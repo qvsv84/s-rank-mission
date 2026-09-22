@@ -256,14 +256,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
     }
   }
 
-  async function saveCompletion(name) {
-    serverStatus[name]=true;
+  async function saveCompletion(name, completed=true) {
+    serverStatus[name]=!!completed;
     refreshChecklist();
     try {
       await fetch(API_URL, {
         method:"POST",
         headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body:JSON.stringify({name,completed:true}),
+        body:JSON.stringify({name,completed:!!completed}),
         mode:"no-cors"
       });
       return true;
@@ -271,6 +271,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
       console.warn("Không lưu được Google Sheets:",err);
       return false;
     }
+  }
+
+  // Tự làm mới checklist khi sang ngày mới (00:00).
+  function scheduleDailyReset(){
+    const now=new Date();
+    const next=new Date(now);
+    next.setHours(24,0,0,50);
+    const delay=Math.max(1000,next-now);
+    setTimeout(async()=>{
+      serverStatus={};
+      refreshChecklist();
+      await loadChecklistFromSheet();
+      scheduleDailyReset();
+    },delay);
   }
 
   const root=document.getElementById("space");
@@ -557,17 +571,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
       },1300);
     });
 
-    box.querySelector("#laterBtn").addEventListener("click",()=>{
+    box.querySelector("#laterBtn").addEventListener("click",async()=>{
+      const completedIndex=current;
+      const completedName=names[current];
+      box.remove();
+
+      // Nếu chọn "Chưa", bỏ tick ngay trên web và xoá trạng thái của ngày hôm nay trên Sheet.
+      await saveCompletion(completedName,false);
+
       showMessage(
-        `Không sao!<br><span class="small">Cố lên “${names[current]}” 💪<br>Hoàn thành nhiệm vụ rồi quay lại nhé!</span>`,
-        0
+        `Không sao!<br><span class="small">Cố lên “${completedName}” 💪<br>Hoàn thành nhiệm vụ rồi quay lại nhé!</span>`,
+        1200
       );
       hint.textContent="";
+      setTimeout(()=>{
+        message.classList.remove("show");
+        showChecklist(completedIndex);
+      },1300);
     });
   }
 
   renderWheel();
   loadChecklistFromSheet();
+  scheduleDailyReset();
 })();
 </script>
 </body>
