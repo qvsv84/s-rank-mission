@@ -237,6 +237,42 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
   /* Đáp án câu 1 theo yêu cầu: v = Tiến Lợi */
   const correctName="Tiến Lợi";
 
+  // Google Sheets / Apps Script
+  const API_URL="https://script.google.com/macros/s/AKfycbyU8-X8ySl_fNn1iBeoJHQNtQnzk6-aU5ndEDKvV8lJoMGUsR8mhoy4mE8ApoqZTv2u/exec";
+  let serverStatus={};
+
+  async function loadChecklistFromSheet() {
+    try {
+      const res=await fetch(API_URL, {cache:"no-store"});
+      if(!res.ok) throw new Error("HTTP "+res.status);
+      const rows=await res.json();
+      serverStatus={};
+      rows.forEach(item=>{
+        serverStatus[item.name]=!!item.completed;
+      });
+      refreshChecklist();
+    } catch(err) {
+      console.warn("Không đọc được Google Sheets:",err);
+    }
+  }
+
+  async function saveCompletion(name) {
+    serverStatus[name]=true;
+    refreshChecklist();
+    try {
+      await fetch(API_URL, {
+        method:"POST",
+        headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body:JSON.stringify({name,completed:true}),
+        mode:"no-cors"
+      });
+      return true;
+    } catch(err) {
+      console.warn("Không lưu được Google Sheets:",err);
+      return false;
+    }
+  }
+
   const root=document.getElementById("space");
   const canvas=document.getElementById("stars");
   const ctx=canvas.getContext("2d",{alpha:true});
@@ -260,21 +296,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
     checklistBody.appendChild(tr);
   });
 
-  function showChecklist(completedIndex){
+  function refreshChecklist(flashIndex=-1){
+    [...checklistBody.querySelectorAll("tr")].forEach((tr,i)=>{
+      const done=!!serverStatus[names[i]];
+      tr.classList.toggle("completed",done);
+      const box=tr.querySelector(".checkBox");
+      box.classList.toggle("checked",done);
+      box.setAttribute("aria-label",done?"Đã hoàn thành":"Chưa hoàn thành");
+      if(done && i===flashIndex){
+        box.classList.remove("checked");
+        void box.offsetWidth;
+        box.classList.add("checked");
+      }
+    });
+  }
+
+  function showChecklist(completedIndex=-1){
     checklistPanel.style.display="block";
     checklistPanel.style.visibility="visible";
     checklistPanel.style.opacity="1";
     checklistPanel.style.pointerEvents="auto";
     checklistPanel.classList.add("show");
-    checklistPanel.classList.add("show");
-    [...checklistBody.querySelectorAll("tr")].forEach((tr,i)=>{
-      const done=i===completedIndex;
-      tr.classList.toggle("completed",done);
-      tr.querySelector(".checkBox").classList.toggle("checked",done);
-    });
-    const row=checklistBody.querySelector(`tr[data-index="${completedIndex}"]`);
+    refreshChecklist(completedIndex);
+    const row=completedIndex>=0 ? checklistBody.querySelector(`tr[data-index="${completedIndex}"]`) : null;
     if(row) setTimeout(()=>row.scrollIntoView({block:"center",behavior:"smooth"}),150);
   }
+
 
 
   /* =========================
@@ -491,11 +538,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
 
     requestAnimationFrame(()=>{box.style.opacity="1";box.style.transform="translate(-50%,0)"});
 
-    box.querySelector("#doneBtn").addEventListener("click",()=>{
+    box.querySelector("#doneBtn").addEventListener("click",async()=>{
       const completedIndex=current;
+      const completedName=names[current];
       box.remove();
+
+      // Lưu vào Google Sheets trước, đồng thời cập nhật giao diện ngay.
+      await saveCompletion(completedName);
+
       showMessage(
-        `Chúc mừng!<br><span class="small">Người chơi S rank “${names[current]}” đã hoàn thành nhiệm vụ 🎉</span>`,
+        `Chúc mừng!<br><span class="small">Người chơi S rank “${completedName}” đã hoàn thành nhiệm vụ 🎉</span>`,
         1200
       );
       hint.textContent="";
@@ -515,6 +567,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
   }
 
   renderWheel();
+  loadChecklistFromSheet();
 })();
 </script>
 </body>
