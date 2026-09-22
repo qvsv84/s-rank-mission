@@ -257,24 +257,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
   }
 
   async function saveCompletion(name, completed=true) {
-    // TRUE = có bản ghi trong Sheet.
-    // Chưa = xoá hẳn bản ghi hôm nay, không để FALSE.
+    // completed=true: tạo bản ghi hôm nay.
+    // completed=false: xoá hẳn bản ghi hôm nay.
     if(completed){
-      serverStatus[name]=true;
+      serverStatus[name] = true;
     }else{
       delete serverStatus[name];
     }
     refreshChecklist();
+
     try {
       await fetch(API_URL, {
         method:"POST",
         headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body:JSON.stringify({name,completed:!!completed}),
+        body:JSON.stringify({name, completed:!!completed}),
         mode:"no-cors"
       });
       return true;
     } catch(err) {
-      console.warn("Không lưu được Google Sheets:",err);
+      console.warn("Không đồng bộ được Google Sheets:", err);
       return false;
     }
   }
