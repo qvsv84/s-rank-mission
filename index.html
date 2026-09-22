@@ -257,7 +257,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
   }
 
   async function saveCompletion(name, completed=true) {
-    serverStatus[name]=!!completed;
+    // TRUE = có bản ghi trong Sheet.
+    // Chưa = xoá hẳn bản ghi hôm nay, không để FALSE.
+    if(completed){
+      serverStatus[name]=true;
+    }else{
+      delete serverStatus[name];
+    }
     refreshChecklist();
     try {
       await fetch(API_URL, {
