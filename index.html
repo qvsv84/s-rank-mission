@@ -1063,62 +1063,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     }
   }
 
-  function showFinalSystemMessage(name, rank, score){
-    wheelArea.classList.remove("show");
-    question.style.opacity="0";
-    hint.textContent="";
-
-    const safeName = String(name || "");
-    const safeRank = String(rank || "");
-    const safeScore = Math.max(0, Number(score) || 0);
-
-    message.innerHTML=`
-      <div class="system-final-wrap">
-        <div class="system-final-kicker system-assemble" id="finalSystemMessage"></div>
-        <div class="system-final-lines">
-          <div class="system-final-line system-appear" style="animation-delay:.35s">
-            Ký chủ: ${safeName}
-          </div>
-          <div class="system-final-line system-appear" style="animation-delay:.48s">
-            Nhiệm vụ hôm nay: <strong>HOÀN THÀNH</strong>
-          </div>
-          <div class="system-final-line system-appear" style="animation-delay:.61s">
-            Điểm đánh giá: <strong id="finalAnimatedScore">000</strong>
-          </div>
-          <div class="system-final-line system-appear" style="animation-delay:.74s">
-            Chúc mừng Ký chủ. Checklist hôm nay đã được ghi nhận.
-          </div>
-        </div>
-      </div>`;
-
-    message.classList.remove("show");
-    void message.offsetWidth;
-    message.classList.add("show");
-
-    // Chỉ dòng tiêu đề cuối cùng dùng hiệu ứng ký tự bay từ không gian 3D.
-    animateSystemAssemble(
-      document.getElementById("finalSystemMessage"),
-      "KÍCH HOẠT HỆ THỐNG THÀNH CÔNG"
-    );
-
-    // Các dòng còn lại hiện nguyên câu, không đánh từng chữ.
-    const scoreEl = document.getElementById("finalAnimatedScore");
-    if(scoreEl){
-      const start = performance.now();
-      const duration = 1000;
-
-      function tick(now){
-        const p = Math.min(1, (now-start)/duration);
-        const eased = 1 - Math.pow(1-p, 3);
-        scoreEl.textContent = String(Math.round(safeScore * eased)).padStart(3,"0");
-        if(p < 1) requestAnimationFrame(tick);
-      }
-      requestAnimationFrame(tick);
-    }
-
-    burst();
-  }
-
   function showMessage(html,duration=2200,next=null){
     wheelArea.classList.remove("show");
     question.style.opacity="0";
@@ -1360,28 +1304,30 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     box.querySelector("#doneBtn").addEventListener("click",async()=>{
       const completedIndex=current, selected=names[current];
       box.remove();
-      showFinalSystemMessage(
-        selected,
-        (Array.isArray(ranks) && ranks[completedIndex]) ? ranks[completedIndex] : rankClient(points[completedIndex]),
-        Array.isArray(points) ? points[completedIndex] : 0
-      );
-      // Ghi Sheet song song với việc hiện animation, không chặn giao diện.
-      checkin(selected,completedIndex);
-      setTimeout(()=>{
-        // Sau khi hoàn thành: mở Checklist chắc chắn, kể cả trước đó bảng đang ẩn.
-        message.classList.remove("show");
-        renderChecklist();
-        checklistPanel.classList.add("show");
-        checklistPanel.style.visibility = "visible";
-        checklistPanel.style.opacity = "1";
-        checklistPanel.style.pointerEvents = "auto";
-        const row=checklistBody.querySelector(`tr[data-index="${completedIndex}"]`);
-        if(row) {
-          row.classList.add("completed");
-          row.querySelector(".checkBox")?.classList.add("checked");
-          setTimeout(()=>row.scrollIntoView({block:"center",behavior:"smooth"}),80);
-        }
-      },1800);
+
+      // Ẩn hoàn toàn màn hình câu hỏi và đi thẳng tới Checklist.
+      question.style.opacity = "0";
+      question.style.pointerEvents = "none";
+      hint.textContent = "";
+      myPointCard.classList.remove("show");
+      message.classList.remove("show");
+
+      // Ghi nhận hoàn thành vào Sheet; UI đã được cập nhật optimistic.
+      checkin(selected, completedIndex);
+
+      // Mở Checklist ngay lập tức, không qua màn hình thông báo.
+      renderChecklist();
+      checklistPanel.classList.add("show");
+      checklistPanel.style.visibility = "visible";
+      checklistPanel.style.opacity = "1";
+      checklistPanel.style.pointerEvents = "auto";
+
+      const row = checklistBody.querySelector(`tr[data-index="${completedIndex}"]`);
+      if(row) {
+        row.classList.add("completed");
+        row.querySelector(".checkBox")?.classList.add("checked");
+        setTimeout(() => row.scrollIntoView({block:"center", behavior:"smooth"}), 80);
+      }
     });
 
     box.querySelector("#laterBtn").addEventListener("click",()=>{
