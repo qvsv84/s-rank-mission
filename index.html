@@ -119,6 +119,14 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #adminBtn{color:rgba(255,255,255,.86)}
 #adminOverlay{position:fixed;inset:0;z-index:20000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.68);backdrop-filter:blur(10px)}
 #adminOverlay.show{display:flex}
+#adminPasswordBox{width:min(88vw,340px);padding:22px;border:1px solid rgba(255,255,255,.16);border-radius:22px;background:linear-gradient(145deg,rgba(20,8,24,.98),rgba(6,4,12,.99));box-shadow:0 18px 60px rgba(0,0,0,.6),0 0 35px rgba(255,60,160,.16);color:#fff;text-align:center}
+#adminPasswordTitle{font-size:20px;font-weight:800;text-shadow:0 0 12px #ff4fa3;margin-bottom:6px}
+#adminPasswordSub{font-size:12px;color:rgba(255,255,255,.48);margin-bottom:14px}
+#adminPasswordInput{width:100%;height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:#fff;font-size:20px;text-align:center;letter-spacing:5px;outline:none}
+#adminPasswordMsg{min-height:18px;margin:9px 0;color:#ff9dcc;font-size:12px}
+#adminPasswordActions{display:flex;gap:9px}
+#adminPasswordActions button{flex:1;min-height:42px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font-weight:700}
+#adminPasswordOk{background:linear-gradient(135deg,#ff3c91,#ff70b9)!important}
 #adminPanel{width:min(92vw,390px);padding:22px;border:1px solid rgba(255,255,255,.16);border-radius:24px;background:linear-gradient(145deg,rgba(20,8,24,.96),rgba(6,4,12,.97));box-shadow:0 18px 60px rgba(0,0,0,.55),0 0 35px rgba(255,60,160,.14);color:#fff}
 #adminTitle{text-align:center;font-size:22px;font-weight:800;text-shadow:0 0 14px #ff4fa3;margin-bottom:5px}
 #adminSub{text-align:center;color:rgba(255,255,255,.48);font-size:12px;margin-bottom:18px}
@@ -169,6 +177,15 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   <button id="adminBtn" type="button">⚙ Admin</button>
   <button id="checklistBtn" type="button">☑ Checklist</button>
 </nav>
+<div id="adminPasswordOverlay" class="adminOverlay" aria-hidden="true" style="position:fixed;inset:0;z-index:21000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);">
+  <section id="adminPasswordBox">
+    <div id="adminPasswordTitle">🔐 Admin</div>
+    <div id="adminPasswordSub">Nhập mật khẩu để mở cài đặt</div>
+    <input id="adminPasswordInput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••">
+    <div id="adminPasswordMsg"></div>
+    <div id="adminPasswordActions"><button id="adminPasswordCancel" type="button">Huỷ</button><button id="adminPasswordOk" type="button">Xác nhận</button></div>
+  </section>
+</div>
 <div id="adminOverlay" aria-hidden="true">
   <section id="adminPanel" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
     <div id="adminTitle">⚙ Cài đặt Admin</div>
@@ -192,7 +209,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 (() => {
   "use strict";
 
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwK-2bmlYNlgMvvN9ypX4VNiR9l0qdrkBjk5UEYMCb8OnDoujJFEM7wiO8iL_3d3Y76WA/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxZzmtKDvCL7OTfyyg7bqP0i_b5Ygt0YbRWnEclg6fSJ2pcc1LaHAL2e33aFxY2e0dSQ/exec";
   const CACHE_KEY = "srank_check_v4";
   const DAY_KEY = "srank_check_day_v1";
   const root = document.getElementById("space");
@@ -322,27 +339,51 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     adminOverlay.setAttribute("aria-hidden","true");
   }
 
-  adminBtn.addEventListener("click", async()=>{
-    const password = prompt("Nhập mật khẩu Admin:");
-    if(password === null) return;
+  const adminPasswordOverlay = document.getElementById("adminPasswordOverlay");
+  const adminPasswordInput = document.getElementById("adminPasswordInput");
+  const adminPasswordMsg = document.getElementById("adminPasswordMsg");
+  const adminPasswordOk = document.getElementById("adminPasswordOk");
+  const adminPasswordCancel = document.getElementById("adminPasswordCancel");
+
+  function openAdminPassword(){
+    adminPasswordMsg.textContent="";
+    adminPasswordInput.value="";
+    adminPasswordOverlay.style.display="flex";
+    adminPasswordOverlay.setAttribute("aria-hidden","false");
+    setTimeout(()=>adminPasswordInput.focus(),50);
+  }
+  function closeAdminPassword(){
+    adminPasswordOverlay.style.display="none";
+    adminPasswordOverlay.setAttribute("aria-hidden","true");
+  }
+  async function verifyAdmin(){
+    const password=adminPasswordInput.value.trim();
     if(password !== "8516"){
-      alert("Mật khẩu không đúng.");
+      adminPasswordMsg.textContent="Mật khẩu không đúng.";
+      adminPasswordInput.value="";
+      adminPasswordInput.focus();
       return;
     }
-    adminStatus.textContent = "Đang tải cài đặt…";
+    closeAdminPassword();
+    adminStatus.textContent="Đang tải cài đặt…";
     adminOverlay.classList.add("show");
     adminOverlay.setAttribute("aria-hidden","false");
     try{
-      const r = await api("getSettings",{},5000);
+      const r=await api("getSettings",{},5000);
       if(!r.ok) throw new Error(r.error || "Không tải được cài đặt");
-      resetTime = r.data.resetTime || "00:00";
-      resetTimeInput.value = resetTime;
-      adminStatus.textContent = "Đang áp dụng giờ Việt Nam (UTC+7)";
+      resetTime=r.data.resetTime || "00:00";
+      resetTimeInput.value=resetTime;
+      adminStatus.textContent="Đang áp dụng giờ Việt Nam (UTC+7)";
     }catch(e){
-      resetTimeInput.value = resetTime;
-      adminStatus.textContent = "Không tải được cài đặt hiện tại.";
+      resetTimeInput.value=resetTime;
+      adminStatus.textContent="Không tải được cài đặt hiện tại. Kiểm tra Apps Script.";
     }
-  });
+  }
+  adminBtn.addEventListener("click",openAdminPassword);
+  adminPasswordOk.addEventListener("click",verifyAdmin);
+  adminPasswordCancel.addEventListener("click",closeAdminPassword);
+  adminPasswordOverlay.addEventListener("click",e=>{if(e.target===adminPasswordOverlay) closeAdminPassword()});
+  adminPasswordInput.addEventListener("keydown",e=>{if(e.key==="Enter") verifyAdmin();});
 
   adminCloseBtn.addEventListener("click",closeAdmin);
   adminOverlay.addEventListener("click",e=>{if(e.target===adminOverlay) closeAdmin()});
