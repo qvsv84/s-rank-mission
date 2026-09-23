@@ -640,15 +640,13 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     }
   });
 
-  // Lăn con lăn chuột để chọn tên. Mỗi nấc/lượng cuộn tương ứng số bậc thực tế.
+  // Lăn chuột: mỗi lần lăn chỉ di chuyển đúng 1 bậc.
   wheelArea.addEventListener("wheel",e=>{
     if(!wheelArea.classList.contains("show") || !names.length) return;
     e.preventDefault();
-    const raw=e.deltaY;
-    if(!raw) return;
-    let steps=Math.round(raw / ITEM_H);
-    if(steps===0) steps=raw>0 ? 1 : -1;
-    current=Math.max(0,Math.min(names.length-1,current+steps));
+    if(!e.deltaY) return;
+    current += e.deltaY > 0 ? 1 : -1;
+    current = Math.max(0, Math.min(names.length - 1, current));
     dragOffset=0;
     renderWheel();
     confirm.classList.add("show");
