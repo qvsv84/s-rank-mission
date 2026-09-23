@@ -285,7 +285,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   function cacheSave(){
     try{
-      localStorage.setItem(CACHE_KEY, JSON.stringify({names,checked,day:todayKey(),ts:Date.now()}));
+      localStorage.setItem(CACHE_KEY, JSON.stringify({names,checked,times,day:todayKey(),ts:Date.now()}));
       localStorage.setItem(DAY_KEY, todayKey());
     }catch(_){}
   }
@@ -295,6 +295,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       if(x && x.day === todayKey() && Array.isArray(x.names) && Array.isArray(x.checked)){
         names = x.names;
         checked = x.checked;
+        times = Array.isArray(x.times) ? x.times : [];
         return true;
       }
       // Cache của ngày cũ không được dùng lại.
@@ -524,6 +525,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       // Không gọi getData lần 2 -> giảm hẳn 1 request.
       checked[index] = true;
       cacheSave();
+      renderChecklist();
     }catch(e){
       // Nếu ghi thất bại, lấy lại trạng thái thật từ Sheet.
       setStatus("Đang xác nhận…");
@@ -592,23 +594,66 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   }
 
   function snap(){
-    if(Math.abs(dragOffset)>ITEM_H*.35){
-      current += dragOffset<0 ? 1 : -1;
-      current = Math.max(0,Math.min(names.length-1,current));
+    // Tính số bậc dựa trên toàn bộ quãng vuốt, không chỉ ±1 bậc.
+    const steps=Math.round(-dragOffset/ITEM_H);
+    if(steps!==0){
+      current=Math.max(0,Math.min(names.length-1,current+steps));
     }
-    dragOffset=0; renderWheel(); confirm.classList.add("show");
+    dragOffset=0;
+    renderWheel();
+    confirm.classList.add("show");
   }
+
+  function moveSelection(delta){
+    if(!wheelArea.classList.contains("show") || !names.length) return;
+    current=Math.max(0,Math.min(names.length-1,current+delta));
+    dragOffset=0;
+    renderWheel();
+    confirm.classList.add("show");
+  }
+
   wheelArea.addEventListener("pointerdown",e=>{
-    dragging=true;startY=e.clientY;dragOffset=0;wheelArea.setPointerCapture?.(e.pointerId);
+    dragging=true;
+    startY=e.clientY;
+    dragOffset=0;
+    wheelArea.setPointerCapture?.(e.pointerId);
   });
   wheelArea.addEventListener("pointermove",e=>{
     if(!dragging)return;
     dragOffset=e.clientY-startY;
-    if((current===0&&dragOffset>0)||(current===names.length-1&&dragOffset<0))dragOffset*=.25;
+    // Không giới hạn về ±1. Có thể kéo qua nhiều tên trong một lần vuốt.
+    if((current===0&&dragOffset>0)||(current===names.length-1&&dragOffset<0)) dragOffset*=.25;
     renderWheel();
   });
-  wheelArea.addEventListener("pointerup",()=>{if(dragging){dragging=false;snap()}});
-  wheelArea.addEventListener("pointercancel",()=>{if(dragging){dragging=false;snap()}});
+  wheelArea.addEventListener("pointerup",e=>{
+    if(dragging){
+      dragging=false;
+      snap();
+      wheelArea.releasePointerCapture?.(e.pointerId);
+    }
+  });
+  wheelArea.addEventListener("pointercancel",e=>{
+    if(dragging){
+      dragging=false;
+      snap();
+      wheelArea.releasePointerCapture?.(e.pointerId);
+    }
+  });
+
+  // Điều khiển bằng bàn phím trên máy tính.
+  addEventListener("keydown",e=>{
+    if(!wheelArea.classList.contains("show")) return;
+    if(e.key==="ArrowDown"){
+      e.preventDefault();
+      moveSelection(1);
+    }else if(e.key==="ArrowUp"){
+      e.preventDefault();
+      moveSelection(-1);
+    }else if(e.key==="Enter" && confirm.classList.contains("show")){
+      e.preventDefault();
+      confirm.click();
+    }
+  });
 
   function openQuestion1(e){
     e?.preventDefault();
@@ -620,7 +665,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     burst();
     setTimeout(()=>{
       wheelArea.classList.add("show"); renderWheel();
-      hint.textContent="Vuốt lên / xuống để chọn tên";
+      hint.textContent="Vuốt lên / xuống • ↑ ↓ để chọn • Enter để xác nhận";
     },180);
   }
   question.addEventListener("pointerup",openQuestion1,{passive:false});
