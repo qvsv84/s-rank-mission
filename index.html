@@ -164,6 +164,59 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
  #bottomNav{right:10px;top:10px;gap:5px;padding:4px}
  #bottomNav button{min-height:34px;padding:6px 10px;font-size:10px}
 }
+
+/* Landing: title and Click here are always separate, centered lines */
+#question{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:100% !important;
+  text-align:center !important;
+  gap:14px !important;
+  box-sizing:border-box;
+}
+#question .landing-title{
+  display:block !important;
+  width:100%;
+  text-align:center;
+  white-space:nowrap;
+  font-size:clamp(34px,9vw,72px);
+  font-weight:900;
+  line-height:1;
+  background:linear-gradient(135deg,#ffffff 10%,#ffeaf5 45%,#ff75b8 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:#ffffff;
+  -webkit-text-fill-color:transparent;
+  text-shadow:0 0 2px rgba(255,255,255,.95),
+              0 0 10px rgba(255,120,190,.85),
+              0 0 26px rgba(255,60,145,.55);
+  filter:none;
+}
+#question .landing-cta{
+  display:flex !important;
+  width:max-content !important;
+  min-width:150px;
+  margin:0 auto;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:10px 25px;
+  border:1px solid rgba(255,150,210,.48);
+  border-radius:999px;
+  background:linear-gradient(135deg,rgba(255,60,145,.18),rgba(255,255,255,.06));
+  color:#fff;
+  font-size:clamp(14px,3.5vw,18px);
+  font-weight:800;
+  letter-spacing:2px;
+  box-shadow:0 0 16px rgba(255,60,145,.25),inset 0 0 18px rgba(255,255,255,.04);
+  text-shadow:0 0 10px rgba(255,120,190,.9);
+}
+@media(max-width:520px){
+  #question .landing-title{font-size:clamp(32px,9vw,54px)}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
@@ -174,7 +227,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
 <div id="questionWrap">
   <div id="counter">CÂU 1</div>
-  <div id="question">Tên bạn là gì?</div>
+  <div id="question"><span class="landing-title">Checklist Đảo Mèo</span><span class="landing-cta">Click here</span></div>
 </div>
 
 <div id="myPointCard" aria-live="polite">⭐ Điểm hiện tại <span class="pointValue">—</span></div>
@@ -1109,7 +1162,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     dragging = false;
 
     counter.textContent = "CÂU 1";
-    question.textContent = "Tên bạn là gì?";
+    question.innerHTML = '<span class="landing-title">Checklist Đảo Mèo</span><span class="landing-cta">Click here</span>';
     question.style.opacity = "1";
     question.style.pointerEvents = "auto";
     question.style.transform = "scale(1)";
