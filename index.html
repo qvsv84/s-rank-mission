@@ -640,6 +640,20 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     }
   });
 
+  // Lăn con lăn chuột để chọn tên. Mỗi nấc/lượng cuộn tương ứng số bậc thực tế.
+  wheelArea.addEventListener("wheel",e=>{
+    if(!wheelArea.classList.contains("show") || !names.length) return;
+    e.preventDefault();
+    const raw=e.deltaY;
+    if(!raw) return;
+    let steps=Math.round(raw / ITEM_H);
+    if(steps===0) steps=raw>0 ? 1 : -1;
+    current=Math.max(0,Math.min(names.length-1,current+steps));
+    dragOffset=0;
+    renderWheel();
+    confirm.classList.add("show");
+  },{passive:false});
+
   // Điều khiển bằng bàn phím trên máy tính.
   addEventListener("keydown",e=>{
     if(!wheelArea.classList.contains("show")) return;
