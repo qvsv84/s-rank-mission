@@ -87,20 +87,26 @@ box-shadow:0 0 15px rgba(255,55,155,.65);animation:checkPop .45s cubic-bezier(.1
 background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-size:12px}
 
 #bottomNav{
- position:absolute;left:50%;bottom:18px;transform:translateX(-50%);
- z-index:10000;display:flex;gap:10px;width:min(92vw,360px);justify-content:center;
+ position:absolute;left:50%;bottom:22px;transform:translateX(-50%);
+ z-index:10000;display:flex;gap:10px;width:min(86vw,300px);justify-content:center;
+ padding:6px;border:1px solid rgba(255,255,255,.10);border-radius:999px;
+ background:rgba(8,4,14,.52);backdrop-filter:blur(14px);
+ box-shadow:0 8px 28px rgba(0,0,0,.28),0 0 22px rgba(255,60,160,.08);
 }
 #bottomNav button{
- flex:1;min-height:44px;padding:10px 16px;border-radius:999px;
- border:1px solid rgba(255,255,255,.16);
- background:rgba(10,5,15,.72);backdrop-filter:blur(12px);
- color:rgba(255,255,255,.82);font-size:13px;font-weight:700;
- box-shadow:0 0 18px rgba(255,60,160,.08);
+ flex:1;min-height:40px;padding:8px 14px;border-radius:999px;
+ border:1px solid rgba(255,255,255,.10);
+ background:transparent;color:rgba(255,255,255,.72);font-size:12px;font-weight:700;
+ transition:transform .18s,background .2s,box-shadow .2s,color .2s;
 }
 #bottomNav button:active{transform:scale(.96)}
 #homeBtn{
- background:linear-gradient(135deg,rgba(255,60,145,.85),rgba(255,112,185,.72)) !important;
- color:#fff !important;
+ background:linear-gradient(135deg,rgba(255,60,145,.88),rgba(255,112,185,.72)) !important;
+ color:#fff !important;box-shadow:0 0 16px rgba(255,60,160,.18);
+}
+#checklistBtn{color:rgba(255,255,255,.86)}
+@media (max-height:620px){
+ #bottomNav{bottom:10px;transform:translateX(-50%) scale(.9);transform-origin:center bottom}
 }
 </style>
 </head>
