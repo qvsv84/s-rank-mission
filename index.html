@@ -430,10 +430,19 @@ background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-size:12px}
       // Ghi Sheet song song với việc hiện animation, không chặn giao diện.
       checkin(selected,completedIndex);
       setTimeout(()=>{
+        // Sau khi hoàn thành: mở Checklist chắc chắn, kể cả trước đó bảng đang ẩn.
         message.classList.remove("show");
+        renderChecklist();
         checklistPanel.classList.add("show");
+        checklistPanel.style.visibility = "visible";
+        checklistPanel.style.opacity = "1";
+        checklistPanel.style.pointerEvents = "auto";
         const row=checklistBody.querySelector(`tr[data-index="${completedIndex}"]`);
-        if(row) setTimeout(()=>row.scrollIntoView({block:"center",behavior:"smooth"}),80);
+        if(row) {
+          row.classList.add("completed");
+          row.querySelector(".checkBox")?.classList.add("checked");
+          setTimeout(()=>row.scrollIntoView({block:"center",behavior:"smooth"}),80);
+        }
       },1000);
     });
 
