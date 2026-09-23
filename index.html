@@ -115,6 +115,21 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
  display:none !important;
 }
 
+/* ===== ADMIN ===== */
+#adminBtn{color:rgba(255,255,255,.86)}
+#adminOverlay{position:fixed;inset:0;z-index:20000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.68);backdrop-filter:blur(10px)}
+#adminOverlay.show{display:flex}
+#adminPanel{width:min(92vw,390px);padding:22px;border:1px solid rgba(255,255,255,.16);border-radius:24px;background:linear-gradient(145deg,rgba(20,8,24,.96),rgba(6,4,12,.97));box-shadow:0 18px 60px rgba(0,0,0,.55),0 0 35px rgba(255,60,160,.14);color:#fff}
+#adminTitle{text-align:center;font-size:22px;font-weight:800;text-shadow:0 0 14px #ff4fa3;margin-bottom:5px}
+#adminSub{text-align:center;color:rgba(255,255,255,.48);font-size:12px;margin-bottom:18px}
+.adminField{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0}
+.adminField label{font-size:13px;color:rgba(255,255,255,.72)}
+#resetTimeInput{width:120px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:#fff;font-size:18px;text-align:center;outline:none}
+#adminStatus{text-align:center;min-height:18px;margin:10px 0;color:#ff9dcc;font-size:12px}
+#adminActions{display:flex;gap:9px}
+#adminActions button{flex:1;min-height:42px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font-weight:700}
+#adminSaveBtn{background:linear-gradient(135deg,#ff3c91,#ff70b9)!important;box-shadow:0 0 18px rgba(255,50,145,.3)}
+#adminResetNowBtn{margin-top:10px;width:100%;min-height:40px;border-radius:999px;border:1px solid rgba(255,120,180,.18);background:rgba(255,60,145,.08);color:#ffb0d3;font-weight:700}
 @media (max-width:420px){
  #bottomNav{right:10px;top:10px;gap:5px;padding:4px}
  #bottomNav button{min-height:34px;padding:6px 10px;font-size:10px}
@@ -151,8 +166,25 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
 <nav id="bottomNav">
   <button id="homeBtn" type="button">⌂ Home</button>
+  <button id="adminBtn" type="button">⚙ Admin</button>
   <button id="checklistBtn" type="button">☑ Checklist</button>
 </nav>
+<div id="adminOverlay" aria-hidden="true">
+  <section id="adminPanel" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+    <div id="adminTitle">⚙ Cài đặt Admin</div>
+    <div id="adminSub">Thiết lập giờ làm mới checklist hằng ngày</div>
+    <div class="adminField">
+      <label for="resetTimeInput">Giờ reset mỗi ngày</label>
+      <input id="resetTimeInput" type="time" value="00:00" step="60">
+    </div>
+    <div id="adminStatus"></div>
+    <div id="adminActions">
+      <button id="adminCloseBtn" type="button">Đóng</button>
+      <button id="adminSaveBtn" type="button">Lưu cài đặt</button>
+    </div>
+    <button id="adminResetNowBtn" type="button">↻ Reset checklist ngay</button>
+  </section>
+</div>
 <div id="hint">Đang tải dữ liệu…</div>
 </main>
 
@@ -161,7 +193,8 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   "use strict";
 
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwK-2bmlYNlgMvvN9ypX4VNiR9l0qdrkBjk5UEYMCb8OnDoujJFEM7wiO8iL_3d3Y76WA/exec";
-  const CACHE_KEY = "srank_check_v3";
+  const CACHE_KEY = "srank_check_v4";
+  const DAY_KEY = "srank_check_day_v1";
   const root = document.getElementById("space");
   const canvas = document.getElementById("stars");
   const ctx = canvas.getContext("2d",{alpha:true});
@@ -178,6 +211,14 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const syncBtn = document.getElementById("syncBtn");
   const homeBtn = document.getElementById("homeBtn");
   const checklistBtn = document.getElementById("checklistBtn");
+  const adminBtn = document.getElementById("adminBtn");
+  const adminOverlay = document.getElementById("adminOverlay");
+  const adminPanel = document.getElementById("adminPanel");
+  const resetTimeInput = document.getElementById("resetTimeInput");
+  const adminStatus = document.getElementById("adminStatus");
+  const adminCloseBtn = document.getElementById("adminCloseBtn");
+  const adminSaveBtn = document.getElementById("adminSaveBtn");
+  const adminResetNowBtn = document.getElementById("adminResetNowBtn");
   const captureBtn = document.getElementById("captureBtn");
 
   let names = [];
@@ -215,22 +256,136 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     });
   }
 
+  function todayKey(){
+    const d = new Date();
+    const parts = new Intl.DateTimeFormat("en-CA",{
+      timeZone:"Asia/Ho_Chi_Minh",year:"numeric",month:"2-digit",day:"2-digit"
+    }).formatToParts(d);
+    const get = k => parts.find(x=>x.type===k)?.value || "";
+    return `${get("year")}-${get("month")}-${get("day")}`;
+  }
+
   function cacheSave(){
     try{
-      localStorage.setItem(CACHE_KEY, JSON.stringify({names,checked,ts:Date.now()}));
+      localStorage.setItem(CACHE_KEY, JSON.stringify({names,checked,day:todayKey(),ts:Date.now()}));
+      localStorage.setItem(DAY_KEY, todayKey());
     }catch(_){}
   }
   function cacheLoad(){
     try{
       const x = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
-      if(x && Array.isArray(x.names) && Array.isArray(x.checked)){
+      if(x && x.day === todayKey() && Array.isArray(x.names) && Array.isArray(x.checked)){
         names = x.names;
         checked = x.checked;
         return true;
       }
+      // Cache của ngày cũ không được dùng lại.
+      localStorage.removeItem(CACHE_KEY);
+      localStorage.setItem(DAY_KEY, todayKey());
     }catch(_){}
     return false;
   }
+
+  let resetTime = "00:00";
+  let resetTimer = null;
+
+  function scheduleNextReset(){
+    if(resetTimer) clearTimeout(resetTimer);
+    const now = new Date();
+    const [hh,mm] = String(resetTime || "00:00").split(":").map(Number);
+    const next = new Date(now);
+    next.setHours(Number.isFinite(hh)?hh:0, Number.isFinite(mm)?mm:0, 3, 0);
+    if(next.getTime() <= now.getTime()) next.setDate(next.getDate()+1);
+    resetTimer = setTimeout(async()=>{
+      checked = names.map(()=>false);
+      cacheSave();
+      renderChecklist();
+      setStatus("Checklist đã làm mới ✓");
+      await loadData(false);
+      await loadAdminSettings();
+      scheduleNextReset();
+    }, Math.max(1000,next.getTime()-now.getTime()));
+  }
+
+  async function loadAdminSettings(){
+    try{
+      const r = await api("getSettings",{},5000);
+      if(r.ok && r.data && /^([01]\d|2[0-3]):[0-5]\d$/.test(r.data.resetTime)){
+        resetTime = r.data.resetTime;
+        scheduleNextReset();
+      }
+    }catch(_){}
+  }
+
+  function closeAdmin(){
+    adminOverlay.classList.remove("show");
+    adminOverlay.setAttribute("aria-hidden","true");
+  }
+
+  adminBtn.addEventListener("click", async()=>{
+    const password = prompt("Nhập mật khẩu Admin:");
+    if(password === null) return;
+    if(password !== "8516"){
+      alert("Mật khẩu không đúng.");
+      return;
+    }
+    adminStatus.textContent = "Đang tải cài đặt…";
+    adminOverlay.classList.add("show");
+    adminOverlay.setAttribute("aria-hidden","false");
+    try{
+      const r = await api("getSettings",{},5000);
+      if(!r.ok) throw new Error(r.error || "Không tải được cài đặt");
+      resetTime = r.data.resetTime || "00:00";
+      resetTimeInput.value = resetTime;
+      adminStatus.textContent = "Đang áp dụng giờ Việt Nam (UTC+7)";
+    }catch(e){
+      resetTimeInput.value = resetTime;
+      adminStatus.textContent = "Không tải được cài đặt hiện tại.";
+    }
+  });
+
+  adminCloseBtn.addEventListener("click",closeAdmin);
+  adminOverlay.addEventListener("click",e=>{if(e.target===adminOverlay) closeAdmin()});
+
+  adminSaveBtn.addEventListener("click",async()=>{
+    const time = resetTimeInput.value;
+    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)){
+      adminStatus.textContent = "Giờ không hợp lệ.";
+      return;
+    }
+    adminSaveBtn.disabled = true;
+    adminStatus.textContent = "Đang lưu…";
+    try{
+      const r = await api("setSettings",{password:"8516",resetTime:time},7000);
+      if(!r.ok) throw new Error(r.error || "Không lưu được");
+      resetTime = time;
+      scheduleNextReset();
+      adminStatus.textContent = `Đã lưu: reset mỗi ngày lúc ${time}`;
+    }catch(e){
+      adminStatus.textContent = "Lưu thất bại. Kiểm tra Apps Script.";
+    }finally{
+      adminSaveBtn.disabled = false;
+    }
+  });
+
+  adminResetNowBtn.addEventListener("click",async()=>{
+    if(!confirm("Reset checklist ngay bây giờ?")) return;
+    adminResetNowBtn.disabled = true;
+    adminStatus.textContent = "Đang reset…";
+    try{
+      const r = await api("resetNow",{password:"8516"},7000);
+      if(!r.ok) throw new Error(r.error || "Reset thất bại");
+      checked = names.map(()=>false);
+      cacheSave();
+      renderChecklist();
+      adminStatus.textContent = "Đã reset checklist ✓";
+      setStatus("Checklist đã reset ✓");
+    }catch(e){
+      adminStatus.textContent = "Reset thất bại.";
+    }finally{
+      adminResetNowBtn.disabled = false;
+    }
+  });
 
   function setStatus(t){
     status.textContent = t;
@@ -625,6 +780,8 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   // Load Sheet ngay khi mở; cache hiển thị trước nếu có.
   loadData(true);
+  loadAdminSettings();
+  scheduleNextReset();
 })();
 </script>
 </body>
