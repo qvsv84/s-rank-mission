@@ -471,10 +471,15 @@ background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-size:12px}
   homeBtn.addEventListener("click", resetHome);
 
   checklistBtn.addEventListener("click", () => {
-    checklistPanel.classList.add("show");
-    renderChecklist();
-    // Đồng bộ nền, không chặn việc mở bảng.
-    loadData(false);
+    // Bấm Checklist: hiện ↔ ẩn bảng
+    const willShow = !checklistPanel.classList.contains("show");
+    checklistPanel.classList.toggle("show", willShow);
+
+    if (willShow) {
+      renderChecklist();
+      // Đồng bộ nền, không chặn việc mở bảng.
+      loadData(false);
+    }
   });
 
   syncBtn.addEventListener("click",()=>loadData(true));
