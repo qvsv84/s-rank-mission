@@ -105,6 +105,12 @@ background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-size:12px}
  color:#fff !important;box-shadow:0 0 16px rgba(255,60,160,.18);
 }
 #checklistBtn{color:rgba(255,255,255,.86)}
+
+/* Khi đang chọn tên, ẩn thanh Home/Checklist để không che nút Xác nhận */
+#space:has(#wheelArea.show) #bottomNav{
+ display:none !important;
+}
+
 @media (max-width:420px){
  #bottomNav{right:10px;top:10px;gap:5px;padding:4px}
  #bottomNav button{min-height:34px;padding:6px 10px;font-size:10px}
