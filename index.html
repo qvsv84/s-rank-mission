@@ -499,6 +499,127 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   text-shadow:0 0 8px rgba(255,70,160,.8);
 }
 
+
+/* ---------- Capture preview: Chrome / Cốc Cốc mobile ---------- */
+#capturePreview{
+  position:fixed;
+  inset:0;
+  z-index:50000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:14px;
+  background:rgba(0,0,0,.86);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  box-sizing:border-box;
+}
+
+.capturePreviewBox{
+  width:min(94vw,520px);
+  max-height:94vh;
+  overflow:auto;
+  box-sizing:border-box;
+  padding:16px;
+  border:1px solid rgba(255,120,190,.35);
+  border-radius:24px;
+  background:linear-gradient(145deg,#09040d,#160714 55%,#07030b);
+  box-shadow:
+    0 0 35px rgba(255,60,160,.28),
+    inset 0 0 30px rgba(255,120,190,.04);
+}
+
+.capturePreviewTitle{
+  text-align:center;
+  color:#fff;
+  font-weight:900;
+  font-size:19px;
+  margin-bottom:12px;
+  text-shadow:
+    0 0 8px rgba(255,105,180,.7),
+    0 0 18px rgba(255,60,145,.35);
+}
+
+.capturePreviewImageWrap{
+  width:100%;
+  max-height:65vh;
+  overflow:auto;
+  display:flex;
+  justify-content:center;
+  border-radius:18px;
+  background:#050208;
+  -webkit-overflow-scrolling:touch;
+}
+
+#capturePreviewImage{
+  display:block;
+  width:100%;
+  height:auto;
+  max-width:100%;
+  border-radius:16px;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:default;
+}
+
+.capturePreviewHint{
+  color:#ffd5e9;
+  text-align:center;
+  font-size:12px;
+  line-height:1.45;
+  margin:11px 5px 12px;
+  opacity:.9;
+}
+
+.capturePreviewActions{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+}
+
+.capturePreviewActions button,
+.capturePreviewActions a{
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  border-radius:999px;
+  border:1px solid rgba(255,130,195,.3);
+  background:rgba(255,70,155,.12);
+  color:#fff;
+  font:inherit;
+  font-weight:800;
+  text-decoration:none;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+
+#captureDownloadBtn{
+  background:linear-gradient(135deg,#ff3c91,#ff70b9);
+  box-shadow:0 0 16px rgba(255,50,145,.28);
+}
+
+@media(max-width:420px){
+  .capturePreviewBox{
+    padding:13px;
+    border-radius:21px;
+  }
+
+  .capturePreviewTitle{
+    font-size:17px;
+  }
+
+  .capturePreviewActions{
+    grid-template-columns:1fr;
+  }
+
+  .capturePreviewActions button,
+  .capturePreviewActions a{
+    min-height:43px;
+  }
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
@@ -1338,8 +1459,10 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
 
   // ---------- Chụp checklist ----------
+  // ---------- Chụp checklist: Chrome + Cốc Cốc mobile ----------
   async function captureChecklist(){
     if(!checklistPanel.classList.contains("show")) return;
+
     if(typeof html2canvas !== "function"){
       setStatus("Không tải được công cụ chụp");
       return;
@@ -1349,11 +1472,10 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     const oldText = captureBtn.textContent;
     captureBtn.textContent = "⏳ Đang tạo ảnh…";
 
-    // Tạo một bản sao riêng để ảnh luôn chứa TOÀN BỘ danh sách,
-    // không phụ thuộc phần đang cuộn trên màn hình.
     const clone = checklistPanel.cloneNode(true);
     clone.id = "checklistCaptureTemp";
     clone.querySelector("#checklistActions")?.remove();
+
     clone.style.cssText = `
       position:absolute !important;
       left:-100000px !important;
@@ -1369,66 +1491,206 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       padding:22px !important;
       border-radius:26px !important;
       box-shadow:0 0 40px rgba(255,60,160,.16) !important;
+      overflow:visible !important;
     `;
+
     const scroll = clone.querySelector("#checklistScroll");
+
     if(scroll){
       scroll.style.maxHeight = "none";
       scroll.style.height = "auto";
       scroll.style.overflow = "visible";
       scroll.style.borderRadius = "20px";
     }
+
     document.body.appendChild(clone);
 
+    let blob = null;
+    let imageUrl = null;
+
     try{
-      // Chờ layout/font ổn định trước khi render canvas.
-      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+      await new Promise(r =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(r)
+        )
+      );
+
       const canvas = await html2canvas(clone,{
         backgroundColor:null,
         scale:Math.min(3, Math.max(2, window.devicePixelRatio || 2)),
         useCORS:true,
+        allowTaint:false,
         logging:false,
+        imageTimeout:10000,
         width:clone.offsetWidth,
         height:clone.scrollHeight,
         windowWidth:clone.offsetWidth,
         windowHeight:clone.scrollHeight
       });
 
-      const blob = await new Promise(resolve=>canvas.toBlob(resolve,"image/png",1));
-      if(!blob) throw new Error("Không tạo được ảnh");
+      blob = await new Promise(resolve =>
+        canvas.toBlob(resolve,"image/png",1)
+      );
 
-      const file = new File([blob],"checklist-s-rank.png",{type:"image/png"});
-
-      // iPhone/iPad Safari: mở Share Sheet với file ảnh.
-      // Người dùng chọn "Lưu hình ảnh" để lưu trực tiếp vào Ảnh.
-      if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
-        await navigator.share({
-          files:[file],
-          title:"Checklist S Rank",
-          text:"Checklist nhiệm vụ"
-        });
-      }else{
-        // Fallback cho trình duyệt không hỗ trợ chia sẻ file.
-        const url=URL.createObjectURL(blob);
-        const a=document.createElement("a");
-        a.href=url;
-        a.download="checklist-s-rank.png";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(()=>URL.revokeObjectURL(url),2000);
-        setStatus("Ảnh đã tạo ✓");
+      if(!blob){
+        throw new Error("Không tạo được ảnh");
       }
+
+      imageUrl = URL.createObjectURL(blob);
+
+      /*
+       * Không cố tải file ngay lập tức.
+       * Chrome/Cốc Cốc mobile có thể chặn download/blob sau
+       * một chuỗi await. Thay vào đó mở cửa sổ ảnh ngay trong
+       * trang, để người dùng có nút Chia sẻ / Lưu ảnh.
+       */
+      showCapturePreview(imageUrl, blob);
+
+      setStatus("Đã tạo ảnh checklist ✓");
+
     }catch(err){
-      // Bấm đóng Share Sheet trên iPhone không phải lỗi cần báo.
-      if(String(err?.name||"") !== "AbortError"){
-        console.error(err);
-        setStatus("Chụp ảnh thất bại");
+
+      console.error(err);
+      setStatus("Chụp checklist thất bại");
+
+      if(imageUrl){
+        URL.revokeObjectURL(imageUrl);
+        imageUrl = null;
       }
+
     }finally{
+
       clone.remove();
       captureBtn.disabled = false;
       captureBtn.textContent = oldText;
     }
+  }
+
+  function showCapturePreview(imageUrl, blob){
+
+    document.getElementById("capturePreview")?.remove();
+
+    const overlay = document.createElement("div");
+    overlay.id = "capturePreview";
+    overlay.innerHTML = `
+      <div class="capturePreviewBox">
+        <div class="capturePreviewTitle">📸 Checklist đã chụp</div>
+
+        <div class="capturePreviewImageWrap">
+          <img
+            id="capturePreviewImage"
+            src="${imageUrl}"
+            alt="Checklist"
+          >
+        </div>
+
+        <div class="capturePreviewHint">
+          Chrome / Cốc Cốc: bấm <b>Lưu ảnh</b> hoặc nhấn giữ vào ảnh để lưu.
+        </div>
+
+        <div class="capturePreviewActions">
+          <button type="button" id="captureShareBtn">
+            ↗ Chia sẻ
+          </button>
+
+          <a
+            id="captureDownloadBtn"
+            href="${imageUrl}"
+            download="checklist-dao-meo.png"
+          >
+            ↓ Lưu ảnh
+          </a>
+
+          <button type="button" id="captureCloseBtn">
+            Đóng
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const cleanup = () => {
+      overlay.remove();
+      try{
+        URL.revokeObjectURL(imageUrl);
+      }catch(_){}
+    };
+
+    overlay.querySelector("#captureCloseBtn")
+      .addEventListener("click",cleanup);
+
+    overlay.addEventListener("click",e=>{
+      if(e.target === overlay) cleanup();
+    });
+
+    overlay.querySelector("#captureDownloadBtn")
+      .addEventListener("click",()=>{
+        /*
+         * Giữ anchor download cho Chrome Android.
+         * Nếu Cốc Cốc không tải trực tiếp, ảnh vẫn đang hiển thị:
+         * người dùng có thể nhấn giữ ảnh -> Lưu hình ảnh.
+         */
+        setStatus("Đang lưu ảnh…");
+      });
+
+    overlay.querySelector("#captureShareBtn")
+      .addEventListener("click",async()=>{
+
+        const shareBtn =
+          overlay.querySelector("#captureShareBtn");
+
+        shareBtn.disabled = true;
+        shareBtn.textContent = "⏳ Đang mở…";
+
+        try{
+
+          const file = new File(
+            [blob],
+            "checklist-dao-meo.png",
+            {type:"image/png"}
+          );
+
+          if(
+            navigator.share &&
+            (
+              !navigator.canShare ||
+              navigator.canShare({files:[file]})
+            )
+          ){
+
+            await navigator.share({
+              files:[file],
+              title:"Checklist Đảo Mèo",
+              text:"Checklist nhiệm vụ"
+            });
+
+            setStatus("Đã mở chia sẻ ✓");
+
+          }else{
+
+            setStatus(
+              "Trình duyệt chưa hỗ trợ chia sẻ file. Hãy bấm Lưu ảnh."
+            );
+
+          }
+
+        }catch(err){
+
+          if(
+            String(err?.name || "") !==
+            "AbortError"
+          ){
+            console.error(err);
+            setStatus("Không thể mở chia sẻ");
+          }
+
+        }finally{
+
+          shareBtn.disabled = false;
+          shareBtn.textContent = "↗ Chia sẻ";
+        }
+      });
   }
 
   captureBtn.addEventListener("click",captureChecklist);
