@@ -322,6 +322,183 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   }
 }
 
+
+/* ---------- System-style question ---------- */
+.system-question{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  width:100%;
+  text-align:center;
+}
+.system-question-title{
+  font-size:clamp(18px,5vw,28px);
+  font-weight:900;
+  letter-spacing:2px;
+  color:#fff;
+  text-shadow:0 0 4px rgba(255,255,255,.95),
+              0 0 14px rgba(255,90,170,.75),
+              0 0 30px rgba(255,40,140,.45);
+}
+.system-question-sub{
+  font-size:clamp(21px,5.5vw,32px);
+  font-weight:850;
+  line-height:1.2;
+  color:#fff;
+  max-width:min(92vw,760px);
+  text-shadow:0 0 3px rgba(255,255,255,.95),
+              0 0 12px rgba(255,105,180,.65),
+              0 0 25px rgba(255,60,145,.4);
+}
+.system-final-wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  width:min(92vw,760px);
+  text-align:center;
+}
+.system-final-kicker{
+  font-size:clamp(16px,4.5vw,25px);
+  font-weight:900;
+  letter-spacing:2px;
+  color:#fff;
+  text-shadow:0 0 4px rgba(255,255,255,.95),
+              0 0 14px rgba(255,100,180,.7);
+}
+.system-final-name{
+  font-size:clamp(20px,5.5vw,32px);
+  font-weight:900;
+  color:#fff;
+  text-shadow:0 0 4px rgba(255,255,255,.95),
+              0 0 15px rgba(255,80,165,.7);
+}
+
+
+/* ===== ĐẢO MÈO SYSTEM UI — final visual layer ===== */
+#question{
+  text-align:center !important;
+}
+
+.landing-title,
+.landing-cta,
+.system-title,
+.system-subtitle,
+.system-line,
+.system-final{
+  text-align:center !important;
+}
+
+.system-title{
+  color:#fff;
+  font-weight:900;
+  letter-spacing:1.5px;
+  text-shadow:0 0 4px rgba(255,255,255,.95),
+              0 0 14px rgba(255,105,180,.75),
+              0 0 30px rgba(255,60,145,.45);
+}
+
+.system-subtitle{
+  color:#ffd9ec;
+  font-weight:800;
+  text-shadow:0 0 5px rgba(255,150,210,.7),
+              0 0 18px rgba(255,60,145,.35);
+}
+
+.system-final{
+  font-weight:900;
+  color:#fff;
+  text-shadow:0 0 4px rgba(255,255,255,.98),
+              0 0 12px rgba(255,120,190,.85),
+              0 0 28px rgba(255,60,145,.55);
+}
+
+/* Final line: characters arrive from deep 3D space and assemble. */
+.system-assemble .assemble-char{
+  display:inline-block;
+  opacity:0;
+  transform:
+    translate3d(var(--sx),var(--sy),-1200px)
+    rotateX(var(--rx))
+    rotateY(var(--ry))
+    rotateZ(var(--rz))
+    scale(.04);
+  filter:blur(8px);
+  animation:systemSpaceAssemble 1.25s cubic-bezier(.12,.76,.18,1) forwards;
+  animation-delay:var(--delay);
+  will-change:transform,opacity,filter;
+}
+
+@keyframes systemSpaceAssemble{
+  0%{
+    opacity:0;
+    transform:
+      translate3d(var(--sx),var(--sy),-1200px)
+      rotateX(var(--rx))
+      rotateY(var(--ry))
+      rotateZ(var(--rz))
+      scale(.04);
+    filter:blur(8px);
+  }
+  52%{
+    opacity:1;
+    filter:blur(1.5px);
+  }
+  100%{
+    opacity:1;
+    transform:translate3d(0,0,0)
+              rotateX(0) rotateY(0) rotateZ(0) scale(1);
+    filter:blur(0);
+  }
+}
+
+.system-line-appear{
+  opacity:0;
+  transform:translateY(10px);
+  animation:systemLineAppear .48s ease-out forwards;
+}
+
+@keyframes systemLineAppear{
+  to{opacity:1;transform:translateY(0)}
+}
+
+
+.system-final-wrap{
+  width:min(92vw,760px);
+  margin:0 auto;
+  text-align:center;
+}
+.system-final-kicker{
+  font-size:clamp(24px,6vw,48px);
+  font-weight:950;
+  letter-spacing:1px;
+  line-height:1.12;
+  color:#fff;
+}
+.system-final-lines{
+  margin-top:20px;
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  align-items:center;
+}
+.system-final-line{
+  color:#fff;
+  font-size:clamp(16px,4vw,22px);
+  font-weight:750;
+  line-height:1.3;
+  text-align:center;
+  text-shadow:0 0 5px rgba(255,255,255,.85),
+              0 0 14px rgba(255,105,180,.5);
+}
+.system-final-line strong{
+  color:#ffb9db;
+  font-weight:950;
+  text-shadow:0 0 8px rgba(255,70,160,.8);
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
@@ -332,7 +509,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
 <div id="questionWrap">
   <div id="counter">CÂU 1</div>
-  <div id="question"><span class="landing-title">Checklist Đảo Mèo</span><span class="landing-cta">Click here</span></div>
+  <div id="question"><span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta">CLICK HERE</span></div>
 </div>
 
 <div id="myPointCard" aria-live="polite">⭐ Điểm hiện tại <span class="pointValue">—</span></div>
@@ -886,6 +1063,62 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     }
   }
 
+  function showFinalSystemMessage(name, rank, score){
+    wheelArea.classList.remove("show");
+    question.style.opacity="0";
+    hint.textContent="";
+
+    const safeName = String(name || "");
+    const safeRank = String(rank || "");
+    const safeScore = Math.max(0, Number(score) || 0);
+
+    message.innerHTML=`
+      <div class="system-final-wrap">
+        <div class="system-final-kicker system-assemble" id="finalSystemMessage"></div>
+        <div class="system-final-lines">
+          <div class="system-final-line system-appear" style="animation-delay:.35s">
+            Ký chủ: ${safeName}
+          </div>
+          <div class="system-final-line system-appear" style="animation-delay:.48s">
+            Nhiệm vụ hôm nay: <strong>HOÀN THÀNH</strong>
+          </div>
+          <div class="system-final-line system-appear" style="animation-delay:.61s">
+            Điểm đánh giá: <strong id="finalAnimatedScore">000</strong>
+          </div>
+          <div class="system-final-line system-appear" style="animation-delay:.74s">
+            Chúc mừng Ký chủ. Checklist hôm nay đã được ghi nhận.
+          </div>
+        </div>
+      </div>`;
+
+    message.classList.remove("show");
+    void message.offsetWidth;
+    message.classList.add("show");
+
+    // Chỉ dòng tiêu đề cuối cùng dùng hiệu ứng ký tự bay từ không gian 3D.
+    animateSystemAssemble(
+      document.getElementById("finalSystemMessage"),
+      "KÍCH HOẠT HỆ THỐNG THÀNH CÔNG"
+    );
+
+    // Các dòng còn lại hiện nguyên câu, không đánh từng chữ.
+    const scoreEl = document.getElementById("finalAnimatedScore");
+    if(scoreEl){
+      const start = performance.now();
+      const duration = 1000;
+
+      function tick(now){
+        const p = Math.min(1, (now-start)/duration);
+        const eased = 1 - Math.pow(1-p, 3);
+        scoreEl.textContent = String(Math.round(safeScore * eased)).padStart(3,"0");
+        if(p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    burst();
+  }
+
   function showMessage(html,duration=2200,next=null){
     wheelArea.classList.remove("show");
     question.style.opacity="0";
@@ -1107,7 +1340,10 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   function showQuestion2(){
     myPointCard.classList.remove("show");
     counter.textContent="CÂU 2";
-    question.textContent="Checklist Đảo Mèo hôm nay — bạn đã đăng bài chưa?";
+    question.innerHTML=`<div class="system-question">
+      <div class="system-question-title">HỆ THỐNG ĐẢO MÈO</div>
+      <div class="system-question-sub">Ký chủ, hôm nay bạn đã đăng bài chưa?</div>
+    </div>`;
     question.style.opacity="1";question.style.pointerEvents="none";question.style.transform="scale(1)";
     const box=document.createElement("div");
     box.id="q2answers";
@@ -1124,7 +1360,11 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     box.querySelector("#doneBtn").addEventListener("click",async()=>{
       const completedIndex=current, selected=names[current];
       box.remove();
-      showMessage(`Chúc mừng!<br><span class="small">“${selected}” đã hoàn thành nhiệm vụ 🎉</span>`,900);
+      showFinalSystemMessage(
+        selected,
+        (Array.isArray(ranks) && ranks[completedIndex]) ? ranks[completedIndex] : rankClient(points[completedIndex]),
+        Array.isArray(points) ? points[completedIndex] : 0
+      );
       // Ghi Sheet song song với việc hiện animation, không chặn giao diện.
       checkin(selected,completedIndex);
       setTimeout(()=>{
@@ -1141,7 +1381,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
           row.querySelector(".checkBox")?.classList.add("checked");
           setTimeout(()=>row.scrollIntoView({block:"center",behavior:"smooth"}),80);
         }
-      },1000);
+      },1800);
     });
 
     box.querySelector("#laterBtn").addEventListener("click",()=>{
@@ -1267,7 +1507,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     dragging = false;
 
     counter.textContent = "CÂU 1";
-    question.innerHTML = '<span class="landing-title">Checklist Đảo Mèo</span><span class="landing-cta">Click here</span>';
+    question.innerHTML = '<span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta">CLICK HERE</span>';
     question.style.opacity = "1";
     question.style.pointerEvents = "auto";
     question.style.transform = "scale(1)";
@@ -1355,6 +1595,37 @@ function animateSystemAssemble(el, textValue){
     s.style.setProperty('--delay', `${Math.min(i * 0.018, 0.55)}s`);
     s.textContent = ch;
     el.appendChild(s);
+  });
+}
+
+
+function showSystemFinalMessage(el, message){
+  if (!el) return;
+  el.classList.add('system-assemble');
+  el.innerHTML = '';
+
+  [...String(message)].forEach((ch, i) => {
+    if (ch === ' ') {
+      const sp = document.createElement('span');
+      sp.className = 'assemble-space';
+      el.appendChild(sp);
+      return;
+    }
+
+    const span = document.createElement('span');
+    span.className = 'assemble-char';
+
+    const a = (i * 47) * Math.PI / 180;
+    const d = 420 + ((i * 83) % 620);
+
+    span.style.setProperty('--sx', `${Math.cos(a) * d}px`);
+    span.style.setProperty('--sy', `${Math.sin(a) * d}px`);
+    span.style.setProperty('--rx', `${((i * 71) % 720) - 360}deg`);
+    span.style.setProperty('--ry', `${((i * 53) % 720) - 360}deg`);
+    span.style.setProperty('--rz', `${((i * 37) % 360) - 180}deg`);
+    span.style.setProperty('--delay', `${Math.min(i * 0.014, .55)}s`);
+    span.textContent = ch;
+    el.appendChild(span);
   });
 }
 
