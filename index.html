@@ -448,6 +448,9 @@ background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-size:12px}
   function resetHome(){
     document.getElementById("q2answers")?.remove();
     checklistPanel.classList.remove("show");
+    checklistPanel.style.visibility = "hidden";
+    checklistPanel.style.opacity = "0";
+    checklistPanel.style.pointerEvents = "none";
     message.classList.remove("show");
     wheelArea.classList.remove("show");
     confirm.classList.remove("show");
@@ -470,15 +473,26 @@ background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-size:12px}
 
   homeBtn.addEventListener("click", resetHome);
 
-  checklistBtn.addEventListener("click", () => {
-    // Bấm Checklist: hiện ↔ ẩn bảng
+  checklistBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     const willShow = !checklistPanel.classList.contains("show");
-    checklistPanel.classList.toggle("show", willShow);
 
     if (willShow) {
+      // HIỆN bảng
+      checklistPanel.classList.add("show");
+      checklistPanel.style.visibility = "visible";
+      checklistPanel.style.opacity = "1";
+      checklistPanel.style.pointerEvents = "auto";
       renderChecklist();
-      // Đồng bộ nền, không chặn việc mở bảng.
       loadData(false);
+    } else {
+      // ẨN bảng — xoá cả class lẫn inline style để chắc chắn ẩn
+      checklistPanel.classList.remove("show");
+      checklistPanel.style.visibility = "hidden";
+      checklistPanel.style.opacity = "0";
+      checklistPanel.style.pointerEvents = "none";
     }
   });
 
