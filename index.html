@@ -15,7 +15,7 @@ radial-gradient(circle at 50% 50%,rgba(255,55,160,.10),transparent 27%),
 radial-gradient(circle at 50% 50%,#080812 0,#020207 58%,#000 100%)}
 #stars{position:absolute;inset:0;width:100%;height:100%}
 #questionWrap{position:absolute;left:50%;top:36%;z-index:10;width:min(92vw,650px);transform:translate(-50%,-50%);text-align:center}
-#counter{font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.45);margin-bottom:16px}
+#counter{display:none !important;font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.45);margin-bottom:16px}
 #question{color:#fff;font-size:clamp(25px,7vw,54px);font-weight:750;line-height:1.18;
 text-shadow:0 0 6px #fff,0 0 18px #ff4fa3,0 0 42px #ff4fa3;cursor:pointer;user-select:none;
 transition:opacity .25s,transform .25s;animation:breathe 2.8s ease-in-out infinite}
@@ -625,7 +625,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       checked = r.data.checks || [];
       times = r.data.times || [];
       points = Array.isArray(r.data.points) ? r.data.points : names.map(()=>100);
-      ranks = Array.isArray(r.data.ranks) ? r.data.ranks : points.map(rankClient);
+      ranks = points.map(rankClient);
       cacheSave();
       renderChecklist();
       buildWheel();
@@ -828,21 +828,120 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   question.addEventListener("pointerup",openQuestion1,{passive:false});
   question.addEventListener("click",openQuestion1);
 
+  // Hiệu ứng lời chào: từng dòng xuất hiện theo kiểu gõ chữ,
+  // riêng điểm chạy từ 000 -> điểm thực tế trong khoảng 1.2 giây.
+  function showActivationMessage(name, rank, score, next){
+    wheelArea.classList.remove("show");
+    question.style.opacity="0";
+    hint.textContent="";
+
+    const safeScore = Math.max(0, Number(score) || 0);
+
+    message.innerHTML = `
+      <div class="activation-message">
+        <div class="activation-line" data-text="Kích hoạt hệ thống thành công"></div>
+        <div class="activation-line" data-text="Ký chủ: ${name}"></div>
+        <div class="activation-line" data-text="Rank: ${rank}"></div>
+        <div class="activation-line score-line">
+          <span>Điểm đánh giá: </span><span id="animatedScore">000</span>
+        </div>
+      </div>
+    `;
+
+    message.classList.remove("show");
+    void message.offsetWidth;
+    message.classList.add("show");
+    burst();
+
+    const lines = [...message.querySelectorAll(".activation-line:not(.score-line)")];
+    const scoreLine = message.querySelector(".score-line");
+    const scoreEl = message.querySelector("#animatedScore");
+
+    lines.forEach(line => {
+      line.style.opacity = "0";
+      line.style.visibility = "hidden";
+    });
+    scoreLine.style.opacity = "0";
+    scoreLine.style.visibility = "hidden";
+
+    let lineIndex = 0;
+
+    function typeLine(el, text, done){
+      el.style.visibility = "visible";
+      el.style.opacity = "1";
+      el.textContent = "";
+      let i = 0;
+
+      function tick(){
+        if(i < text.length){
+          el.textContent += text[i++];
+          setTimeout(tick, 30);
+        }else{
+          setTimeout(done, 110);
+        }
+      }
+      tick();
+    }
+
+    function animateScore(){
+      scoreLine.style.visibility = "visible";
+      scoreLine.style.opacity = "1";
+
+      const start = performance.now();
+      const duration = 1200;
+
+      function frame(now){
+        const progress = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const value = Math.round(safeScore * eased);
+        scoreEl.textContent = String(value).padStart(3, "0");
+
+        if(progress < 1){
+          requestAnimationFrame(frame);
+        }else{
+          scoreEl.textContent = String(safeScore).padStart(3, "0");
+        }
+      }
+
+      requestAnimationFrame(frame);
+    }
+
+    function nextLine(){
+      if(lineIndex < lines.length){
+        const el = lines[lineIndex++];
+        typeLine(el, el.dataset.text, nextLine);
+      }else{
+        animateScore();
+      }
+    }
+
+    nextLine();
+
+    if(next){
+      setTimeout(()=>{
+        message.classList.remove("show");
+        setTimeout(next, 220);
+      }, 3600);
+    }
+  }
+
   confirm.addEventListener("click",()=>{
     const selected = names[current];
 
     // Ẩn thẻ điểm khi chuyển sang lời chào.
     myPointCard.classList.remove("show");
 
-    // Rank lấy trực tiếp từ dữ liệu điểm đã đồng bộ với Google Sheets.
-    // Ví dụ: "Xin chào người chơi S rank - Tiến Lợi"
+    // Rank và điểm lấy trực tiếp từ dữ liệu đã đồng bộ với Google Sheets.
     const playerRank = (Array.isArray(ranks) && ranks[current])
       ? ranks[current]
       : rankClient(points[current]);
 
-    showMessage(
-      `Xin chào người chơi ${playerRank} rank - ${selected}`,
-      2000,
+    const playerPoints = Array.isArray(points) ? points[current] : 0;
+
+    showActivationMessage(
+      selected,
+      playerRank,
+      playerPoints,
       showQuestion2
     );
   });
