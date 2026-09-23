@@ -3,572 +3,368 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Checklist 3D — Daily Mission</title>
+<meta name="theme-color" content="#050208">
+<title>S Rank — Daily Mission</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#010107}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;touch-action:none}
-#space{
- position:relative;width:100%;height:100%;overflow:hidden;
- background:radial-gradient(circle at 50% 50%,rgba(255,55,160,.10),transparent 27%),
- radial-gradient(circle at 50% 50%,#080812 0,#020207 58%,#000 100%);
-}
+button{font:inherit}
+#space{position:relative;width:100%;height:100%;overflow:hidden;background:
+radial-gradient(circle at 50% 50%,rgba(255,55,160,.10),transparent 27%),
+radial-gradient(circle at 50% 50%,#080812 0,#020207 58%,#000 100%)}
 #stars{position:absolute;inset:0;width:100%;height:100%}
-
-/* ---------- Star field ---------- */
-.star{position:absolute;border-radius:50%;background:#fff;box-shadow:0 0 5px rgba(255,255,255,.9)}
-@keyframes twinkle{from{opacity:.18}to{opacity:var(--op)}}
-
-/* ---------- Question ---------- */
-#questionWrap{
- position:absolute;left:50%;top:36%;z-index:10;width:min(92vw,650px);
- transform:translate(-50%,-50%);text-align:center;
-}
+#questionWrap{position:absolute;left:50%;top:36%;z-index:10;width:min(92vw,650px);transform:translate(-50%,-50%);text-align:center}
 #counter{font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.45);margin-bottom:16px}
-#question{
- color:#fff;font-size:clamp(25px,7vw,54px);font-weight:750;line-height:1.18;
- text-shadow:0 0 6px #fff,0 0 18px #ff4fa3,0 0 42px #ff4fa3;
- cursor:pointer;user-select:none;transition:opacity .35s,transform .35s;
- animation:breathe 2.8s ease-in-out infinite;
-}
+#question{color:#fff;font-size:clamp(25px,7vw,54px);font-weight:750;line-height:1.18;
+text-shadow:0 0 6px #fff,0 0 18px #ff4fa3,0 0 42px #ff4fa3;cursor:pointer;user-select:none;
+transition:opacity .25s,transform .25s;animation:breathe 2.8s ease-in-out infinite}
 @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
 
-/* ---------- Wheel ---------- */
-#wheelArea{
- position:absolute;left:50%;top:65%;z-index:20;
- width:min(88vw,390px);height:250px;
- transform:translate(-50%,-50%);
- opacity:0;pointer-events:none;transition:opacity .35s;
-}
+#wheelArea{position:absolute;left:50%;top:65%;z-index:20;width:min(88vw,390px);height:250px;
+transform:translate(-50%,-50%);opacity:0;pointer-events:none;transition:opacity .25s}
 #wheelArea.show{opacity:1;pointer-events:auto}
-#wheelViewport{
- position:absolute;inset:0;overflow:hidden;border-radius:28px;
- background:linear-gradient(to bottom,rgba(0,0,0,.93),rgba(15,5,14,.32) 50%,rgba(0,0,0,.93));
- border:1px solid rgba(255,255,255,.10);
- box-shadow:inset 0 0 35px rgba(255,60,160,.08);
-}
-#selectionLine{
- position:absolute;left:8%;right:8%;top:50%;height:58px;
- transform:translateY(-50%);
- border-top:1px solid rgba(255,105,185,.6);
- border-bottom:1px solid rgba(255,105,185,.6);
- background:rgba(255,70,165,.055);border-radius:14px;
- z-index:3;pointer-events:none;
-}
+#wheelViewport{position:absolute;inset:0;overflow:hidden;border-radius:28px;
+background:linear-gradient(to bottom,rgba(0,0,0,.93),rgba(15,5,14,.32) 50%,rgba(0,0,0,.93));
+border:1px solid rgba(255,255,255,.10);box-shadow:inset 0 0 35px rgba(255,60,160,.08)}
+#selectionLine{position:absolute;left:8%;right:8%;top:50%;height:58px;transform:translateY(-50%);
+border-top:1px solid rgba(255,105,185,.6);border-bottom:1px solid rgba(255,105,185,.6);
+background:rgba(255,70,165,.055);border-radius:14px;z-index:3;pointer-events:none}
 #items{position:absolute;left:0;right:0;top:0;height:100%}
-.item{
- position:absolute;left:0;right:0;height:58px;
- display:flex;align-items:center;justify-content:center;
- color:rgba(255,255,255,.22);font-size:21px;font-weight:650;
- transform-origin:center;user-select:none;
-}
-.item.selected{
- color:#fff;text-shadow:0 0 6px #fff,0 0 17px #ff4fa3,0 0 35px #ff4fa3;
-}
-#wheelHint{
- position:absolute;bottom:-31px;left:50%;transform:translateX(-50%);
- color:rgba(255,255,255,.38);font-size:12px;white-space:nowrap;
-}
-#confirm{
- position:absolute;left:50%;bottom:-91px;transform:translateX(-50%);
- min-width:130px;min-height:46px;padding:10px 22px;border-radius:999px;
- border:1px solid rgba(255,255,255,.25);
- background:linear-gradient(135deg,#ff3c91,#ff70b9);
- color:#fff;font-size:15px;font-weight:700;
- box-shadow:0 0 20px rgba(255,50,145,.45);
- opacity:0;pointer-events:none;transition:opacity .25s;
-}
+.item{position:absolute;left:0;right:0;height:58px;display:flex;align-items:center;justify-content:center;
+color:rgba(255,255,255,.22);font-size:21px;font-weight:650;transform-origin:center;user-select:none}
+.item.selected{color:#fff;text-shadow:0 0 6px #fff,0 0 17px #ff4fa3,0 0 35px #ff4fa3}
+#wheelHint{position:absolute;bottom:-31px;left:50%;transform:translateX(-50%);
+color:rgba(255,255,255,.38);font-size:12px;white-space:nowrap}
+#confirm{position:absolute;left:50%;bottom:-91px;transform:translateX(-50%);min-width:130px;min-height:46px;
+padding:10px 22px;border-radius:999px;border:1px solid rgba(255,255,255,.25);
+background:linear-gradient(135deg,#ff3c91,#ff70b9);color:#fff;font-size:15px;font-weight:700;
+box-shadow:0 0 20px rgba(255,50,145,.45);opacity:0;pointer-events:none;transition:opacity .2s}
 #confirm.show{opacity:1;pointer-events:auto}
 
-/* ---------- Messages ---------- */
-#message{
- position:absolute;inset:0;z-index:30;
- display:flex;align-items:center;justify-content:center;
- padding:25px;text-align:center;pointer-events:none;
- color:#fff;font-weight:800;font-size:clamp(28px,7.5vw,62px);line-height:1.12;
- text-shadow:0 0 8px #fff,0 0 25px #ff4fa3,0 0 65px #ff4fa3;
- opacity:0;transform:scale(.6);
-}
-#message.show{animation:messageIn .85s cubic-bezier(.16,.9,.25,1) forwards}
-@keyframes messageIn{
- 0%{opacity:0;transform:scale(.35);filter:blur(14px)}
- 60%{opacity:1;transform:scale(1.08);filter:blur(0)}
- 100%{opacity:1;transform:scale(1)}
-}
+#message{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+padding:25px;text-align:center;pointer-events:none;color:#fff;font-weight:800;
+font-size:clamp(28px,7.5vw,62px);line-height:1.12;text-shadow:0 0 8px #fff,0 0 25px #ff4fa3,0 0 65px #ff4fa3;
+opacity:0;transform:scale(.6)}
+#message.show{animation:messageIn .75s cubic-bezier(.16,.9,.25,1) forwards}
+@keyframes messageIn{0%{opacity:0;transform:scale(.35);filter:blur(12px)}
+60%{opacity:1;transform:scale(1.08);filter:blur(0)}100%{opacity:1;transform:scale(1)}}
 #message .small{display:block;font-size:.42em;font-weight:500;margin-top:16px;color:rgba(255,255,255,.68)}
-.heart{
- position:absolute;left:50%;top:50%;z-index:25;pointer-events:none;
- color:#ff397f;font-size:22px;text-shadow:0 0 8px #ff397f,0 0 22px #ff397f;
- animation:fly var(--time) ease-out forwards;
-}
-@keyframes fly{
- 0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}
- 12%{opacity:1}
- 100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(var(--r)) scale(var(--s))}
-}
-.flash{
- position:absolute;left:50%;top:50%;z-index:24;width:8px;height:8px;border-radius:50%;
- background:#fff;box-shadow:0 0 20px #fff,0 0 60px #ff4fa3,0 0 120px #ff4fa3;
- transform:translate(-50%,-50%);animation:flash .75s ease-out forwards;
-}
+.heart{position:absolute;left:50%;top:50%;z-index:25;pointer-events:none;color:#ff397f;font-size:22px;
+text-shadow:0 0 8px #ff397f,0 0 22px #ff397f;animation:fly var(--time) ease-out forwards}
+@keyframes fly{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}
+12%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(var(--r)) scale(var(--s))}}
+.flash{position:absolute;left:50%;top:50%;z-index:24;width:8px;height:8px;border-radius:50%;background:#fff;
+box-shadow:0 0 20px #fff,0 0 60px #ff4fa3,0 0 120px #ff4fa3;transform:translate(-50%,-50%);animation:flash .65s ease-out forwards}
 @keyframes flash{0%{opacity:1;transform:translate(-50%,-50%) scale(.5)}100%{opacity:0;transform:translate(-50%,-50%) scale(42)}}
-#hint{
- position:absolute;left:50%;bottom:7%;transform:translateX(-50%);
- color:rgba(255,255,255,.38);font-size:12px;z-index:10;white-space:nowrap;
-}
 
-/* ===== CHECKLIST ===== */
-#checklistPanel{
-  position:absolute;left:50%;top:50%;z-index:9999;
-  width:min(90vw,460px);max-height:82vh;
-  transform:translate(-50%,-50%) scale(.94);
-  opacity:0;visibility:hidden;pointer-events:none;
-  transition:opacity .35s,transform .45s;
-}
-#checklistPanel.show{
-  opacity:1;visibility:visible;pointer-events:auto;
-  transform:translate(-50%,-50%) scale(1);
-}
-#checklistTitle{
-  text-align:center;color:#fff;font-size:clamp(24px,6vw,36px);
-  font-weight:800;margin-bottom:6px;
-  text-shadow:0 0 10px #fff,0 0 28px #ff4fa3;
-}
-#checklistSub{
-  text-align:center;color:rgba(255,255,255,.5);
-  font-size:12px;margin-bottom:14px;
-}
-#checklistScroll{
-  max-height:65vh;overflow:auto;border-radius:20px;
-  scrollbar-width:none;
-}
+#hint{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);color:rgba(255,255,255,.38);font-size:12px;z-index:10;white-space:nowrap}
+#status{position:absolute;right:12px;top:10px;z-index:100;color:rgba(255,255,255,.42);font-size:10px;opacity:0;transition:opacity .2s}
+#status.show{opacity:1}
+
+#checklistPanel{position:absolute;left:50%;top:50%;z-index:9999;width:min(90vw,460px);max-height:82vh;
+transform:translate(-50%,-50%) scale(.94);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,transform .3s}
+#checklistPanel.show{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+#checklistTitle{text-align:center;color:#fff;font-size:clamp(24px,6vw,36px);font-weight:800;margin-bottom:6px;
+text-shadow:0 0 10px #fff,0 0 28px #ff4fa3}
+#checklistSub{text-align:center;color:rgba(255,255,255,.5);font-size:12px;margin-bottom:14px}
+#checklistScroll{max-height:65vh;overflow:auto;border-radius:20px;scrollbar-width:none}
 #checklistScroll::-webkit-scrollbar{display:none}
-#checklist{
-  width:100%;border-collapse:separate;border-spacing:0;
-  border:1px solid rgba(255,255,255,.14);border-radius:20px;
-  overflow:hidden;background:rgba(8,4,12,.78);
-  backdrop-filter:blur(14px);
-}
-#checklist th,#checklist td{
-  padding:12px 15px;border-bottom:1px solid rgba(255,255,255,.07);
-}
-#checklist th{
-  color:rgba(255,255,255,.48);font-size:11px;
-  letter-spacing:1.2px;text-transform:uppercase;
-}
-#checklist th:last-child,#checklist td:last-child{
-  text-align:center;width:78px;
-}
+#checklist{width:100%;border-collapse:separate;border-spacing:0;border:1px solid rgba(255,255,255,.14);
+border-radius:20px;overflow:hidden;background:rgba(8,4,12,.78);backdrop-filter:blur(14px)}
+#checklist th,#checklist td{padding:12px 15px;border-bottom:1px solid rgba(255,255,255,.07)}
+#checklist th{color:rgba(255,255,255,.48);font-size:11px;letter-spacing:1.2px;text-transform:uppercase}
+#checklist th:last-child,#checklist td:last-child{text-align:center;width:78px}
 #checklist tr:last-child td{border-bottom:0}
 .playerName{color:rgba(255,255,255,.8);font-size:14px;font-weight:600}
-.checkBox{
-  width:25px;height:25px;border-radius:8px;margin:auto;
-  border:1px solid rgba(255,255,255,.25);
-  background:rgba(255,255,255,.05);
-  display:flex;align-items:center;justify-content:center;
-}
-.checkBox.checked{
-  border-color:#ff70b9;
-  background:linear-gradient(135deg,#ff3c91,#ff70b9);
-  box-shadow:0 0 15px rgba(255,55,155,.65);
-  animation:checkPop .55s cubic-bezier(.16,.9,.25,1);
-}
-.checkBox.checked::after{
-  content:"✓";color:#fff;font-size:17px;font-weight:900;
-}
-#checklist tr.completed{
-  animation:rowGlow .8s ease forwards;
-}
-@keyframes checkPop{
-  0%{transform:scale(.3);opacity:.2}
-  65%{transform:scale(1.2)}
-  100%{transform:scale(1)}
-}
-@keyframes rowGlow{
-  0%{background:rgba(255,70,165,0)}
-  45%{background:rgba(255,70,165,.14)}
-  100%{background:rgba(255,70,165,.04)}
-}
-
-
-#saveChecklistImage{
-  display:block;
-  width:min(90%,360px);
-  margin:14px auto 0;
-  min-height:46px;
-  padding:10px 18px;
-  border:1px solid rgba(255,255,255,.25);
-  border-radius:999px;
-  background:linear-gradient(135deg,#ff3c91,#ff70b9);
-  color:#fff;
-  font-size:14px;
-  font-weight:800;
-  box-shadow:0 0 20px rgba(255,55,155,.4);
-  cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-}
-#saveChecklistImage:active{
-  transform:scale(.97);
-}
-#saveChecklistImage.saving{
-  opacity:.7;
-  pointer-events:none;
-}
-
+.checkBox{width:25px;height:25px;border-radius:8px;margin:auto;border:1px solid rgba(255,255,255,.25);
+background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center}
+.checkBox.checked{border-color:#ff70b9;background:linear-gradient(135deg,#ff3c91,#ff70b9);
+box-shadow:0 0 15px rgba(255,55,155,.65);animation:checkPop .45s cubic-bezier(.16,.9,.25,1)}
+.checkBox.checked::after{content:"✓";color:#fff;font-size:17px;font-weight:900}
+@keyframes checkPop{0%{transform:scale(.3);opacity:.2}65%{transform:scale(1.2)}100%{transform:scale(1)}}
+#syncBtn{display:block;margin:12px auto 0;border:0;border-radius:999px;padding:9px 16px;
+background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-size:12px}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
 <main id="space">
- <canvas id="stars"></canvas>
+<canvas id="stars"></canvas>
+<div id="status"></div>
 
- <div id="questionWrap">
-   <div id="counter">CÂU 1</div>
-   <div id="question">Tên bạn là gì?</div>
- </div>
+<div id="questionWrap">
+  <div id="counter">CÂU 1</div>
+  <div id="question">Tên bạn là gì?</div>
+</div>
 
- <div id="wheelArea">
-   <div id="wheelViewport">
-     <div id="selectionLine"></div>
-     <div id="items"></div>
-   </div>
-   <div id="wheelHint">Vuốt lên / xuống để chọn</div>
-   <button id="confirm" type="button">Xác nhận ❤️</button>
- </div>
+<div id="wheelArea">
+  <div id="wheelViewport"><div id="selectionLine"></div><div id="items"></div></div>
+  <div id="wheelHint">Vuốt lên / xuống để chọn</div>
+  <button id="confirm" type="button">Xác nhận ❤️</button>
+</div>
 
- <div id="message"></div>
+<div id="message"></div>
 
 <section id="checklistPanel">
   <div id="checklistTitle">Checklist nhiệm vụ</div>
   <div id="checklistSub">Danh sách người chơi</div>
-  <div id="checklistScroll">
-    <table id="checklist">
-      <thead><tr><th>Người chơi</th><th>Hoàn thành</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <button id="saveChecklistImage" type="button">
-    📸 Lưu ảnh Checklist
-  </button>
+  <div id="checklistScroll"><table id="checklist">
+    <thead><tr><th>Người chơi</th><th>Hoàn thành</th></tr></thead><tbody></tbody>
+  </table></div>
+  <button id="syncBtn" type="button">↻ Đồng bộ lại</button>
 </section>
 
- <div id="hint">Chạm vào câu hỏi</div>
+<div id="hint">Đang tải dữ liệu…</div>
 </main>
 
 <script>
 (() => {
-  // ===== GOOGLE APPS SCRIPT =====
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwK-2bmlYNlgMvvN9ypX4VNiR9l0qdrkBjk5UEYMCb8OnDoujJFEM7wiO8iL_3d3Y76WA/exec';
+  "use strict";
+
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwK-2bmlYNlgMvvN9ypX4VNiR9l0qdrkBjk5UEYMCb8OnDoujJFEM7wiO8iL_3d3Y76WA/exec";
+  const CACHE_KEY = "srank_check_v3";
+  const root = document.getElementById("space");
+  const canvas = document.getElementById("stars");
+  const ctx = canvas.getContext("2d",{alpha:true});
+  const question = document.getElementById("question");
+  const counter = document.getElementById("counter");
+  const wheelArea = document.getElementById("wheelArea");
+  const itemsBox = document.getElementById("items");
+  const confirm = document.getElementById("confirm");
+  const hint = document.getElementById("hint");
+  const message = document.getElementById("message");
+  const checklistPanel = document.getElementById("checklistPanel");
+  const checklistBody = document.querySelector("#checklist tbody");
+  const status = document.getElementById("status");
+  const syncBtn = document.getElementById("syncBtn");
 
   let names = [];
   let checked = [];
   let current = 0;
+  let q1Opened = false;
   let dragging = false, startY = 0, dragOffset = 0;
-  let selectedName = "";
+  const ITEM_H = 58;
 
-  const root=document.getElementById("space");
-  const canvas=document.getElementById("stars");
-  const ctx=canvas.getContext("2d",{alpha:true});
-  const question=document.getElementById("question");
-  const counter=document.getElementById("counter");
-  const wheelArea=document.getElementById("wheelArea");
-  const itemsBox=document.getElementById("items");
-  const confirm=document.getElementById("confirm");
-  const hint=document.getElementById("hint");
-  const message=document.getElementById("message");
-  const checklistPanel=document.getElementById("checklistPanel");
-  const checklistBody=document.querySelector("#checklist tbody");
+  // ---------- Fast JSONP transport ----------
+  let requestSeq = 0;
+  function api(action, data = {}, timeout = 7000){
+    return new Promise((resolve,reject) => {
+      const cb = "__srank_" + Date.now() + "_" + (++requestSeq);
+      const script = document.createElement("script");
+      const u = new URL(SCRIPT_URL);
+      u.searchParams.set("action", action);
+      u.searchParams.set("callback", cb);
+      for(const [k,v] of Object.entries(data)) u.searchParams.set(k, v);
 
-  async function api(action, data={}){
-    const url = new URL(SCRIPT_URL);
-    url.searchParams.set("action", action);
-    Object.entries(data).forEach(([k,v])=>url.searchParams.set(k,v));
-    const res = await fetch(url.toString(), {cache:"no-store"});
-    if(!res.ok) throw new Error("HTTP "+res.status);
-    return await res.json();
+      let done = false;
+      const finish = (fn, value) => {
+        if(done) return;
+        done = true;
+        clearTimeout(timer);
+        delete window[cb];
+        script.remove();
+        fn(value);
+      };
+      window[cb] = result => finish(resolve, result);
+      script.onerror = () => finish(reject, new Error("Không kết nối được Google Sheet"));
+      const timer = setTimeout(() => finish(reject, new Error("Google Sheet phản hồi chậm")), timeout);
+      script.src = u.toString();
+      document.head.appendChild(script);
+    });
   }
 
-  async function loadData(){
+  function cacheSave(){
     try{
-      const data = await api("getData");
-      names = Array.isArray(data.names) ? data.names.filter(Boolean) : [];
-      checked = Array.isArray(data.checked) ? data.checked : [];
-      if(!names.length) throw new Error("Không đọc được danh sách tên từ C4:C17");
-      buildWheel();
-      buildChecklist();
-      renderWheel();
-    }catch(err){
-      console.error("Google Apps Script error:", err);
-      names = [];
-      question.textContent = "Không tải được dữ liệu";
-      hint.textContent = "Apps Script chưa trả JSON. Hãy triển khai lại Web App.";
+      localStorage.setItem(CACHE_KEY, JSON.stringify({names,checked,ts:Date.now()}));
+    }catch(_){}
+  }
+  function cacheLoad(){
+    try{
+      const x = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+      if(x && Array.isArray(x.names) && Array.isArray(x.checked)){
+        names = x.names;
+        checked = x.checked;
+        return true;
+      }
+    }catch(_){}
+    return false;
+  }
+
+  function setStatus(t){
+    status.textContent = t;
+    status.classList.add("show");
+    clearTimeout(setStatus.t);
+    setStatus.t = setTimeout(() => status.classList.remove("show"), 1400);
+  }
+
+  function renderChecklist(){
+    checklistBody.innerHTML = "";
+    const frag = document.createDocumentFragment();
+    names.forEach((name,i) => {
+      const tr = document.createElement("tr");
+      tr.dataset.index = i;
+      tr.innerHTML = `<td class="playerName"></td><td><div class="checkBox"></div></td>`;
+      tr.firstChild.textContent = name;
+      if(checked[i]) tr.querySelector(".checkBox").classList.add("checked");
+      frag.appendChild(tr);
+    });
+    checklistBody.appendChild(frag);
+  }
+
+  function renderWheel(){
+    if(!names.length) return;
+    const mid = wheelArea.clientHeight / 2;
+    const children = itemsBox.children;
+    for(let i=0;i<children.length;i++){
+      const el = children[i];
+      const y = (i-current)*ITEM_H + mid + dragOffset;
+      const d = Math.abs(y-mid);
+      const n = Math.min(1,d/(ITEM_H*2.3));
+      el.style.top = (y-ITEM_H/2) + "px";
+      el.style.transform = `scale(${1-n*.28})`;
+      el.style.opacity = .20 + (1-n)*.80;
+      el.style.filter = `blur(${n*2.5}px)`;
+      el.classList.toggle("selected", i===current && Math.abs(dragOffset)<ITEM_H*.35);
     }
   }
 
   function buildWheel(){
-    itemsBox.innerHTML="";
-    names.forEach(name=>{
-      const el=document.createElement("div");
-      el.className="item";
-      el.textContent=name;
-      itemsBox.appendChild(el);
+    itemsBox.innerHTML = "";
+    const frag = document.createDocumentFragment();
+    names.forEach(name => {
+      const el = document.createElement("div");
+      el.className = "item";
+      el.textContent = name;
+      frag.appendChild(el);
     });
-    current=0;
-    dragOffset=0;
+    itemsBox.appendChild(frag);
+    current = Math.min(current, Math.max(0,names.length-1));
+    renderWheel();
   }
 
-  function buildChecklist(){
-    checklistBody.innerHTML="";
-    names.forEach((name,i)=>{
-      const tr=document.createElement("tr");
-      tr.dataset.index=i;
-      tr.innerHTML=`
-        <td class="playerName">${escapeHtml(name)}</td>
-        <td><div class="checkBox ${checked[i] ? "checked":""}" aria-label="${checked[i] ? "Đã hoàn thành":"Chưa hoàn thành"}"></div></td>
-      `;
-      checklistBody.appendChild(tr);
-    });
+  async function loadData(showError = true){
+    // Hiển thị cache ngay -> UI không phải chờ Sheet.
+    if(!names.length && cacheLoad()){
+      renderChecklist();
+      buildWheel();
+    }
+    try{
+      const r = await api("getData");
+      if(!r.ok) throw new Error(r.error || "getData lỗi");
+      names = r.data.names || [];
+      checked = r.data.checks || [];
+      cacheSave();
+      renderChecklist();
+      buildWheel();
+      hint.textContent = "Chạm vào câu hỏi";
+      setStatus("Đã đồng bộ ✓");
+    }catch(e){
+      if(showError && !names.length) hint.textContent = "Không tải được dữ liệu";
+      if(names.length) setStatus("Đang dùng dữ liệu đã lưu");
+    }
   }
 
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g,c=>({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[c]));
+  async function checkin(name, index){
+    // Optimistic UI: tick ngay, không chờ server.
+    checked[index] = true;
+    cacheSave();
+    renderChecklist();
+    setStatus("Đã ghi ✓");
+
+    try{
+      const r = await api("checkin",{name},6000);
+      if(!r.ok) throw new Error(r.error || "checkin lỗi");
+      // Không gọi getData lần 2 -> giảm hẳn 1 request.
+      checked[index] = true;
+      cacheSave();
+    }catch(e){
+      // Nếu ghi thất bại, lấy lại trạng thái thật từ Sheet.
+      setStatus("Đang xác nhận…");
+      await loadData(false);
+      setStatus("Đã kiểm tra lại");
+    }
   }
 
-  function showChecklist(completedIndex=null){
-    checklistPanel.style.display="block";
-    checklistPanel.style.visibility="visible";
-    checklistPanel.style.opacity="1";
-    checklistPanel.style.pointerEvents="auto";
-    checklistPanel.classList.add("show");
-
-    [...checklistBody.querySelectorAll("tr")].forEach((tr,i)=>{
-      const done=completedIndex===i ? true : !!checked[i];
-      tr.classList.toggle("completed",done && i===completedIndex);
-      tr.querySelector(".checkBox").classList.toggle("checked",done);
-    });
-
-    const row=completedIndex==null ? null :
-      checklistBody.querySelector(`tr[data-index="${completedIndex}"]`);
-    if(row) setTimeout(()=>row.scrollIntoView({block:"center",behavior:"smooth"}),150);
-  }
-
-  function hideChecklist(){
-    checklistPanel.classList.remove("show");
-    checklistPanel.style.visibility="hidden";
-    checklistPanel.style.pointerEvents="none";
-  }
-
-  // Back button shown after a name is selected.
-  function showActionButtons(){
-    let box=document.getElementById("actionButtons");
-    if(box) box.remove();
-
-    box=document.createElement("div");
-    box.id="actionButtons";
-    box.innerHTML=`
-      <button id="checkinBtn" type="button">Checklist ✓</button>
-      <button id="backBtn" type="button">Quay lại</button>
-    `;
-    root.appendChild(box);
-
-    Object.assign(box.style,{
-      position:"absolute",left:"50%",top:"82%",transform:"translate(-50%,-50%)",
-      zIndex:"50",display:"flex",gap:"10px",width:"min(90vw,390px)",
-      justifyContent:"center",opacity:"0",transition:"opacity .35s"
-    });
-
-    [...box.querySelectorAll("button")].forEach(b=>{
-      Object.assign(b.style,{
-        minHeight:"48px",padding:"10px 20px",borderRadius:"999px",
-        border:"1px solid rgba(255,255,255,.25)",color:"#fff",
-        fontSize:"15px",fontWeight:"750",backdropFilter:"blur(10px)"
-      });
-    });
-
-    box.querySelector("#checkinBtn").style.background="linear-gradient(135deg,#ff3c91,#ff70b9)";
-    box.querySelector("#checkinBtn").style.boxShadow="0 0 22px rgba(255,50,145,.45)";
-    box.querySelector("#backBtn").style.background="rgba(255,255,255,.08)";
-
-    requestAnimationFrame(()=>box.style.opacity="1");
-
-    box.querySelector("#backBtn").onclick=()=>{
-      box.remove();
-      selectedName="";
-      confirm.classList.add("show");
-      hint.textContent="Vuốt lên / xuống để chọn tên";
-    };
-
-    box.querySelector("#checkinBtn").onclick=async()=>{
-      const idx=current;
-      const name=names[idx];
-      box.remove();
-      confirm.classList.remove("show");
-      hint.textContent="Đang đồng bộ Google Sheet…";
-
-      try{
-        const result=await api("checkin",{name});
-        if(result.ok===false) throw new Error(result.error || "Check-in thất bại");
-
-        checked[idx]=true;
-        showMessage(
-          `Check-in thành công ❤️<span class="small">${escapeHtml(name)} đã được đánh dấu hoàn thành</span>`,
-          1300
-        );
-        setTimeout(()=>{
-          message.classList.remove("show");
-          showChecklist(idx);
-          hint.textContent="";
-        },1400);
-      }catch(err){
-        console.error(err);
-        showMessage(
-          `Không thể check-in<span class="small">Kiểm tra kết nối Google Sheet rồi thử lại</span>`,
-          1800
-        );
-        setTimeout(()=>message.classList.remove("show"),1900);
-        hint.textContent="Vuốt lên / xuống để chọn tên";
-        confirm.classList.add("show");
-      }
-    };
-  }
-
-  /* =========================
-     SAO 3D CỐ ĐỊNH + QUAY QUANH TÂM
-  ========================= */
+  // ---------- Visuals ----------
   let W=innerWidth,H=innerHeight,DPR=1;
   const stars=[];
-  const STAR_COUNT=180;
-
+  const STAR_COUNT=110; // giảm tải GPU/CPU
   function resize(){
-    W=innerWidth;H=innerHeight;DPR=Math.min(devicePixelRatio||1,2);
-    canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);
-    canvas.style.width=W+"px";canvas.style.height=H+"px";
+    W=innerWidth; H=innerHeight; DPR=Math.min(devicePixelRatio||1,2);
+    canvas.width=Math.round(W*DPR); canvas.height=Math.round(H*DPR);
+    canvas.style.width=W+"px"; canvas.style.height=H+"px";
     ctx.setTransform(DPR,0,0,DPR,0,0);
   }
-  addEventListener("resize",resize,{passive:true});resize();
-
-  for(let i=0;i<STAR_COUNT;i++){
-    stars.push({
-      angle:Math.random()*Math.PI*2,
-      radius:.38+Math.random()*.9,
-      tilt:(Math.random()-.5)*1.5,
-      speed:.00010+Math.random()*.00016,
-      size:.45+Math.random()*1.7,
-      phase:Math.random()*Math.PI*2,
-      alpha:.2+Math.random()*.75
-    });
-  }
-
+  addEventListener("resize",resize,{passive:true});
+  resize();
+  for(let i=0;i<STAR_COUNT;i++) stars.push({
+    angle:Math.random()*Math.PI*2,radius:.38+Math.random()*.9,
+    tilt:(Math.random()-.5)*1.5,speed:.00010+Math.random()*.00016,
+    size:.45+Math.random()*1.7,phase:Math.random()*Math.PI*2,alpha:.2+Math.random()*.75
+  });
   function drawStars(time){
     ctx.clearRect(0,0,W,H);
     const cx=W*.5,cy=H*.5,base=Math.min(W,H);
-
     for(const s of stars){
-      const a=s.angle+time*s.speed;
-      const orbitX=base*(.72+s.radius*.20);
-      const orbitY=base*(.25+s.radius*.16);
-      const x=Math.cos(a)*orbitX,y=Math.sin(a)*orbitY;
+      const a=s.angle+time*s.speed, ox=base*(.72+s.radius*.20), oy=base*(.25+s.radius*.16);
+      const x=Math.cos(a)*ox,y=Math.sin(a)*oy;
       const yy=y*Math.cos(s.tilt)-x*.12*Math.sin(s.tilt);
       const xx=x*Math.cos(s.tilt)+y*.12*Math.sin(s.tilt);
-      const z=(Math.sin(a)+1)/2;
-      const perspective=.48+z*.85;
-      const px=cx+xx*perspective,py=cy+yy*perspective;
-      const alpha=s.alpha*(.72+.28*Math.sin(time*.002+s.phase))*(.25+z*.75);
-      const size=s.size*(.55+z*1.45);
-
-      ctx.beginPath();ctx.arc(px,py,size,0,Math.PI*2);
-      ctx.fillStyle=`rgba(255,245,252,${alpha})`;
-      ctx.shadowColor="rgba(255,110,190,.9)";ctx.shadowBlur=3+z*7;ctx.fill();
+      const z=(Math.sin(a)+1)/2, p=.48+z*.85;
+      const px=cx+xx*p,py=cy+yy*p,alpha=s.alpha*(.72+.28*Math.sin(time*.002+s.phase))*(.25+z*.75);
+      ctx.beginPath();ctx.arc(px,py,s.size*(.55+z*1.45),0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,245,252,${alpha})`;ctx.shadowColor="rgba(255,110,190,.9)";
+      ctx.shadowBlur=3+z*7;ctx.fill();
     }
     requestAnimationFrame(drawStars);
   }
   requestAnimationFrame(drawStars);
 
+  function burst(){
+    const f=document.createElement("div"); f.className="flash"; root.appendChild(f);
+    setTimeout(()=>f.remove(),700);
+    for(let i=0;i<20;i++){
+      const h=document.createElement("div"); h.className="heart"; h.textContent=i%5===0?"💗":"♥";
+      const a=Math.PI*2*i/20,r=80+Math.random()*200;
+      h.style.setProperty("--x",Math.cos(a)*r+"px"); h.style.setProperty("--y",Math.sin(a)*r+"px");
+      h.style.setProperty("--r",(Math.random()*120-60)+"deg");
+      h.style.setProperty("--s",(0.7+Math.random()*1.3).toFixed(2));
+      h.style.setProperty("--time",(0.7+Math.random()*.6).toFixed(2)+"s");
+      root.appendChild(h); setTimeout(()=>h.remove(),1500);
+    }
+  }
 
-  /* =========================
-     WHEEL + HIỆU ỨNG
-  ========================= */
-  const ITEM_H=58;
-  const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
-
-  function renderWheel(){
-    if(!names.length) return;
-    const mid=wheelArea.clientHeight/2;
-    [...itemsBox.children].forEach((el,i)=>{
-      const y=(i-current)*ITEM_H+mid+dragOffset;
-      const distance=Math.abs(y-mid);
-      const normalized=clamp(distance/(ITEM_H*2.3),0,1);
-      const scale=1-normalized*.28;
-      const opacity=.20+(1-normalized)*.80;
-      el.style.top=(y-ITEM_H/2)+"px";
-      el.style.transform=`scale(${scale})`;
-      el.style.opacity=opacity;
-      el.style.filter=`blur(${normalized*2.5}px)`;
-      el.classList.toggle("selected",i===current&&Math.abs(dragOffset)<ITEM_H*.35);
-    });
+  function showMessage(html,duration=2200,next=null){
+    wheelArea.classList.remove("show");
+    question.style.opacity="0";
+    hint.textContent="";
+    message.innerHTML=html;
+    message.classList.remove("show"); void message.offsetWidth; message.classList.add("show");
+    burst();
+    if(next) setTimeout(()=>{message.classList.remove("show");setTimeout(next,220)},duration);
   }
 
   function snap(){
     if(Math.abs(dragOffset)>ITEM_H*.35){
-      current+=dragOffset<0?1:-1;
-      current=clamp(current,0,names.length-1);
+      current += dragOffset<0 ? 1 : -1;
+      current = Math.max(0,Math.min(names.length-1,current));
     }
-    dragOffset=0;
-    renderWheel();
-    confirm.classList.add("show");
+    dragOffset=0; renderWheel(); confirm.classList.add("show");
   }
-
   wheelArea.addEventListener("pointerdown",e=>{
-    dragging=true;
-    startY=e.clientY;
-    dragOffset=0;
-    wheelArea.setPointerCapture?.(e.pointerId);
+    dragging=true;startY=e.clientY;dragOffset=0;wheelArea.setPointerCapture?.(e.pointerId);
   });
-
   wheelArea.addEventListener("pointermove",e=>{
     if(!dragging)return;
     dragOffset=e.clientY-startY;
     if((current===0&&dragOffset>0)||(current===names.length-1&&dragOffset<0))dragOffset*=.25;
     renderWheel();
   });
-
   wheelArea.addEventListener("pointerup",()=>{if(dragging){dragging=false;snap()}});
   wheelArea.addEventListener("pointercancel",()=>{if(dragging){dragging=false;snap()}});
 
-  function burst(){
-    const f=document.createElement("div");f.className="flash";root.appendChild(f);
-    setTimeout(()=>f.remove(),800);
-    for(let i=0;i<32;i++){
-      const h=document.createElement("div");
-      h.className="heart";h.textContent=i%5===0?"💗":"♥";
-      const a=Math.PI*2*i/32,r=80+Math.random()*220;
-      h.style.setProperty("--x",Math.cos(a)*r+"px");
-      h.style.setProperty("--y",Math.sin(a)*r+"px");
-      h.style.setProperty("--r",(Math.random()*120-60)+"deg");
-      h.style.setProperty("--s",(0.7+Math.random()*1.3).toFixed(2));
-      h.style.setProperty("--time",(0.75+Math.random()*.7).toFixed(2)+"s");
-      root.appendChild(h);setTimeout(()=>h.remove(),1700);
-    }
-  }
-
-  function showMessage(html,duration=1800){
-    wheelArea.classList.remove("show");
-    question.style.opacity="0";
-    hint.textContent="";
-    message.innerHTML=html;
-    message.classList.remove("show");
-    void message.offsetWidth;
-    message.classList.add("show");
-    burst();
-    if(duration) setTimeout(()=>message.classList.remove("show"),duration);
-  }
-
-  let q1Opened=false;
   function openQuestion1(e){
-    if(e) e.preventDefault();
+    e?.preventDefault();
     if(q1Opened || !names.length) return;
     q1Opened=true;
     question.style.pointerEvents="none";
@@ -576,222 +372,58 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
     question.style.transform="scale(.8)";
     burst();
     setTimeout(()=>{
-      wheelArea.classList.add("show");
-      renderWheel();
+      wheelArea.classList.add("show"); renderWheel();
       hint.textContent="Vuốt lên / xuống để chọn tên";
-    },250);
+    },180);
   }
-
-  question.style.pointerEvents="auto";
-  question.addEventListener("pointerdown",openQuestion1,{passive:false});
+  question.addEventListener("pointerup",openQuestion1,{passive:false});
   question.addEventListener("click",openQuestion1);
 
   confirm.addEventListener("click",()=>{
-    selectedName=names[current] || "";
-    confirm.classList.remove("show");
-    wheelArea.classList.remove("show");
-    showMessage(`Xin chào<br><span class="small">${escapeHtml(selectedName)}</span>`,900);
-    setTimeout(()=>{
-      message.classList.remove("show");
-      question.style.opacity="1";
-      question.style.pointerEvents="none";
-      question.textContent=selectedName;
-      counter.textContent="ĐÃ CHỌN";
-      showActionButtons();
-    },1000);
+    const selected = names[current];
+    showMessage(`Xin chào<br>người chơi “${selected}”`,2000,showQuestion2);
   });
 
-  window.addEventListener("load",loadData);
+  function showQuestion2(){
+    counter.textContent="CÂU 2";
+    question.textContent="Hôm nay bạn đã đăng bài chưa?";
+    question.style.opacity="1";question.style.pointerEvents="none";question.style.transform="scale(1)";
+    const box=document.createElement("div");
+    box.id="q2answers";
+    box.innerHTML=`<button id="doneBtn">Tôi đã hoàn thành</button><button id="laterBtn">Chưa, tôi sẽ quay lại sau</button>`;
+    root.appendChild(box);
+    Object.assign(box.style,{position:"absolute",left:"50%",top:"64%",transform:"translate(-50%,0)",zIndex:"22",
+      display:"flex",flexDirection:"column",gap:"12px",width:"min(88vw,390px)",opacity:"0",transition:"opacity .25s"});
+    [...box.children].forEach(b=>Object.assign(b.style,{minHeight:"50px",padding:"10px 18px",borderRadius:"999px",
+      border:"1px solid rgba(255,255,255,.25)",color:"#fff",fontSize:"15px",fontWeight:"700",
+      background:"rgba(255,255,255,.07)",backdropFilter:"blur(10px)"}));
+    box.querySelector("#doneBtn").style.background="linear-gradient(135deg,#ff3c91,#ff70b9)";
+    requestAnimationFrame(()=>box.style.opacity="1");
 
-
-
-  // =========================
-  // CHỤP TOÀN BỘ CHECKLIST
-  // Trên iPhone: mở bảng chia sẻ để chọn "Lưu hình ảnh"
-  // =========================
-  async function saveChecklistImage(){
-    const btn = document.getElementById("saveChecklistImage");
-    btn.classList.add("saving");
-    btn.textContent = "⏳ Đang tạo ảnh...";
-
-    let capture = null;
-
-    try{
-      if(!window.html2canvas){
-        throw new Error("html2canvas chưa tải");
-      }
-
-      capture = document.createElement("div");
-
-      Object.assign(capture.style,{
-        position:"fixed",
-        left:"-100000px",
-        top:"0",
-        width:"760px",
-        maxWidth:"760px",
-        height:"auto",
-        maxHeight:"none",
-        overflow:"visible",
-        padding:"34px",
-        boxSizing:"border-box",
-        background:"#080812",
-        borderRadius:"28px",
-        zIndex:"-99999",
-        color:"#fff",
-        fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif"
-      });
-
-      capture.innerHTML = `
-        <div style="text-align:center;color:#fff;font-size:34px;font-weight:800;margin-bottom:8px;">
-          Checklist nhiệm vụ
-        </div>
-        <div style="text-align:center;color:rgba(255,255,255,.55);font-size:14px;margin-bottom:22px;">
-          Danh sách người chơi
-        </div>
-        <div style="border:1px solid rgba(255,255,255,.14);border-radius:20px;overflow:hidden;background:#0b0710;">
-          <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
-            <thead>
-              <tr>
-                <th style="padding:15px 18px;text-align:left;color:rgba(255,255,255,.5);font-size:12px;letter-spacing:1px;border-bottom:1px solid rgba(255,255,255,.12);">
-                  NGƯỜI CHƠI
-                </th>
-                <th style="width:110px;padding:15px 18px;text-align:center;color:rgba(255,255,255,.5);font-size:12px;letter-spacing:1px;border-bottom:1px solid rgba(255,255,255,.12);">
-                  HOÀN THÀNH
-                </th>
-              </tr>
-            </thead>
-            <tbody id="captureChecklistBody"></tbody>
-          </table>
-        </div>
-        <div style="text-align:center;color:rgba(255,255,255,.35);font-size:11px;margin-top:18px;">
-          Checklist 3D
-        </div>
-      `;
-
-      const body = capture.querySelector("#captureChecklistBody");
-
-      names.forEach((name,i)=>{
-        const done = !!checked[i];
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
-          <td style="padding:15px 18px;color:${done ? "#fff" : "rgba(255,255,255,.78)"};font-size:16px;font-weight:600;border-bottom:1px solid rgba(255,255,255,.07);">
-            ${escapeHtml(name)}
-          </td>
-          <td style="padding:15px 18px;text-align:center;border-bottom:1px solid rgba(255,255,255,.07);">
-            <span style="display:inline-flex;width:28px;height:28px;align-items:center;justify-content:center;border-radius:9px;border:1px solid ${done ? "#ff70b9" : "rgba(255,255,255,.25)"};background:${done ? "linear-gradient(135deg,#ff3c91,#ff70b9)" : "rgba(255,255,255,.05)"};color:#fff;font-size:18px;font-weight:900;">
-              ${done ? "✓" : ""}
-            </span>
-          </td>
-        `;
-
-        body.appendChild(tr);
-      });
-
-      document.body.appendChild(capture);
-
-      await new Promise(r =>
-        requestAnimationFrame(() =>
-          requestAnimationFrame(r)
-        )
-      );
-
-      const canvas = await html2canvas(capture,{
-        backgroundColor:"#080812",
-        scale:Math.min(window.devicePixelRatio || 2,2),
-        width:760,
-        height:capture.scrollHeight,
-        windowWidth:760,
-        windowHeight:capture.scrollHeight,
-        scrollX:0,
-        scrollY:0,
-        useCORS:true,
-        logging:false
-      });
-
-      capture.remove();
-      capture=null;
-
-      const blob = await new Promise(resolve =>
-        canvas.toBlob(resolve,"image/png",1)
-      );
-
-      if(!blob) throw new Error("Không tạo được ảnh");
-
-      const filename =
-        "checklist_" +
-        new Date().toISOString().slice(0,10) +
-        ".png";
-
-      const file = new File(
-        [blob],
-        filename,
-        {type:"image/png"}
-      );
-
-      /*
-       * iPhone/iPad: mở Share Sheet native.
-       * Từ đây chọn "Lưu hình ảnh" để ảnh vào ứng dụng Ảnh.
-       */
-      if(
-        navigator.share &&
-        navigator.canShare &&
-        navigator.canShare({files:[file]})
-      ){
-        try{
-          await navigator.share({
-            files:[file],
-            title:"Checklist",
-            text:"Checklist nhiệm vụ"
-          });
-
-          btn.textContent="✅ Đã lưu/chia sẻ ảnh";
-          setTimeout(()=>{
-            btn.textContent="📸 Lưu ảnh Checklist";
-            btn.classList.remove("saving");
-          },1500);
-          return;
-
-        }catch(e){
-          if(e && e.name==="AbortError"){
-            btn.textContent="📸 Lưu ảnh Checklist";
-            btn.classList.remove("saving");
-            return;
-          }
-        }
-      }
-
-      // Fallback trình duyệt không hỗ trợ Share File.
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement("a");
-      a.href=url;
-      a.download=filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(()=>URL.revokeObjectURL(url),5000);
-
-      btn.textContent="✅ Đã tạo ảnh";
+    box.querySelector("#doneBtn").addEventListener("click",async()=>{
+      const completedIndex=current, selected=names[current];
+      box.remove();
+      showMessage(`Chúc mừng!<br><span class="small">“${selected}” đã hoàn thành nhiệm vụ 🎉</span>`,900);
+      // Ghi Sheet song song với việc hiện animation, không chặn giao diện.
+      checkin(selected,completedIndex);
       setTimeout(()=>{
-        btn.textContent="📸 Lưu ảnh Checklist";
-        btn.classList.remove("saving");
-      },1500);
+        message.classList.remove("show");
+        checklistPanel.classList.add("show");
+        const row=checklistBody.querySelector(`tr[data-index="${completedIndex}"]`);
+        if(row) setTimeout(()=>row.scrollIntoView({block:"center",behavior:"smooth"}),80);
+      },1000);
+    });
 
-    }catch(err){
-      console.error(err);
-      if(capture) capture.remove();
-
-      btn.textContent="❌ Chụp ảnh thất bại";
-      setTimeout(()=>{
-        btn.textContent="📸 Lưu ảnh Checklist";
-        btn.classList.remove("saving");
-      },1800);
-    }
+    box.querySelector("#laterBtn").addEventListener("click",()=>{
+      box.remove();
+      showMessage(`Không sao!<br><span class="small">Cố lên “${names[current]}” 💪</span>`,0);
+    });
   }
 
-  document.getElementById("saveChecklistImage")
-    ?.addEventListener("click",saveChecklistImage);
+  syncBtn.addEventListener("click",()=>loadData(true));
 
+  // Load Sheet ngay khi mở; cache hiển thị trước nếu có.
+  loadData(true);
 })();
 </script>
 </body>
