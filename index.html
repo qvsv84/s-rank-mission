@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>S Rank — Daily Mission</title>
+<title>Checklist 3D — Daily Mission</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#010107}
@@ -228,14 +228,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
 
 <script>
 (() => {
-  const names=[
-    "Tiến Lợi","Mỹ Dung","Phạm Kim Chi","Kim Chi","Quỳnh Trang",
-    "Minh Thuỳ","Phương Thảo","Thảo Uyên","Minh Thư","Như Dương",
-    "Rosalie","Tuan Nguyen","Minh Quân","Huong Lye"
-  ];
+  // ===== GOOGLE APPS SCRIPT =====
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwK-2bmlYNlgMvvN9ypX4VNiR9l0qdrkBjk5UEYMCb8OnDoujJFEM7wiO8iL_3d3Y76WA/exec';
 
-  /* Đáp án câu 1 theo yêu cầu: v = Tiến Lợi */
-  const correctName="Tiến Lợi";
+  let names = [];
+  let checked = [];
+  let current = 0;
+  let dragging = false, startY = 0, dragOffset = 0;
+  let selectedName = "";
 
   const root=document.getElementById("space");
   const canvas=document.getElementById("stars");
@@ -250,32 +250,160 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
   const checklistPanel=document.getElementById("checklistPanel");
   const checklistBody=document.querySelector("#checklist tbody");
 
-  names.forEach((name,i)=>{
-    const tr=document.createElement("tr");
-    tr.dataset.index=i;
-    tr.innerHTML=`
-      <td class="playerName">${name}</td>
-      <td><div class="checkBox" aria-label="Chưa hoàn thành"></div></td>
-    `;
-    checklistBody.appendChild(tr);
-  });
+  async function api(action, data={}){
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set("action", action);
+    Object.entries(data).forEach(([k,v])=>url.searchParams.set(k,v));
+    const res = await fetch(url.toString(), {cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    return await res.json();
+  }
 
-  function showChecklist(completedIndex){
+  async function loadData(){
+    try{
+      const data = await api("getData");
+      names = Array.isArray(data.names) ? data.names.filter(Boolean) : [];
+      checked = Array.isArray(data.checked) ? data.checked : [];
+      if(!names.length) throw new Error("Không đọc được danh sách tên từ C4:C17");
+      buildWheel();
+      buildChecklist();
+      renderWheel();
+    }catch(err){
+      console.error("Google Apps Script error:", err);
+      names = [];
+      question.textContent = "Không tải được dữ liệu";
+      hint.textContent = "Apps Script chưa trả JSON. Hãy triển khai lại Web App.";
+    }
+  }
+
+  function buildWheel(){
+    itemsBox.innerHTML="";
+    names.forEach(name=>{
+      const el=document.createElement("div");
+      el.className="item";
+      el.textContent=name;
+      itemsBox.appendChild(el);
+    });
+    current=0;
+    dragOffset=0;
+  }
+
+  function buildChecklist(){
+    checklistBody.innerHTML="";
+    names.forEach((name,i)=>{
+      const tr=document.createElement("tr");
+      tr.dataset.index=i;
+      tr.innerHTML=`
+        <td class="playerName">${escapeHtml(name)}</td>
+        <td><div class="checkBox ${checked[i] ? "checked":""}" aria-label="${checked[i] ? "Đã hoàn thành":"Chưa hoàn thành"}"></div></td>
+      `;
+      checklistBody.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g,c=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
+  }
+
+  function showChecklist(completedIndex=null){
     checklistPanel.style.display="block";
     checklistPanel.style.visibility="visible";
     checklistPanel.style.opacity="1";
     checklistPanel.style.pointerEvents="auto";
     checklistPanel.classList.add("show");
-    checklistPanel.classList.add("show");
+
     [...checklistBody.querySelectorAll("tr")].forEach((tr,i)=>{
-      const done=i===completedIndex;
-      tr.classList.toggle("completed",done);
+      const done=completedIndex===i ? true : !!checked[i];
+      tr.classList.toggle("completed",done && i===completedIndex);
       tr.querySelector(".checkBox").classList.toggle("checked",done);
     });
-    const row=checklistBody.querySelector(`tr[data-index="${completedIndex}"]`);
+
+    const row=completedIndex==null ? null :
+      checklistBody.querySelector(`tr[data-index="${completedIndex}"]`);
     if(row) setTimeout(()=>row.scrollIntoView({block:"center",behavior:"smooth"}),150);
   }
 
+  function hideChecklist(){
+    checklistPanel.classList.remove("show");
+    checklistPanel.style.visibility="hidden";
+    checklistPanel.style.pointerEvents="none";
+  }
+
+  // Back button shown after a name is selected.
+  function showActionButtons(){
+    let box=document.getElementById("actionButtons");
+    if(box) box.remove();
+
+    box=document.createElement("div");
+    box.id="actionButtons";
+    box.innerHTML=`
+      <button id="checkinBtn" type="button">Checklist ✓</button>
+      <button id="backBtn" type="button">Quay lại</button>
+    `;
+    root.appendChild(box);
+
+    Object.assign(box.style,{
+      position:"absolute",left:"50%",top:"82%",transform:"translate(-50%,-50%)",
+      zIndex:"50",display:"flex",gap:"10px",width:"min(90vw,390px)",
+      justifyContent:"center",opacity:"0",transition:"opacity .35s"
+    });
+
+    [...box.querySelectorAll("button")].forEach(b=>{
+      Object.assign(b.style,{
+        minHeight:"48px",padding:"10px 20px",borderRadius:"999px",
+        border:"1px solid rgba(255,255,255,.25)",color:"#fff",
+        fontSize:"15px",fontWeight:"750",backdropFilter:"blur(10px)"
+      });
+    });
+
+    box.querySelector("#checkinBtn").style.background="linear-gradient(135deg,#ff3c91,#ff70b9)";
+    box.querySelector("#checkinBtn").style.boxShadow="0 0 22px rgba(255,50,145,.45)";
+    box.querySelector("#backBtn").style.background="rgba(255,255,255,.08)";
+
+    requestAnimationFrame(()=>box.style.opacity="1");
+
+    box.querySelector("#backBtn").onclick=()=>{
+      box.remove();
+      selectedName="";
+      confirm.classList.add("show");
+      hint.textContent="Vuốt lên / xuống để chọn tên";
+    };
+
+    box.querySelector("#checkinBtn").onclick=async()=>{
+      const idx=current;
+      const name=names[idx];
+      box.remove();
+      confirm.classList.remove("show");
+      hint.textContent="Đang đồng bộ Google Sheet…";
+
+      try{
+        const result=await api("checkin",{name});
+        if(result.ok===false) throw new Error(result.error || "Check-in thất bại");
+
+        checked[idx]=true;
+        showMessage(
+          `Check-in thành công ❤️<span class="small">${escapeHtml(name)} đã được đánh dấu hoàn thành</span>`,
+          1300
+        );
+        setTimeout(()=>{
+          message.classList.remove("show");
+          showChecklist(idx);
+          hint.textContent="";
+        },1400);
+      }catch(err){
+        console.error(err);
+        showMessage(
+          `Không thể check-in<span class="small">Kiểm tra kết nối Google Sheet rồi thử lại</span>`,
+          1800
+        );
+        setTimeout(()=>message.classList.remove("show"),1900);
+        hint.textContent="Vuốt lên / xuống để chọn tên";
+        confirm.classList.add("show");
+      }
+    };
+  }
 
   /* =========================
      SAO 3D CỐ ĐỊNH + QUAY QUANH TÂM
@@ -329,21 +457,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
   }
   requestAnimationFrame(drawStars);
 
+
   /* =========================
-     WHEEL CÂU 1
+     WHEEL + HIỆU ỨNG
   ========================= */
   const ITEM_H=58;
-  names.forEach((name)=>{
-    const el=document.createElement("div");
-    el.className="item";el.textContent=name;itemsBox.appendChild(el);
-  });
-
-  let current=0;
-  let dragging=false,startY=0,dragOffset=0;
-
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 
   function renderWheel(){
+    if(!names.length) return;
     const mid=wheelArea.clientHeight/2;
     [...itemsBox.children].forEach((el,i)=>{
       const y=(i-current)*ITEM_H+mid+dragOffset;
@@ -364,29 +486,31 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
       current+=dragOffset<0?1:-1;
       current=clamp(current,0,names.length-1);
     }
-    dragOffset=0;renderWheel();confirm.classList.add("show");
+    dragOffset=0;
+    renderWheel();
+    confirm.classList.add("show");
   }
 
   wheelArea.addEventListener("pointerdown",e=>{
-    dragging=true;startY=e.clientY;dragOffset=0;
+    dragging=true;
+    startY=e.clientY;
+    dragOffset=0;
     wheelArea.setPointerCapture?.(e.pointerId);
   });
+
   wheelArea.addEventListener("pointermove",e=>{
     if(!dragging)return;
     dragOffset=e.clientY-startY;
     if((current===0&&dragOffset>0)||(current===names.length-1&&dragOffset<0))dragOffset*=.25;
     renderWheel();
   });
+
   wheelArea.addEventListener("pointerup",()=>{if(dragging){dragging=false;snap()}});
   wheelArea.addEventListener("pointercancel",()=>{if(dragging){dragging=false;snap()}});
 
-  /* =========================
-     HIỆU ỨNG
-  ========================= */
   function burst(){
     const f=document.createElement("div");f.className="flash";root.appendChild(f);
     setTimeout(()=>f.remove(),800);
-
     for(let i=0;i<32;i++){
       const h=document.createElement("div");
       h.className="heart";h.textContent=i%5===0?"💗":"♥";
@@ -400,7 +524,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
     }
   }
 
-  function showMessage(html,duration=3000,next=null){
+  function showMessage(html,duration=1800){
     wheelArea.classList.remove("show");
     question.style.opacity="0";
     hint.textContent="";
@@ -409,20 +533,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
     void message.offsetWidth;
     message.classList.add("show");
     burst();
-
-    if(next){
-      setTimeout(()=>{
-        message.classList.remove("show");
-        setTimeout(next,300);
-      },duration);
-    }
+    if(duration) setTimeout(()=>message.classList.remove("show"),duration);
   }
 
-  /* Câu 1 */
   let q1Opened=false;
   function openQuestion1(e){
     if(e) e.preventDefault();
-    if(q1Opened) return;
+    if(q1Opened || !names.length) return;
     q1Opened=true;
     question.style.pointerEvents="none";
     question.style.opacity="0";
@@ -434,87 +551,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;to
       hint.textContent="Vuốt lên / xuống để chọn tên";
     },250);
   }
+
   question.style.pointerEvents="auto";
   question.addEventListener("pointerdown",openQuestion1,{passive:false});
   question.addEventListener("click",openQuestion1);
 
   confirm.addEventListener("click",()=>{
-    const selected=names[current];
-
-    /* Người dùng nói đáp án là v => Tiến Lợi.
-       Nếu chọn tên khác vẫn cho đi tiếp, nhưng câu chào phản ánh tên đã chọn. */
-    const rank=selected===correctName?"S rank":"người chơi";
-
-    showMessage(
-      `Xin chào<br>${rank} “${selected}”`,
-      3000,
-      showQuestion2
-    );
+    selectedName=names[current] || "";
+    confirm.classList.remove("show");
+    wheelArea.classList.remove("show");
+    showMessage(`Xin chào<br><span class="small">${escapeHtml(selectedName)}</span>`,900);
+    setTimeout(()=>{
+      message.classList.remove("show");
+      question.style.opacity="1";
+      question.style.pointerEvents="none";
+      question.textContent=selectedName;
+      counter.textContent="ĐÃ CHỌN";
+      showActionButtons();
+    },1000);
   });
 
-  /* =========================
-     CÂU 2
-  ========================= */
-  function showQuestion2(){
-    counter.textContent="CÂU 2";
-    question.textContent="Hôm nay bạn đã đăng bài chưa?";
-    question.style.opacity="1";
-    question.style.pointerEvents="none";
-    question.style.transform="scale(1)";
-    question.style.animation="breathe 2.8s ease-in-out infinite";
+  window.addEventListener("load",loadData);
 
-    /* Câu 2 dùng 2 nút, không dùng wheel */
-    const box=document.createElement("div");
-    box.id="q2answers";
-    box.innerHTML=`
-      <button id="doneBtn" type="button">Tôi đã hoàn thành</button>
-      <button id="laterBtn" type="button">Chưa, tôi sẽ quay lại sau</button>
-    `;
-    root.appendChild(box);
-
-    Object.assign(box.style,{
-      position:"absolute",left:"50%",top:"64%",transform:"translate(-50%,0)",
-      zIndex:"22",display:"flex",flexDirection:"column",gap:"12px",
-      width:"min(88vw,390px)",opacity:"0",transition:"opacity .35s,transform .35s"
-    });
-
-    [...box.querySelectorAll("button")].forEach(b=>{
-      Object.assign(b.style,{
-        minHeight:"50px",padding:"10px 18px",borderRadius:"999px",
-        border:"1px solid rgba(255,255,255,.25)",
-        color:"#fff",fontSize:"15px",fontWeight:"700",
-        background:"rgba(255,255,255,.07)",backdropFilter:"blur(10px)"
-      });
-    });
-    box.querySelector("#doneBtn").style.background="linear-gradient(135deg,#ff3c91,#ff70b9)";
-    box.querySelector("#doneBtn").style.boxShadow="0 0 22px rgba(255,50,145,.45)";
-
-    requestAnimationFrame(()=>{box.style.opacity="1";box.style.transform="translate(-50%,0)"});
-
-    box.querySelector("#doneBtn").addEventListener("click",()=>{
-      const completedIndex=current;
-      box.remove();
-      showMessage(
-        `Chúc mừng!<br><span class="small">Người chơi S rank “${names[current]}” đã hoàn thành nhiệm vụ 🎉</span>`,
-        1200
-      );
-      hint.textContent="";
-      setTimeout(()=>{
-        message.classList.remove("show");
-        showChecklist(completedIndex);
-      },1300);
-    });
-
-    box.querySelector("#laterBtn").addEventListener("click",()=>{
-      showMessage(
-        `Không sao!<br><span class="small">Cố lên “${names[current]}” 💪<br>Hoàn thành nhiệm vụ rồi quay lại nhé!</span>`,
-        0
-      );
-      hint.textContent="";
-    });
-  }
-
-  renderWheel();
 })();
 </script>
 </body>
