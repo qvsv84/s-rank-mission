@@ -345,7 +345,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
         checked = x.checked;
         times = Array.isArray(x.times) ? x.times : [];
         points = Array.isArray(x.points) ? x.points : names.map(()=>100);
-        ranks = Array.isArray(x.ranks) ? x.ranks : points.map(rankClient);
+        ranks = points.map(rankClient);
         return true;
       }
       // Cache của ngày cũ không được dùng lại.
@@ -490,11 +490,14 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   function rankClient(value){
     const p = Number(value) || 0;
-    if(p < 100) return "B";
-    if(p <= 160) return "A";
-    if(p < 220) return "S";
-    if(p <= 280) return "SS";
-    return "SSS";
+    if(p >= 700) return "VIP";
+    if(p >= 600) return "SSS";
+    if(p >= 500) return "SS";
+    if(p >= 400) return "S";
+    if(p >= 300) return "A";
+    if(p >= 200) return "B";
+    if(p >= 100) return "C";
+    return "D";
   }
 
   function currentSelectedPoints(){ return Number(points[current]) || 0; }
