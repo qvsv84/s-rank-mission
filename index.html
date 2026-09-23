@@ -90,6 +90,28 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #captureBtn{background:linear-gradient(135deg,rgba(255,60,145,.9),rgba(255,112,185,.72)) !important;color:#fff !important}
 #checklistActions button:active{transform:scale(.96)}
 
+#myPointCard{position:absolute;left:50%;top:43%;z-index:11;transform:translate(-50%,-50%);min-width:170px;padding:8px 14px;border:1px solid rgba(255,255,255,.10);border-radius:999px;background:rgba(8,4,14,.48);backdrop-filter:blur(12px);box-shadow:0 0 22px rgba(255,60,160,.08);color:rgba(255,255,255,.78);font-size:12px;font-weight:700;text-align:center;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+#myPointCard.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#myPointCard .pointValue{color:#ff9dcc;text-shadow:0 0 10px rgba(255,60,160,.65);font-size:15px;margin-left:4px}
+#myPointCard.bump .pointValue{animation:pointBump .65s cubic-bezier(.16,.9,.25,1)}
+@keyframes pointBump{0%{transform:scale(1)}35%{transform:scale(1.45);text-shadow:0 0 20px #ff4fa3}100%{transform:scale(1)}}
+#topBtn{color:#ffb5d8}
+#topPanel{position:absolute;left:50%;top:50%;z-index:10001;width:min(92vw,500px);max-height:82vh;transform:translate(-50%,-50%) scale(.94);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,transform .3s;padding:20px;border:1px solid rgba(255,255,255,.14);border-radius:26px;background:linear-gradient(145deg,rgba(20,8,24,.97),rgba(6,4,12,.98));box-shadow:0 18px 60px rgba(0,0,0,.62),0 0 40px rgba(255,60,160,.16);backdrop-filter:blur(18px)}
+#topPanel.show{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+#topTitle{text-align:center;color:#fff;font-size:26px;font-weight:850;text-shadow:0 0 10px #fff,0 0 28px #ff4fa3}
+#topSub{text-align:center;color:rgba(255,255,255,.48);font-size:12px;margin:5px 0 15px}
+#topScroll{max-height:60vh;overflow:auto;border-radius:18px;scrollbar-width:none}
+#topScroll::-webkit-scrollbar{display:none}
+#topTable{width:100%;border-collapse:separate;border-spacing:0;border:1px solid rgba(255,255,255,.12);border-radius:18px;overflow:hidden;background:rgba(8,4,12,.72)}
+#topTable th,#topTable td{padding:11px 9px;border-bottom:1px solid rgba(255,255,255,.07)}
+#topTable th{color:rgba(255,255,255,.42);font-size:10px;letter-spacing:1px;text-transform:uppercase}
+#topTable th:first-child,#topTable td:first-child{text-align:center;width:42px}
+#topTable th:nth-child(3),#topTable td:nth-child(3){text-align:right;white-space:nowrap}
+#topTable th:last-child,#topTable td:last-child{text-align:center;width:62px}
+.topName{color:rgba(255,255,255,.86);font-size:13px;font-weight:700}.topPoints{color:#ff9dcc;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}.topRank{display:inline-flex;min-width:36px;justify-content:center;padding:4px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:10px;font-weight:900}
+.topRow1{background:linear-gradient(90deg,rgba(255,215,120,.10),transparent)}.topRow2{background:linear-gradient(90deg,rgba(210,220,235,.08),transparent)}.topRow3{background:linear-gradient(90deg,rgba(190,120,80,.08),transparent)}
+#topTable tr:last-child td{border-bottom:0}
+#topCloseBtn{display:block;margin:13px auto 0;min-width:110px;min-height:40px;padding:8px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(135deg,#ff3c91,#ff70b9);color:#fff;font-weight:800}
 #bottomNav{
  position:absolute;right:16px;top:16px;z-index:10000;
  display:flex;gap:7px;width:auto;justify-content:center;
@@ -155,6 +177,8 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   <div id="question">Tên bạn là gì?</div>
 </div>
 
+<div id="myPointCard" aria-live="polite">⭐ Điểm hiện tại <span class="pointValue">—</span></div>
+
 <div id="wheelArea">
   <div id="wheelViewport"><div id="selectionLine"></div><div id="items"></div></div>
   <div id="wheelHint">Vuốt lên / xuống để chọn</div>
@@ -172,9 +196,19 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   <div id="checklistActions"><button id="captureBtn" type="button">📸 Chụp checklist</button><button id="syncBtn" type="button">↻ Đồng bộ lại</button></div>
 </section>
 
+<section id="topPanel" aria-hidden="true">
+  <div id="topTitle">🏆 BXH TOP</div>
+  <div id="topSub">Xếp hạng theo tổng điểm</div>
+  <div id="topScroll"><table id="topTable">
+    <thead><tr><th>#</th><th>Tên</th><th>⭐ Điểm</th><th>Rank</th></tr></thead><tbody></tbody>
+  </table></div>
+  <button id="topCloseBtn" type="button">Đóng</button>
+</section>
+
 <nav id="bottomNav">
   <button id="homeBtn" type="button">⌂ Home</button>
   <button id="adminBtn" type="button">⚙ Admin</button>
+  <button id="topBtn" type="button">🏆 BXH TOP</button>
   <button id="checklistBtn" type="button">☑ Checklist</button>
 </nav>
 <div id="adminPasswordOverlay" class="adminOverlay" aria-hidden="true" style="position:fixed;inset:0;z-index:21000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);">
@@ -225,9 +259,14 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const checklistPanel = document.getElementById("checklistPanel");
   const checklistBody = document.querySelector("#checklist tbody");
   const status = document.getElementById("status");
+  const myPointCard = document.getElementById("myPointCard");
   const syncBtn = document.getElementById("syncBtn");
   const homeBtn = document.getElementById("homeBtn");
   const checklistBtn = document.getElementById("checklistBtn");
+  const topBtn = document.getElementById("topBtn");
+  const topPanel = document.getElementById("topPanel");
+  const topBody = document.querySelector("#topTable tbody");
+  const topCloseBtn = document.getElementById("topCloseBtn");
   const adminBtn = document.getElementById("adminBtn");
   const adminOverlay = document.getElementById("adminOverlay");
   const adminPanel = document.getElementById("adminPanel");
@@ -248,6 +287,8 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   let names = [];
   let checked = [];
   let times = [];
+  let points = [];
+  let ranks = [];
   let current = 0;
   let q1Opened = false;
   let dragging = false, startY = 0, dragOffset = 0;
@@ -292,7 +333,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   function cacheSave(){
     try{
-      localStorage.setItem(CACHE_KEY, JSON.stringify({names,checked,times,day:todayKey(),ts:Date.now()}));
+      localStorage.setItem(CACHE_KEY, JSON.stringify({names,checked,times,points,ranks,day:todayKey(),ts:Date.now()}));
       localStorage.setItem(DAY_KEY, todayKey());
     }catch(_){}
   }
@@ -303,6 +344,8 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
         names = x.names;
         checked = x.checked;
         times = Array.isArray(x.times) ? x.times : [];
+        points = Array.isArray(x.points) ? x.points : names.map(()=>100);
+        ranks = Array.isArray(x.ranks) ? x.ranks : points.map(rankClient);
         return true;
       }
       // Cache của ngày cũ không được dùng lại.
@@ -445,6 +488,53 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     setStatus.t = setTimeout(() => status.classList.remove("show"), 1400);
   }
 
+  function rankClient(value){
+    const p = Number(value) || 0;
+    if(p < 100) return "B";
+    if(p <= 160) return "A";
+    if(p < 220) return "S";
+    if(p <= 280) return "SS";
+    return "SSS";
+  }
+
+  function currentSelectedPoints(){ return Number(points[current]) || 0; }
+
+  function updatePointCard(){
+    if(!q1Opened || !names.length || !Array.isArray(points) || points[current] == null){
+      myPointCard.classList.remove("show"); return;
+    }
+    myPointCard.querySelector(".pointValue").textContent = `${currentSelectedPoints()} điểm`;
+    myPointCard.classList.add("show");
+  }
+
+  function bumpPointCard(){
+    myPointCard.classList.remove("bump");
+    void myPointCard.offsetWidth;
+    myPointCard.classList.add("bump");
+  }
+
+  function renderTop(){
+    const rows = names.map((name,i)=>({name,points:Number(points[i])||0,rank:ranks[i]||rankClient(points[i]),index:i}));
+    rows.sort((a,b)=>b.points-a.points || a.index-b.index);
+    topBody.innerHTML = "";
+    const frag = document.createDocumentFragment();
+    rows.forEach((row,i)=>{
+      const tr=document.createElement("tr");
+      if(i<3) tr.classList.add("topRow"+(i+1));
+      tr.innerHTML=`<td>${i===0?"🥇":i===1?"🥈":i===2?"🥉":i+1}</td><td class="topName"></td><td class="topPoints"></td><td><span class="topRank"></span></td>`;
+      tr.querySelector(".topName").textContent=row.name;
+      tr.querySelector(".topPoints").textContent=row.points.toLocaleString("vi-VN");
+      tr.querySelector(".topRank").textContent=row.rank;
+      frag.appendChild(tr);
+    });
+    topBody.appendChild(frag);
+  }
+
+  function closeTop(){
+    topPanel.classList.remove("show");
+    topPanel.setAttribute("aria-hidden","true");
+  }
+
   function renderChecklist(){
     checklistBody.innerHTML = "";
     const frag = document.createDocumentFragment();
@@ -489,6 +579,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   function renderWheel(){
     if(!names.length) return;
+    updatePointCard();
     const mid = wheelArea.clientHeight / 2;
     const children = itemsBox.children;
     for(let i=0;i<children.length;i++){
@@ -530,6 +621,8 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       names = r.data.names || [];
       checked = r.data.checks || [];
       times = r.data.times || [];
+      points = Array.isArray(r.data.points) ? r.data.points : names.map(()=>100);
+      ranks = Array.isArray(r.data.ranks) ? r.data.ranks : points.map(rankClient);
       cacheSave();
       renderChecklist();
       buildWheel();
@@ -555,11 +648,19 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     try{
       const r = await api("checkin",{name},6000);
       if(!r.ok) throw new Error(r.error || "checkin lỗi");
-      if(r.data && r.data.time) { times[index] = r.data.time; cacheSave(); renderChecklist(); }
+      if(r.data && r.data.time) { times[index] = r.data.time; }
+      if(r.data && Number.isFinite(Number(r.data.points))) {
+        const before = Number(points[index]) || 0;
+        points[index] = Number(r.data.points);
+        ranks[index] = r.data.rank || rankClient(points[index]);
+        cacheSave();
+        renderChecklist();
+        if(points[index] !== before) bumpPointCard();
+      } else {
+        cacheSave();
+        renderChecklist();
+      }
       // Không gọi getData lần 2 -> giảm hẳn 1 request.
-      checked[index] = true;
-      cacheSave();
-      renderChecklist();
     }catch(e){
       // Nếu ghi thất bại, lấy lại trạng thái thật từ Sheet.
       setStatus("Đang xác nhận…");
@@ -868,6 +969,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   // ---------- Navigation ----------
   function resetHome(){
     document.getElementById("q2answers")?.remove();
+    closeTop();
     checklistPanel.classList.remove("show");
     checklistPanel.style.visibility = "hidden";
     checklistPanel.style.opacity = "0";
@@ -875,6 +977,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     message.classList.remove("show");
     wheelArea.classList.remove("show");
     confirm.classList.remove("show");
+    myPointCard.classList.remove("show");
 
     q1Opened = false;
     current = 0;
@@ -901,6 +1004,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     const willShow = !checklistPanel.classList.contains("show");
 
     if (willShow) {
+      closeTop();
       // HIỆN bảng
       checklistPanel.classList.add("show");
       checklistPanel.style.visibility = "visible";
@@ -916,6 +1020,21 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       checklistPanel.style.pointerEvents = "none";
     }
   });
+
+  topBtn.addEventListener("click", (e) => {
+    e.preventDefault(); e.stopPropagation();
+    closeAdmin();
+    checklistPanel.classList.remove("show");
+    checklistPanel.style.visibility = "hidden";
+    checklistPanel.style.opacity = "0";
+    checklistPanel.style.pointerEvents = "none";
+    renderTop();
+    topPanel.classList.add("show");
+    topPanel.setAttribute("aria-hidden","false");
+  });
+
+  topCloseBtn.addEventListener("click", closeTop);
+  topPanel.addEventListener("click", e => { if(e.target === topPanel) closeTop(); });
 
   syncBtn.addEventListener("click",()=>loadData(true));
 
