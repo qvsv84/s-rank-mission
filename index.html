@@ -655,7 +655,14 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
         ranks[index] = r.data.rank || rankClient(points[index]);
         cacheSave();
         renderChecklist();
-        if(points[index] !== before) bumpPointCard();
+
+        // Apps Script là nơi quyết định điểm. Một ngày chỉ được +10 một lần.
+        if(Number(r.data.pointsAdded) > 0) {
+          bumpPointCard();
+          setStatus(`+${Number(r.data.pointsAdded)} điểm ⭐`);
+        } else {
+          setStatus("Hôm nay đã nhận điểm rồi ✓");
+        }
       } else {
         cacheSave();
         renderChecklist();
@@ -820,10 +827,13 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   confirm.addEventListener("click",()=>{
     const selected = names[current];
+    // Điểm chỉ dùng để tham khảo ở bước chọn tên; khi sang CÂU 2 phải ẩn đi để không che nội dung.
+    myPointCard.classList.remove("show");
     showMessage(`Xin chào<br>người chơi “${selected}”`,2000,showQuestion2);
   });
 
   function showQuestion2(){
+    myPointCard.classList.remove("show");
     counter.textContent="CÂU 2";
     question.textContent="Hôm nay bạn đã đăng bài chưa?";
     question.style.opacity="1";question.style.pointerEvents="none";question.style.transform="scale(1)";
