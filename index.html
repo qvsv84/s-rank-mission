@@ -626,6 +626,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       cacheSave();
       renderChecklist();
       buildWheel();
+      renderTop();
       hint.textContent = "Chạm vào câu hỏi";
       setStatus("Đã đồng bộ ✓");
     }catch(e){
@@ -634,48 +635,130 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     }
   }
 
+  let checkinInFlight = false;
+  let pendingCheckinName = null;
+
   async function checkin(name, index){
-    const localTime = new Intl.DateTimeFormat("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date());
-    times[index] = localTime;
-    cacheSave();
-    renderChecklist();
-    // Optimistic UI: tick ngay, không chờ server.
+    const alreadyChecked = !!checked[index];
+    const localTime = new Intl.DateTimeFormat("vi-VN",{
+      timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",hour12:false
+    }).format(new Date());
+
+    // Optimistic UI: tick + điểm ngay lập tức.
     checked[index] = true;
+    times[index] = localTime;
+
+    if(!alreadyChecked){
+      points[index] = (Number(points[index]) || 0) + 10;
+      ranks[index] = rankClient(points[index]);
+    }
+
     cacheSave();
     renderChecklist();
-    setStatus("Đã ghi ✓");
+    updatePointCard();
+    bumpPointCard();
+    renderTop();
+    setStatus(alreadyChecked ? "Đã hoàn thành hôm nay ✓" : "+10 điểm ⭐");
+
+    // Chỉ có một request ghi điểm tại một thời điểm.
+    // Không chờ request này để giữ UI hoạt động.
+    if(checkinInFlight) return;
+    checkinInFlight = true;
+    pendingCheckinName = name;
 
     try{
-      const r = await api("checkin",{name},6000);
+      const r = await api("checkin",{name},8000);
       if(!r.ok) throw new Error(r.error || "checkin lỗi");
-      if(r.data && r.data.time) { times[index] = r.data.time; }
-      if(r.data && Number.isFinite(Number(r.data.points))) {
-        const before = Number(points[index]) || 0;
-        points[index] = Number(r.data.points);
-        ranks[index] = r.data.rank || rankClient(points[index]);
-        cacheSave();
-        renderChecklist();
 
-        // Apps Script là nơi quyết định điểm. Một ngày chỉ được +10 một lần.
-        if(Number(r.data.pointsAdded) > 0) {
-          bumpPointCard();
-          setStatus(`+${Number(r.data.pointsAdded)} điểm ⭐`);
-        } else {
-          setStatus("Hôm nay đã nhận điểm rồi ✓");
+      // Server là dữ liệu chuẩn. Đồng bộ lại đúng điểm/rank/giờ.
+      if(r.data){
+        if(r.data.time) times[index] = r.data.time;
+        if(Number.isFinite(Number(r.data.points))){
+          points[index] = Number(r.data.points);
+          ranks[index] = r.data.rank || rankClient(points[index]);
         }
-      } else {
-        cacheSave();
-        renderChecklist();
+        checked[index] = true;
       }
-      // Không gọi getData lần 2 -> giảm hẳn 1 request.
+
+      cacheSave();
+      renderChecklist();
+      renderTop();
+      updatePointCard();
+
+      pendingCheckinName = null;
+
+      if(r.data && Number(r.data.pointsAdded) > 0){
+        setStatus(`Đã lưu +${Number(r.data.pointsAdded)} điểm ✓`);
+      }else{
+        setStatus("Đã đồng bộ ✓");
+      }
     }catch(e){
-      // Nếu ghi thất bại, lấy lại trạng thái thật từ Sheet.
-      setStatus("Đang xác nhận…");
-      await loadData(false);
-      setStatus("Đã kiểm tra lại");
+      // Không ghi đè điểm optimistic bằng dữ liệu cũ khi request chậm.
+      // Polling nền sẽ tự xác nhận lại từ server.
+      setStatus("Đang đồng bộ nền…");
+    }finally{
+      checkinInFlight = false;
     }
   }
 
+  // Nếu người dùng đóng/đổi trang khi request JSONP chưa trả về,
+  // gửi thêm một request POST keepalive. Server xử lý idempotent nên
+  // không thể cộng điểm 2 lần trong cùng ngày.
+  addEventListener("pagehide",()=>{
+    if(!pendingCheckinName) return;
+    try{
+      const body = JSON.stringify({
+        action:"checkin",
+        name:pendingCheckinName
+      });
+      navigator.sendBeacon(
+        SCRIPT_URL,
+        new Blob([body],{type:"application/json"})
+      );
+    }catch(_){}
+  });
+
+  // Đồng bộ nền: không chặn giao diện, cập nhật khi có thay đổi từ thiết bị khác.
+  let syncBusy = false;
+  async function backgroundSync(){
+    if(syncBusy || document.visibilityState === "hidden") return;
+    syncBusy = true;
+    try{
+      const r = await api("getData",{},7000);
+      if(!r.ok) throw new Error(r.error || "sync lỗi");
+
+      const oldPoints = points.slice();
+      names = r.data.names || [];
+      checked = r.data.checks || [];
+      times = r.data.times || [];
+      points = Array.isArray(r.data.points) ? r.data.points : names.map(()=>100);
+      ranks = Array.isArray(r.data.ranks) ? r.data.ranks : points.map(rankClient);
+
+      cacheSave();
+      renderChecklist();
+      renderTop();
+      updatePointCard();
+
+      const changed = points.some((v,i)=>Number(v)!==Number(oldPoints[i]));
+      if(changed) setStatus("Đã cập nhật điểm ✓");
+    }catch(_){
+      // Im lặng khi mạng/Apps Script tạm thời chậm.
+    }finally{
+      syncBusy = false;
+    }
+  }
+
+  // 5 giây/lần khi trang đang mở; khi đưa app xuống nền thì dừng.
+  let syncTimer = setInterval(backgroundSync,5000);
+  document.addEventListener("visibilitychange",()=>{
+    if(document.visibilityState === "visible"){
+      backgroundSync();
+      clearInterval(syncTimer);
+      syncTimer = setInterval(backgroundSync,5000);
+    }else{
+      clearInterval(syncTimer);
+    }
+  });
   // ---------- Visuals ----------
   let W=innerWidth,H=innerHeight,DPR=1;
   const stars=[];
@@ -827,21 +910,132 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   confirm.addEventListener("click",()=>{
     const selected = names[current];
-
-    // Ẩn thẻ điểm khi chuyển sang lời chào.
+    // Điểm chỉ dùng để tham khảo ở bước chọn tên; khi sang CÂU 2 phải ẩn đi để không che nội dung.
     myPointCard.classList.remove("show");
+      let checkinInFlight = false;
+  let pendingCheckinName = null;
 
-    // Rank lấy trực tiếp từ dữ liệu điểm đã đồng bộ với Google Sheets.
-    // Ví dụ: "Xin chào người chơi S rank - Tiến Lợi"
-    const playerRank = (Array.isArray(ranks) && ranks[current])
-      ? ranks[current]
-      : rankClient(points[current]);
+  async function checkin(name, index){
+    const alreadyChecked = !!checked[index];
+    const localTime = new Intl.DateTimeFormat("vi-VN",{
+      timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",hour12:false
+    }).format(new Date());
 
-    showMessage(
-      `Xin chào người chơi ${playerRank} rank - ${selected}`,
-      2000,
-      showQuestion2
-    );
+    // Optimistic UI: tick + điểm ngay lập tức.
+    checked[index] = true;
+    times[index] = localTime;
+
+    if(!alreadyChecked){
+      points[index] = (Number(points[index]) || 0) + 10;
+      ranks[index] = rankClient(points[index]);
+    }
+
+    cacheSave();
+    renderChecklist();
+    updatePointCard();
+    bumpPointCard();
+    renderTop();
+    setStatus(alreadyChecked ? "Đã hoàn thành hôm nay ✓" : "+10 điểm ⭐");
+
+    // Chỉ có một request ghi điểm tại một thời điểm.
+    // Không chờ request này để giữ UI hoạt động.
+    if(checkinInFlight) return;
+    checkinInFlight = true;
+    pendingCheckinName = name;
+
+    try{
+      const r = await api("checkin",{name},8000);
+      if(!r.ok) throw new Error(r.error || "checkin lỗi");
+
+      // Server là dữ liệu chuẩn. Đồng bộ lại đúng điểm/rank/giờ.
+      if(r.data){
+        if(r.data.time) times[index] = r.data.time;
+        if(Number.isFinite(Number(r.data.points))){
+          points[index] = Number(r.data.points);
+          ranks[index] = r.data.rank || rankClient(points[index]);
+        }
+        checked[index] = true;
+      }
+
+      cacheSave();
+      renderChecklist();
+      renderTop();
+      updatePointCard();
+
+      pendingCheckinName = null;
+
+      if(r.data && Number(r.data.pointsAdded) > 0){
+        setStatus(`Đã lưu +${Number(r.data.pointsAdded)} điểm ✓`);
+      }else{
+        setStatus("Đã đồng bộ ✓");
+      }
+    }catch(e){
+      // Không ghi đè điểm optimistic bằng dữ liệu cũ khi request chậm.
+      // Polling nền sẽ tự xác nhận lại từ server.
+      setStatus("Đang đồng bộ nền…");
+    }finally{
+      checkinInFlight = false;
+    }
+  }
+
+  // Nếu người dùng đóng/đổi trang khi request JSONP chưa trả về,
+  // gửi thêm một request POST keepalive. Server xử lý idempotent nên
+  // không thể cộng điểm 2 lần trong cùng ngày.
+  addEventListener("pagehide",()=>{
+    if(!pendingCheckinName) return;
+    try{
+      const body = JSON.stringify({
+        action:"checkin",
+        name:pendingCheckinName
+      });
+      navigator.sendBeacon(
+        SCRIPT_URL,
+        new Blob([body],{type:"application/json"})
+      );
+    }catch(_){}
+  });
+
+  // Đồng bộ nền: không chặn giao diện, cập nhật khi có thay đổi từ thiết bị khác.
+  let syncBusy = false;
+  async function backgroundSync(){
+    if(syncBusy || document.visibilityState === "hidden") return;
+    syncBusy = true;
+    try{
+      const r = await api("getData",{},7000);
+      if(!r.ok) throw new Error(r.error || "sync lỗi");
+
+      const oldPoints = points.slice();
+      names = r.data.names || [];
+      checked = r.data.checks || [];
+      times = r.data.times || [];
+      points = Array.isArray(r.data.points) ? r.data.points : names.map(()=>100);
+      ranks = Array.isArray(r.data.ranks) ? r.data.ranks : points.map(rankClient);
+
+      cacheSave();
+      renderChecklist();
+      renderTop();
+      updatePointCard();
+
+      const changed = points.some((v,i)=>Number(v)!==Number(oldPoints[i]));
+      if(changed) setStatus("Đã cập nhật điểm ✓");
+    }catch(_){
+      // Im lặng khi mạng/Apps Script tạm thời chậm.
+    }finally{
+      syncBusy = false;
+    }
+  }
+
+  // 5 giây/lần khi trang đang mở; khi đưa app xuống nền thì dừng.
+  let syncTimer = setInterval(backgroundSync,5000);
+  document.addEventListener("visibilitychange",()=>{
+    if(document.visibilityState === "visible"){
+      backgroundSync();
+      clearInterval(syncTimer);
+      syncTimer = setInterval(backgroundSync,5000);
+    }else{
+      clearInterval(syncTimer);
+    }
+  });
   });
 
   function showQuestion2(){
