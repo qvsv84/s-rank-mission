@@ -85,6 +85,23 @@ box-shadow:0 0 15px rgba(255,55,155,.65);animation:checkPop .45s cubic-bezier(.1
 @keyframes checkPop{0%{transform:scale(.3);opacity:.2}65%{transform:scale(1.2)}100%{transform:scale(1)}}
 #syncBtn{display:block;margin:12px auto 0;border:0;border-radius:999px;padding:9px 16px;
 background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-size:12px}
+
+#bottomNav{
+ position:absolute;left:50%;bottom:18px;transform:translateX(-50%);
+ z-index:10000;display:flex;gap:10px;width:min(92vw,360px);justify-content:center;
+}
+#bottomNav button{
+ flex:1;min-height:44px;padding:10px 16px;border-radius:999px;
+ border:1px solid rgba(255,255,255,.16);
+ background:rgba(10,5,15,.72);backdrop-filter:blur(12px);
+ color:rgba(255,255,255,.82);font-size:13px;font-weight:700;
+ box-shadow:0 0 18px rgba(255,60,160,.08);
+}
+#bottomNav button:active{transform:scale(.96)}
+#homeBtn{
+ background:linear-gradient(135deg,rgba(255,60,145,.85),rgba(255,112,185,.72)) !important;
+ color:#fff !important;
+}
 </style>
 </head>
 <body>
@@ -114,6 +131,10 @@ background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-size:12px}
   <button id="syncBtn" type="button">↻ Đồng bộ lại</button>
 </section>
 
+<nav id="bottomNav">
+  <button id="homeBtn" type="button">⌂ Home</button>
+  <button id="checklistBtn" type="button">☑ Checklist</button>
+</nav>
 <div id="hint">Đang tải dữ liệu…</div>
 </main>
 
@@ -137,6 +158,8 @@ background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-size:12px}
   const checklistBody = document.querySelector("#checklist tbody");
   const status = document.getElementById("status");
   const syncBtn = document.getElementById("syncBtn");
+  const homeBtn = document.getElementById("homeBtn");
+  const checklistBtn = document.getElementById("checklistBtn");
 
   let names = [];
   let checked = [];
@@ -419,6 +442,40 @@ background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-size:12px}
       showMessage(`Không sao!<br><span class="small">Cố lên “${names[current]}” 💪</span>`,0);
     });
   }
+
+
+  // ---------- Navigation ----------
+  function resetHome(){
+    document.getElementById("q2answers")?.remove();
+    checklistPanel.classList.remove("show");
+    message.classList.remove("show");
+    wheelArea.classList.remove("show");
+    confirm.classList.remove("show");
+
+    q1Opened = false;
+    current = 0;
+    dragOffset = 0;
+    dragging = false;
+
+    counter.textContent = "CÂU 1";
+    question.textContent = "Tên bạn là gì?";
+    question.style.opacity = "1";
+    question.style.pointerEvents = "auto";
+    question.style.transform = "scale(1)";
+    question.style.animation = "breathe 2.8s ease-in-out infinite";
+
+    hint.textContent = names.length ? "Chạm vào câu hỏi" : "Đang tải dữ liệu…";
+    renderWheel();
+  }
+
+  homeBtn.addEventListener("click", resetHome);
+
+  checklistBtn.addEventListener("click", () => {
+    checklistPanel.classList.add("show");
+    renderChecklist();
+    // Đồng bộ nền, không chặn việc mở bảng.
+    loadData(false);
+  });
 
   syncBtn.addEventListener("click",()=>loadData(true));
 
