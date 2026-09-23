@@ -192,7 +192,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     <div id="adminSub">Thiết lập giờ làm mới checklist hằng ngày</div>
     <div class="adminField">
       <label for="resetTimeInput">Giờ reset mỗi ngày</label>
-      <input id="resetTimeInput" type="time" value="00:00" step="60">
+      <input id="resetTimeInput" type="text" value="00:00" inputmode="numeric" maxlength="5" pattern="(?:[01]\d|2[0-3]):[0-5]\d" placeholder="00:00" autocomplete="off" aria-label="Giờ reset 24 giờ">
     </div>
     <div id="adminStatus"></div>
     <div id="adminActions">
@@ -236,6 +236,13 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const adminCloseBtn = document.getElementById("adminCloseBtn");
   const adminSaveBtn = document.getElementById("adminSaveBtn");
   const adminResetNowBtn = document.getElementById("adminResetNowBtn");
+
+  // Giờ reset luôn dùng định dạng 24 giờ HH:mm
+  resetTimeInput.addEventListener("input", () => {
+    let v = resetTimeInput.value.replace(/\D/g, "").slice(0, 4);
+    if(v.length > 2) v = v.slice(0,2) + ":" + v.slice(2);
+    resetTimeInput.value = v;
+  });
   const captureBtn = document.getElementById("captureBtn");
 
   let names = [];
@@ -392,7 +399,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   adminOverlay.addEventListener("click",e=>{if(e.target===adminOverlay) closeAdmin()});
 
   adminSaveBtn.addEventListener("click",async()=>{
-    const time = resetTimeInput.value;
+    const time = resetTimeInput.value.trim();
     if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)){
       adminStatus.textContent = "Giờ không hợp lệ.";
       return;
