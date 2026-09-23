@@ -689,6 +689,10 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       <button id="adminCloseBtn" type="button">Đóng</button>
       <button id="adminSaveBtn" type="button">Lưu cài đặt</button>
     </div>
+    <div id="adminChecklistEditor" style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);">
+      <div style="font-size:13px;color:rgba(255,255,255,.72);margin-bottom:9px;">☑ Chỉnh checklist</div>
+      <div id="adminChecklistRows" style="max-height:230px;overflow:auto;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.03);"></div>
+    </div>
     <button id="adminResetNowBtn" type="button">↻ Reset checklist ngay</button>
   </section>
 </div>
@@ -731,6 +735,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const adminCloseBtn = document.getElementById("adminCloseBtn");
   const adminSaveBtn = document.getElementById("adminSaveBtn");
   const adminResetNowBtn = document.getElementById("adminResetNowBtn");
+  const adminChecklistRows = document.getElementById("adminChecklistRows");
 
   // Giờ reset luôn dùng định dạng 24 giờ HH:mm
   resetTimeInput.addEventListener("input", () => {
@@ -813,6 +818,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   let resetTime = "00:00";
   let resetTimer = null;
+  let initialSheetLoaded = false;
 
   function scheduleNextReset(){
     if(resetTimer) clearTimeout(resetTimer);
@@ -822,13 +828,17 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     next.setHours(Number.isFinite(hh)?hh:0, Number.isFinite(mm)?mm:0, 3, 0);
     if(next.getTime() <= now.getTime()) next.setDate(next.getDate()+1);
     resetTimer = setTimeout(async()=>{
+      try{
+        const r = await api("resetNow",{password:"8516"},7000);
+        if(!r.ok) throw new Error(r.error || "Reset thất bại");
+      }catch(_){}
+
       checked = names.map(()=>false);
       times = names.map(()=>"");
       cacheSave();
       renderChecklist();
+      renderAdminChecklistEditor();
       setStatus("Checklist đã làm mới ✓");
-      await loadData(false);
-      await loadAdminSettings();
       scheduleNextReset();
     }, Math.max(1000,next.getTime()-now.getTime()));
   }
@@ -865,6 +875,69 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     adminPasswordOverlay.style.display="none";
     adminPasswordOverlay.setAttribute("aria-hidden","true");
   }
+  function renderAdminChecklistEditor(){
+    if(!adminChecklistRows) return;
+    adminChecklistRows.innerHTML = "";
+    const frag = document.createDocumentFragment();
+
+    names.forEach((name, i) => {
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);";
+
+      const label = document.createElement("div");
+      label.style.cssText = "min-width:0;flex:1;color:rgba(255,255,255,.82);font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+      label.textContent = name || ("Người chơi " + (i+1));
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = checked[i] ? "✓ Đã check" : "○ Chưa check";
+      btn.style.cssText = "min-width:96px;min-height:34px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:" +
+        (checked[i] ? "linear-gradient(135deg,#ff3c91,#ff70b9)" : "rgba(255,255,255,.07)") +
+        ";color:#fff;font-size:11px;font-weight:800;";
+
+      btn.addEventListener("click", async () => {
+        const next = !checked[i];
+        btn.disabled = true;
+        try{
+          const r = await api("adminSetCheck", {
+            password:"8516",
+            name:names[i],
+            checked:next ? "true" : "false"
+          }, 7000);
+          if(!r.ok) throw new Error(r.error || "Không cập nhật được checklist");
+
+          checked[i] = next;
+          times[i] = next
+            ? ((r.data && r.data.time) || new Intl.DateTimeFormat("vi-VN", {
+                timeZone:"Asia/Ho_Chi_Minh",
+                hour:"2-digit",
+                minute:"2-digit",
+                hour12:false
+              }).format(new Date()))
+            : "";
+
+          cacheSave();
+          renderChecklist();
+          renderAdminChecklistEditor();
+          setStatus(next ? "Đã check ✓" : "Đã bỏ check ✓");
+          adminStatus.textContent = next
+            ? `Đã check ${names[i]}`
+            : `Đã bỏ check ${names[i]}`;
+        }catch(e){
+          adminStatus.textContent = e.message || "Không cập nhật được checklist.";
+        }finally{
+          btn.disabled = false;
+        }
+      });
+
+      row.appendChild(label);
+      row.appendChild(btn);
+      frag.appendChild(row);
+    });
+
+    adminChecklistRows.appendChild(frag);
+  }
+
   async function verifyAdmin(){
     const password=adminPasswordInput.value.trim();
     if(password !== "8516"){
@@ -882,6 +955,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       if(!r.ok) throw new Error(r.error || "Không tải được cài đặt");
       resetTime=r.data.resetTime || "00:00";
       resetTimeInput.value=resetTime;
+      renderAdminChecklistEditor();
       adminStatus.textContent="Đang áp dụng giờ Việt Nam (UTC+7)";
     }catch(e){
       resetTimeInput.value=resetTime;
@@ -926,8 +1000,10 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       const r = await api("resetNow",{password:"8516"},7000);
       if(!r.ok) throw new Error(r.error || "Reset thất bại");
       checked = names.map(()=>false);
+      times = names.map(()=>"");
       cacheSave();
       renderChecklist();
+      renderAdminChecklistEditor();
       adminStatus.textContent = "Đã reset checklist ✓";
       setStatus("Checklist đã reset ✓");
     }catch(e){
@@ -1068,28 +1144,48 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     renderWheel();
   }
 
-  async function loadData(showError = true){
-    // Hiển thị cache ngay -> UI không phải chờ Sheet.
+  async function loadData(showError = true, force = false){
+    // Sheet chỉ được dùng để khởi tạo dữ liệu.
+    // Sau lần tải đầu, HTML là nguồn chuẩn cho checked/times.
+    if(initialSheetLoaded && !force){
+      renderChecklist();
+      buildWheel();
+      renderAdminChecklistEditor();
+      return true;
+    }
+
     if(!names.length && cacheLoad()){
       renderChecklist();
       buildWheel();
     }
+
     try{
       const r = await api("getData");
       if(!r.ok) throw new Error(r.error || "getData lỗi");
+
+      // Tên + điểm lấy từ Sheet.
       names = r.data.names || [];
-      checked = r.data.checks || [];
-      times = r.data.times || [];
       points = Array.isArray(r.data.points) ? r.data.points : names.map(()=>100);
       ranks = points.map(rankClient);
+
+      // B/D chỉ lấy từ Sheet đúng 1 lần khi khởi tạo.
+      if(!initialSheetLoaded){
+        checked = r.data.checks || [];
+        times = r.data.times || [];
+      }
+
+      initialSheetLoaded = true;
       cacheSave();
       renderChecklist();
       buildWheel();
+      renderAdminChecklistEditor();
       hint.textContent = "Chạm vào câu hỏi";
       setStatus("Đã đồng bộ ✓");
+      return true;
     }catch(e){
       if(showError && !names.length) hint.textContent = "Không tải được dữ liệu";
       if(names.length) setStatus("Đang dùng dữ liệu đã lưu");
+      return false;
     }
   }
 
@@ -1128,10 +1224,9 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       }
       // Không gọi getData lần 2 -> giảm hẳn 1 request.
     }catch(e){
-      // Nếu ghi thất bại, lấy lại trạng thái thật từ Sheet.
-      setStatus("Đang xác nhận…");
-      await loadData(false);
-      setStatus("Đã kiểm tra lại");
+      // Không lấy Sheet đè ngược vào HTML.
+      setStatus("Máy chủ chưa xác nhận — trạng thái HTML vẫn giữ nguyên");
+      cacheSave();
     }
   }
 
