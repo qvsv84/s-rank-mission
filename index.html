@@ -217,6 +217,111 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   #question .landing-title{font-size:clamp(32px,9vw,54px)}
 }
 
+
+/* ---------- Consistent question / congratulations screens ---------- */
+.question-text,
+.congrats-text,
+.activation-line{
+  text-align:center !important;
+}
+
+.question-text{
+  color:#fff !important;
+  font-weight:900 !important;
+  line-height:1.18 !important;
+  text-shadow:0 0 4px rgba(255,255,255,.9),
+              0 0 14px rgba(255,105,180,.55),
+              0 0 28px rgba(255,60,145,.3);
+}
+
+.congrats-text{
+  color:#fff !important;
+  font-weight:900 !important;
+  line-height:1.2 !important;
+  text-shadow:0 0 4px rgba(255,255,255,.95),
+              0 0 14px rgba(255,105,180,.65),
+              0 0 30px rgba(255,60,145,.4);
+}
+
+@media(max-width:520px){
+  .question-text,
+  .congrats-text{
+    padding-left:12px;
+    padding-right:12px;
+  }
+}
+
+
+/* ---------- System notification: 3D letters assemble from deep space ---------- */
+.system-assemble{
+  display:inline-block;
+  perspective:900px;
+  transform-style:preserve-3d;
+  will-change:transform,opacity,filter;
+}
+
+.system-assemble .assemble-char{
+  display:inline-block;
+  opacity:0;
+  transform:
+    translate3d(var(--sx),var(--sy),-1100px)
+    rotateX(var(--rx))
+    rotateY(var(--ry))
+    rotateZ(var(--rz))
+    scale(.08);
+  filter:blur(7px);
+  text-shadow:0 0 2px rgba(255,255,255,.95),
+              0 0 16px rgba(255,105,180,.8),
+              0 0 34px rgba(255,60,145,.55);
+  animation:spaceAssemble 1.15s cubic-bezier(.16,.78,.18,1) forwards;
+  animation-delay:var(--delay);
+}
+
+.system-assemble .assemble-space{
+  display:inline-block;
+  width:.28em;
+}
+
+@keyframes spaceAssemble{
+  0%{
+    opacity:0;
+    transform:
+      translate3d(var(--sx),var(--sy),-1100px)
+      rotateX(var(--rx))
+      rotateY(var(--ry))
+      rotateZ(var(--rz))
+      scale(.08);
+    filter:blur(7px);
+  }
+  55%{
+    opacity:1;
+    filter:blur(1px);
+  }
+  100%{
+    opacity:1;
+    transform:
+      translate3d(0,0,0)
+      rotateX(0)
+      rotateY(0)
+      rotateZ(0)
+      scale(1);
+    filter:blur(0);
+  }
+}
+
+.system-appear{
+  opacity:0;
+  transform:translateY(8px) scale(.98);
+  animation:systemAppear .45s ease-out forwards;
+}
+
+@keyframes systemAppear{
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
@@ -1002,7 +1107,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   function showQuestion2(){
     myPointCard.classList.remove("show");
     counter.textContent="CÂU 2";
-    question.textContent="Hôm nay bạn đã đăng bài chưa?";
+    question.textContent="Checklist Đảo Mèo hôm nay — bạn đã đăng bài chưa?";
     question.style.opacity="1";question.style.pointerEvents="none";question.style.transform="scale(1)";
     const box=document.createElement("div");
     box.id="q2answers";
@@ -1220,6 +1325,39 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   loadAdminSettings();
   scheduleNextReset();
 })();
+
+/* 3D space-to-text assembly for the final system notification */
+function animateSystemAssemble(el, textValue){
+  if (!el) return;
+  const text = String(textValue || '');
+  el.classList.add('system-assemble');
+  el.innerHTML = '';
+
+  [...text].forEach((ch, i) => {
+    if (ch === ' ') {
+      const s = document.createElement('span');
+      s.className = 'assemble-space';
+      el.appendChild(s);
+      return;
+    }
+
+    const s = document.createElement('span');
+    s.className = 'assemble-char';
+    const angle = (i * 47) % 360;
+    const rad = angle * Math.PI / 180;
+    const distance = 360 + ((i * 83) % 520);
+
+    s.style.setProperty('--sx', `${Math.cos(rad) * distance}px`);
+    s.style.setProperty('--sy', `${Math.sin(rad) * distance}px`);
+    s.style.setProperty('--rx', `${((i * 71) % 720) - 360}deg`);
+    s.style.setProperty('--ry', `${((i * 53) % 720) - 360}deg`);
+    s.style.setProperty('--rz', `${((i * 37) % 360) - 180}deg`);
+    s.style.setProperty('--delay', `${Math.min(i * 0.018, 0.55)}s`);
+    s.textContent = ch;
+    el.appendChild(s);
+  });
+}
+
 </script>
 </body>
 </html>
