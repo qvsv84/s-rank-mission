@@ -827,9 +827,21 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   confirm.addEventListener("click",()=>{
     const selected = names[current];
-    // Điểm chỉ dùng để tham khảo ở bước chọn tên; khi sang CÂU 2 phải ẩn đi để không che nội dung.
+
+    // Ẩn thẻ điểm khi chuyển sang lời chào.
     myPointCard.classList.remove("show");
-    showMessage(`Xin chào<br>người chơi “${selected}”`,2000,showQuestion2);
+
+    // Rank lấy trực tiếp từ dữ liệu điểm đã đồng bộ với Google Sheets.
+    // Ví dụ: "Xin chào người chơi S rank - Tiến Lợi"
+    const playerRank = (Array.isArray(ranks) && ranks[current])
+      ? ranks[current]
+      : rankClient(points[current]);
+
+    showMessage(
+      `Xin chào người chơi ${playerRank} rank - ${selected}`,
+      2000,
+      showQuestion2
+    );
   });
 
   function showQuestion2(){
