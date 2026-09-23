@@ -448,15 +448,42 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   function renderChecklist(){
     checklistBody.innerHTML = "";
     const frag = document.createDocumentFragment();
-    names.forEach((name,i) => {
+
+    // Chỉ sắp xếp thứ tự HIỂN THỊ trên HTML.
+    // Không thay đổi names/checked/times gốc nên không ảnh hưởng Google Sheet.
+    const rows = names.map((name,i) => ({
+      name,
+      index: i,
+      checked: !!checked[i],
+      time: times[i] || ""
+    }));
+
+    rows.sort((a,b) => {
+      // Người đã check luôn ở trên người chưa check.
+      if(a.checked !== b.checked) return a.checked ? -1 : 1;
+
+      // Trong nhóm đã check: giờ sớm hơn ở trên.
+      if(a.checked && b.checked){
+        const ta = a.time || "99:99";
+        const tb = b.time || "99:99";
+        const cmp = ta.localeCompare(tb);
+        if(cmp !== 0) return cmp;
+      }
+
+      // Nếu cùng giờ / chưa check: giữ nguyên thứ tự trong Sheet.
+      return a.index - b.index;
+    });
+
+    rows.forEach(row => {
       const tr = document.createElement("tr");
-      tr.dataset.index = i;
+      tr.dataset.index = row.index;
       tr.innerHTML = `<td class="playerName"></td><td class="checkTime"></td><td><div class="checkBox"></div></td>`;
-      tr.firstChild.textContent = name;
-      tr.querySelector(".checkTime").textContent = times[i] || "—";
-      if(checked[i]) tr.querySelector(".checkBox").classList.add("checked");
+      tr.firstChild.textContent = row.name;
+      tr.querySelector(".checkTime").textContent = row.time || "—";
+      if(row.checked) tr.querySelector(".checkBox").classList.add("checked");
       frag.appendChild(tr);
     });
+
     checklistBody.appendChild(frag);
   }
 
