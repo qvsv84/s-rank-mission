@@ -76,7 +76,7 @@ border-radius:20px;overflow:hidden;background:rgba(8,4,12,.78);backdrop-filter:b
 #checklist th{color:rgba(255,255,255,.48);font-size:11px;letter-spacing:1.2px;text-transform:uppercase}
 #checklist th:last-child,#checklist td:last-child{text-align:center;width:78px}
 #checklist tr:last-child td{border-bottom:0}
-.playerName{color:rgba(255,255,255,.8);font-size:14px;font-weight:600}
+.checkTime{color:rgba(255,255,255,.62);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:center}.playerName{color:rgba(255,255,255,.8);font-size:14px;font-weight:600}
 .checkBox{width:25px;height:25px;border-radius:8px;margin:auto;border:1px solid rgba(255,255,255,.25);
 background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center}
 .checkBox.checked{border-color:#ff70b9;background:linear-gradient(135deg,#ff3c91,#ff70b9);
@@ -167,7 +167,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   <div id="checklistTitle">Checklist nhiệm vụ</div>
   <div id="checklistSub">Danh sách người chơi</div>
   <div id="checklistScroll"><table id="checklist">
-    <thead><tr><th>Người chơi</th><th>Hoàn thành</th></tr></thead><tbody></tbody>
+    <thead><tr><th>Người chơi</th><th>Giờ</th><th>Hoàn thành</th></tr></thead><tbody></tbody>
   </table></div>
   <div id="checklistActions"><button id="captureBtn" type="button">📸 Chụp checklist</button><button id="syncBtn" type="button">↻ Đồng bộ lại</button></div>
 </section>
@@ -240,6 +240,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   let names = [];
   let checked = [];
+  let times = [];
   let current = 0;
   let q1Opened = false;
   let dragging = false, startY = 0, dragOffset = 0;
@@ -315,6 +316,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     if(next.getTime() <= now.getTime()) next.setDate(next.getDate()+1);
     resetTimer = setTimeout(async()=>{
       checked = names.map(()=>false);
+      times = names.map(()=>"");
       cacheSave();
       renderChecklist();
       setStatus("Checklist đã làm mới ✓");
@@ -441,8 +443,9 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     names.forEach((name,i) => {
       const tr = document.createElement("tr");
       tr.dataset.index = i;
-      tr.innerHTML = `<td class="playerName"></td><td><div class="checkBox"></div></td>`;
+      tr.innerHTML = `<td class="playerName"></td><td class="checkTime"></td><td><div class="checkBox"></div></td>`;
       tr.firstChild.textContent = name;
+      tr.querySelector(".checkTime").textContent = times[i] || "—";
       if(checked[i]) tr.querySelector(".checkBox").classList.add("checked");
       frag.appendChild(tr);
     });
@@ -491,6 +494,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       if(!r.ok) throw new Error(r.error || "getData lỗi");
       names = r.data.names || [];
       checked = r.data.checks || [];
+      times = r.data.times || [];
       cacheSave();
       renderChecklist();
       buildWheel();
@@ -503,6 +507,10 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   }
 
   async function checkin(name, index){
+    const localTime = new Intl.DateTimeFormat("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date());
+    times[index] = localTime;
+    cacheSave();
+    renderChecklist();
     // Optimistic UI: tick ngay, không chờ server.
     checked[index] = true;
     cacheSave();
@@ -512,6 +520,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     try{
       const r = await api("checkin",{name},6000);
       if(!r.ok) throw new Error(r.error || "checkin lỗi");
+      if(r.data && r.data.time) { times[index] = r.data.time; cacheSave(); renderChecklist(); }
       // Không gọi getData lần 2 -> giảm hẳn 1 request.
       checked[index] = true;
       cacheSave();
