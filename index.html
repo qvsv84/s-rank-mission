@@ -1105,7 +1105,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     const scoreEl = document.getElementById("finalAnimatedScore");
     if(scoreEl){
       const start = performance.now();
-      const duration = 2000;
+      const duration = 1000;
 
       function tick(now){
         const p = Math.min(1, (now-start)/duration);
@@ -1117,12 +1117,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     }
 
     burst();
-
-    // Giữ thông báo hoàn thành đủ 2.5 giây rồi mới biến mất.
-    setTimeout(()=>{
-      message.classList.remove("show");
-      setTimeout(()=>{ message.innerHTML=""; }, 350);
-    }, 2500);
   }
 
   function showMessage(html,duration=2200,next=null){
@@ -1335,7 +1329,12 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
     const playerPoints = Array.isArray(points) ? points[current] : 0;
 
-    showQuestion2();
+    showActivationMessage(
+      selected,
+      playerRank,
+      playerPoints,
+      showQuestion2
+    );
   });
 
   function showQuestion2(){
