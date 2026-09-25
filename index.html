@@ -968,24 +968,10 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const MONITOR_FB_LINK = "https://facebook.com/kinya03";
 
   function openMonitorFacebook(name){
-    // Mở tab mới ngay trong sự kiện click để giảm khả năng trình duyệt chặn popup.
-    const win = window.open("about:blank", "_blank");
+    // Mở thẳng Facebook trong tab mới; tab checklist hiện tại vẫn giữ nguyên.
+    const win = window.open(MONITOR_FB_LINK, "_blank", "noopener,noreferrer");
     if(!win){
       setStatus("Trình duyệt đang chặn cửa sổ mới. Hãy cho phép popup cho trang này.");
-      return;
-    }
-
-    try{
-      win.document.open();
-      win.document.write(`<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Đang mở Facebook</title><style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#09050d;color:#fff;font-family:Arial,sans-serif}div{text-align:center;padding:24px}b{display:block;font-size:20px;margin-bottom:8px}span{font-size:13px;color:#aaa}</style></head><body><div><b>Đang mở Facebook…</b><span>${String(name || "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}</span></div></body></html>`);
-      win.document.close();
-      win.onload = () => { win.location.href = MONITOR_FB_LINK; };
-      // about:blank đã có DOM; fallback nếu onload không phát sinh.
-      setTimeout(() => {
-        try { if(win && !win.closed) win.location.href = MONITOR_FB_LINK; } catch(_){}
-      }, 250);
-    }catch(_){
-      try{ win.location.href = MONITOR_FB_LINK; }catch(__){}
     }
   }
 
