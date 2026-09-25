@@ -113,42 +113,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 .topRow1{background:linear-gradient(90deg,rgba(255,215,120,.10),transparent)}.topRow2{background:linear-gradient(90deg,rgba(210,220,235,.08),transparent)}.topRow3{background:linear-gradient(90deg,rgba(190,120,80,.08),transparent)}
 #topTable tr:last-child td{border-bottom:0}
 #topCloseBtn{display:block;margin:13px auto 0;min-width:110px;min-height:40px;padding:8px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(135deg,#ff3c91,#ff70b9);color:#fff;font-weight:800}
-#bottomNav{
-  position:absolute;
-  left:50%;
-  right:auto;
-  top:clamp(8px,2vw,16px);
-  z-index:10000;
-  transform:translateX(-50%);
-  display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  gap:clamp(4px,1vw,7px);
-  width:min(760px,calc(100vw - 28px));
-  padding:clamp(5px,1vw,7px);
-  box-sizing:border-box;
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:20px;
-  background:rgba(8,4,14,.68);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  box-shadow:0 8px 28px rgba(0,0,0,.28),0 0 22px rgba(255,60,160,.08);
-}
-#bottomNav button{
-  min-width:0;
-  min-height:clamp(34px,8vw,42px);
-  padding:clamp(6px,1.6vw,9px) clamp(4px,1.1vw,10px);
-  border-radius:clamp(10px,2.5vw,14px);
-  border:1px solid rgba(255,255,255,.10);
-  background:transparent;
-  color:rgba(255,255,255,.72);
-  font-size:clamp(9px,2.2vw,12px);
-  font-weight:750;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  line-height:1.15;
-  transition:transform .18s,background .2s,box-shadow .2s,color .2s;
-}
+
 #bottomNav button:active{transform:scale(.96)}
 #homeBtn{
  background:linear-gradient(135deg,rgba(255,60,145,.88),rgba(255,112,185,.72)) !important;
@@ -157,9 +122,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #checklistBtn{color:rgba(255,255,255,.86)}
 
 /* Khi đang chọn tên, ẩn thanh Home/Checklist để không che nút Xác nhận */
-#space:has(#wheelArea.show) #bottomNav{
- display:none !important;
-}
+#space:has(#wheelArea.show) 
 
 
 /* ===== GIÁM SÁT ===== */
@@ -220,7 +183,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #linkEditorSave{background:linear-gradient(135deg,#ff3c91,#ff70b9)!important}
 #linkEditorClear{color:#ffb3d6!important}
 @media(max-width:420px){#monitorPanel{padding:15px;max-height:calc(100dvh - 22px)}#monitorScroll{max-height:calc(100dvh - 170px)}#monitorTable th,#monitorTable td{padding-left:5px;padding-right:5px}.monitorLinkState{max-width:105px}.monitorCheckBtn,.monitorAssignBtn{padding:6px 7px;font-size:9px}}
-@media (max-width:420px){#bottomNav{top:9px;gap:4px;width:calc(100vw - 10px);padding:4px;border-radius:16px}#bottomNav button{min-height:34px;padding:6px 2px;font-size:9px;border-radius:10px}}
+@media (max-width:420px){}
 
 /* ===== ADMIN ===== */
 #adminBtn{color:rgba(255,255,255,.86)}
@@ -245,7 +208,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #adminActions button{flex:1;min-height:42px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font-weight:700}
 #adminSaveBtn{background:linear-gradient(135deg,#ff3c91,#ff70b9)!important;box-shadow:0 0 18px rgba(255,50,145,.3)}
 #adminResetNowBtn{margin-top:10px;width:100%;min-height:40px;border-radius:999px;border:1px solid rgba(255,120,180,.18);background:rgba(255,60,145,.08);color:#ffb0d3;font-weight:700}
-@media (max-width:420px){#bottomNav{top:9px;gap:4px;width:calc(100vw - 10px);padding:4px;border-radius:16px}#bottomNav button{min-height:34px;padding:6px 2px;font-size:9px;border-radius:10px}}
+@media (max-width:420px){}
 
 /* Landing: title and Click here are always separate, centered lines */
 #question{
@@ -703,27 +666,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 }
 
 
-/* ---------- Luật KDV ---------- */
-#kdvRulesBtn{
-  position:absolute;
-  left:50%;
-  top:clamp(58px,13vw,72px);
-  transform:translateX(-50%);
-  z-index:10001;
-  min-height:34px;
-  padding:7px 18px;
-  border-radius:999px;
-  border:1px solid rgba(255,120,190,.28);
-  background:rgba(26,8,28,.78);
-  color:#ffc3df;
-  font-size:11px;
-  font-weight:850;
-  letter-spacing:.2px;
-  box-shadow:0 6px 20px rgba(0,0,0,.22),0 0 18px rgba(255,60,160,.10);
-  backdrop-filter:blur(12px);
-  -webkit-tap-highlight-color:transparent;
-}
-#kdvRulesBtn:active{transform:translateX(-50%) scale(.96)}
 
 #kdvRulesOverlay{
   position:fixed;
@@ -987,12 +929,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   box-shadow:0 6px 20px rgba(0,0,0,.22),0 0 18px rgba(255,60,160,.08);
   transition:opacity .18s,transform .18s;
 }
-#quickToolsBar.hidden{
-  display:none !important;
-  opacity:0 !important;
-  pointer-events:none !important;
-  visibility:hidden !important;
-}
+#quickToolsBar.hidden{opacity:0!important;pointer-events:none!important;transform:translate(-50%,-8px)!important}
 #quickToolsBar button{
   min-height:32px;padding:6px 12px;border-radius:999px;
   border:1px solid rgba(255,120,190,.20);background:rgba(255,70,155,.06);
@@ -1005,6 +942,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   #quickToolsBar{top:clamp(55px,14vw,66px);gap:3px;width:calc(100vw - 24px);padding:3px}
   #quickToolsBar button{min-width:0;flex:1 1 0;padding:6px 4px;font-size:clamp(8px,2.25vw,10px)}
 }
+
 
 /* ===== BÀI KIỂM TRA ===== */
 #quizOverlay,#quizNameOverlay,#quizTakeOverlay,#quizResultOverlay,#quizBuilderOverlay{
@@ -1166,6 +1104,146 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   overflow-wrap:anywhere;
 }
 
+
+
+
+
+
+/* ===== CLEAN FIXED NAVIGATION ===== */
+#bottomNav,
+#secondaryNav{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  box-sizing:border-box;
+  display:grid;
+  align-items:stretch;
+  overflow:hidden;
+  touch-action:manipulation;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(8,4,14,.70);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  box-shadow:0 8px 28px rgba(0,0,0,.28),0 0 22px rgba(255,60,160,.08);
+}
+
+#bottomNav{
+  top:clamp(7px,1.8vw,14px);
+  width:min(760px,calc(100vw - 24px));
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:4px;
+  padding:4px;
+  border-radius:18px;
+  z-index:10000;
+}
+
+#secondaryNav{
+  top:clamp(57px,12vw,70px);
+  width:min(430px,calc(100vw - 24px));
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:4px;
+  padding:4px;
+  border-radius:18px;
+  z-index:9999;
+}
+#secondaryNav.admin-visible{
+  width:min(620px,calc(100vw - 24px));
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+
+#bottomNav button,
+#secondaryNav button{
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  min-height:clamp(34px,8vw,42px);
+  padding:5px 3px;
+  border-radius:13px;
+  border:1px solid rgba(255,255,255,.09);
+  background:transparent;
+  color:rgba(255,255,255,.76);
+  font-size:clamp(8.5px,2.45vw,11px);
+  font-weight:800;
+  line-height:1.08;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:center;
+  -webkit-tap-highlight-color:transparent;
+}
+#bottomNav button.active,
+#secondaryNav button.active{
+  color:#fff;
+  background:linear-gradient(135deg,rgba(255,60,145,.82),rgba(255,95,175,.65));
+  border-color:rgba(255,160,210,.34);
+  box-shadow:0 0 18px rgba(255,55,155,.18);
+}
+#secondaryNav #quizBtn{
+  color:#ffd8a8;
+  border-color:rgba(255,180,90,.20);
+}
+#secondaryNav #quizAdminBtn{
+  color:#bcdcff;
+  border-color:rgba(130,190,255,.20);
+}
+#secondaryNav button[hidden]{display:none!important}
+#secondaryNav.nav-hidden{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+
+@media(max-width:600px){
+  #bottomNav{
+    top:7px;
+    width:calc(100vw - 16px);
+    max-width:calc(100vw - 16px);
+    gap:3px;
+    padding:3px;
+    border-radius:16px;
+  }
+  #secondaryNav{
+    top:clamp(54px,13vw,66px);
+    width:calc(100vw - 16px);
+    max-width:calc(100vw - 16px);
+    gap:3px;
+    padding:3px;
+    border-radius:16px;
+  }
+  #secondaryNav.admin-visible{
+    width:calc(100vw - 16px);
+  }
+  #bottomNav button,
+  #secondaryNav button{
+    min-height:34px;
+    padding:5px 2px;
+    font-size:clamp(8px,2.35vw,9.5px);
+    border-radius:11px;
+  }
+}
+@media(max-width:360px){
+  #bottomNav,
+  #secondaryNav{
+    width:calc(100vw - 12px);
+    max-width:calc(100vw - 12px);
+    gap:2px;
+    padding:2px;
+  }
+  #bottomNav button,
+  #secondaryNav button{
+    min-height:32px;
+    padding:4px 1px;
+    font-size:7.3px;
+    border-radius:9px;
+  }
+}
+
+
+@media(max-width:600px){
+  #questionWrap{top:40%}
+}
+
 </style>
 
 </head>
@@ -1207,19 +1285,19 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   <button id="topCloseBtn" type="button">Đóng</button>
 </section>
 
-<nav id="bottomNav">
+<nav id="bottomNav" aria-label="Điều hướng chính">
   <button id="homeBtn" type="button">⌂ Home</button>
   <button id="adminBtn" type="button">⚙ Admin</button>
   <button id="monitorBtn" type="button">👁 Giám sát</button>
   <button id="topBtn" type="button">🏆 BXH TOP</button>
   <button id="checklistBtn" type="button">☑ Checklist</button>
 </nav>
-
-<div id="quickToolsBar" aria-label="Công cụ nhanh">
+<nav id="secondaryNav" aria-label="Công cụ">
   <button id="kdvRulesBtn" type="button" aria-label="Mở Luật KDV">📜 Luật KDV</button>
   <button id="quizBtn" type="button" aria-label="Mở Bài kiểm tra">📝 Bài kiểm tra</button>
   <button id="quizAdminBtn" type="button" aria-label="Tạo bài kiểm tra" hidden>⚙ Tạo Ktra</button>
-</div>
+</nav>
+
 
 <div id="kdvRulesOverlay" aria-hidden="true">
   <section id="kdvRulesPanel" role="dialog" aria-modal="true" aria-labelledby="kdvRulesTitle">
@@ -1435,9 +1513,9 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const monitorOverlay = document.getElementById("monitorOverlay");
   const monitorBody = document.querySelector("#monitorTable tbody");
   const monitorCloseBtn = document.getElementById("monitorCloseBtn");
-  const quickToolsBar = document.getElementById("quickToolsBar");
   const quizBtn = document.getElementById("quizBtn");
   const quizAdminBtn = document.getElementById("quizAdminBtn");
+  const secondaryNav = document.getElementById("secondaryNav");
   const quizOverlay = document.getElementById("quizOverlay");
   const quizClose = document.getElementById("quizClose");
   const quizLeaderboardBody = document.querySelector("#quizLeaderboard tbody");
@@ -1717,16 +1795,12 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     linkEditorOverlay.classList.add("show");
     linkEditorOverlay.setAttribute("aria-hidden","false");
     setTimeout(()=>linkEditorInput.focus(),50);
-  
-    if(typeof syncQuickTools==="function") syncQuickTools();
   }
 
   function closeLinkEditor(){
     linkEditorOverlay.classList.remove("show");
     linkEditorOverlay.setAttribute("aria-hidden","true");
     editingMonitorName = "";
-  
-    if(typeof syncQuickTools==="function") syncQuickTools();
   }
 
   function saveEditedMonitorLink(){
@@ -1863,13 +1937,11 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     adminPasswordInput.value="";
     adminPasswordOverlay.style.display="flex";
     adminPasswordOverlay.setAttribute("aria-hidden","false");
-    if(typeof syncQuickTools==="function") syncQuickTools();
     setTimeout(()=>adminPasswordInput.focus(),50);
   }
   function closeAdminPassword(){
     adminPasswordOverlay.style.display="none";
     adminPasswordOverlay.setAttribute("aria-hidden","true");
-    if(typeof syncQuickTools==="function") syncQuickTools();
   }
   function renderAdminChecklistEditor(){
     if(!adminChecklistRows) return;
@@ -2374,6 +2446,7 @@ function renderTop(){
     setTimeout(()=>{
       wheelArea.classList.add("show"); renderWheel();
       hint.textContent="Vuốt lên / xuống • ↑ ↓ để chọn • Enter để xác nhận";
+      if(typeof syncQuickTools==="function") syncQuickTools();
     },180);
   }
   question.addEventListener("pointerup",openQuestion1,{passive:false});
@@ -2822,6 +2895,8 @@ function renderTop(){
     wheelArea.classList.remove("show");
     confirm.classList.remove("show");
 
+    if(typeof syncQuickTools==="function") syncQuickTools();
+
     q1Opened = false;
     current = 0;
     dragOffset = 0;
@@ -2945,8 +3020,10 @@ function renderTop(){
     });
   }
   function syncQuickTools(){
-    // Luật KDV + Bài kiểm tra chỉ thuộc giao diện HOME.
-    // Khi chuyển sang bất kỳ tab/bảng chức năng nào khác thì ẩn hoàn toàn.
+    renderQuizAdminButton();
+
+    // Thanh 2 (Luật KDV / Bài kiểm tra / Tạo Ktra) chỉ xuất hiện ở HOME.
+    // Bất kỳ bảng/tab/màn hình con nào mở ra -> ẩn hoàn toàn.
     const otherViewOpen =
       kdvRulesOverlay.classList.contains("show") ||
       monitorOverlay.classList.contains("show") ||
@@ -2960,11 +3037,17 @@ function renderTop(){
       quizTakeOverlay.classList.contains("show") ||
       quizResultOverlay.classList.contains("show") ||
       quizBuilderOverlay.classList.contains("show") ||
-      wheelArea.classList.contains("show");
+      wheelArea.classList.contains("show") ||
+      message.classList.contains("show") ||
+      confirm.classList.contains("show");
 
-    quickToolsBar.classList.toggle("hidden", otherViewOpen);
+    secondaryNav.classList.toggle("nav-hidden", otherViewOpen);
+    secondaryNav.setAttribute("aria-hidden", otherViewOpen ? "true" : "false");
   }
-  function renderQuizAdminButton(){quizAdminBtn.hidden=!adminUnlocked}
+  function renderQuizAdminButton(){
+    quizAdminBtn.hidden=!adminUnlocked;
+    secondaryNav.classList.toggle("admin-visible", !!adminUnlocked);
+  }
 
   function openQuiz(){
     closeTop();
@@ -3100,6 +3183,13 @@ function renderTop(){
     quizQuestions=clean;saveQuizStore();quizBuilderStatus.textContent=`Đã lưu ${quizQuestions.length} câu hỏi ✓`;
     setTimeout(closeQuizBuilder,500);
   }
+
+
+  function markNavButton(btn){
+    document.querySelectorAll("#bottomNav button").forEach(b=>b.classList.remove("active"));
+    if(btn) btn.classList.add("active");
+  }
+  kdvRulesBtn.addEventListener("click",()=>markNavButton(kdvRulesBtn));
 
   quizBtn.addEventListener("click",openQuiz);
   quizClose.addEventListener("click",closeQuiz);
