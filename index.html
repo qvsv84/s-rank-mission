@@ -60,6 +60,11 @@ box-shadow:0 0 20px #fff,0 0 60px #ff4fa3,0 0 120px #ff4fa3;transform:translate(
 
 #hint{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);color:rgba(255,255,255,.38);font-size:12px;z-index:10;white-space:nowrap}
 #status{position:absolute;right:12px;top:10px;z-index:100;color:rgba(255,255,255,.42);font-size:10px;opacity:0;transition:opacity .2s}
+#connectionState{position:absolute;left:12px;top:10px;z-index:100;display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:rgba(8,4,14,.45);backdrop-filter:blur(10px);font-size:10px;color:rgba(255,255,255,.58);pointer-events:none}
+#connectionState .dot{width:6px;height:6px;border-radius:50%;background:#ffb0d3;box-shadow:0 0 8px currentColor}
+#connectionState.ok .dot{background:#79f2bd;color:#79f2bd}
+#connectionState.busy .dot{background:#ffd66b;color:#ffd66b}
+#connectionState.off .dot{background:#ff6f91;color:#ff6f91}
 #status.show{opacity:1}
 
 #checklistPanel{position:absolute;left:50%;top:50%;z-index:9999;width:min(90vw,460px);max-height:82vh;
@@ -627,6 +632,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 <main id="space">
 <canvas id="stars"></canvas>
 <div id="status"></div>
+<div id="connectionState" class="off"><span class="dot"></span><span id="connectionText">Đang kết nối…</span></div>
 
 <div id="questionWrap">
   <div id="counter">CÂU 1</div>
@@ -757,8 +763,20 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   // ---------- Fast JSONP transport ----------
   let requestSeq = 0;
+  let syncInFlight = false;
+  let autoSyncTimer = null;
+  let lastServerSync = 0;
+  const AUTO_SYNC_MS = 30000;
+  const connectionState = document.getElementById("connectionState");
+  const connectionText = document.getElementById("connectionText");
+
+  function setConnection(state, text){
+    connectionState.className = state;
+    connectionText.textContent = text;
+  }
   function api(action, data = {}, timeout = 7000){
     return new Promise((resolve,reject) => {
+      setConnection("busy", "Đang đồng bộ…");
       const cb = "__srank_" + Date.now() + "_" + (++requestSeq);
       const script = document.createElement("script");
       const u = new URL(SCRIPT_URL);
@@ -775,9 +793,19 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
         script.remove();
         fn(value);
       };
-      window[cb] = result => finish(resolve, result);
-      script.onerror = () => finish(reject, new Error("Không kết nối được Google Sheet"));
-      const timer = setTimeout(() => finish(reject, new Error("Google Sheet phản hồi chậm")), timeout);
+      window[cb] = result => {
+        setConnection("ok", "Đã kết nối");
+        lastServerSync = Date.now();
+        finish(resolve, result);
+      };
+      script.onerror = () => {
+        setConnection("off", "Mất kết nối");
+        finish(reject, new Error("Không kết nối được Google Sheet"));
+      };
+      const timer = setTimeout(() => {
+        setConnection("off", "Phản hồi chậm");
+        finish(reject, new Error("Google Sheet phản hồi chậm"));
+      }, timeout);
       script.src = u.toString();
       document.head.appendChild(script);
     });
@@ -831,15 +859,18 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       try{
         const r = await api("resetNow",{password:"8516"},7000);
         if(!r.ok) throw new Error(r.error || "Reset thất bại");
-      }catch(_){}
-
-      checked = names.map(()=>false);
-      times = names.map(()=>"");
-      cacheSave();
-      renderChecklist();
-      renderAdminChecklistEditor();
-      setStatus("Checklist đã làm mới ✓");
-      scheduleNextReset();
+        checked = names.map(()=>false);
+        times = names.map(()=>"");
+        cacheSave();
+        renderChecklist();
+        renderAdminChecklistEditor();
+        setStatus("Checklist đã làm mới ✓");
+      }catch(e){
+        setStatus("Reset chưa thành công — sẽ thử lại ✓");
+        // Không xoá dữ liệu local nếu server chưa xác nhận reset.
+      }finally{
+        scheduleNextReset();
+      }
     }, Math.max(1000,next.getTime()-now.getTime()));
   }
 
@@ -1145,8 +1176,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   }
 
   async function loadData(showError = true, force = false){
-    // Sheet chỉ được dùng để khởi tạo dữ liệu.
-    // Sau lần tải đầu, HTML là nguồn chuẩn cho checked/times.
+    if(syncInFlight) return false;
     if(initialSheetLoaded && !force){
       renderChecklist();
       buildWheel();
@@ -1154,39 +1184,57 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       return true;
     }
 
-    if(!names.length && cacheLoad()){
-      renderChecklist();
-      buildWheel();
-    }
-
+    syncInFlight = true;
     try{
+      if(!names.length && cacheLoad()){
+        renderChecklist();
+        buildWheel();
+      }
+
       const r = await api("getData");
       if(!r.ok) throw new Error(r.error || "getData lỗi");
 
-      // Tên + điểm lấy từ Sheet.
-      names = r.data.names || [];
-      points = Array.isArray(r.data.points) ? r.data.points : names.map(()=>100);
+      const serverNames = Array.isArray(r.data.names) ? r.data.names : [];
+      const serverPoints = Array.isArray(r.data.points) ? r.data.points : serverNames.map(()=>100);
+      const serverChecks = Array.isArray(r.data.checks) ? r.data.checks : [];
+      const serverTimes = Array.isArray(r.data.times) ? r.data.times : [];
+
+      names = serverNames;
+      points = serverPoints;
       ranks = points.map(rankClient);
 
-      // B/D chỉ lấy từ Sheet đúng 1 lần khi khởi tạo.
-      if(!initialSheetLoaded){
-        checked = r.data.checks || [];
-        times = r.data.times || [];
+      // Lần đầu: lấy toàn bộ trạng thái từ Sheet.
+      // Đồng bộ thủ công/auto: cũng lấy lại check + giờ để các máy thấy thay đổi của nhau.
+      if(!initialSheetLoaded || force){
+        checked = serverChecks;
+        times = serverTimes;
       }
 
       initialSheetLoaded = true;
+      lastServerSync = Date.now();
       cacheSave();
       renderChecklist();
       buildWheel();
       renderAdminChecklistEditor();
       hint.textContent = "Chạm vào câu hỏi";
-      setStatus("Đã đồng bộ ✓");
+      setStatus(force ? "Đã cập nhật ✓" : "Đã đồng bộ ✓");
       return true;
     }catch(e){
       if(showError && !names.length) hint.textContent = "Không tải được dữ liệu";
       if(names.length) setStatus("Đang dùng dữ liệu đã lưu");
       return false;
+    }finally{
+      syncInFlight = false;
     }
+  }
+
+  function startAutoSync(){
+    clearInterval(autoSyncTimer);
+    autoSyncTimer = setInterval(() => {
+      // Không làm gián đoạn màn hình chọn tên / hiệu ứng kết quả.
+      if(document.hidden || wheelArea.classList.contains("show") || message.classList.contains("show")) return;
+      loadData(false, true);
+    }, AUTO_SYNC_MS);
   }
 
   async function checkin(name, index){
@@ -1836,7 +1884,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       checklistPanel.style.opacity = "1";
       checklistPanel.style.pointerEvents = "auto";
       renderChecklist();
-      loadData(false);
+      if(!initialSheetLoaded) loadData(false);
     } else {
       // ẨN bảng — xoá cả class lẫn inline style để chắc chắn ẩn
       checklistPanel.classList.remove("show");
@@ -1861,12 +1909,13 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   topCloseBtn.addEventListener("click", closeTop);
   topPanel.addEventListener("click", e => { if(e.target === topPanel) closeTop(); });
 
-  syncBtn.addEventListener("click",()=>loadData(true));
+  syncBtn.addEventListener("click",()=>loadData(true, true));
 
   // Load Sheet ngay khi mở; cache hiển thị trước nếu có.
   loadData(true);
   loadAdminSettings();
   scheduleNextReset();
+  startAutoSync();
 })();
 
 /* 3D space-to-text assembly for the final system notification */
