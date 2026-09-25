@@ -968,11 +968,16 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const MONITOR_FB_LINK = "https://facebook.com/kinya03";
 
   function openMonitorFacebook(name){
-    // Mở thẳng Facebook trong tab mới; tab checklist hiện tại vẫn giữ nguyên.
-    const win = window.open(MONITOR_FB_LINK, "_blank", "noopener,noreferrer");
-    if(!win){
-      setStatus("Trình duyệt đang chặn cửa sổ mới. Hãy cho phép popup cho trang này.");
-    }
+    // Mở Facebook bằng thẻ <a> thật để trình duyệt chỉ tạo đúng 1 tab mới.
+    // Không dùng window.open() vì trên iOS/Chrome có thể phát sinh thêm tab trắng.
+    const a = document.createElement("a");
+    a.href = MONITOR_FB_LINK;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   function renderMonitor(){
