@@ -976,6 +976,128 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   #bottomNav button{font-size:8px;padding-left:2px;padding-right:2px}
 }
 
+
+/* ===== CÔNG CỤ NHANH ===== */
+#quickToolsBar{
+  position:absolute;left:50%;top:clamp(58px,13vw,72px);transform:translateX(-50%);
+  z-index:10001;display:flex;align-items:center;justify-content:center;gap:6px;
+  width:max-content;max-width:calc(100vw - 24px);padding:4px;box-sizing:border-box;
+  border:1px solid rgba(255,255,255,.09);border-radius:999px;
+  background:rgba(10,4,15,.60);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 6px 20px rgba(0,0,0,.22),0 0 18px rgba(255,60,160,.08);
+  transition:opacity .18s,transform .18s;
+}
+#quickToolsBar.hidden{opacity:0!important;pointer-events:none!important;transform:translate(-50%,-8px)!important}
+#quickToolsBar button{
+  min-height:32px;padding:6px 12px;border-radius:999px;
+  border:1px solid rgba(255,120,190,.20);background:rgba(255,70,155,.06);
+  color:#ffc0df;font-size:10px;font-weight:850;white-space:nowrap;
+}
+#quickToolsBar #quizBtn{border-color:rgba(255,180,90,.20);color:#ffd8a8;background:rgba(255,170,70,.06)}
+#quickToolsBar #quizAdminBtn{border-color:rgba(130,190,255,.20);color:#bcdcff;background:rgba(80,150,255,.06)}
+#quickToolsBar button[hidden]{display:none!important}
+@media(max-width:600px){
+  #quickToolsBar{top:clamp(55px,14vw,66px);gap:3px;width:calc(100vw - 24px);padding:3px}
+  #quickToolsBar button{min-width:0;flex:1 1 0;padding:6px 4px;font-size:clamp(8px,2.25vw,10px)}
+}
+
+/* ===== BÀI KIỂM TRA ===== */
+#quizOverlay,#quizNameOverlay,#quizTakeOverlay,#quizResultOverlay,#quizBuilderOverlay{
+  position:fixed;inset:0;z-index:25000;display:none;align-items:center;justify-content:center;
+  padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right))
+           max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+  box-sizing:border-box;background:rgba(0,0,0,.74);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+#quizOverlay.show,#quizNameOverlay.show,#quizTakeOverlay.show,#quizResultOverlay.show,#quizBuilderOverlay.show{display:flex}
+#quizPanel,#quizNamePanel,#quizTakePanel,#quizResultPanel,#quizBuilderPanel{
+  position:relative;width:min(92vw,500px);max-height:calc(100dvh - 24px);box-sizing:border-box;
+  border:1px solid rgba(255,150,210,.18);border-radius:26px;
+  background:radial-gradient(circle at 50% -10%,rgba(255,75,165,.15),transparent 38%),linear-gradient(145deg,rgba(25,8,28,.99),rgba(7,4,13,.99));
+  box-shadow:0 24px 80px rgba(0,0,0,.62),0 0 40px rgba(255,60,160,.11);color:#fff;
+}
+#quizPanel,#quizNamePanel,#quizBuilderPanel{padding:21px 15px 15px;overflow:hidden}
+#quizTakePanel,#quizResultPanel{padding:22px 16px 17px}
+#quizClose,#quizNameClose,#quizBuilderClose{
+  position:absolute;top:10px;right:10px;z-index:3;width:34px;height:34px;padding:0;border-radius:50%;
+  border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.07);color:rgba(255,255,255,.86);
+  font-size:22px;line-height:32px;
+}
+#quizTitle,#quizNameTitle,#quizBuilderTitle,#quizTakeTitle,#quizResultTitle{
+  text-align:center;font-size:21px;font-weight:900;text-shadow:0 0 14px rgba(255,76,169,.75)
+}
+#quizSub,#quizNameSub,#quizBuilderSub{text-align:center;margin:5px 26px 13px;color:rgba(255,255,255,.45);font-size:10px}
+#quizLeaderboardWrap{max-height:min(52dvh,430px);overflow:auto;-webkit-overflow-scrolling:touch;border-radius:15px}
+#quizLeaderboard{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:11px}
+#quizLeaderboard th{color:rgba(255,255,255,.40);font-size:9px;font-weight:800;text-align:left;padding:0 8px 3px}
+#quizLeaderboard td{padding:9px 8px;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.045)}
+#quizLeaderboard td:first-child{border-left:1px solid rgba(255,255,255,.07);border-radius:11px 0 0 11px;text-align:center;width:36px}
+#quizLeaderboard td:last-child{border-right:1px solid rgba(255,255,255,.07);border-radius:0 11px 11px 0;text-align:right;color:#ff9dcc;font-weight:900}
+#quizEmpty{text-align:center;color:rgba(255,255,255,.36);font-size:10px;padding:18px 8px}
+#startQuizBtn,#quizNextBtn,#quizResultClose{
+  width:100%;min-height:44px;margin-top:12px;border:0;border-radius:999px;
+  background:linear-gradient(135deg,#ff3c91,#ff70b9);color:#fff;font-size:12px;font-weight:900;
+  box-shadow:0 8px 22px rgba(255,45,140,.18)
+}
+#quizNextBtn:disabled{opacity:.38;box-shadow:none}
+#quizNameList{max-height:min(58dvh,500px);overflow:auto;-webkit-overflow-scrolling:touch;padding:2px}
+.quizNameItem{
+  width:100%;min-height:43px;margin:6px 0;padding:9px 12px;box-sizing:border-box;border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045);color:rgba(255,255,255,.88);
+  text-align:left;font-size:12px;font-weight:750
+}
+.quizNoNames{text-align:center;color:rgba(255,255,255,.40);padding:20px;font-size:11px}
+#quizTakeTop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-right:36px}
+#quizTakeTitle{text-align:left;font-size:17px}
+#quizProgress{font-size:10px;color:rgba(255,255,255,.42);white-space:nowrap}
+#quizQuestion{
+  margin-top:18px;padding:15px;border:1px solid rgba(255,255,255,.09);border-radius:17px;
+  background:rgba(255,255,255,.045);font-size:14px;line-height:1.5;font-weight:800
+}
+.quizAnswer{
+  display:grid;grid-template-columns:32px minmax(0,1fr);gap:9px;align-items:center;width:100%;min-height:48px;
+  margin:8px 0;padding:8px 10px;box-sizing:border-box;border-radius:15px;
+  border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);color:rgba(255,255,255,.88);
+  text-align:left;font-size:11px;line-height:1.4
+}
+.quizAnswerLetter{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(255,70,155,.12);color:#ff9dcc;font-weight:900}
+.quizAnswer.selected{border-color:rgba(255,100,180,.60);background:rgba(255,60,155,.12);box-shadow:0 0 14px rgba(255,50,150,.10)}
+#quizResultPanel{text-align:center;width:min(88vw,370px)}
+.quizResultIcon{font-size:38px;margin-bottom:4px}
+#quizResultName{margin-top:7px;color:rgba(255,255,255,.50);font-size:11px}
+#quizResultScore{margin:12px 0 3px;font-size:34px;font-weight:950;color:#ff9dcc;text-shadow:0 0 18px rgba(255,65,160,.55)}
+#quizResultDetail{font-size:10px;color:rgba(255,255,255,.42)}
+#quizBuilderPanel{width:min(94vw,600px)}
+#quizBuilderList{max-height:calc(100dvh - 245px);overflow:auto;-webkit-overflow-scrolling:touch;padding:2px 2px 5px}
+.quizQuestionCard{margin:8px 0;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:17px;background:rgba(255,255,255,.035)}
+.quizQuestionHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.quizQuestionNo{color:#ff9dcc;font-size:11px;font-weight:900}
+.quizQuestionRemove{border:0;background:transparent;color:rgba(255,255,255,.38);font-size:10px}
+.quizQuestionInput{
+  width:100%;min-height:58px;resize:vertical;box-sizing:border-box;padding:10px;border-radius:12px;
+  border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.20);color:#fff;font-size:11px;outline:none
+}
+.quizAnswerEdit{display:grid;grid-template-columns:28px minmax(0,1fr) 30px;gap:6px;align-items:center;margin-top:7px}
+.quizAnswerEdit .letter{color:#ff9dcc;font-weight:900;text-align:center}
+.quizAnswerInput{
+  width:100%;min-height:37px;box-sizing:border-box;padding:8px 9px;border-radius:10px;
+  border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.18);color:#fff;font-size:10px;outline:none
+}
+.quizCorrectRadio{width:18px;height:18px;accent-color:#ff4fa3}
+.quizAddAnswer{
+  margin-top:8px;border:1px dashed rgba(255,120,190,.25);background:transparent;color:#ffafd2;
+  border-radius:999px;min-height:30px;padding:5px 10px;font-size:9px;font-weight:800
+}
+#quizBuilderActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+#quizBuilderActions button{min-height:42px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.06);color:#fff;font-size:10px;font-weight:850}
+#saveQuizBtn{background:linear-gradient(135deg,#ff3c91,#ff70b9)!important;border:0!important}
+#quizBuilderStatus{text-align:center;min-height:15px;margin-top:7px;color:#ff9dcc;font-size:9px}
+@media(max-width:600px){
+  #quizPanel,#quizNamePanel,#quizTakePanel,#quizResultPanel,#quizBuilderPanel{width:calc(100vw - 20px);max-height:calc(100dvh - 20px);border-radius:22px}
+  #quizTitle,#quizNameTitle,#quizBuilderTitle{font-size:19px}
+  #quizQuestion{font-size:13px}
+  #quizBuilderList{max-height:calc(100dvh - 235px)}
+}
+
 </style>
 
 </head>
@@ -1025,7 +1147,11 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   <button id="checklistBtn" type="button">☑ Checklist</button>
 </nav>
 
-<button id="kdvRulesBtn" type="button" aria-label="Mở Luật KDV">📜 Luật KDV</button>
+<div id="quickToolsBar" aria-label="Công cụ nhanh">
+  <button id="kdvRulesBtn" type="button" aria-label="Mở Luật KDV">📜 Luật KDV</button>
+  <button id="quizBtn" type="button" aria-label="Mở Bài kiểm tra">📝 Bài kiểm tra</button>
+  <button id="quizAdminBtn" type="button" aria-label="Tạo bài kiểm tra" hidden>⚙ Tạo Ktra</button>
+</div>
 
 <div id="kdvRulesOverlay" aria-hidden="true">
   <section id="kdvRulesPanel" role="dialog" aria-modal="true" aria-labelledby="kdvRulesTitle">
@@ -1086,6 +1212,69 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     </div>
 
     <div class="kdvFooter">♡ Kiểm duyệt đúng luật • Công bằng • Rõ ràng ♡</div>
+  </section>
+</div>
+
+
+<div id="quizOverlay" aria-hidden="true">
+  <section id="quizPanel" role="dialog" aria-modal="true" aria-labelledby="quizTitle">
+    <button id="quizClose" type="button" aria-label="Đóng Bài kiểm tra">×</button>
+    <div id="quizTitle">📝 BÀI KIỂM TRA</div>
+    <div id="quizSub">Bảng điểm kiểm tra</div>
+    <div id="quizLeaderboardWrap">
+      <table id="quizLeaderboard">
+        <thead><tr><th>#</th><th>Tên</th><th>Điểm</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div id="quizEmpty">Chưa có ai hoàn thành bài kiểm tra.</div>
+    </div>
+    <button id="startQuizBtn" type="button">🎯 Làm bài kiểm tra</button>
+  </section>
+</div>
+
+<div id="quizNameOverlay" aria-hidden="true">
+  <section id="quizNamePanel" role="dialog" aria-modal="true" aria-labelledby="quizNameTitle">
+    <button id="quizNameClose" type="button" aria-label="Đóng chọn tên">×</button>
+    <div id="quizNameTitle">👤 Chọn tên</div>
+    <div id="quizNameSub">Chọn tên của bạn để bắt đầu</div>
+    <div id="quizNameList"></div>
+  </section>
+</div>
+
+<div id="quizTakeOverlay" aria-hidden="true">
+  <section id="quizTakePanel" role="dialog" aria-modal="true" aria-labelledby="quizTakeTitle">
+    <div id="quizTakeTop">
+      <div id="quizTakeTitle">📝 Bài kiểm tra</div>
+      <div id="quizProgress"></div>
+    </div>
+    <div id="quizQuestion"></div>
+    <div id="quizAnswers"></div>
+    <button id="quizNextBtn" type="button" disabled>Tiếp tục</button>
+  </section>
+</div>
+
+<div id="quizResultOverlay" aria-hidden="true">
+  <section id="quizResultPanel" role="dialog" aria-modal="true">
+    <div class="quizResultIcon">🎉</div>
+    <div id="quizResultTitle">Hoàn thành!</div>
+    <div id="quizResultName"></div>
+    <div id="quizResultScore">0 điểm</div>
+    <div id="quizResultDetail"></div>
+    <button id="quizResultClose" type="button">Xem BXH</button>
+  </section>
+</div>
+
+<div id="quizBuilderOverlay" aria-hidden="true">
+  <section id="quizBuilderPanel" role="dialog" aria-modal="true" aria-labelledby="quizBuilderTitle">
+    <button id="quizBuilderClose" type="button" aria-label="Đóng Tạo Ktra">×</button>
+    <div id="quizBuilderTitle">⚙ TẠO BÀI KIỂM TRA</div>
+    <div id="quizBuilderSub">Mỗi câu đúng = 10 điểm • Chọn 1 đáp án đúng</div>
+    <div id="quizBuilderList"></div>
+    <div id="quizBuilderActions">
+      <button id="addQuizQuestionBtn" type="button">＋ Thêm câu hỏi</button>
+      <button id="saveQuizBtn" type="button">💾 Lưu bài kiểm tra</button>
+    </div>
+    <div id="quizBuilderStatus"></div>
   </section>
 </div>
 
@@ -1178,6 +1367,33 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const monitorOverlay = document.getElementById("monitorOverlay");
   const monitorBody = document.querySelector("#monitorTable tbody");
   const monitorCloseBtn = document.getElementById("monitorCloseBtn");
+  const quickToolsBar = document.getElementById("quickToolsBar");
+  const quizBtn = document.getElementById("quizBtn");
+  const quizAdminBtn = document.getElementById("quizAdminBtn");
+  const quizOverlay = document.getElementById("quizOverlay");
+  const quizClose = document.getElementById("quizClose");
+  const quizLeaderboardBody = document.querySelector("#quizLeaderboard tbody");
+  const quizEmpty = document.getElementById("quizEmpty");
+  const startQuizBtn = document.getElementById("startQuizBtn");
+  const quizNameOverlay = document.getElementById("quizNameOverlay");
+  const quizNameClose = document.getElementById("quizNameClose");
+  const quizNameList = document.getElementById("quizNameList");
+  const quizTakeOverlay = document.getElementById("quizTakeOverlay");
+  const quizProgress = document.getElementById("quizProgress");
+  const quizQuestion = document.getElementById("quizQuestion");
+  const quizAnswers = document.getElementById("quizAnswers");
+  const quizNextBtn = document.getElementById("quizNextBtn");
+  const quizResultOverlay = document.getElementById("quizResultOverlay");
+  const quizResultName = document.getElementById("quizResultName");
+  const quizResultScore = document.getElementById("quizResultScore");
+  const quizResultDetail = document.getElementById("quizResultDetail");
+  const quizResultClose = document.getElementById("quizResultClose");
+  const quizBuilderOverlay = document.getElementById("quizBuilderOverlay");
+  const quizBuilderClose = document.getElementById("quizBuilderClose");
+  const quizBuilderList = document.getElementById("quizBuilderList");
+  const addQuizQuestionBtn = document.getElementById("addQuizQuestionBtn");
+  const saveQuizBtn = document.getElementById("saveQuizBtn");
+  const quizBuilderStatus = document.getElementById("quizBuilderStatus");
   const kdvRulesBtn = document.getElementById("kdvRulesBtn");
   const kdvRulesOverlay = document.getElementById("kdvRulesOverlay");
   const kdvRulesClose = document.getElementById("kdvRulesClose");
@@ -1549,15 +1765,19 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     renderMonitor();
     monitorOverlay.classList.add("show");
     monitorOverlay.setAttribute("aria-hidden","false");
+    if(typeof syncQuickTools==="function") syncQuickTools();
   }
   function closeMonitor(){
     monitorOverlay.classList.remove("show");
     monitorOverlay.setAttribute("aria-hidden","true");
+    if(typeof syncQuickTools==="function") syncQuickTools();
   }
 
   function closeAdmin(){
     adminOverlay.classList.remove("show");
     adminOverlay.setAttribute("aria-hidden","true");
+    if(typeof renderQuizAdminButton==="function") renderQuizAdminButton();
+    if(typeof syncQuickTools==="function") syncQuickTools();
   }
 
   const adminPasswordOverlay = document.getElementById("adminPasswordOverlay");
@@ -1651,6 +1871,8 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     closeAdminPassword();
     adminUnlocked = true;
     renderMonitor();
+    renderQuizAdminButton();
+    syncQuickTools();
     adminStatus.textContent="Đang tải cài đặt…";
     adminOverlay.classList.add("show");
     adminOverlay.setAttribute("aria-hidden","false");
@@ -1671,12 +1893,14 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     kdvRulesOverlay.classList.add("show");
     kdvRulesOverlay.setAttribute("aria-hidden","false");
     document.body.style.overflow="hidden";
+    if(typeof syncQuickTools==="function") syncQuickTools();
   }
 
   function closeKdvRules(){
     kdvRulesOverlay.classList.remove("show");
     kdvRulesOverlay.setAttribute("aria-hidden","true");
     document.body.style.overflow="";
+    if(typeof syncQuickTools==="function") syncQuickTools();
   }
 
   kdvRulesBtn.addEventListener("click",openKdvRules);
@@ -2540,7 +2764,7 @@ function renderTop(){
     renderWheel();
   }
 
-  homeBtn.addEventListener("click", resetHome);
+  homeBtn.addEventListener("click", ()=>{resetHome();if(typeof syncQuickTools==="function")syncQuickTools()});
 
   checklistBtn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -2563,7 +2787,7 @@ function renderTop(){
       checklistPanel.style.visibility = "hidden";
       checklistPanel.style.opacity = "0";
       checklistPanel.style.pointerEvents = "none";
-    }
+    }    if(typeof syncQuickTools==="function")syncQuickTools();
   });
 
   topBtn.addEventListener("click", (e) => {
@@ -2576,9 +2800,10 @@ function renderTop(){
     renderTop();
     topPanel.classList.add("show");
     topPanel.setAttribute("aria-hidden","false");
+    if(typeof syncQuickTools==="function") syncQuickTools();
   });
 
-  topCloseBtn.addEventListener("click", closeTop);
+  topCloseBtn.addEventListener("click", ()=>{closeTop();if(typeof syncQuickTools==="function")syncQuickTools()});
   topPanel.addEventListener("click", e => { if(e.target === topPanel) closeTop(); });
 
   syncBtn.addEventListener("click",()=>loadData(true, true));
@@ -2598,6 +2823,224 @@ function renderTop(){
   }
   scheduleNextReset();
   startAutoSync();
+
+  const QUIZ_DATA_KEY="srank_quiz_questions_v1";
+  const QUIZ_SCORE_KEY="srank_quiz_scores_v1";
+  let quizQuestions=[];
+  let quizScores={};
+  let quizCurrentName="";
+  let quizCurrentIndex=0;
+  let quizCurrentScore=0;
+  let quizSelectedAnswer=-1;
+
+  function loadQuizStore(){
+    try{
+      const q=JSON.parse(localStorage.getItem(QUIZ_DATA_KEY)||"[]");
+      const s=JSON.parse(localStorage.getItem(QUIZ_SCORE_KEY)||"{}");
+      quizQuestions=Array.isArray(q)?q:[];
+      quizScores=s&&typeof s==="object"?s:{};
+    }catch(_){quizQuestions=[];quizScores={};}
+  }
+  function saveQuizStore(){
+    try{
+      localStorage.setItem(QUIZ_DATA_KEY,JSON.stringify(quizQuestions));
+      localStorage.setItem(QUIZ_SCORE_KEY,JSON.stringify(quizScores));
+    }catch(_){}
+  }
+  function normalizeQuizQuestion(q){
+    return {
+      question:String(q.question||"").trim(),
+      answers:Array.isArray(q.answers)?q.answers.map(a=>({text:String(a.text||"").trim(),correct:!!a.correct})).filter(a=>a.text):[]
+    };
+  }
+  function validQuizQuestions(){
+    return quizQuestions.map(normalizeQuizQuestion).filter(q=>q.question&&q.answers.length>=2&&q.answers.some(a=>a.correct));
+  }
+  function renderQuizLeaderboard(){
+    quizLeaderboardBody.innerHTML="";
+    const rows=Object.entries(quizScores)
+      .filter(([n,s])=>Number.isFinite(Number(s)))
+      .sort((a,b)=>Number(b[1])-Number(a[1])||a[0].localeCompare(b[0],"vi"));
+    quizEmpty.style.display=rows.length?"none":"block";
+    rows.forEach(([name,score],i)=>{
+      const tr=document.createElement("tr");
+      const a=document.createElement("td");a.textContent=String(i+1);
+      const b=document.createElement("td");b.textContent=name;
+      const c=document.createElement("td");c.textContent=`${Number(score)} điểm`;
+      tr.append(a,b,c);quizLeaderboardBody.appendChild(tr);
+    });
+  }
+  function syncQuickTools(){
+    const active=
+      kdvRulesOverlay.classList.contains("show")||
+      monitorOverlay.classList.contains("show")||
+      topPanel.classList.contains("show")||
+      checklistPanel.classList.contains("show")||
+      adminOverlay.classList.contains("show")||
+      quizOverlay.classList.contains("show")||
+      quizNameOverlay.classList.contains("show")||
+      quizTakeOverlay.classList.contains("show")||
+      quizResultOverlay.classList.contains("show")||
+      quizBuilderOverlay.classList.contains("show")||
+      wheelArea.classList.contains("show");
+    quickToolsBar.classList.toggle("hidden",!!active);
+  }
+  function renderQuizAdminButton(){quizAdminBtn.hidden=!adminUnlocked}
+
+  function openQuiz(){
+    closeTop();
+    closeMonitor();
+    closeAdmin();
+    checklistPanel.classList.remove("show");
+    checklistPanel.style.visibility="hidden";
+    checklistPanel.style.opacity="0";
+    checklistPanel.style.pointerEvents="none";
+    loadQuizStore();
+    renderQuizLeaderboard();
+    quizOverlay.classList.add("show");
+    quizOverlay.setAttribute("aria-hidden","false");
+    syncQuickTools();
+  }
+  function closeQuiz(){
+    quizOverlay.classList.remove("show");
+    quizOverlay.setAttribute("aria-hidden","true");
+    syncQuickTools();
+  }
+  function renderQuizNameList(){
+    quizNameList.innerHTML="";
+    if(!names.length){
+      const e=document.createElement("div");e.className="quizNoNames";e.textContent="Chưa có danh sách người chơi.";quizNameList.appendChild(e);return;
+    }
+    names.forEach(name=>{
+      const b=document.createElement("button");b.type="button";b.className="quizNameItem";b.textContent=`👤 ${name}`;
+      b.addEventListener("click",()=>startQuizForName(name));quizNameList.appendChild(b);
+    });
+  }
+  function openQuizNamePicker(){
+    const qs=validQuizQuestions();
+    if(!qs.length){alert("Chưa có câu hỏi. Admin cần tạo bài kiểm tra trước.");return;}
+    renderQuizNameList();
+    quizNameOverlay.classList.add("show");
+    quizNameOverlay.setAttribute("aria-hidden","false");
+    syncQuickTools();
+  }
+  function closeQuizNamePicker(){
+    quizNameOverlay.classList.remove("show");
+    quizNameOverlay.setAttribute("aria-hidden","true");
+    syncQuickTools();
+  }
+  function startQuizForName(name){
+    quizQuestions=validQuizQuestions();
+    quizCurrentName=String(name);
+    quizCurrentIndex=0;quizCurrentScore=0;quizSelectedAnswer=-1;
+    closeQuizNamePicker();
+    quizTakeOverlay.classList.add("show");
+    quizTakeOverlay.setAttribute("aria-hidden","false");
+    renderQuizQuestion();syncQuickTools();
+  }
+  function renderQuizQuestion(){
+    const q=quizQuestions[quizCurrentIndex];
+    if(!q){finishQuiz();return;}
+    quizProgress.textContent=`Câu ${quizCurrentIndex+1}/${quizQuestions.length}`;
+    quizQuestion.textContent=q.question;
+    quizAnswers.innerHTML="";quizSelectedAnswer=-1;quizNextBtn.disabled=true;
+    quizNextBtn.textContent=quizCurrentIndex===quizQuestions.length-1?"Hoàn thành":"Tiếp tục";
+    q.answers.forEach((a,i)=>{
+      const b=document.createElement("button");b.type="button";b.className="quizAnswer";
+      const l=document.createElement("span");l.className="quizAnswerLetter";l.textContent=String.fromCharCode(65+i);
+      const t=document.createElement("span");t.textContent=a.text;b.append(l,t);
+      b.addEventListener("click",()=>{
+        quizSelectedAnswer=i;
+        [...quizAnswers.children].forEach(x=>x.classList.remove("selected"));
+        b.classList.add("selected");quizNextBtn.disabled=false;
+      });
+      quizAnswers.appendChild(b);
+    });
+  }
+  function submitQuizAnswer(){
+    if(quizSelectedAnswer<0)return;
+    const q=quizQuestions[quizCurrentIndex];
+    if(q.answers[quizSelectedAnswer]?.correct)quizCurrentScore+=10;
+    quizCurrentIndex++;
+    if(quizCurrentIndex>=quizQuestions.length)finishQuiz();else renderQuizQuestion();
+  }
+  function finishQuiz(){
+    quizScores[quizCurrentName]=quizCurrentScore;saveQuizStore();
+    quizTakeOverlay.classList.remove("show");quizTakeOverlay.setAttribute("aria-hidden","true");
+    quizResultName.textContent=quizCurrentName;
+    quizResultScore.textContent=`${quizCurrentScore} điểm`;
+    quizResultDetail.textContent=`Đúng ${Math.round(quizCurrentScore/10)}/${quizQuestions.length} câu • Mỗi câu đúng +10 điểm`;
+    quizResultOverlay.classList.add("show");quizResultOverlay.setAttribute("aria-hidden","false");syncQuickTools();
+  }
+  function closeQuizResult(){
+    quizResultOverlay.classList.remove("show");quizResultOverlay.setAttribute("aria-hidden","true");
+    renderQuizLeaderboard();quizOverlay.classList.add("show");quizOverlay.setAttribute("aria-hidden","false");syncQuickTools();
+  }
+
+  function defaultQuizQuestion(){return {question:"",answers:[{text:"",correct:true},{text:"",correct:false}]}}
+  function renderQuizBuilder(){
+    quizBuilderList.innerHTML="";
+    quizQuestions.forEach((q,qi)=>{
+      const card=document.createElement("article");card.className="quizQuestionCard";
+      const head=document.createElement("div");head.className="quizQuestionHead";
+      const no=document.createElement("span");no.className="quizQuestionNo";no.textContent=`Câu ${qi+1}`;
+      const remove=document.createElement("button");remove.type="button";remove.className="quizQuestionRemove";remove.textContent="Xoá câu";
+      remove.addEventListener("click",()=>{quizQuestions.splice(qi,1);if(!quizQuestions.length)quizQuestions.push(defaultQuizQuestion());renderQuizBuilder()});
+      head.append(no,remove);card.appendChild(head);
+      const qin=document.createElement("textarea");qin.className="quizQuestionInput";qin.placeholder="Nhập nội dung câu hỏi…";qin.value=q.question||"";
+      qin.addEventListener("input",e=>quizQuestions[qi].question=e.target.value);card.appendChild(qin);
+      q.answers.forEach((a,ai)=>{
+        const row=document.createElement("div");row.className="quizAnswerEdit";
+        const letter=document.createElement("span");letter.className="letter";letter.textContent=String.fromCharCode(65+ai);
+        const ain=document.createElement("input");ain.type="text";ain.className="quizAnswerInput";ain.placeholder=`Đáp án ${String.fromCharCode(65+ai)}`;ain.value=a.text||"";
+        ain.addEventListener("input",e=>quizQuestions[qi].answers[ai].text=e.target.value);
+        const radio=document.createElement("input");radio.type="radio";radio.className="quizCorrectRadio";radio.name=`quizCorrect_${qi}`;radio.checked=!!a.correct;radio.title="Đáp án đúng";
+        radio.addEventListener("change",()=>quizQuestions[qi].answers.forEach((x,idx)=>x.correct=idx===ai));
+        row.append(letter,ain,radio);card.appendChild(row);
+      });
+      const add=document.createElement("button");add.type="button";add.className="quizAddAnswer";add.textContent="＋ Thêm đáp án";
+      add.addEventListener("click",()=>{quizQuestions[qi].answers.push({text:"",correct:false});renderQuizBuilder()});
+      card.appendChild(add);quizBuilderList.appendChild(card);
+    });
+  }
+  function openQuizBuilder(){
+    if(!adminUnlocked){openAdminPassword();return}
+    loadQuizStore();if(!quizQuestions.length)quizQuestions=[defaultQuizQuestion()];
+    renderQuizBuilder();quizBuilderStatus.textContent="";
+    quizBuilderOverlay.classList.add("show");quizBuilderOverlay.setAttribute("aria-hidden","false");syncQuickTools();
+  }
+  function closeQuizBuilder(){quizBuilderOverlay.classList.remove("show");quizBuilderOverlay.setAttribute("aria-hidden","true");syncQuickTools()}
+  function saveQuizBuilder(){
+    const clean=quizQuestions.map(normalizeQuizQuestion);let error="";
+    clean.forEach((q,i)=>{
+      if(!error&&!q.question)error=`Câu ${i+1} chưa có nội dung.`;
+      else if(!error&&q.answers.length<2)error=`Câu ${i+1} phải có ít nhất 2 đáp án.`;
+      else if(!error&&!q.answers.some(a=>a.correct))error=`Câu ${i+1} chưa chọn đáp án đúng.`;
+    });
+    if(error){quizBuilderStatus.textContent=error;return}
+    quizQuestions=clean;saveQuizStore();quizBuilderStatus.textContent=`Đã lưu ${quizQuestions.length} câu hỏi ✓`;
+    setTimeout(closeQuizBuilder,500);
+  }
+
+  quizBtn.addEventListener("click",openQuiz);
+  quizClose.addEventListener("click",closeQuiz);
+  quizOverlay.addEventListener("click",e=>{if(e.target===quizOverlay)closeQuiz()});
+  startQuizBtn.addEventListener("click",openQuizNamePicker);
+  quizNameClose.addEventListener("click",closeQuizNamePicker);
+  quizNameOverlay.addEventListener("click",e=>{if(e.target===quizNameOverlay)closeQuizNamePicker()});
+  quizNextBtn.addEventListener("click",submitQuizAnswer);
+  quizResultClose.addEventListener("click",closeQuizResult);
+  quizResultOverlay.addEventListener("click",e=>{if(e.target===quizResultOverlay)closeQuizResult()});
+  quizAdminBtn.addEventListener("click",openQuizBuilder);
+  quizBuilderClose.addEventListener("click",closeQuizBuilder);
+  quizBuilderOverlay.addEventListener("click",e=>{if(e.target===quizBuilderOverlay)closeQuizBuilder()});
+  addQuizQuestionBtn.addEventListener("click",()=>{
+    quizQuestions.push(defaultQuizQuestion());renderQuizBuilder();
+    setTimeout(()=>quizBuilderList.lastElementChild?.scrollIntoView({behavior:"smooth",block:"center"}),30);
+  });
+  saveQuizBtn.addEventListener("click",saveQuizBuilder);
+  loadQuizStore();renderQuizAdminButton();syncQuickTools();
+
 })();
 
 /* 3D space-to-text assembly for the final system notification */
