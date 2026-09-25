@@ -118,17 +118,20 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #topTable tr:last-child td{border-bottom:0}
 #topCloseBtn{display:block;margin:13px auto 0;min-width:110px;min-height:40px;padding:8px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(135deg,#ff3c91,#ff70b9);color:#fff;font-weight:800}
 #bottomNav{
- position:absolute;right:16px;top:16px;z-index:10000;
- display:flex;gap:7px;width:auto;justify-content:center;
- padding:5px;border:1px solid rgba(255,255,255,.10);border-radius:999px;
- background:rgba(8,4,14,.52);backdrop-filter:blur(14px);
+ position:absolute;left:50%;right:auto;top:12px;z-index:10000;
+ transform:translateX(-50%);
+ display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+ gap:5px;width:min(760px,calc(100vw - 14px));
+ padding:5px;border:1px solid rgba(255,255,255,.10);border-radius:18px;
+ background:rgba(8,4,14,.62);backdrop-filter:blur(16px);
  box-shadow:0 8px 28px rgba(0,0,0,.28),0 0 22px rgba(255,60,160,.08);
 }
 #bottomNav button{
- flex:0 0 auto;min-height:36px;padding:7px 12px;border-radius:999px;
+ min-width:0;min-height:36px;padding:7px 4px;border-radius:12px;
  border:1px solid rgba(255,255,255,.10);
- background:transparent;color:rgba(255,255,255,.72);font-size:11px;font-weight:700;
- white-space:nowrap;transition:transform .18s,background .2s,box-shadow .2s,color .2s;
+ background:transparent;color:rgba(255,255,255,.72);font-size:10px;font-weight:750;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ transition:transform .18s,background .2s,box-shadow .2s,color .2s;
 }
 #bottomNav button:active{transform:scale(.96)}
 #homeBtn{
@@ -158,10 +161,38 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #monitorTable tr:last-child td{border-bottom:0}
 .monitorCheckBtn{min-width:68px;min-height:32px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,120,180,.22);background:linear-gradient(135deg,#ff3c91,#ff70b9);color:#fff;font-size:11px;font-weight:800;box-shadow:0 0 12px rgba(255,50,145,.16)}
 #monitorCloseBtn{width:100%;min-height:40px;margin-top:12px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font-weight:700}
-@media (max-width:420px){
- #bottomNav{gap:3px}
- #bottomNav button{padding:6px 7px;font-size:9px}
-}
+#monitorPanel{padding:18px}
+#monitorTitle{font-size:22px}
+#monitorSub{margin-bottom:12px}
+#monitorScroll{border:0;background:transparent;overflow:visible;max-height:54vh}
+#monitorTable{border-collapse:separate;border-spacing:0 7px;font-size:12px}
+#monitorTable thead th{background:transparent;border:0;padding:0 8px 5px;color:rgba(255,255,255,.42)}
+#monitorTable tbody tr{background:rgba(255,255,255,.045)}
+#monitorTable td{padding:9px 7px;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07)}
+#monitorTable td:first-child{border-left:1px solid rgba(255,255,255,.07);border-radius:12px 0 0 12px}
+#monitorTable td:last-child{border-right:1px solid rgba(255,255,255,.07);border-radius:0 12px 12px 0}
+.monitorName{display:flex;align-items:center;gap:7px;min-width:0}
+.monitorDot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#ff70b9;box-shadow:0 0 9px rgba(255,80,170,.75)}
+.monitorNameText{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:750;color:rgba(255,255,255,.9)}
+.monitorLinkState{display:block;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.38);font-size:9px;margin-top:2px}
+.monitorActions{display:flex;justify-content:flex-end;gap:5px;flex-wrap:wrap}
+.monitorCheckBtn,.monitorAssignBtn{min-height:31px;padding:6px 9px;border-radius:999px;font-size:10px;font-weight:850}
+.monitorAssignBtn{border:1px solid rgba(255,120,190,.22);background:rgba(255,70,155,.08);color:#ffb7d8}
+.monitorEmpty{padding:18px!important;text-align:center;color:rgba(255,255,255,.38)!important}
+#linkEditorOverlay{position:fixed;inset:0;z-index:23000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(12px)}
+#linkEditorOverlay.show{display:flex}
+#linkEditorPanel{width:min(92vw,390px);padding:20px;border:1px solid rgba(255,255,255,.15);border-radius:24px;background:linear-gradient(145deg,rgba(20,8,24,.98),rgba(6,4,12,.99));box-shadow:0 18px 60px rgba(0,0,0,.6),0 0 35px rgba(255,60,160,.14);color:#fff}
+#linkEditorTitle{text-align:center;font-size:20px;font-weight:850;text-shadow:0 0 12px #ff4fa3}
+#linkEditorName{text-align:center;color:rgba(255,255,255,.48);font-size:12px;margin:5px 0 14px}
+#linkEditorInput{width:100%;height:46px;padding:0 13px;border-radius:13px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff;font-size:13px;outline:none}
+#linkEditorInput:focus{border-color:rgba(255,112,185,.6);box-shadow:0 0 0 3px rgba(255,60,160,.08)}
+#linkEditorHint{margin:8px 2px 14px;color:rgba(255,255,255,.38);font-size:10px;line-height:1.4}
+#linkEditorActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+#linkEditorActions button{min-height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.07);color:#fff;font-weight:750;font-size:11px}
+#linkEditorSave{background:linear-gradient(135deg,#ff3c91,#ff70b9)!important}
+#linkEditorClear{color:#ffb3d6!important}
+@media(max-width:420px){#monitorPanel{padding:15px}#monitorTable th,#monitorTable td{padding-left:5px;padding-right:5px}.monitorLinkState{max-width:105px}.monitorCheckBtn,.monitorAssignBtn{padding:6px 7px;font-size:9px}}
+@media (max-width:420px){#bottomNav{top:9px;gap:4px;width:calc(100vw - 10px);padding:4px;border-radius:16px}#bottomNav button{min-height:34px;padding:6px 2px;font-size:9px;border-radius:10px}}
 
 /* ===== ADMIN ===== */
 #adminBtn{color:rgba(255,255,255,.86)}
@@ -186,10 +217,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #adminActions button{flex:1;min-height:42px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font-weight:700}
 #adminSaveBtn{background:linear-gradient(135deg,#ff3c91,#ff70b9)!important;box-shadow:0 0 18px rgba(255,50,145,.3)}
 #adminResetNowBtn{margin-top:10px;width:100%;min-height:40px;border-radius:999px;border:1px solid rgba(255,120,180,.18);background:rgba(255,60,145,.08);color:#ffb0d3;font-weight:700}
-@media (max-width:420px){
- #bottomNav{right:10px;top:10px;gap:5px;padding:4px}
- #bottomNav button{min-height:34px;padding:6px 10px;font-size:10px}
-}
+@media (max-width:420px){#bottomNav{top:9px;gap:4px;width:calc(100vw - 10px);padding:4px;border-radius:16px}#bottomNav button{min-height:34px;padding:6px 2px;font-size:9px;border-radius:10px}}
 
 /* Landing: title and Click here are always separate, centered lines */
 #question{
@@ -701,11 +729,24 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     <div id="monitorSub">Bấm CHECK để mở Facebook của từng người</div>
     <div id="monitorScroll">
       <table id="monitorTable">
-        <thead><tr><th>Tên</th><th>Check</th></tr></thead>
+        <thead><tr><th>Người chơi</th><th>Thao tác</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
     <button id="monitorCloseBtn" type="button">Đóng</button>
+  </section>
+</div>
+<div id="linkEditorOverlay" aria-hidden="true">
+  <section id="linkEditorPanel" role="dialog" aria-modal="true" aria-labelledby="linkEditorTitle">
+    <div id="linkEditorTitle">🔗 Gán liên kết</div>
+    <div id="linkEditorName"></div>
+    <input id="linkEditorInput" type="url" inputmode="url" autocomplete="off" placeholder="https://facebook.com/ten-nguoi">
+    <div id="linkEditorHint">Mỗi người có thể dùng một liên kết riêng. Liên kết được lưu trên thiết bị này.</div>
+    <div id="linkEditorActions">
+      <button id="linkEditorCancel" type="button">Huỷ</button>
+      <button id="linkEditorClear" type="button">Xoá link</button>
+      <button id="linkEditorSave" type="button">Lưu</button>
+    </div>
   </section>
 </div>
 <div id="adminPasswordOverlay" class="adminOverlay" aria-hidden="true" style="position:fixed;inset:0;z-index:21000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);">
@@ -772,6 +813,12 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const monitorOverlay = document.getElementById("monitorOverlay");
   const monitorBody = document.querySelector("#monitorTable tbody");
   const monitorCloseBtn = document.getElementById("monitorCloseBtn");
+  const linkEditorOverlay = document.getElementById("linkEditorOverlay");
+  const linkEditorName = document.getElementById("linkEditorName");
+  const linkEditorInput = document.getElementById("linkEditorInput");
+  const linkEditorCancel = document.getElementById("linkEditorCancel");
+  const linkEditorClear = document.getElementById("linkEditorClear");
+  const linkEditorSave = document.getElementById("linkEditorSave");
   const adminOverlay = document.getElementById("adminOverlay");
   const adminPanel = document.getElementById("adminPanel");
   const resetTimeInput = document.getElementById("resetTimeInput");
@@ -966,49 +1013,165 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   }
 
   const MONITOR_FB_LINK = "https://facebook.com/kinya03";
+  const MONITOR_LINKS_KEY = "srank_monitor_links_v1";
+  let monitorLinks = {};
+  let editingMonitorName = "";
+
+  function loadMonitorLinks(){
+    try{
+      const saved = JSON.parse(localStorage.getItem(MONITOR_LINKS_KEY) || "{}");
+      monitorLinks = saved && typeof saved === "object" ? saved : {};
+    }catch(_){ monitorLinks = {}; }
+  }
+
+  function saveMonitorLinks(){
+    try{ localStorage.setItem(MONITOR_LINKS_KEY, JSON.stringify(monitorLinks)); }catch(_){}
+  }
+
+  function getMonitorLink(name){
+    const custom = String(monitorLinks[String(name)] || "").trim();
+    return custom || MONITOR_FB_LINK;
+  }
+
+  function normalizeMonitorLink(value){
+    const v = String(value || "").trim();
+    if(!v) return "";
+    try{
+      const u = new URL(v);
+      if(u.protocol !== "http:" && u.protocol !== "https:") return "";
+      return u.toString();
+    }catch(_){ return ""; }
+  }
 
   function openMonitorFacebook(name){
-    // Chỉ tạo DUY NHẤT một tab phụ. Tab này ban đầu là about:blank,
-    // sau đó chính tab đó được điều hướng sang Facebook.
+    const link = getMonitorLink(name);
     let win = null;
-
+    try{ win = window.open("about:blank", "_blank"); }catch(_){}
+    if(!win){ setStatus("Trình duyệt đang chặn tab mới."); return; }
     try{
-      win = window.open("about:blank", "_blank");
-    }catch(_){}
-
-    if(!win){
-      setStatus("Trình duyệt đang chặn cửa sổ mới. Hãy cho phép popup cho trang này.");
-      return;
-    }
-
-    try{
-      win.location.replace(MONITOR_FB_LINK);
+      win.location.replace(link);
       try{ win.focus(); }catch(_){}
     }catch(e){
       try{ win.close(); }catch(_){}
-      setStatus("Không mở được Facebook.");
+      setStatus("Không mở được liên kết.");
     }
+  }
+
+  function openLinkEditor(name){
+    editingMonitorName = String(name || "");
+    linkEditorName.textContent = editingMonitorName || "Người chơi";
+    linkEditorInput.value = String(monitorLinks[editingMonitorName] || "").trim();
+    linkEditorOverlay.classList.add("show");
+    linkEditorOverlay.setAttribute("aria-hidden","false");
+    setTimeout(()=>linkEditorInput.focus(),50);
+  }
+
+  function closeLinkEditor(){
+    linkEditorOverlay.classList.remove("show");
+    linkEditorOverlay.setAttribute("aria-hidden","true");
+    editingMonitorName = "";
+  }
+
+  function saveEditedMonitorLink(){
+    const name = editingMonitorName;
+    if(!name) return;
+    const raw = linkEditorInput.value.trim();
+    if(!raw){
+      delete monitorLinks[name];
+      saveMonitorLinks();
+      closeLinkEditor();
+      renderMonitor();
+      setStatus("Đã dùng link mặc định ✓");
+      return;
+    }
+    const link = normalizeMonitorLink(raw);
+    if(!link){
+      setStatus("Link không hợp lệ");
+      linkEditorInput.focus();
+      return;
+    }
+    monitorLinks[name] = link;
+    saveMonitorLinks();
+    closeLinkEditor();
+    renderMonitor();
+    setStatus("Đã gán link ✓");
+  }
+
+  function clearEditedMonitorLink(){
+    const name = editingMonitorName;
+    if(!name) return;
+    delete monitorLinks[name];
+    saveMonitorLinks();
+    closeLinkEditor();
+    renderMonitor();
+    setStatus("Đã xoá link riêng ✓");
   }
 
   function renderMonitor(){
     if(!monitorBody) return;
     monitorBody.innerHTML = "";
     const frag = document.createDocumentFragment();
-    names.forEach((name, i) => {
+
+    if(!names.length){
       const tr = document.createElement("tr");
+      tr.innerHTML = '<td colspan="2" class="monitorEmpty">Chưa có danh sách người chơi.</td>';
+      frag.appendChild(tr);
+      monitorBody.appendChild(frag);
+      return;
+    }
+
+    names.forEach((name, i) => {
+      const player = name || ("Người chơi " + (i+1));
+      const customLink = String(monitorLinks[player] || "").trim();
+
+      const tr = document.createElement("tr");
+
       const tdName = document.createElement("td");
-      tdName.textContent = name || ("Người chơi " + (i+1));
-      const tdCheck = document.createElement("td");
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "monitorCheckBtn";
-      btn.textContent = "CHECK";
-      btn.addEventListener("click", () => openMonitorFacebook(name));
-      tdCheck.appendChild(btn);
+      const nameWrap = document.createElement("div");
+      nameWrap.className = "monitorName";
+      const dot = document.createElement("span");
+      dot.className = "monitorDot";
+
+      const nameBox = document.createElement("div");
+      nameBox.style.minWidth = "0";
+      const nameText = document.createElement("div");
+      nameText.className = "monitorNameText";
+      nameText.textContent = player;
+      const linkState = document.createElement("span");
+      linkState.className = "monitorLinkState";
+      linkState.textContent = customLink ? customLink : "Link mặc định";
+
+      nameBox.appendChild(nameText);
+      nameBox.appendChild(linkState);
+      nameWrap.appendChild(dot);
+      nameWrap.appendChild(nameBox);
+      tdName.appendChild(nameWrap);
+
+      const tdActions = document.createElement("td");
+      const actions = document.createElement("div");
+      actions.className = "monitorActions";
+
+      const assignBtn = document.createElement("button");
+      assignBtn.type = "button";
+      assignBtn.className = "monitorAssignBtn";
+      assignBtn.textContent = customLink ? "Sửa link" : "Gán link";
+      assignBtn.addEventListener("click", () => openLinkEditor(player));
+
+      const checkBtn = document.createElement("button");
+      checkBtn.type = "button";
+      checkBtn.className = "monitorCheckBtn";
+      checkBtn.textContent = "CHECK";
+      checkBtn.addEventListener("click", () => openMonitorFacebook(player));
+
+      actions.appendChild(assignBtn);
+      actions.appendChild(checkBtn);
+      tdActions.appendChild(actions);
+
       tr.appendChild(tdName);
-      tr.appendChild(tdCheck);
+      tr.appendChild(tdActions);
       frag.appendChild(tr);
     });
+
     monitorBody.appendChild(frag);
   }
 
@@ -1131,8 +1294,14 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       adminStatus.textContent="Không tải được cài đặt hiện tại. Kiểm tra Apps Script.";
     }
   }
+  loadMonitorLinks();
   monitorBtn.addEventListener("click",openMonitor);
   monitorCloseBtn.addEventListener("click",closeMonitor);
+  linkEditorCancel.addEventListener("click",closeLinkEditor);
+  linkEditorSave.addEventListener("click",saveEditedMonitorLink);
+  linkEditorClear.addEventListener("click",clearEditedMonitorLink);
+  linkEditorOverlay.addEventListener("click",e=>{if(e.target===linkEditorOverlay) closeLinkEditor();});
+  linkEditorInput.addEventListener("keydown",e=>{if(e.key==="Enter") saveEditedMonitorLink();});
   monitorOverlay.addEventListener("click",e=>{if(e.target===monitorOverlay) closeMonitor()});
   adminBtn.addEventListener("click",openAdminPassword);
   adminPasswordOk.addEventListener("click",verifyAdmin);
