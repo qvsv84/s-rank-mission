@@ -6,9 +6,6 @@
 <meta name="theme-color" content="#050208">
 <title>S Rank — Daily Mission</title>
 <style>
-/* Ẩn thông báo "Điểm hiện tại" theo yêu cầu. */
-#myPointCard{display:none !important;}
-
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#010107}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;touch-action:none}
@@ -98,10 +95,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #captureBtn{background:linear-gradient(135deg,rgba(255,60,145,.9),rgba(255,112,185,.72)) !important;color:#fff !important}
 #checklistActions button:active{transform:scale(.96)}
 
-#myPointCard{position:absolute;left:50%;top:43%;z-index:11;transform:translate(-50%,-50%);min-width:170px;padding:8px 14px;border:1px solid rgba(255,255,255,.10);border-radius:999px;background:rgba(8,4,14,.48);backdrop-filter:blur(12px);box-shadow:0 0 22px rgba(255,60,160,.08);color:rgba(255,255,255,.78);font-size:12px;font-weight:700;text-align:center;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
-#myPointCard.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
-#myPointCard .pointValue{color:#ff9dcc;text-shadow:0 0 10px rgba(255,60,160,.65);font-size:15px;margin-left:4px}
-#myPointCard.bump .pointValue{animation:pointBump .65s cubic-bezier(.16,.9,.25,1)}
 @keyframes pointBump{0%{transform:scale(1)}35%{transform:scale(1.45);text-shadow:0 0 20px #ff4fa3}100%{transform:scale(1)}}
 #topBtn{color:#ffb5d8}
 #topPanel{position:absolute;left:50%;top:50%;z-index:10001;width:min(92vw,500px);max-height:82vh;transform:translate(-50%,-50%) scale(.94);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,transform .3s;padding:20px;border:1px solid rgba(255,255,255,.14);border-radius:26px;background:linear-gradient(145deg,rgba(20,8,24,.97),rgba(6,4,12,.98));box-shadow:0 18px 60px rgba(0,0,0,.62),0 0 40px rgba(255,60,160,.16);backdrop-filter:blur(18px)}
@@ -703,7 +696,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   <div id="question"><span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta">CLICK HERE</span></div>
 </div>
 
-<div id="myPointCard" aria-live="polite">⭐ Điểm hiện tại <span class="pointValue">—</span></div>
 
 <div id="wheelArea">
   <div id="wheelViewport"><div id="selectionLine"></div><div id="items"></div></div>
@@ -815,7 +807,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const checklistPanel = document.getElementById("checklistPanel");
   const checklistBody = document.querySelector("#checklist tbody");
   const status = document.getElementById("status");
-  const myPointCard = document.getElementById("myPointCard");
   const syncBtn = document.getElementById("syncBtn");
   const homeBtn = document.getElementById("homeBtn");
   const checklistBtn = document.getElementById("checklistBtn");
@@ -1205,8 +1196,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   function closeAdmin(){
     adminOverlay.classList.remove("show");
     adminOverlay.setAttribute("aria-hidden","true");
-    adminUnlocked = false;
-    if(typeof renderMonitor === "function") renderMonitor();
   }
 
   const adminPasswordOverlay = document.getElementById("adminPasswordOverlay");
@@ -1225,7 +1214,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   function closeAdminPassword(){
     adminPasswordOverlay.style.display="none";
     adminPasswordOverlay.setAttribute("aria-hidden","true");
-    if(!adminUnlocked && typeof renderMonitor === "function") renderMonitor();
   }
   function renderAdminChecklistEditor(){
     if(!adminChecklistRows) return;
@@ -1376,22 +1364,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   }
 
   function currentSelectedPoints(){ return Number(points[current]) || 0; }
-
-  function updatePointCard(){
-    if(!q1Opened || !names.length || !Array.isArray(points) || points[current] == null){
-      myPointCard.classList.remove("show"); return;
-    }
-    myPointCard.querySelector(".pointValue").textContent = `${currentSelectedPoints()} điểm`;
-    myPointCard.classList.add("show");
-  }
-
-  function bumpPointCard(){
-    myPointCard.classList.remove("bump");
-    void myPointCard.offsetWidth;
-    myPointCard.classList.add("bump");
-  }
-
-  function renderTop(){
+function renderTop(){
     const rows = names.map((name,i)=>({name,points:Number(points[i])||0,rank:ranks[i]||rankClient(points[i]),index:i}));
     rows.sort((a,b)=>b.points-a.points || a.index-b.index);
     topBody.innerHTML = "";
@@ -1457,7 +1430,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   function renderWheel(){
     if(!names.length) return;
-    updatePointCard();
     const mid = wheelArea.clientHeight / 2;
     const children = itemsBox.children;
     for(let i=0;i<children.length;i++){
@@ -1831,7 +1803,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     saveQ1Answer(selected);
 
     // Ẩn thẻ điểm khi chuyển sang lời chào.
-    myPointCard.classList.remove("show");
 
     // Rank và điểm lấy trực tiếp từ dữ liệu đã đồng bộ với Google Sheets.
     const playerRank = (Array.isArray(ranks) && ranks[current])
@@ -1849,7 +1820,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   });
 
   function showQuestion2(){
-    myPointCard.classList.remove("show");
     counter.textContent="CÂU 2";
     question.innerHTML=`<div class="system-question">
       <div class="system-question-title">HỆ THỐNG ĐẢO MÈO</div>
@@ -1876,7 +1846,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       question.style.opacity = "0";
       question.style.pointerEvents = "none";
       hint.textContent = "";
-      myPointCard.classList.remove("show");
       message.classList.remove("show");
 
       // Ghi nhận hoàn thành vào Sheet; UI đã được cập nhật optimistic.
@@ -2174,7 +2143,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     message.classList.remove("show");
     wheelArea.classList.remove("show");
     confirm.classList.remove("show");
-    myPointCard.classList.remove("show");
 
     q1Opened = false;
     current = 0;
