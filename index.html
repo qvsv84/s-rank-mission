@@ -1274,25 +1274,15 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       const r = await api("checkin",{name},6000);
       if(!r.ok) throw new Error(r.error || "checkin lỗi");
       if(r.data && r.data.time) { times[index] = r.data.time; }
+      // Không cộng điểm. Chỉ giữ lại điểm/rank hiện tại nếu backend trả về để không làm mất tính năng hiển thị.
       if(r.data && Number.isFinite(Number(r.data.points))) {
-        const before = Number(points[index]) || 0;
         points[index] = Number(r.data.points);
         ranks[index] = r.data.rank || rankClient(points[index]);
-        cacheSave();
-        renderChecklist();
-
-        // Apps Script là nơi quyết định điểm. Một ngày chỉ được +10 một lần.
-        if(Number(r.data.pointsAdded) > 0) {
-          bumpPointCard();
-          setStatus(`+${Number(r.data.pointsAdded)} điểm ⭐`);
-        } else {
-          setStatus("Hôm nay đã nhận điểm rồi ✓");
-        }
-      } else {
-        cacheSave();
-        renderChecklist();
       }
-      // Không gọi getData lần 2 -> giảm hẳn 1 request.
+      cacheSave();
+      renderChecklist();
+      setStatus("Đã ghi ✓");
+      // Không gọi getData lần 2.
     }catch(e){
       // Không lấy Sheet đè ngược vào HTML.
       setStatus("Máy chủ chưa xác nhận — trạng thái HTML vẫn giữ nguyên");
