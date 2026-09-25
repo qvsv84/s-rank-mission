@@ -765,6 +765,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   let autoSyncTimer = null;
   let lastServerSync = 0;
   const AUTO_SYNC_MS = 30000;
+  const Q1_CACHE_KEY = "srank_q1_answer_v1";
   const connectionState = document.getElementById("connectionState");
   const connectionText = document.getElementById("connectionText");
 
@@ -840,6 +841,49 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       localStorage.setItem(DAY_KEY, todayKey());
     }catch(_){}
     return false;
+  }
+
+  // Chỉ câu 1 được nhớ riêng theo ngày. Các câu khác không dùng cache này.
+  function saveQ1Answer(name){
+    try{
+      localStorage.setItem(Q1_CACHE_KEY, JSON.stringify({name:String(name || ""),day:todayKey()}));
+    }catch(_){}
+  }
+
+  function loadQ1Answer(){
+    try{
+      const x = JSON.parse(localStorage.getItem(Q1_CACHE_KEY) || "null");
+      if(x && x.day === todayKey() && x.name) return String(x.name);
+      localStorage.removeItem(Q1_CACHE_KEY);
+    }catch(_){}
+    return "";
+  }
+
+  function clearQ1Answer(){
+    try{ localStorage.removeItem(Q1_CACHE_KEY); }catch(_){}
+  }
+
+  function resumeQ1FromCache(){
+    if(q1Opened || !names.length) return false;
+    const savedName = loadQ1Answer();
+    if(!savedName) return false;
+    const idx = names.findIndex(n => String(n) === savedName);
+    if(idx < 0){ clearQ1Answer(); return false; }
+
+    current = idx;
+    q1Opened = true;
+    question.style.pointerEvents = "none";
+    question.style.opacity = "0";
+    question.style.transform = "scale(.8)";
+    wheelArea.classList.remove("show");
+    hint.textContent = "";
+    showActivationMessage(
+      savedName,
+      ranks[idx] || rankClient(points[idx]),
+      points[idx] || 0,
+      showQuestion2
+    );
+    return true;
   }
 
   let resetTime = "00:00";
@@ -1194,7 +1238,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       renderChecklist();
       buildWheel();
       renderAdminChecklistEditor();
-      hint.textContent = "Chạm vào câu hỏi";
+      if(!resumeQ1FromCache()) hint.textContent = "Chạm vào câu hỏi";
       setStatus(force ? "Đã cập nhật ✓" : "Đã đồng bộ ✓");
       return true;
     }catch(e){
@@ -1504,6 +1548,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   confirm.addEventListener("click",()=>{
     const selected = names[current];
+    saveQ1Answer(selected);
 
     // Ẩn thẻ điểm khi chuyển sang lời chào.
     myPointCard.classList.remove("show");
@@ -1819,6 +1864,8 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   // ---------- Navigation ----------
   function resetHome(){
+    // Home chỉ xoá cache của CÂU 1; các câu khác không bị ảnh hưởng.
+    clearQ1Answer();
     document.getElementById("q2answers")?.remove();
     closeTop();
     checklistPanel.classList.remove("show");
