@@ -162,9 +162,21 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 .monitorCheckBtn{min-width:68px;min-height:32px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,120,180,.22);background:linear-gradient(135deg,#ff3c91,#ff70b9);color:#fff;font-size:11px;font-weight:800;box-shadow:0 0 12px rgba(255,50,145,.16)}
 #monitorCloseBtn{width:100%;min-height:40px;margin-top:12px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font-weight:700}
 #monitorPanel{padding:18px}
+#monitorPanel{position:relative;max-height:calc(100dvh - 32px);overflow:hidden}
+#monitorCloseBtn{
+  position:absolute;top:12px;right:12px;
+  width:34px;height:34px;min-height:34px;margin:0;padding:0;
+  border-radius:50%;border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.07);color:rgba(255,255,255,.82);
+  font-size:20px;line-height:32px;font-weight:500;
+  display:flex;align-items:center;justify-content:center;
+}
+#monitorCloseBtn:hover{background:rgba(255,255,255,.12)}
+#monitorPanel #monitorTitle{padding-right:42px}
+
 #monitorTitle{font-size:22px}
 #monitorSub{margin-bottom:12px}
-#monitorScroll{border:0;background:transparent;overflow:visible;max-height:54vh}
+#monitorScroll{border:0;background:transparent;overflow-y:auto;overflow-x:hidden;max-height:56vh;min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 2px 4px 0;scrollbar-width:thin}
 #monitorTable{border-collapse:separate;border-spacing:0 7px;font-size:12px}
 #monitorTable thead th{background:transparent;border:0;padding:0 8px 5px;color:rgba(255,255,255,.42)}
 #monitorTable tbody tr{background:rgba(255,255,255,.045)}
@@ -191,7 +203,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #linkEditorActions button{min-height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.07);color:#fff;font-weight:750;font-size:11px}
 #linkEditorSave{background:linear-gradient(135deg,#ff3c91,#ff70b9)!important}
 #linkEditorClear{color:#ffb3d6!important}
-@media(max-width:420px){#monitorPanel{padding:15px}#monitorTable th,#monitorTable td{padding-left:5px;padding-right:5px}.monitorLinkState{max-width:105px}.monitorCheckBtn,.monitorAssignBtn{padding:6px 7px;font-size:9px}}
+@media(max-width:420px){#monitorPanel{padding:15px;max-height:calc(100dvh - 22px)}#monitorScroll{max-height:calc(100dvh - 170px)}#monitorTable th,#monitorTable td{padding-left:5px;padding-right:5px}.monitorLinkState{max-width:105px}.monitorCheckBtn,.monitorAssignBtn{padding:6px 7px;font-size:9px}}
 @media (max-width:420px){#bottomNav{top:9px;gap:4px;width:calc(100vw - 10px);padding:4px;border-radius:16px}#bottomNav button{min-height:34px;padding:6px 2px;font-size:9px;border-radius:10px}}
 
 /* ===== ADMIN ===== */
@@ -733,7 +745,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
         <tbody></tbody>
       </table>
     </div>
-    <button id="monitorCloseBtn" type="button">Đóng</button>
+    <button id="monitorCloseBtn" type="button" aria-label="Đóng bảng giám sát" title="Đóng">×</button>
   </section>
 </div>
 <div id="linkEditorOverlay" aria-hidden="true">
