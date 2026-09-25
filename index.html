@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#050208">
 <title>S Rank — Daily Mission</title>
 <style>
+/* Ẩn thông báo "Điểm hiện tại" theo yêu cầu. */
+#myPointCard{display:none !important;}
+
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#010107}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;touch-action:none}
@@ -1028,6 +1031,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const MONITOR_LINKS_KEY = "srank_monitor_links_v1";
   let monitorLinks = {};
   let editingMonitorName = "";
+  let adminUnlocked = false;
 
   function loadMonitorLinks(){
     try{
@@ -1163,19 +1167,20 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       const actions = document.createElement("div");
       actions.className = "monitorActions";
 
-      const assignBtn = document.createElement("button");
-      assignBtn.type = "button";
-      assignBtn.className = "monitorAssignBtn";
-      assignBtn.textContent = customLink ? "Sửa link" : "Gán link";
-      assignBtn.addEventListener("click", () => openLinkEditor(player));
+      if(adminUnlocked){
+        const assignBtn = document.createElement("button");
+        assignBtn.type = "button";
+        assignBtn.className = "monitorAssignBtn";
+        assignBtn.textContent = customLink ? "Sửa link" : "Gán link";
+        assignBtn.addEventListener("click", () => openLinkEditor(player));
+        actions.appendChild(assignBtn);
+      }
 
       const checkBtn = document.createElement("button");
       checkBtn.type = "button";
       checkBtn.className = "monitorCheckBtn";
       checkBtn.textContent = "CHECK";
       checkBtn.addEventListener("click", () => openMonitorFacebook(player));
-
-      actions.appendChild(assignBtn);
       actions.appendChild(checkBtn);
       tdActions.appendChild(actions);
 
@@ -1200,6 +1205,8 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   function closeAdmin(){
     adminOverlay.classList.remove("show");
     adminOverlay.setAttribute("aria-hidden","true");
+    adminUnlocked = false;
+    if(typeof renderMonitor === "function") renderMonitor();
   }
 
   const adminPasswordOverlay = document.getElementById("adminPasswordOverlay");
@@ -1218,6 +1225,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   function closeAdminPassword(){
     adminPasswordOverlay.style.display="none";
     adminPasswordOverlay.setAttribute("aria-hidden","true");
+    if(!adminUnlocked && typeof renderMonitor === "function") renderMonitor();
   }
   function renderAdminChecklistEditor(){
     if(!adminChecklistRows) return;
@@ -1291,6 +1299,8 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       return;
     }
     closeAdminPassword();
+    adminUnlocked = true;
+    renderMonitor();
     adminStatus.textContent="Đang tải cài đặt…";
     adminOverlay.classList.add("show");
     adminOverlay.setAttribute("aria-hidden","false");
