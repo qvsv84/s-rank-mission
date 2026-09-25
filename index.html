@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#050208">
 <title>S Rank — Daily Mission</title>
 <style>
@@ -114,20 +114,40 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #topTable tr:last-child td{border-bottom:0}
 #topCloseBtn{display:block;margin:13px auto 0;min-width:110px;min-height:40px;padding:8px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(135deg,#ff3c91,#ff70b9);color:#fff;font-weight:800}
 #bottomNav{
- position:absolute;left:50%;right:auto;top:12px;z-index:10000;
- transform:translateX(-50%);
- display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
- gap:5px;width:min(760px,calc(100vw - 14px));
- padding:5px;border:1px solid rgba(255,255,255,.10);border-radius:18px;
- background:rgba(8,4,14,.62);backdrop-filter:blur(16px);
- box-shadow:0 8px 28px rgba(0,0,0,.28),0 0 22px rgba(255,60,160,.08);
+  position:absolute;
+  left:50%;
+  right:auto;
+  top:clamp(8px,2vw,16px);
+  z-index:10000;
+  transform:translateX(-50%);
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:clamp(4px,1vw,7px);
+  width:min(760px,calc(100vw - 28px));
+  padding:clamp(5px,1vw,7px);
+  box-sizing:border-box;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:20px;
+  background:rgba(8,4,14,.68);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  box-shadow:0 8px 28px rgba(0,0,0,.28),0 0 22px rgba(255,60,160,.08);
 }
 #bottomNav button{
- min-width:0;min-height:36px;padding:7px 4px;border-radius:12px;
- border:1px solid rgba(255,255,255,.10);
- background:transparent;color:rgba(255,255,255,.72);font-size:10px;font-weight:750;
- white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
- transition:transform .18s,background .2s,box-shadow .2s,color .2s;
+  min-width:0;
+  min-height:clamp(34px,8vw,42px);
+  padding:clamp(6px,1.6vw,9px) clamp(4px,1.1vw,10px);
+  border-radius:clamp(10px,2.5vw,14px);
+  border:1px solid rgba(255,255,255,.10);
+  background:transparent;
+  color:rgba(255,255,255,.72);
+  font-size:clamp(9px,2.2vw,12px);
+  font-weight:750;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  line-height:1.15;
+  transition:transform .18s,background .2s,box-shadow .2s,color .2s;
 }
 #bottomNav button:active{transform:scale(.96)}
 #homeBtn{
@@ -687,7 +707,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #kdvRulesBtn{
   position:absolute;
   left:50%;
-  top:64px;
+  top:clamp(58px,13vw,72px);
   transform:translateX(-50%);
   z-index:10001;
   min-height:34px;
@@ -823,7 +843,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 }
 @media(max-width:420px){
   #kdvRulesBtn{
-    top:59px;
+    top:clamp(55px,14vw,66px);
     min-height:32px;
     padding:6px 15px;
     font-size:10px;
@@ -845,6 +865,115 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     border-radius:14px;
   }
   .kdvNum{width:27px;height:27px}
+}
+
+
+/* Responsive KDV modal — adapts to small/large phones and iPhone safe areas */
+#kdvRulesOverlay{
+  padding:
+    max(12px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
+}
+#kdvRulesPanel{
+  box-sizing:border-box;
+  width:min(560px, calc(100vw - 24px));
+  max-width:560px;
+  height:auto;
+  max-height:calc(100dvh - max(24px, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+#kdvRulesList{
+  flex:1 1 auto;
+  min-height:0;
+  max-height:none;
+  width:100%;
+  box-sizing:border-box;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+}
+.kdvRule{
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+}
+.kdvRule > div{
+  min-width:0;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.kdvFooter{
+  flex:0 0 auto;
+  width:100%;
+  box-sizing:border-box;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:normal;
+  line-height:1.45;
+  padding-left:6px;
+  padding-right:6px;
+}
+@media(max-width:600px){
+  #kdvRulesPanel{
+    width:calc(100vw - 20px);
+    max-height:calc(100dvh - 20px);
+    padding:clamp(16px,4vw,22px) clamp(10px,3vw,16px) 12px;
+  }
+  #kdvRulesTitle{
+    font-size:clamp(18px,5vw,22px);
+  }
+  #kdvRulesSub{
+    font-size:clamp(9px,2.5vw,10px);
+  }
+  .kdvRule{
+    grid-template-columns:clamp(28px,8vw,34px) minmax(0,1fr);
+    gap:clamp(7px,2.2vw,10px);
+    padding:clamp(8px,2.5vw,11px);
+    font-size:clamp(10px,2.7vw,11px);
+    line-height:1.48;
+  }
+  .kdvNum{
+    width:clamp(26px,7.5vw,29px);
+    height:clamp(26px,7.5vw,29px);
+  }
+  .kdvFooter{
+    font-size:clamp(8px,2.4vw,9px);
+  }
+}
+@media(max-height:700px){
+  #kdvRulesPanel{
+    max-height:calc(100dvh - 12px);
+    border-radius:22px;
+  }
+  #kdvRulesSub{margin-bottom:8px}
+  .kdvRule{margin:5px 0;padding:8px}
+  .kdvFooter{margin-top:6px;padding-top:7px}
+}
+
+
+/* Global mobile spacing: keep every major control away from the screen edges */
+@media(max-width:600px){
+  :root{--mobile-gutter:12px}
+  body{overflow-x:hidden}
+  #bottomNav,
+  #kdvRulesBtn{
+    max-width:calc(100vw - 24px);
+  }
+  /* Prevent wide headings/buttons/cards from touching the viewport edge */
+  .container,.main,.content,.panel,.card,.section{
+    max-width:100%;
+    box-sizing:border-box;
+  }
+}
+@media(max-width:380px){
+  #bottomNav{width:calc(100vw - 18px);gap:3px;padding:3px}
+  #bottomNav button{font-size:8px;padding-left:2px;padding-right:2px}
 }
 
 </style>
@@ -956,7 +1085,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       </article>
     </div>
 
-    <div class="kdvFooter">♡ Kiểm duyệt đúng luật • công bằng • rõ ràng ♡</div>
+    <div class="kdvFooter">♡ Kiểm duyệt đúng luật • Công bằng • Rõ ràng ♡</div>
   </section>
 </div>
 
