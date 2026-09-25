@@ -987,7 +987,12 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   box-shadow:0 6px 20px rgba(0,0,0,.22),0 0 18px rgba(255,60,160,.08);
   transition:opacity .18s,transform .18s;
 }
-#quickToolsBar.hidden{opacity:0!important;pointer-events:none!important;transform:translate(-50%,-8px)!important}
+#quickToolsBar.hidden{
+  display:none !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+  visibility:hidden !important;
+}
 #quickToolsBar button{
   min-height:32px;padding:6px 12px;border-radius:999px;
   border:1px solid rgba(255,120,190,.20);background:rgba(255,70,155,.06);
@@ -1712,12 +1717,16 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     linkEditorOverlay.classList.add("show");
     linkEditorOverlay.setAttribute("aria-hidden","false");
     setTimeout(()=>linkEditorInput.focus(),50);
+  
+    if(typeof syncQuickTools==="function") syncQuickTools();
   }
 
   function closeLinkEditor(){
     linkEditorOverlay.classList.remove("show");
     linkEditorOverlay.setAttribute("aria-hidden","true");
     editingMonitorName = "";
+  
+    if(typeof syncQuickTools==="function") syncQuickTools();
   }
 
   function saveEditedMonitorLink(){
@@ -1854,11 +1863,13 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     adminPasswordInput.value="";
     adminPasswordOverlay.style.display="flex";
     adminPasswordOverlay.setAttribute("aria-hidden","false");
+    if(typeof syncQuickTools==="function") syncQuickTools();
     setTimeout(()=>adminPasswordInput.focus(),50);
   }
   function closeAdminPassword(){
     adminPasswordOverlay.style.display="none";
     adminPasswordOverlay.setAttribute("aria-hidden","true");
+    if(typeof syncQuickTools==="function") syncQuickTools();
   }
   function renderAdminChecklistEditor(){
     if(!adminChecklistRows) return;
@@ -2934,19 +2945,24 @@ function renderTop(){
     });
   }
   function syncQuickTools(){
-    const active=
-      kdvRulesOverlay.classList.contains("show")||
-      monitorOverlay.classList.contains("show")||
-      topPanel.classList.contains("show")||
-      checklistPanel.classList.contains("show")||
-      adminOverlay.classList.contains("show")||
-      quizOverlay.classList.contains("show")||
-      quizNameOverlay.classList.contains("show")||
-      quizTakeOverlay.classList.contains("show")||
-      quizResultOverlay.classList.contains("show")||
-      quizBuilderOverlay.classList.contains("show")||
+    // Luật KDV + Bài kiểm tra chỉ thuộc giao diện HOME.
+    // Khi chuyển sang bất kỳ tab/bảng chức năng nào khác thì ẩn hoàn toàn.
+    const otherViewOpen =
+      kdvRulesOverlay.classList.contains("show") ||
+      monitorOverlay.classList.contains("show") ||
+      topPanel.classList.contains("show") ||
+      checklistPanel.classList.contains("show") ||
+      adminOverlay.classList.contains("show") ||
+      adminPasswordOverlay.style.display === "flex" ||
+      linkEditorOverlay.classList.contains("show") ||
+      quizOverlay.classList.contains("show") ||
+      quizNameOverlay.classList.contains("show") ||
+      quizTakeOverlay.classList.contains("show") ||
+      quizResultOverlay.classList.contains("show") ||
+      quizBuilderOverlay.classList.contains("show") ||
       wheelArea.classList.contains("show");
-    quickToolsBar.classList.toggle("hidden",!!active);
+
+    quickToolsBar.classList.toggle("hidden", otherViewOpen);
   }
   function renderQuizAdminButton(){quizAdminBtn.hidden=!adminUnlocked}
 
