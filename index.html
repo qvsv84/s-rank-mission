@@ -142,6 +142,27 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
  display:none !important;
 }
 
+
+/* ===== GIÁM SÁT ===== */
+#monitorBtn{color:rgba(255,255,255,.86)}
+#monitorOverlay{position:fixed;inset:0;z-index:19000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.68);backdrop-filter:blur(10px)}
+#monitorOverlay.show{display:flex}
+#monitorPanel{width:min(92vw,420px);max-height:min(78vh,620px);padding:20px;border:1px solid rgba(255,255,255,.16);border-radius:24px;background:linear-gradient(145deg,rgba(20,8,24,.97),rgba(6,4,12,.98));box-shadow:0 18px 60px rgba(0,0,0,.55),0 0 35px rgba(255,60,160,.14);color:#fff}
+#monitorTitle{text-align:center;font-size:21px;font-weight:800;text-shadow:0 0 14px #ff4fa3;margin-bottom:4px}
+#monitorSub{text-align:center;color:rgba(255,255,255,.48);font-size:12px;margin-bottom:14px}
+#monitorScroll{max-height:52vh;overflow:auto;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.03)}
+#monitorTable{width:100%;border-collapse:collapse;font-size:12px}
+#monitorTable th{position:sticky;top:0;background:rgba(20,8,24,.98);color:rgba(255,255,255,.62);font-size:11px;text-align:left;padding:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+#monitorTable th:last-child,#monitorTable td:last-child{text-align:center;width:90px}
+#monitorTable td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.86)}
+#monitorTable tr:last-child td{border-bottom:0}
+.monitorCheckBtn{min-width:68px;min-height:32px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,120,180,.22);background:linear-gradient(135deg,#ff3c91,#ff70b9);color:#fff;font-size:11px;font-weight:800;box-shadow:0 0 12px rgba(255,50,145,.16)}
+#monitorCloseBtn{width:100%;min-height:40px;margin-top:12px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font-weight:700}
+@media (max-width:420px){
+ #bottomNav{gap:3px}
+ #bottomNav button{padding:6px 7px;font-size:9px}
+}
+
 /* ===== ADMIN ===== */
 #adminBtn{color:rgba(255,255,255,.86)}
 #adminOverlay{position:fixed;inset:0;z-index:20000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.68);backdrop-filter:blur(10px)}
@@ -626,7 +647,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 }
 
 </style>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 </head>
 <body>
 <main id="space">
@@ -670,9 +691,23 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 <nav id="bottomNav">
   <button id="homeBtn" type="button">⌂ Home</button>
   <button id="adminBtn" type="button">⚙ Admin</button>
+  <button id="monitorBtn" type="button">👁 Giám sát</button>
   <button id="topBtn" type="button">🏆 BXH TOP</button>
   <button id="checklistBtn" type="button">☑ Checklist</button>
 </nav>
+<div id="monitorOverlay" aria-hidden="true">
+  <section id="monitorPanel" role="dialog" aria-modal="true" aria-labelledby="monitorTitle">
+    <div id="monitorTitle">👁 Giám sát</div>
+    <div id="monitorSub">Bấm CHECK để mở Facebook của từng người</div>
+    <div id="monitorScroll">
+      <table id="monitorTable">
+        <thead><tr><th>Tên</th><th>Check</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <button id="monitorCloseBtn" type="button">Đóng</button>
+  </section>
+</div>
 <div id="adminPasswordOverlay" class="adminOverlay" aria-hidden="true" style="position:fixed;inset:0;z-index:21000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);">
   <section id="adminPasswordBox">
     <div id="adminPasswordTitle">🔐 Admin</div>
@@ -733,6 +768,10 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const topBody = document.querySelector("#topTable tbody");
   const topCloseBtn = document.getElementById("topCloseBtn");
   const adminBtn = document.getElementById("adminBtn");
+  const monitorBtn = document.getElementById("monitorBtn");
+  const monitorOverlay = document.getElementById("monitorOverlay");
+  const monitorBody = document.querySelector("#monitorTable tbody");
+  const monitorCloseBtn = document.getElementById("monitorCloseBtn");
   const adminOverlay = document.getElementById("adminOverlay");
   const adminPanel = document.getElementById("adminPanel");
   const resetTimeInput = document.getElementById("resetTimeInput");
@@ -926,6 +965,62 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     }catch(_){}
   }
 
+  const MONITOR_FB_LINK = "https://facebook.com/kinya03";
+
+  function openMonitorFacebook(name){
+    // Mở tab mới ngay trong sự kiện click để giảm khả năng trình duyệt chặn popup.
+    const win = window.open("about:blank", "_blank");
+    if(!win){
+      setStatus("Trình duyệt đang chặn cửa sổ mới. Hãy cho phép popup cho trang này.");
+      return;
+    }
+
+    try{
+      win.document.open();
+      win.document.write(`<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Đang mở Facebook</title><style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#09050d;color:#fff;font-family:Arial,sans-serif}div{text-align:center;padding:24px}b{display:block;font-size:20px;margin-bottom:8px}span{font-size:13px;color:#aaa}</style></head><body><div><b>Đang mở Facebook…</b><span>${String(name || "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}</span></div></body></html>`);
+      win.document.close();
+      win.onload = () => { win.location.href = MONITOR_FB_LINK; };
+      // about:blank đã có DOM; fallback nếu onload không phát sinh.
+      setTimeout(() => {
+        try { if(win && !win.closed) win.location.href = MONITOR_FB_LINK; } catch(_){}
+      }, 250);
+    }catch(_){
+      try{ win.location.href = MONITOR_FB_LINK; }catch(__){}
+    }
+  }
+
+  function renderMonitor(){
+    if(!monitorBody) return;
+    monitorBody.innerHTML = "";
+    const frag = document.createDocumentFragment();
+    names.forEach((name, i) => {
+      const tr = document.createElement("tr");
+      const tdName = document.createElement("td");
+      tdName.textContent = name || ("Người chơi " + (i+1));
+      const tdCheck = document.createElement("td");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "monitorCheckBtn";
+      btn.textContent = "CHECK";
+      btn.addEventListener("click", () => openMonitorFacebook(name));
+      tdCheck.appendChild(btn);
+      tr.appendChild(tdName);
+      tr.appendChild(tdCheck);
+      frag.appendChild(tr);
+    });
+    monitorBody.appendChild(frag);
+  }
+
+  function openMonitor(){
+    renderMonitor();
+    monitorOverlay.classList.add("show");
+    monitorOverlay.setAttribute("aria-hidden","false");
+  }
+  function closeMonitor(){
+    monitorOverlay.classList.remove("show");
+    monitorOverlay.setAttribute("aria-hidden","true");
+  }
+
   function closeAdmin(){
     adminOverlay.classList.remove("show");
     adminOverlay.setAttribute("aria-hidden","true");
@@ -1035,6 +1130,9 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       adminStatus.textContent="Không tải được cài đặt hiện tại. Kiểm tra Apps Script.";
     }
   }
+  monitorBtn.addEventListener("click",openMonitor);
+  monitorCloseBtn.addEventListener("click",closeMonitor);
+  monitorOverlay.addEventListener("click",e=>{if(e.target===monitorOverlay) closeMonitor()});
   adminBtn.addEventListener("click",openAdminPassword);
   adminPasswordOk.addEventListener("click",verifyAdmin);
   adminPasswordCancel.addEventListener("click",closeAdminPassword);
@@ -1616,16 +1714,35 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   // ---------- Chụp checklist ----------
   // ---------- Chụp checklist: Chrome + Cốc Cốc mobile ----------
+  let html2canvasPromise = null;
+  function ensureHtml2Canvas(){
+    if(typeof html2canvas === "function") return Promise.resolve();
+    if(html2canvasPromise) return html2canvasPromise;
+    html2canvasPromise = new Promise((resolve,reject)=>{
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+      s.onload = resolve;
+      s.onerror = () => reject(new Error("Không tải được công cụ chụp"));
+      document.head.appendChild(s);
+    });
+    return html2canvasPromise;
+  }
+
   async function captureChecklist(){
     if(!checklistPanel.classList.contains("show")) return;
 
-    if(typeof html2canvas !== "function"){
-      setStatus("Không tải được công cụ chụp");
+    captureBtn.disabled = true;
+    const oldText = captureBtn.textContent;
+    captureBtn.textContent = "⏳ Đang tải công cụ…";
+    try{
+      await ensureHtml2Canvas();
+    }catch(e){
+      setStatus(e.message || "Không tải được công cụ chụp");
+      captureBtn.disabled = false;
+      captureBtn.textContent = oldText;
       return;
     }
 
-    captureBtn.disabled = true;
-    const oldText = captureBtn.textContent;
     captureBtn.textContent = "⏳ Đang tạo ảnh…";
 
     const clone = checklistPanel.cloneNode(true);
@@ -1926,9 +2043,19 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
   syncBtn.addEventListener("click",()=>loadData(true, true));
 
-  // Load Sheet ngay khi mở; cache hiển thị trước nếu có.
-  loadData(true);
-  loadAdminSettings();
+  // Hiển thị cache ngay lập tức nếu có; server đồng bộ nền sau đó.
+  // Không gọi getSettings khi mở Home — chỉ tải khi Admin được mở.
+  if(cacheLoad()){
+    initialSheetLoaded = true;
+    renderChecklist();
+    buildWheel();
+    renderAdminChecklistEditor();
+    if(!resumeQ1FromCache()) hint.textContent = names.length ? "Chạm vào câu hỏi" : "Đang tải dữ liệu…";
+    setStatus("Đã tải dữ liệu lưu ✓");
+    loadData(false, true);
+  }else{
+    loadData(true);
+  }
   scheduleNextReset();
   startAutoSync();
 })();
