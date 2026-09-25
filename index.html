@@ -1098,6 +1098,69 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   #quizBuilderList{max-height:calc(100dvh - 235px)}
 }
 
+
+/* ===== iOS SAFARI ZOOM FIX =====
+   Safari auto-zooms focused text fields below 16px.
+   Keep all editable controls at >=16px so focusing them does not zoom the page.
+*/
+#quizBuilderPanel input,
+#quizBuilderPanel textarea,
+#quizBuilderPanel select,
+#quizNamePanel input,
+#quizNamePanel textarea,
+#adminOverlay input,
+#adminOverlay textarea,
+#adminOverlay select,
+#linkEditorOverlay input,
+#linkEditorOverlay textarea{
+  font-size:16px !important;
+  line-height:1.35;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+
+#quizBuilderPanel input,
+#quizBuilderPanel textarea,
+#adminOverlay input,
+#adminOverlay textarea,
+#linkEditorOverlay input{
+  touch-action:manipulation;
+}
+
+/* Never allow a modal's internal content to create a horizontal page zoom. */
+#quizBuilderOverlay,
+#quizBuilderPanel,
+#quizBuilderList{
+  max-width:100vw;
+  overflow-x:hidden;
+}
+
+/* Keep the quiz builder usable when Safari's keyboard reduces the viewport. */
+#quizBuilderOverlay{
+  align-items:flex-start;
+  padding-top:max(12px,env(safe-area-inset-top));
+  padding-bottom:max(12px,env(safe-area-inset-bottom));
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+#quizBuilderPanel{
+  margin:auto;
+  max-height:calc(100dvh - 24px);
+}
+@media(max-width:600px){
+  #quizBuilderPanel{
+    max-height:calc(100dvh - 20px);
+  }
+}
+
+/* Prevent long answer/question text from widening the builder. */
+.quizQuestionInput,
+.quizAnswerInput{
+  min-width:0;
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+
 </style>
 
 </head>
