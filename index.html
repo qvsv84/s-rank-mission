@@ -1323,6 +1323,108 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   }
 }
 
+/* ===== BỮA TRƯA ĂN GÌ ===== */
+#lunchChoiceOverlay{position:fixed;inset:0;z-index:20500;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(3,1,7,.76);backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px)}
+#lunchChoiceOverlay.show{display:flex}
+#lunchChoicePanel{position:relative;width:min(430px,calc(100vw - 28px));padding:24px 18px 18px;border:1px solid rgba(255,150,205,.22);border-radius:26px;background:linear-gradient(180deg,rgba(25,8,24,.96),rgba(10,5,14,.98));box-shadow:0 22px 70px rgba(0,0,0,.5),0 0 45px rgba(255,55,155,.12);text-align:center;color:#fff}
+#lunchChoiceClose{position:absolute;right:10px;top:8px;width:34px;height:34px;border:0;background:transparent;color:rgba(255,255,255,.55);font-size:27px;line-height:1}
+.lunchChoiceIcon{font-size:30px;margin-bottom:5px}
+#lunchChoiceTitle{font-size:20px;font-weight:950;letter-spacing:.5px;text-shadow:0 0 18px rgba(255,100,180,.45)}
+#lunchChoiceSub{margin:5px 0 16px;color:rgba(255,255,255,.48);font-size:10px}
+#lunchChoiceButtons{display:grid;grid-template-columns:1fr;gap:8px}
+.lunchModeBtn{min-height:62px;padding:9px 12px;border-radius:17px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);color:#fff;text-align:left;display:grid;grid-template-columns:42px 1fr;grid-template-rows:1fr 1fr;column-gap:8px;align-items:center}
+.lunchModeBtn span{grid-row:1/3;grid-column:1;font-size:25px;text-align:center}.lunchModeBtn b{grid-column:2;font-size:12px;align-self:end}.lunchModeBtn small{grid-column:2;color:rgba(255,255,255,.45);font-size:9px;align-self:start;margin-top:2px}
+.lunchModeBtn.home{border-color:rgba(110,220,150,.18)}.lunchModeBtn.out{border-color:rgba(255,145,90,.20)}.lunchModeBtn.all{border-color:rgba(255,100,190,.22);background:linear-gradient(135deg,rgba(255,70,160,.10),rgba(255,180,90,.06))}.lunchModeBtn:active{transform:scale(.985)}
+#secondaryNav{
+  width:min(620px,calc(100vw - 24px));
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+#secondaryNav.admin-visible{
+  width:min(820px,calc(100vw - 24px));
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+#lunchBtn{
+  color:#ffd2e7 !important;
+  border-color:rgba(255,130,195,.24) !important;
+  background:linear-gradient(135deg,rgba(255,92,166,.10),rgba(255,190,110,.07)) !important;
+}
+#lunchBtn.running{
+  color:#fff !important;
+  background:linear-gradient(135deg,rgba(255,60,145,.72),rgba(255,145,190,.58)) !important;
+  box-shadow:0 0 18px rgba(255,60,160,.22);
+}
+#lunchResult{
+  position:absolute;
+  left:50%;
+  top:calc(clamp(57px,12vw,70px) + 48px);
+  z-index:9998;
+  width:min(90vw,560px);
+  transform:translateX(-50%);
+  text-align:center;
+  color:#fff;
+  font-size:clamp(19px,5.2vw,30px);
+  font-weight:950;
+  letter-spacing:.3px;
+  line-height:1.15;
+  text-shadow:0 0 5px rgba(255,255,255,.95),0 0 15px rgba(255,105,180,.8),0 0 34px rgba(255,60,145,.5);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .22s,transform .22s;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#lunchResult.show{
+  opacity:1;
+  visibility:visible;
+  animation:lunchPop .32s ease-out;
+}
+#lunchResult.rolling{
+  filter:blur(.15px);
+  animation:lunchRoll .16s ease-in-out infinite alternate;
+}
+#lunchResult .lunchLabel{
+  display:block;
+  margin-bottom:4px;
+  color:rgba(255,205,230,.62);
+  font-size:clamp(8px,2.1vw,11px);
+  font-weight:800;
+  letter-spacing:2px;
+  text-transform:uppercase;
+}
+#lunchResult .lunchDish{display:block;}
+@keyframes lunchPop{
+  0%{opacity:0;transform:translateX(-50%) translateY(-7px) scale(.88)}
+  70%{transform:translateX(-50%) translateY(1px) scale(1.05)}
+  100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+}
+@keyframes lunchRoll{
+  from{transform:translateX(-50%) translateY(-1px) scale(.98) rotate(-.4deg)}
+  to{transform:translateX(-50%) translateY(1px) scale(1.02) rotate(.4deg)}
+}
+@media(max-width:600px){
+  #secondaryNav{
+    width:calc(100vw - 16px) !important;
+    max-width:calc(100vw - 16px) !important;
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+  #secondaryNav.admin-visible{
+    width:calc(100vw - 16px) !important;
+    max-width:calc(100vw - 16px) !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  }
+  #lunchResult{
+    top:calc(clamp(54px,13vw,66px) + 45px);
+    width:calc(100vw - 28px);
+  }
+}
+@media(max-width:360px){
+  #secondaryNav{gap:2px !important;padding:2px !important;}
+  #secondaryNav > button{font-size:7px !important;}
+  #lunchResult{top:calc(clamp(54px,13vw,66px) + 43px);font-size:18px;}
+}
+
 </style>
 
 <script>
@@ -1382,9 +1484,25 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 </nav>
 <nav id="secondaryNav" aria-label="Công cụ">
   <button id="kdvRulesBtn" type="button" aria-label="Mở Luật KDV">📜 Luật KDV</button>
+  <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?">🍜 Bữa trưa ăn gì?</button>
   <button id="quizBtn" type="button" aria-label="Mở Bài kiểm tra">📝 Bài kiểm tra</button>
   <button id="quizAdminBtn" type="button" aria-label="Tạo bài kiểm tra" hidden>⚙ Tạo Ktra</button>
 </nav>
+
+<div id="lunchChoiceOverlay" aria-hidden="true">
+  <section id="lunchChoicePanel" role="dialog" aria-modal="true" aria-labelledby="lunchChoiceTitle">
+    <button id="lunchChoiceClose" type="button" aria-label="Đóng">×</button>
+    <div class="lunchChoiceIcon">🍽️</div>
+    <div id="lunchChoiceTitle">BỮA TRƯA ĂN GÌ?</div>
+    <div id="lunchChoiceSub">Chọn kiểu ăn rồi để vòng quay chọn món cho m</div>
+    <div id="lunchChoiceButtons">
+      <button type="button" class="lunchModeBtn home" data-mode="home"><span>🏠</span><b>Ăn nhà</b><small>50 món cơm nhà</small></button>
+      <button type="button" class="lunchModeBtn out" data-mode="out"><span>🍜</span><b>Ăn ngoài</b><small>50 món dễ tìm</small></button>
+      <button type="button" class="lunchModeBtn all" data-mode="all"><span>🎲</span><b>Random tất cả</b><small>100 món</small></button>
+    </div>
+  </section>
+</div>
+<div id="lunchResult" aria-live="polite" aria-hidden="true"><span class="lunchLabel">🍽️ Hôm nay ăn</span><span class="lunchDish">Bấm nút để chọn món</span></div>
 
 
 <div id="kdvRulesOverlay" aria-hidden="true">
@@ -1631,6 +1749,12 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const kdvRulesBtn = document.getElementById("kdvRulesBtn");
   const kdvRulesOverlay = document.getElementById("kdvRulesOverlay");
   const kdvRulesClose = document.getElementById("kdvRulesClose");
+  const lunchBtn = document.getElementById("lunchBtn");
+  const lunchChoiceOverlay = document.getElementById("lunchChoiceOverlay");
+  const lunchChoiceClose = document.getElementById("lunchChoiceClose");
+  const lunchModeButtons = [...document.querySelectorAll(".lunchModeBtn")];
+  const lunchResult = document.getElementById("lunchResult");
+  const lunchDish = lunchResult.querySelector(".lunchDish");
   const linkEditorOverlay = document.getElementById("linkEditorOverlay");
   const linkEditorName = document.getElementById("linkEditorName");
   const linkEditorInput = document.getElementById("linkEditorInput");
@@ -3181,6 +3305,8 @@ function renderTop(){
 
     secondaryNav.classList.toggle("nav-hidden", otherViewOpen);
     secondaryNav.setAttribute("aria-hidden", otherViewOpen ? "true" : "false");
+    lunchResult.classList.toggle("show", !otherViewOpen && lunchResult.dataset.hasResult === "1");
+    lunchResult.setAttribute("aria-hidden", otherViewOpen ? "true" : "false");
   }
   function renderQuizAdminButton(){
     quizAdminBtn.hidden=!adminUnlocked;
@@ -3323,12 +3449,61 @@ function renderTop(){
   }
 
 
+  const LUNCH_HOME = [
+    "Thịt xào lá khế","Thịt kho trứng","Thịt rang cháy cạnh","Thịt xào hành tây","Thịt xào sả ớt","Thịt xào rau củ","Sườn xào chua ngọt","Sườn ram","Sườn nướng","Gà chiên nước mắm","Gà kho gừng","Gà kho sả","Gà chiên giòn","Gà xào sả ớt","Gà nướng","Cá kho tộ","Cá kho tiêu","Cá chiên mắm","Cá chiên sốt cà","Cá nướng","Tôm rim mặn ngọt","Tôm rang me","Tôm rang thịt","Mực xào rau củ","Mực chiên nước mắm","Trứng chiên thịt bằm","Trứng chiên hành","Trứng chiên cà chua","Trứng kho","Đậu hũ sốt cà chua","Đậu hũ chiên sả ớt","Đậu hũ sốt thịt bằm","Rau muống xào tỏi","Rau muống xào thịt bò","Cải thìa xào tỏi","Bắp cải xào trứng","Khổ qua xào trứng","Bí xanh xào tỏi","Cà tím xào thịt","Đậu que xào thịt bò","Cơm chiên trứng","Cơm chiên Dương Châu","Cơm chiên thịt bò","Cơm chiên hải sản","Cơm chiên kim chi","Mì xào bò","Mì xào hải sản","Nui xào bò","Cháo gà","Canh chua cá"
+  ];
+  const LUNCH_OUT = [
+    "Cơm tấm sườn","Cơm tấm sườn bì chả","Cơm gà xối mỡ","Cơm gà nướng","Cơm gà chiên mắm","Cơm bò lúc lắc","Cơm thịt nướng","Cơm heo quay","Cơm xá xíu","Cơm cá","Phở bò","Phở gà","Hủ tiếu Nam Vang","Hủ tiếu bò kho","Bún bò Huế","Bún thịt nướng","Bún chả","Bún riêu","Bún mắm","Bún đậu mắm tôm","Bún nem nướng","Bún bò xào","Bún hải sản","Mì Quảng","Cao lầu","Bánh canh cua","Bánh canh giò heo","Mì hoành thánh","Mì vịt tiềm","Mì cay","Mì trộn","Bánh mì thịt","Bánh mì xíu mại","Bánh mì chảo","Bò né","Bò kho + bánh mì","Bánh xèo","Bánh cuốn","Bánh ướt thịt nướng","Cháo gà","Cháo lòng","Súp cua","Gà rán","Gà nướng","Há cảo","Kimbap","Cơm trộn Hàn Quốc","Tokbokki","Pizza","Hamburger"
+  ];
+  const LUNCH_DISHES = [...LUNCH_HOME,...LUNCH_OUT];
+  let lunchMode="all";
+  let lunchRolling=false;
+  let lunchTimer=null;
+  function randomLunchDish(){
+    const list=lunchMode==="home"?LUNCH_HOME:lunchMode==="out"?LUNCH_OUT:LUNCH_DISHES;
+    return list[Math.floor(Math.random()*list.length)];
+  }
+  function openLunchChoice(){lunchChoiceOverlay.classList.add("show");lunchChoiceOverlay.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";}
+  function closeLunchChoice(){lunchChoiceOverlay.classList.remove("show");lunchChoiceOverlay.setAttribute("aria-hidden","true");document.body.style.overflow="";}
+  function chooseLunchMode(mode){lunchMode=mode;closeLunchChoice();pickLunch();}
+  function pickLunch(){
+    if(lunchRolling) return;
+    lunchRolling=true;
+    lunchBtn.classList.add("running");
+    lunchResult.classList.add("show","rolling");
+    lunchResult.dataset.hasResult="1";
+    lunchResult.setAttribute("aria-hidden","false");
+    let elapsed=0;
+    let delay=55;
+    const roll=()=>{
+      if(elapsed>=2850){
+        const finalDish=randomLunchDish();
+        lunchDish.textContent=finalDish;
+        lunchResult.classList.remove("rolling");
+        lunchResult.classList.add("show");
+        lunchRolling=false;
+        lunchBtn.classList.remove("running");
+        return;
+      }
+      lunchDish.textContent=randomLunchDish();
+      elapsed+=delay;
+      delay=Math.min(210,delay+7);
+      lunchTimer=setTimeout(roll,delay);
+    };
+    clearTimeout(lunchTimer);
+    roll();
+  }
+
   function markNavButton(btn){
     document.querySelectorAll("#bottomNav button").forEach(b=>b.classList.remove("active"));
     if(btn) btn.classList.add("active");
   }
   kdvRulesBtn.addEventListener("click",()=>markNavButton(kdvRulesBtn));
 
+  lunchBtn.addEventListener("click",openLunchChoice);
+  lunchChoiceClose.addEventListener("click",closeLunchChoice);
+  lunchChoiceOverlay.addEventListener("click",e=>{if(e.target===lunchChoiceOverlay)closeLunchChoice()});
+  lunchModeButtons.forEach(btn=>btn.addEventListener("click",()=>chooseLunchMode(btn.dataset.mode)));
   quizBtn.addEventListener("click",openQuiz);
   quizClose.addEventListener("click",closeQuiz);
   quizOverlay.addEventListener("click",e=>{if(e.target===quizOverlay)closeQuiz()});
