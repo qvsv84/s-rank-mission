@@ -5319,34 +5319,15 @@ function showSystemFinalMessage(el, message){
   const wheelStep = 58;
 
   function syncAttendanceEmployees(){
-    const source = typeof window.__getChecklistNames === 'function'
-      ? window.__getChecklistNames()
-      : [];
-    const unique = [...new Set(source.map(v => String(v || '').trim()).filter(Boolean))];
-    ATTENDANCE_EMPLOYEES = unique;
-
-    employee.innerHTML = '';
-    ATTENDANCE_EMPLOYEES.forEach(name=>{
-      const opt=document.createElement('option');
-      opt.value=name; opt.textContent=name; employee.appendChild(opt);
-    });
-
+    // KHÔNG lấy danh sách từ checklist C4:C17.
+    // Danh sách chấm công bắt buộc lấy từ API getAttendance(),
+    // tức Check!C19:C32.
     if(!ATTENDANCE_EMPLOYEES.length){
-      selectedName = '';
-      wheelIndex = 0;
-    }else{
-      const currentIndex = ATTENDANCE_EMPLOYEES.indexOf(selectedName);
-      if(currentIndex >= 0){
-        wheelIndex = currentIndex;
-      }else{
-        wheelIndex = 0;
-        selectedName = ATTENDANCE_EMPLOYEES[0];
-      }
+      loadAttendanceMonth(true);
+      return;
     }
 
-    employee.value = selectedName;
-    updateWheelButton();
-    renderNameWheel();
+    syncAttendanceEmployeeControls();
     render();
   }
   window.syncAttendanceEmployees = syncAttendanceEmployees;
@@ -5433,6 +5414,14 @@ function showSystemFinalMessage(el, message){
     badge.textContent=(y===new Date().getFullYear() && m===new Date().getMonth())?'THÁNG HIỆN TẠI':`THÁNG ${m+1}/${y}`;
     grid.innerHTML='';
 
+    if(!selectedName){
+      grid.innerHTML = '<div style="grid-column:1/-1;padding:28px 16px;text-align:center;opacity:.7">Đang tải danh sách nhân viên…</div>';
+      workCount.textContent='0';
+      offCount.textContent='0';
+      leaveCount.textContent='0';
+      return;
+    }
+
     const first=new Date(y,m,1), days=new Date(y,m+1,0).getDate();
     const prevDays=new Date(y,m,0).getDate();
     const leading=mondayIndex(first);
@@ -5508,9 +5497,9 @@ function showSystemFinalMessage(el, message){
 
   async function openPage(){
     page.classList.add('show');
-    requestAnimationFrame(()=>render());
     if(typeof syncQuickTools==='function') syncQuickTools();
-    loadAttendanceMonth(false);
+    render();
+    await loadAttendanceMonth(false);
   }
   function closePage(){
     page.classList.remove('show');
