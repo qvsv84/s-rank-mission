@@ -5196,24 +5196,35 @@ function showSystemFinalMessage(el, message){
   prev.addEventListener('click',()=>{viewDate.setMonth(viewDate.getMonth()-1);render()});
   next.addEventListener('click',()=>{viewDate.setMonth(viewDate.getMonth()+1);render()});
 
-  /* Vuốt trái trên trang chính để mở hệ thống 02; vuốt phải trên trang 02 để quay lại. */
+  /* Điều hướng giữa Page 1 và Page 2: vuốt trên điện thoại + phím mũi tên trên PC. */
   let sx=0, sy=0, tracking=false;
-  document.addEventListener('touchstart',e=>{
-    if(e.touches.length!==1) return;
-    sx=e.touches[0].clientX; sy=e.touches[0].clientY; tracking=true;
+
+  document.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse' && e.button!==0) return;
+    if(e.target.closest('#attendanceNameWheel') || e.target.closest('#attendancePrev') || e.target.closest('#attendanceNext')) return;
+    sx=e.clientX;
+    sy=e.clientY;
+    tracking=true;
   },{passive:true});
-  document.addEventListener('touchend',e=>{
-    if(!tracking || e.changedTouches.length!==1) return;
+
+  document.addEventListener('pointerup',e=>{
+    if(!tracking) return;
     tracking=false;
-    const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
-    if(Math.abs(dx)<75 || Math.abs(dx)<Math.abs(dy)*1.35) return;
+    const dx=e.clientX-sx;
+    const dy=e.clientY-sy;
+    if(Math.abs(dx)<75 || Math.abs(dx)<Math.abs(dy)*1.25) return;
     if(dx<0 && !page.classList.contains('show')) openPage();
     else if(dx>0 && page.classList.contains('show')) closePage();
   },{passive:true});
 
   window.addEventListener('keydown',e=>{
-    if(e.key==='ArrowLeft' && !page.classList.contains('show')) openPage();
-    if(e.key==='ArrowRight' && page.classList.contains('show')) closePage();
+    if(e.key==='ArrowRight' && !page.classList.contains('show')){
+      e.preventDefault();
+      openPage();
+    }else if(e.key==='ArrowLeft' && page.classList.contains('show')){
+      e.preventDefault();
+      closePage();
+    }
   });
 
   if(names.length) syncAttendanceEmployees();
