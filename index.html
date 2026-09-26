@@ -5424,21 +5424,38 @@ function showSystemFinalMessage(el, message){
     }catch(e){
       const msg = attendanceErrorText(e);
 
-      // Không tự ghi đè trạng thái HTML và không rollback giả.
-      // Đọc lại Sheet để biết trạng thái thật.
-      attendanceStatusSaving.textContent =
-        'Chưa lưu: ' + msg;
-
-      setAttendanceSyncStatus(
-        'error',
-        'Không ghi được Google Sheet: ' + msg
-      );
+      // Request có thể timeout ở trình duyệt dù Apps Script đã ghi xong.
+      // Vì Sheet là source of truth, đọc lại Sheet trước khi kết luận thất bại.
+      let confirmedBySheet = false;
 
       try{
         await loadAttendanceMonth(true);
+
+        const serverValue =
+          ATTENDANCE_DATA?.[nameAtRequest]?.[key(y,m,day)] || '';
+
+        confirmedBySheet =
+          String(serverValue).trim().toUpperCase() === cleanStatus;
       }catch(_syncErr){}
 
-      setTimeout(closeAttendanceStatus, 1400);
+      if(confirmedBySheet){
+        render();
+        attendanceStatusSaving.textContent = 'Đã lưu ✓';
+        setAttendanceSyncStatus(
+          'ok',
+          'Đã lưu Google Sheet'
+        );
+      }else{
+        attendanceStatusSaving.textContent =
+          'Chưa lưu: ' + msg;
+
+        setAttendanceSyncStatus(
+          'error',
+          'Không ghi được Google Sheet: ' + msg
+        );
+      }
+
+      setTimeout(closeAttendanceStatus, confirmedBySheet ? 500 : 1400);
     }
   }
 
