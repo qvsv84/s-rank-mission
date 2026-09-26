@@ -2668,7 +2668,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .att-day-num{font-size:12px;font-weight:900;color:#37695e;line-height:1}
 .att-day.today .att-day-num{width:25px;height:25px;display:flex;align-items:center;justify-content:center;border-radius:9px;background:#58b99d;color:#fff;box-shadow:0 5px 12px rgba(55,171,141,.22)}
 .att-status{width:100%;padding:4px 2px;border-radius:8px;text-align:center;font-size:8px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.att-status.work{background:#e0f7ee;color:#26836b}.att-status.off{background:#f1f3f5;color:#8b9896}.att-status.leave{background:#fff0d9;color:#a66b20}.att-status.empty{background:#eef4f2;color:#8da09b}
+.att-status.work{background:#e0f7ee;color:#26836b}.att-status.off{background:#ffd9df;color:#b33a4b}.att-status.leave{background:#fff0a8;color:#8a6500}.att-status.empty{background:#eef4f2;color:#8da09b}
 .att-time{font-size:8px;font-weight:750;color:#72918a;white-space:nowrap}
 .att-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .att-stat{padding:12px;border-radius:17px;background:rgba(255,255,255,.72);border:1px solid rgba(40,105,91,.07);text-align:center}.att-stat strong{display:block;font-size:20px;line-height:1;color:#276958}.att-stat span{display:block;margin-top:5px;font-size:9px;font-weight:750;color:#809b95}
@@ -2708,12 +2708,12 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 }
 .att-status-option:active{transform:scale(.97)}
 .att-status-option.work{background:#e0f7ee;color:#26836b}
-.att-status-option.leave{background:#fff0d9;color:#a66b20}
-.att-status-option.off{background:#f1f3f5;color:#7d8987}
-.att-status-option.ot{background:#e8efff;color:#476bb0}
+.att-status-option.leave{background:#fff0a8;color:#8a6500}
+.att-status-option.off{background:#ffd9df;color:#b33a4b}
+.att-status-option.ot{background:#d9f5e6;color:#24724d}
 .att-status-option.clear{grid-column:1/-1;background:#fff;border-color:rgba(166,94,94,.14);color:#a05e5e}
 #attendanceStatusSaving{text-align:center;min-height:16px;margin-top:11px;color:#7b9b94;font-size:10px}
-.att-status.ot{background:#e8efff;color:#476bb0}
+.att-status.ot{background:#d9f5e6;color:#24724d}
 
 /* ===== CHẤM CÔNG: nút nằm bên phải Bữa trưa ===== */
 #secondaryNav{grid-template-columns:repeat(4,minmax(0,1fr)) !important;}
@@ -3066,10 +3066,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     </div>
     <div id="attendanceStatusSub"></div>
     <div id="attendanceStatusOptions">
-      <button class="att-status-option work" type="button" data-status="">Đi làm</button>
-      <button class="att-status-option leave" type="button" data-status="P">Nghỉ phép</button>
-      <button class="att-status-option off" type="button" data-status="Off">Ngày nghỉ</button>
-      <button class="att-status-option ot" type="button" data-status="OT">Tăng ca</button>
+      <button class="att-status-option work" type="button" data-status="">✓ Đi làm</button>
+      <button class="att-status-option leave" type="button" data-status="P">Phép</button>
+      <button class="att-status-option off" type="button" data-status="O">OFF</button>
+      <button class="att-status-option ot" type="button" data-status="T">OT</button>
       <button class="att-status-option clear" type="button" data-status="__clear">Xóa trạng thái</button>
     </div>
     <div id="attendanceStatusSaving"></div>
@@ -5209,7 +5209,7 @@ function showSystemFinalMessage(el, message){
 
   function statusInfo(status){
     const s = String(status || '').trim().toUpperCase();
-    if(s === 'V') return {className:'work', label:'V'};
+    if(s === 'V') return {className:'work', label:'✓'};
     if(s === 'P') return {className:'leave', label:'P'};
     if(s === 'O') return {className:'off', label:'O'};
     if(s === 'T') return {className:'ot', label:'T'};
@@ -5304,7 +5304,7 @@ function showSystemFinalMessage(el, message){
     const dateText = String(day).padStart(2,'0') + '/' + String(m+1).padStart(2,'0') + '/' + y;
     const current = ATTENDANCE_DATA[selectedName]?.[key(y,m,day)];
     const isFuture = new Date(y,m,day) > new Date();
-    const info = current ? statusInfo(current) : (isFuture ? {label:'Chưa tới ngày'} : {label:'V — Đi làm bình thường'});
+    const info = current ? statusInfo(current) : (isFuture ? {label:'Chưa tới ngày'} : {label:'✓ — Đi làm bình thường'});
     attendanceStatusSub.textContent = selectedName + ' • ' + dateText + ' • ' + info.label;
     attendanceStatusSaving.textContent = '';
     attendanceStatusOverlay.classList.add('show');
@@ -5446,7 +5446,7 @@ function showSystemFinalMessage(el, message){
     const raw = String(ATTENDANCE_DATA[selectedName]?.[key(y,m,d)] || '').trim().toUpperCase();
     if(raw === 'P' || raw === 'O' || raw === 'T') return {status:raw};
 
-    // Ngày đã tới nhưng không có mã P/O/T trong Sheet => V (đi làm bình thường).
+    // Ngày đã tới nhưng không có mã P/O/T trong Sheet => ✓ (đi làm bình thường).
     const today = new Date();
     const dateOnly = new Date(y,m,d);
     const todayOnly = new Date(today.getFullYear(),today.getMonth(),today.getDate());
