@@ -3801,7 +3801,6 @@ function renderTop(){
       const serverTimes = Array.isArray(r.data.times) ? r.data.times : [];
 
       names = serverNames;
-      window.syncAttendanceEmployees?.();
       points = serverPoints;
       ranks = points.map(rankClient);
 
@@ -3813,6 +3812,7 @@ function renderTop(){
       }
 
       initialSheetLoaded = true;
+      window.syncAttendanceEmployees?.();
       lastServerSync = Date.now();
       cacheSave();
       renderChecklist();
@@ -5163,7 +5163,11 @@ function showSystemFinalMessage(el, message){
     workCount.textContent=work; offCount.textContent=off; leaveCount.textContent=leave;
   }
 
-  function openPage(){page.classList.add('show');}
+  function openPage(){
+    if(Array.isArray(names) && names.length) syncAttendanceEmployees();
+    page.classList.add('show');
+    requestAnimationFrame(()=>render());
+  }
   function closePage(){page.classList.remove('show');}
   back.addEventListener('click',closePage);
   wheelBtn.addEventListener('click',openNameWheel);
