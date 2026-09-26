@@ -2671,6 +2671,8 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .att-status.work{background:#e0f7ee;color:#26836b}.att-status.off{background:#ffd9df;color:#b33a4b}.att-status.leave{background:#fff0a8;color:#8a6500}.att-status.empty{background:#eef4f2;color:#8da09b}
 .att-time{font-size:8px;font-weight:750;color:#72918a;white-space:nowrap}
 .att-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.att-score-summary{margin-top:8px}
+.att-score-summary .att-stat strong{font-size:22px}
 .att-stat{padding:12px;border-radius:17px;background:rgba(255,255,255,.72);border:1px solid rgba(40,105,91,.07);text-align:center}.att-stat strong{display:block;font-size:20px;line-height:1;color:#276958}.att-stat span{display:block;margin-top:5px;font-size:9px;font-weight:750;color:#809b95}
 #attendanceSyncBar{display:flex;align-items:center;gap:8px;margin-top:10px}
 #attendanceSyncBtn{flex:0 0 auto;height:40px;padding:0 15px;border:1px solid rgba(40,105,91,.12);border-radius:13px;background:#fff;color:#276958;font-size:11px;font-weight:900;box-shadow:0 7px 18px rgba(37,93,82,.08)}
@@ -3042,6 +3044,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         <div class="att-stat"><strong id="attendanceWorkCount">0</strong><span>Ngày làm</span></div>
         <div class="att-stat"><strong id="attendanceOffCount">0</strong><span>Ngày nghỉ</span></div>
         <div class="att-stat"><strong id="attendanceLeaveCount">0</strong><span>Nghỉ phép</span></div>
+      </div>
+      <div class="att-summary att-score-summary">
+        <div class="att-stat"><strong id="attendanceScoreValue">300</strong><span>Điểm tháng</span></div>
       </div>
       <div id="attendanceSyncBar" aria-live="polite">
         <button id="attendanceSyncBtn" type="button">↻ Đồng bộ</button>
@@ -5669,13 +5674,16 @@ function showSystemFinalMessage(el, message){
       workCount.textContent='0';
       offCount.textContent='0';
       leaveCount.textContent='0';
+      const scoreEl = document.getElementById('attendanceScoreValue');
+      if(scoreEl) scoreEl.textContent='300';
       return;
     }
 
     const first=new Date(y,m,1), days=new Date(y,m+1,0).getDate();
     const prevDays=new Date(y,m,0).getDate();
     const leading=mondayIndex(first);
-    let work=0, off=0, leave=0;
+    let work=0, off=0, leave=0, ot=0;
+    const BASE_SCORE=300, LEAVE_SCORE=-10, OT_SCORE=40, OFF_SCORE=0;
 
     for(let i=leading-1;i>=0;i--){
       const cell=document.createElement('div');
@@ -5706,7 +5714,8 @@ function showSystemFinalMessage(el, message){
         status=info.className;
         label=info.label;
 
-        if(item.status === 'V' || item.status === 'T') work++;
+        if(item.status === 'V') work++;
+        else if(item.status === 'T'){ work++; ot++; }
         else if(item.status === 'O') off++;
         else if(item.status === 'P') leave++;
       }
@@ -5729,6 +5738,9 @@ function showSystemFinalMessage(el, message){
     workCount.textContent=work;
     offCount.textContent=off;
     leaveCount.textContent=leave;
+    const attendanceScore = BASE_SCORE + (leave * LEAVE_SCORE) + (ot * OT_SCORE) + (off * OFF_SCORE);
+    const scoreEl = document.getElementById('attendanceScoreValue');
+    if(scoreEl) scoreEl.textContent = attendanceScore;
   }
 
   grid.addEventListener('click',e=>{
