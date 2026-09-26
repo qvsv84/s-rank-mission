@@ -2601,6 +2601,207 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 }
 </style>
 
+
+
+<style id="breakthrough-design-v1">
+/* =========================================================
+   ĐẢO MÈO — BREAKTHROUGH DESIGN SYSTEM
+   Visual-only layer. JavaScript / IDs / interactions untouched.
+   ========================================================= */
+:root{
+  --bt-ink:#173b2b;
+  --bt-ink-soft:#547365;
+  --bt-mint:#eaf5ec;
+  --bt-mint-2:#dceee0;
+  --bt-paper:#fbfdf9;
+  --bt-card:rgba(255,255,255,.90);
+  --bt-line:rgba(46,104,72,.14);
+  --bt-green:#2f7a55;
+  --bt-green-2:#55a875;
+  --bt-lime:#b9d99a;
+  --bt-gold:#e8c878;
+  --bt-shadow:0 24px 70px rgba(32,73,49,.13),0 5px 18px rgba(32,73,49,.06);
+  --bt-radius:28px;
+}
+
+html,body{background:#eaf4eb!important;color:var(--bt-ink)!important}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Rounded","Avenir Next","Segoe UI",sans-serif!important}
+button,input{font-family:inherit!important}
+
+#space{
+  isolation:isolate;
+  background:
+    radial-gradient(900px 500px at 12% 8%,rgba(189,220,170,.55),transparent 62%),
+    radial-gradient(760px 520px at 88% 20%,rgba(210,232,218,.70),transparent 58%),
+    linear-gradient(180deg,#f7fbf5 0%,#edf6ee 48%,#e5f1e7 100%)!important;
+}
+#space::before{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(47,122,85,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(47,122,85,.035) 1px,transparent 1px);
+  background-size:32px 32px;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.55),transparent 76%);
+}
+#stars{opacity:.12!important;mix-blend-mode:multiply!important}
+
+/* top status */
+#connectionState{
+  position:fixed!important;left:16px!important;top:max(14px,env(safe-area-inset-top))!important;
+  z-index:16000!important;border:1px solid rgba(47,122,85,.12)!important;
+  background:rgba(255,255,255,.72)!important;color:#638274!important;
+  box-shadow:0 8px 22px rgba(42,78,57,.06)!important;backdrop-filter:blur(16px)!important;
+}
+#status{color:var(--bt-green)!important}
+
+/* Main hero */
+#questionWrap{
+  top:39%!important;width:min(92vw,650px)!important;z-index:30!important;
+  padding:38px 24px 34px!important;border:1px solid rgba(47,122,85,.13)!important;
+  border-radius:34px!important;background:rgba(255,255,255,.68)!important;
+  box-shadow:var(--bt-shadow)!important;backdrop-filter:blur(18px)!important;
+}
+#questionWrap::before{
+  content:"DAILY MISSION  ·  ĐẢO MÈO";display:block;margin:0 auto 13px;
+  width:max-content;max-width:100%;padding:7px 12px;border-radius:999px;
+  background:#edf7ef;color:#4f8065;border:1px solid rgba(47,122,85,.12);
+  font-size:9px;font-weight:900;letter-spacing:2px;
+}
+#questionWrap::after{
+  content:"";position:absolute;width:180px;height:180px;border-radius:50%;
+  right:-90px;top:-90px;background:radial-gradient(circle,rgba(185,217,154,.42),transparent 68%);pointer-events:none;
+}
+#question{
+  display:flex!important;flex-direction:column!important;align-items:center!important;gap:18px!important;
+  color:var(--bt-ink)!important;text-shadow:none!important;animation:none!important;cursor:pointer!important;
+}
+#question .landing-title{
+  display:block!important;color:var(--bt-ink)!important;
+  font-size:clamp(30px,8.2vw,62px)!important;line-height:.98!important;
+  font-weight:950!important;letter-spacing:-.065em!important;text-shadow:none!important;
+}
+#question .landing-title::first-letter{color:var(--bt-green)}
+#question .landing-cta{
+  display:inline-flex!important;align-items:center;justify-content:center;
+  min-width:178px!important;padding:13px 23px!important;border-radius:999px!important;
+  background:var(--bt-ink)!important;color:#fff!important;
+  border:0!important;box-shadow:0 12px 24px rgba(23,59,43,.18)!important;
+  font-size:12px!important;font-weight:950!important;letter-spacing:3px!important;
+}
+
+/* Primary navigation */
+#bottomNav,#secondaryNav{
+  z-index:15000!important;left:50%!important;transform:translateX(-50%)!important;
+  width:min(780px,calc(100vw - 20px))!important;
+  border:1px solid rgba(47,122,85,.13)!important;
+  background:rgba(250,253,249,.82)!important;
+  box-shadow:0 16px 40px rgba(32,73,49,.10)!important;
+  backdrop-filter:blur(20px)!important;-webkit-backdrop-filter:blur(20px)!important;
+}
+#bottomNav{top:max(58px,calc(env(safe-area-inset-top) + 48px))!important}
+#secondaryNav{top:max(112px,calc(env(safe-area-inset-top) + 102px))!important}
+#bottomNav button,#secondaryNav button{
+  color:#5d7568!important;text-shadow:none!important;border:1px solid transparent!important;
+  background:transparent!important;border-radius:17px!important;font-weight:900!important;
+}
+#bottomNav button.active,#secondaryNav button.active,
+#bottomNav button:hover,#secondaryNav button:hover{
+  color:#1f6846!important;background:#e9f4eb!important;
+  border-color:rgba(47,122,85,.12)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 6px 14px rgba(47,122,85,.06)!important;
+}
+#homeBtn{background:#1f4e39!important;color:#fff!important;box-shadow:0 8px 18px rgba(23,59,43,.16)!important}
+#homeBtn:hover{background:#286449!important;color:#fff!important}
+#bottomNav button::after,#secondaryNav button::after{display:none!important}
+
+/* Wheel */
+#wheelArea{z-index:14000!important}
+#wheelViewport{
+  border:1px solid rgba(47,122,85,.16)!important;border-radius:30px!important;
+  background:rgba(255,255,255,.88)!important;box-shadow:var(--bt-shadow)!important;
+  backdrop-filter:blur(18px)!important;
+}
+#selectionLine{border-color:rgba(47,122,85,.38)!important;background:rgba(82,168,117,.08)!important}
+.item{color:rgba(45,86,65,.28)!important}
+.item.selected{color:var(--bt-ink)!important;text-shadow:none!important;font-weight:950!important}
+#wheelHint{color:#6e8979!important}
+#confirm{background:var(--bt-ink)!important;box-shadow:0 12px 25px rgba(23,59,43,.18)!important}
+
+/* Main panels */
+#checklistPanel,#topPanel,#monitorPanel,#linkEditorPanel,#adminPanel,
+#adminPasswordBox,#lunchChoicePanel,#lunchManagePanel,
+#quizPanel,#quizNamePanel,#quizTakePanel,#quizResultPanel,#quizBuilderPanel,#kdvRulesPanel{
+  color:var(--bt-ink)!important;
+  border:1px solid rgba(47,122,85,.15)!important;
+  background:rgba(251,253,249,.94)!important;
+  box-shadow:var(--bt-shadow)!important;
+  backdrop-filter:blur(22px)!important;-webkit-backdrop-filter:blur(22px)!important;
+}
+#checklistPanel,#topPanel{border-radius:30px!important}
+#checklistTitle,#topTitle,#monitorTitle,#adminTitle,#quizTitle,#quizNameTitle,#quizBuilderTitle,#quizTakeTitle,#quizResultTitle,#lunchChoiceTitle{
+  color:var(--bt-ink)!important;text-shadow:none!important;font-weight:950!important;letter-spacing:-.04em!important;
+}
+#checklistSub,#topSub,#monitorSub,#adminSub,#quizSub,#quizNameSub,#quizBuilderSub,#lunchChoiceSub{color:#789083!important}
+#checklistScroll,#topScroll,#monitorScroll,#quizLeaderboardWrap,#quizNameList{border-color:var(--bt-line)!important}
+
+/* Checklist */
+#checklist{border-color:var(--bt-line)!important;overflow:hidden!important}
+#checklist th{background:#edf6ee!important;color:#668174!important}
+#checklist td{color:#365f4b!important;border-color:rgba(47,122,85,.08)!important}
+#checklist tr:nth-child(even) td{background:#f8fbf8!important}
+.checkBox{border-color:#bfd5c5!important;background:#f3f8f3!important}
+.checkBox.checked{background:linear-gradient(145deg,#2f7a55,#55a875)!important;box-shadow:0 5px 13px rgba(47,122,85,.18)!important}
+#checklistActions button,#topCloseBtn,#monitorCloseBtn,#adminActions button,#startQuizBtn,#quizNextBtn,#quizResultClose,
+#saveQuizBtn,#addQuizQuestionBtn,#linkEditorActions button{
+  border-color:rgba(47,122,85,.14)!important;background:#edf6ee!important;color:#35654d!important;box-shadow:none!important;
+}
+#syncBtn,#captureBtn,#adminSaveBtn,#topCloseBtn,#startQuizBtn,#quizNextBtn,#quizResultClose,#saveQuizBtn{background:var(--bt-ink)!important;color:#fff!important}
+
+/* Tables */
+#topTable td,#monitorTable td,#quizLeaderboard td{background:rgba(255,255,255,.78)!important;color:#416451!important;border-color:rgba(47,122,85,.08)!important}
+#topTable th,#monitorTable th,#quizLeaderboard th{color:#759084!important}
+
+/* Overlays */
+#adminOverlay,#adminPasswordOverlay,#monitorOverlay,#lunchChoiceOverlay,#lunchManageOverlay,
+#quizOverlay,#quizNameOverlay,#quizTakeOverlay,#quizResultOverlay,#quizBuilderOverlay,#kdvRulesOverlay,#linkEditorOverlay{
+  background:rgba(225,238,227,.70)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important;
+}
+#adminPasswordTitle,#adminTitle{color:var(--bt-ink)!important;text-shadow:none!important}
+#adminPasswordSub,#adminSub{color:#71897b!important}
+#adminPasswordInput,#resetTimeInput,#linkEditorInput{background:#f7fbf7!important;color:var(--bt-ink)!important;border-color:#c9ddce!important}
+#adminStatus,#adminPasswordMsg{color:#e28ab0!important}
+
+/* Admin checklist editor */
+#adminChecklistEditor{border-top-color:rgba(47,122,85,.12)!important}
+#adminChecklistEditor>div:first-child{color:#47705a!important;font-weight:900!important}
+#adminChecklistRows{background:#f7fbf7!important;border-color:#cfe0d2!important}
+#adminChecklistRows>div{border-bottom-color:rgba(47,122,85,.08)!important}
+#adminChecklistRows>div>div:first-child{color:#315b46!important}
+#adminChecklistRows button{font-family:inherit!important}
+
+/* Lunch */
+#lunchChoiceIcon{filter:none!important}
+#lunchChoiceTitle::after{background:var(--bt-gold)!important}
+.lunchModeBtn{border-color:rgba(47,122,85,.13)!important;background:#fff!important;box-shadow:0 8px 20px rgba(32,73,49,.055)!important}
+.lunchModeBtn.home{background:linear-gradient(135deg,#edf7ef,#e5f2e8)!important}
+.lunchModeBtn.all{background:linear-gradient(135deg,#fbfaf1,#f3f7ed)!important}
+#lunchAddBtn,#lunchManageBtn{background:#edf6ee!important;color:#35654d!important;border-color:#c9ddce!important}
+#lunchAddForm{background:#f5faf6!important;border-color:#d5e4d8!important}
+#lunchResult{color:var(--bt-ink)!important}
+
+/* Quiz */
+#quizLeaderboard td:last-child{color:#2f7a55!important}
+.quizOption,.quizNameBtn{background:#f7fbf7!important;color:#315b46!important;border-color:#d2e2d5!important}
+.quizOption.selected,.quizNameBtn.selected{background:#e7f3e9!important;border-color:#6da985!important;color:#245b3e!important}
+
+/* Better mobile proportions */
+@media(max-width:600px){
+  #bottomNav,#secondaryNav{width:calc(100vw - 18px)!important}
+  #bottomNav{top:max(58px,calc(env(safe-area-inset-top) + 46px))!important}
+  #secondaryNav{top:max(110px,calc(env(safe-area-inset-top) + 98px))!important}
+  #questionWrap{top:39%!important;width:calc(100vw - 28px)!important;padding:30px 17px 28px!important;border-radius:28px!important}
+  #question .landing-title{font-size:clamp(30px,8.5vw,46px)!important}
+  #question .landing-cta{min-width:164px!important;padding:12px 18px!important;font-size:11px!important}
+}
+</style>
+
 </head>
 <body>
 <main id="space">
