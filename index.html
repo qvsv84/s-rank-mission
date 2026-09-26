@@ -5063,7 +5063,7 @@ function showSystemFinalMessage(el, message){
   const wheelClose = document.getElementById('attendanceNameWheelClose');
   const wheelConfirm = document.getElementById('attendanceNameWheelConfirm');
   let wheelIndex = 0;
-  let wheelStartY = 0, wheelLastY = 0, wheelDragging = false, wheelOffset = 0;
+  let wheelStartY = 0, wheelDragging = false, wheelOffset = 0;
   const wheelStep = 58;
 
   function syncAttendanceEmployees(){
@@ -5106,29 +5106,37 @@ function showSystemFinalMessage(el, message){
   function renderNameWheel(){
     if(!wheelItems) return;
     wheelItems.innerHTML='';
-    const n=ATTENDANCE_EMPLOYEES.length;
-    ATTENDANCE_EMPLOYEES.forEach((name,i)=>{
+    ATTENDANCE_EMPLOYEES.forEach(name=>{
       const el=document.createElement('div');
-      el.className='att-name-wheel-item'+(i===wheelIndex?' selected':'');
+      el.className='att-name-wheel-item';
       el.textContent=name;
       wheelItems.appendChild(el);
     });
-    const center=(wheelViewport?.clientHeight||292)/2;
-    [...wheelItems.children].forEach((el,i)=>{
-      const rel=i-wheelIndex;
-      const y=center-wheelStep/2 + rel*wheelStep + wheelOffset;
-      const distance=Math.abs(rel*wheelStep+wheelOffset);
-      const scale=Math.max(.78,1-distance/520);
-      const opacity=Math.max(.12,1-distance/145);
-      el.style.transform=`translateY(${y-el.offsetTop-el.offsetHeight/2}px) scale(${scale})`;
-      el.style.opacity=opacity;
-      el.classList.toggle('selected',i===wheelIndex && Math.abs(wheelOffset)<wheelStep*.45);
-    });
+
+    // Dùng cùng cơ chế với vòng quay chọn tên ở Page 1:
+    // vị trí của mọi tên được tính theo current + toàn bộ quãng vuốt,
+    // nên có thể vuốt qua nhiều tên trong một lần kéo.
+    const mid = (wheelViewport?.clientHeight || 292) / 2;
+    const children = wheelItems.children;
+    for(let i=0;i<children.length;i++){
+      const el = children[i];
+      const y = (i-wheelIndex)*wheelStep + mid + wheelOffset;
+      const d = Math.abs(y-mid);
+      const n = Math.min(1,d/(wheelStep*2.3));
+      el.style.top = (y-wheelStep/2) + 'px';
+      el.style.transform = `scale(${1-n*.28})`;
+      el.style.opacity = .20 + (1-n)*.80;
+      el.style.filter = `blur(${n*2.5}px)`;
+      el.classList.toggle('selected', i===wheelIndex && Math.abs(wheelOffset)<wheelStep*.35);
+    }
   }
   function settleNameWheel(){
     if(!ATTENDANCE_EMPLOYEES.length) return;
-    if(Math.abs(wheelOffset)>=wheelStep*.5){
-      wheelIndex=Math.max(0,Math.min(ATTENDANCE_EMPLOYEES.length-1,wheelIndex+(wheelOffset<0?1:-1)));
+
+    // Giống Page 1: số bậc di chuyển = toàn bộ quãng vuốt / chiều cao 1 tên.
+    const steps = Math.round(-wheelOffset / wheelStep);
+    if(steps!==0){
+      wheelIndex = Math.max(0, Math.min(ATTENDANCE_EMPLOYEES.length-1, wheelIndex + steps));
     }
     wheelOffset=0;
     renderNameWheel();
@@ -5225,18 +5233,44 @@ function showSystemFinalMessage(el, message){
     render();
   });
   wheelViewport.addEventListener('pointerdown',e=>{
-    wheelDragging=true; wheelStartY=wheelLastY=e.clientY; wheelViewport.setPointerCapture?.(e.pointerId);
+    wheelDragging=true;
+    wheelStartY=e.clientY;
+    wheelOffset=0;
+    wheelViewport.setPointerCapture?.(e.pointerId);
   });
   wheelViewport.addEventListener('pointermove',e=>{
     if(!wheelDragging) return;
-    const dy=e.clientY-wheelLastY; wheelLastY=e.clientY; wheelOffset=Math.max(-wheelStep*.95,Math.min(wheelStep*.95,wheelOffset+dy));
-    if(Math.abs(wheelOffset)>=wheelStep){ wheelOffset=0; }
+    // Giống Page 1: lấy trực tiếp khoảng cách từ điểm bắt đầu vuốt,
+    // không giới hạn ở ±1 bậc.
+    wheelOffset=e.clientY-wheelStartY;
+    if((wheelIndex===0 && wheelOffset>0) || (wheelIndex===ATTENDANCE_EMPLOYEES.length-1 && wheelOffset<0)){
+      wheelOffset*=.25;
+    }
     renderNameWheel();
   });
   wheelViewport.addEventListener('pointerup',e=>{
-    if(!wheelDragging) return; wheelDragging=false; wheelViewport.releasePointerCapture?.(e.pointerId); settleNameWheel();
+    if(!wheelDragging) return;
+    wheelDragging=false;
+    settleNameWheel();
+    wheelViewport.releasePointerCapture?.(e.pointerId);
   });
-  wheelViewport.addEventListener('pointercancel',()=>{if(wheelDragging){wheelDragging=false;settleNameWheel()}});
+  wheelViewport.addEventListener('pointercancel',e=>{
+    if(!wheelDragging) return;
+    wheelDragging=false;
+    settleNameWheel();
+    if(e.pointerId!=null) wheelViewport.releasePointerCapture?.(e.pointerId);
+  });
+
+  // Cuộn chuột trên máy tính cũng dùng cùng kiểu chọn từng bậc như Page 1.
+  wheelViewport.addEventListener('wheel',e=>{
+    if(!wheelOverlay.classList.contains('show') || !ATTENDANCE_EMPLOYEES.length) return;
+    e.preventDefault();
+    if(!e.deltaY) return;
+    wheelIndex += e.deltaY > 0 ? 1 : -1;
+    wheelIndex = Math.max(0, Math.min(ATTENDANCE_EMPLOYEES.length-1, wheelIndex));
+    wheelOffset=0;
+    renderNameWheel();
+  },{passive:false});
   prev.addEventListener('click',()=>{viewDate.setMonth(viewDate.getMonth()-1);render()});
   next.addEventListener('click',()=>{viewDate.setMonth(viewDate.getMonth()+1);render()});
 
