@@ -5196,37 +5196,55 @@ function showSystemFinalMessage(el, message){
   prev.addEventListener('click',()=>{viewDate.setMonth(viewDate.getMonth()-1);render()});
   next.addEventListener('click',()=>{viewDate.setMonth(viewDate.getMonth()+1);render()});
 
-  /* Điều hướng giữa Page 1 và Page 2: vuốt trên điện thoại + phím mũi tên trên PC. */
-  let sx=0, sy=0, tracking=false;
+  /* Điều hướng giữa Page 1 và Page 2: vuốt ngang trên điện thoại + phím mũi tên trên PC. */
+  let swipeX=0, swipeY=0, swipeTracking=false;
 
-  function startSwipe(x,y,target){
-    if(target?.closest?.('#attendanceNameWheel') || target?.closest?.('#attendancePrev') || target?.closest?.('#attendanceNext')) return;
-    sx=x;
-    sy=y;
-    tracking=true;
+  function swipeBlocked(target){
+    return !!target?.closest?.('#attendanceNameWheel, #attendancePrev, #attendanceNext');
   }
 
-  function finishSwipe(x,y){
-    if(!tracking) return;
-    tracking=false;
-    const dx=x-sx;
-    const dy=y-sy;
-    if(Math.abs(dx)<60 || Math.abs(dx)<Math.abs(dy)*1.15) return;
-    if(dx<0 && !page.classList.contains('show')) openPage();
-    else if(dx>0 && page.classList.contains('show')) closePage();
+  function beginSwipe(x,y,target){
+    if(swipeBlocked(target)) return;
+    swipeX=x;
+    swipeY=y;
+    swipeTracking=true;
   }
 
-  // Touch events được bắt ở capture phase để không bị các thành phần bên trong Page 2 chặn.
+  function endSwipe(x,y){
+    if(!swipeTracking) return;
+    swipeTracking=false;
+    const dx=x-swipeX;
+    const dy=y-swipeY;
+    if(Math.abs(dx)<55 || Math.abs(dx)<=Math.abs(dy)) return;
+
+    if(dx<0 && !page.classList.contains('show')){
+      openPage();
+    }else if(dx>0 && page.classList.contains('show')){
+      closePage();
+    }
+  }
+
+  /* Touch riêng để iPhone không phụ thuộc Pointer Events. */
   document.addEventListener('touchstart',e=>{
     if(e.touches.length!==1) return;
     const t=e.touches[0];
-    startSwipe(t.clientX,t.clientY,e.target);
-  },{passive:true,capture:true});
+    beginSwipe(t.clientX,t.clientY,e.target);
+  },{capture:true,passive:true});
 
   document.addEventListener('touchend',e=>{
     const t=e.changedTouches[0];
-    if(t) finishSwipe(t.clientX,t.clientY);
-  },{passive:true,capture:true});
+    if(t) endSwipe(t.clientX,t.clientY);
+  },{capture:true,passive:true});
+
+  /* Pointer dự phòng cho trình duyệt/thiết bị khác. */
+  document.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse' && e.button!==0) return;
+    beginSwipe(e.clientX,e.clientY,e.target);
+  },{capture:true,passive:true});
+
+  document.addEventListener('pointerup',e=>{
+    endSwipe(e.clientX,e.clientY);
+  },{capture:true,passive:true});
 
   window.addEventListener('keydown',e=>{
     if(e.key==='ArrowRight' && !page.classList.contains('show')){
