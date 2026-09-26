@@ -5289,15 +5289,17 @@ function showSystemFinalMessage(el, message){
     render();
 
     try{
-      const action = cleanStatus === '' ? 'clearAttendance' : 'setAttendance';
+      // Dùng đúng luồng API của Page 1 (action = checkin).
+      // mode=attendance để Apps Script ghi vào sheet Data thay vì Check.
       const payload = {
+        mode: 'attendance',
         month: m + 1,
         day,
-        name: selectedName
+        name: selectedName,
+        status: cleanStatus
       };
-      if(cleanStatus !== '') payload.status = cleanStatus;
 
-      const r = await api(action,payload,8000);
+      const r = await api('checkin',payload,8000);
       if(!r.ok) throw new Error(r.error || 'Lưu chấm công thất bại');
 
       attendanceStatusSaving.textContent = 'Đã lưu ✓';
