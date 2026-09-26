@@ -67,16 +67,12 @@ box-shadow:0 0 20px #fff,0 0 60px #ff4fa3,0 0 120px #ff4fa3;transform:translate(
 #connectionState.off .dot{background:#ff6f91;color:#ff6f91}
 #status.show{opacity:1}
 
-#checklistPanel{position:absolute;left:50%;top:50%;z-index:9999;width:min(92vw,500px);max-height:82vh;
-padding:20px;border:1px solid rgba(255,255,255,.14);border-radius:26px;
-background:linear-gradient(145deg,rgba(20,8,24,.97),rgba(6,4,12,.98));
-box-shadow:0 18px 60px rgba(0,0,0,.62),0 0 40px rgba(255,60,160,.16);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-transform:translate(-50%,-50%) scale(.94);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,transform .3s;overflow:hidden}
+#checklistPanel{position:absolute;left:50%;top:50%;z-index:9999;width:min(90vw,460px);max-height:82vh;
+transform:translate(-50%,-50%) scale(.94);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,transform .3s}
 #checklistPanel.show{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
-#checklistTitle{text-align:center;color:#fff;font-size:clamp(24px,6vw,30px);font-weight:850;margin-bottom:5px;
+#checklistTitle{text-align:center;color:#fff;font-size:clamp(24px,6vw,36px);font-weight:800;margin-bottom:6px;
 text-shadow:0 0 10px #fff,0 0 28px #ff4fa3}
-#checklistSub{text-align:center;color:rgba(255,255,255,.48);font-size:12px;margin:5px 0 15px}
-@media(max-width:420px){#checklistPanel{width:calc(100vw - 22px);padding:16px;max-height:calc(100dvh - 22px);border-radius:23px}#checklistTitle{font-size:23px}#checklistSub{font-size:11px;margin-bottom:12px}}
+#checklistSub{text-align:center;color:rgba(255,255,255,.5);font-size:12px;margin-bottom:14px}
 #checklistScroll{max-height:65vh;overflow:auto;border-radius:20px;scrollbar-width:none}
 #checklistScroll::-webkit-scrollbar{display:none}
 #checklist{width:100%;border-collapse:separate;border-spacing:0;border:1px solid rgba(255,255,255,.14);
@@ -1112,6 +1108,29 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
 /* ===== CLEAN FIXED NAVIGATION ===== */
 #bottomNav,
+
+#lunchManageBtn{width:100%;min-height:42px;margin-top:8px;border-radius:15px;border:1px solid rgba(150,190,255,.20);background:rgba(100,150,255,.06);color:#cfe2ff;font-size:11px;font-weight:900}
+#lunchManageOverlay{position:fixed;inset:0;z-index:20600;display:none;align-items:center;justify-content:center;padding:14px;background:rgba(3,1,7,.80);backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px)}
+#lunchManageOverlay.show{display:flex}
+#lunchManagePanel{position:relative;width:min(560px,calc(100vw - 20px));max-height:min(82dvh,700px);overflow:auto;padding:20px 14px 14px;border:1px solid rgba(150,190,255,.20);border-radius:24px;background:linear-gradient(180deg,rgba(14,10,28,.98),rgba(7,5,14,.99));box-shadow:0 22px 70px rgba(0,0,0,.55);color:#fff}
+#lunchManageClose{position:absolute;right:9px;top:7px;width:34px;height:34px;border:0;background:transparent;color:rgba(255,255,255,.58);font-size:27px}
+#lunchManageTitle{text-align:center;font-size:18px;font-weight:950}
+#lunchManageSub{text-align:center;margin:4px 0 12px;color:rgba(255,255,255,.42);font-size:9px}
+#lunchManageTabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
+.lunchManageTab{min-height:38px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);color:rgba(255,255,255,.65);font-size:9px;font-weight:900}
+.lunchManageTab.active{background:rgba(255,90,165,.13);border-color:rgba(255,120,190,.25);color:#ffd0e5}
+#lunchManageList{display:grid;gap:6px}
+.lunchManageRow{display:grid;grid-template-columns:28px minmax(0,1fr) 48px 48px;gap:5px;align-items:center;padding:6px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:rgba(255,255,255,.035)}
+.lunchManageNo{font-size:8px;color:rgba(255,255,255,.32);text-align:center}
+.lunchManageInput{width:100%;height:34px;min-width:0;padding:0 9px;border-radius:9px;border:1px solid rgba(255,255,255,.09);outline:none;background:rgba(0,0,0,.22);color:#fff;font-size:10px}
+.lunchManageSave,.lunchManageDelete{height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.09);font-size:8px;font-weight:900}
+.lunchManageSave{background:rgba(80,180,120,.10);color:#bff5d0}.lunchManageDelete{background:rgba(255,70,100,.08);color:#ffc0c8}
+#lunchManageEmpty{text-align:center;padding:22px 8px;color:rgba(255,255,255,.35);font-size:10px}
+#lunchManageStatus{text-align:center;min-height:15px;margin-top:8px;color:#ff9dcc;font-size:9px}
+.lunchLine{display:block;margin-top:3px}
+.lunchLine .lineLabel{display:inline-block;margin-right:6px;color:rgba(255,205,230,.58);font-size:.42em;letter-spacing:1px;vertical-align:middle}
+.lunchLine.soup .lineLabel{color:rgba(180,220,255,.62)}
+@media(max-width:600px){#lunchManagePanel{max-height:78dvh}.lunchManageRow{grid-template-columns:24px minmax(0,1fr) 44px 44px}.lunchManageSave,.lunchManageDelete{font-size:7px}}
 #secondaryNav{
   position:absolute;
   left:50%;
@@ -1166,7 +1185,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   font-size:clamp(8.5px,2.45vw,11px);
   font-weight:800;
   line-height:1.08;
-  white-space:nowrap;
+  white-space:normal;
   overflow:hidden;
   text-overflow:ellipsis;
   text-align:center;
@@ -1337,9 +1356,9 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #lunchAddForm.show{display:block}
 #lunchAddInput{width:100%;height:42px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);outline:none;background:rgba(0,0,0,.25);color:#fff;font-size:12px}
 #lunchAddInput::placeholder{color:rgba(255,255,255,.32)}
-#lunchAddCategories{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+#lunchAddCategories{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:8px}
 .lunchAddCat{min-height:38px;border-radius:11px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);color:#fff;font-size:10px;font-weight:850}
-.lunchAddCat.home{border-color:rgba(110,220,150,.20);color:#bff5d0}.lunchAddCat.out{border-color:rgba(255,145,90,.20);color:#ffd0b5}
+.lunchAddCat.home{border-color:rgba(110,220,150,.20);color:#bff5d0}.lunchAddCat.soup{border-color:rgba(110,180,255,.20);color:#c7e5ff}.lunchAddCat.out{border-color:rgba(255,145,90,.20);color:#ffd0b5}
 #lunchAddStatus{min-height:14px;margin-top:7px;text-align:center;color:#ff9dcc;font-size:9px}
 .lunchModeBtn{min-height:62px;padding:9px 12px;border-radius:17px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);color:#fff;text-align:left;display:grid;grid-template-columns:42px 1fr;grid-template-rows:1fr 1fr;column-gap:8px;align-items:center}
 .lunchModeBtn span{grid-row:1/3;grid-column:1;font-size:25px;text-align:center}.lunchModeBtn b{grid-column:2;font-size:12px;align-self:end}.lunchModeBtn small{grid-column:2;color:rgba(255,255,255,.45);font-size:9px;align-self:start;margin-top:2px}
@@ -1434,6 +1453,126 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   #lunchResult{top:calc(clamp(54px,13vw,66px) + 43px);font-size:18px;}
 }
 
+
+/* ===== NAV FIX — GIỮ ĐÚNG GIAO DIỆN ẢNH MẪU ===== */
+#bottomNav{
+  display:grid !important;
+  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+  flex-wrap:nowrap !important;
+  width:calc(100vw - 24px) !important;
+  max-width:760px !important;
+  gap:4px !important;
+  padding:4px !important;
+  top:clamp(7px,1.8vw,14px) !important;
+}
+#bottomNav > button{
+  display:flex !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+}
+#secondaryNav{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  width:calc(100vw - 24px) !important;
+  max-width:760px !important;
+  top:clamp(57px,12vw,70px) !important;
+}
+#secondaryNav > button{display:flex !important;width:100% !important;min-width:0 !important;}
+@media(max-width:600px){
+  #bottomNav{width:calc(100vw - 16px) !important;max-width:calc(100vw - 16px) !important;top:7px !important;gap:3px !important;padding:3px !important;}
+  #secondaryNav{width:calc(100vw - 16px) !important;max-width:calc(100vw - 16px) !important;top:clamp(54px,13vw,66px) !important;gap:3px !important;padding:3px !important;}
+}
+
+/* ===== NAVIGATION — KHÔI PHỤC ĐÚNG BỐ CỤC GIAO DIỆN MẪU ===== */
+#connectionState{display:none !important;}
+#bottomNav{
+  position:absolute !important;
+  left:50% !important;
+  top:12px !important;
+  transform:translateX(-50%) !important;
+  display:grid !important;
+  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+  width:calc(100vw - 28px) !important;
+  max-width:760px !important;
+  height:64px !important;
+  gap:4px !important;
+  padding:4px !important;
+  margin:0 !important;
+  overflow:hidden !important;
+  border-radius:18px !important;
+}
+#bottomNav > button{
+  position:static !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:100% !important;
+  height:100% !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 3px !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  font-size:11px !important;
+  border-radius:13px !important;
+}
+#secondaryNav{
+  position:absolute !important;
+  left:50% !important;
+  top:92px !important;
+  transform:translateX(-50%) !important;
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  width:calc(100vw - 28px) !important;
+  max-width:760px !important;
+  height:64px !important;
+  gap:4px !important;
+  padding:4px !important;
+  margin:0 !important;
+  overflow:hidden !important;
+  border-radius:18px !important;
+}
+#secondaryNav > button{
+  position:static !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:100% !important;
+  height:100% !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 3px !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  font-size:11px !important;
+  border-radius:13px !important;
+}
+@media(max-width:600px){
+  #bottomNav{top:12px !important;width:calc(100vw - 28px) !important;height:64px !important;gap:4px !important;padding:4px !important;}
+  #secondaryNav{top:92px !important;width:calc(100vw - 28px) !important;height:64px !important;gap:4px !important;padding:4px !important;}
+  #bottomNav > button,#secondaryNav > button{font-size:10px !important;}
+}
+@media(max-width:380px){
+  #bottomNav,#secondaryNav{width:calc(100vw - 20px) !important;}
+  #bottomNav > button,#secondaryNav > button{font-size:9px !important;}
+}
+
+/* ===== FINAL SPACING — KẾT QUẢ BỮA TRƯA KHÔNG ĐÈ THANH ĐIỀU HƯỚNG ===== */
+#lunchResult{
+  top:165px !important;
+  z-index:9998 !important;
+  width:calc(100vw - 28px) !important;
+  max-width:560px !important;
+}
+@media(max-width:600px){
+  #lunchResult{top:165px !important;}
+}
+@media(max-width:360px){
+  #lunchResult{top:162px !important;font-size:18px !important;}
+}
 </style>
 
 <script>
@@ -1505,22 +1644,39 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     <div id="lunchChoiceTitle">BỮA TRƯA ĂN GÌ?</div>
     <div id="lunchChoiceSub">Chọn kiểu ăn rồi để vòng quay chọn món cho m</div>
     <div id="lunchChoiceButtons">
-      <button type="button" class="lunchModeBtn home" data-mode="home"><span>🏠</span><b>Ăn nhà</b><small>50 món</small></button>
+      <button type="button" class="lunchModeBtn home" data-mode="home"><span>🏠</span><b>Ăn tại nhà</b><small>50 món mặn + 50 món canh</small></button>
       <button type="button" class="lunchModeBtn out" data-mode="out"><span>🍜</span><b>Ăn ngoài</b><small>50 món</small></button>
-      <button type="button" class="lunchModeBtn all" data-mode="all"><span>🎲</span><b>Random tất cả</b><small>100 món</small></button>
+      <button type="button" class="lunchModeBtn all" data-mode="all"><span>🎲</span><b>Ngẫu nhiên tất cả</b><small>Ăn tại nhà hoặc ăn ngoài</small></button>
     </div>
     <button id="lunchAddBtn" type="button">＋ Thêm món ăn</button>
     <div id="lunchAddForm">
       <input id="lunchAddInput" type="text" maxlength="60" autocomplete="off" placeholder="Nhập tên món muốn thêm...">
       <div id="lunchAddCategories">
-        <button type="button" class="lunchAddCat home" data-add-category="home">🏠 Thêm vào Ăn nhà</button>
-        <button type="button" class="lunchAddCat out" data-add-category="out">🍜 Thêm vào Ăn ngoài</button>
+        <button type="button" class="lunchAddCat home" data-add-category="savory">🍖 Món mặn</button>
+        <button type="button" class="lunchAddCat soup" data-add-category="soup">🍲 Món canh</button>
+        <button type="button" class="lunchAddCat out" data-add-category="out">🍜 Ăn ngoài</button>
       </div>
       <div id="lunchAddStatus" aria-live="polite"></div>
     </div>
+    <button id="lunchManageBtn" type="button">⚙ Quản lý danh sách món</button>
   </section>
 </div>
-<div id="lunchResult" aria-live="polite" aria-hidden="true"><span class="lunchLabel">🍽️ Hôm nay ăn</span><span class="lunchDish">Bấm nút để chọn món</span></div>
+
+<div id="lunchManageOverlay" aria-hidden="true">
+  <section id="lunchManagePanel" role="dialog" aria-modal="true" aria-labelledby="lunchManageTitle">
+    <button id="lunchManageClose" type="button" aria-label="Đóng">×</button>
+    <div id="lunchManageTitle">⚙ QUẢN LÝ DANH SÁCH MÓN</div>
+    <div id="lunchManageSub">Đổi tên hoặc xóa món. Thay đổi được lưu trên thiết bị này.</div>
+    <div id="lunchManageTabs">
+      <button class="lunchManageTab active" type="button" data-manage-category="savory">🍖 Món mặn</button>
+      <button class="lunchManageTab" type="button" data-manage-category="soup">🍲 Món canh</button>
+      <button class="lunchManageTab" type="button" data-manage-category="out">🍜 Ăn ngoài</button>
+    </div>
+    <div id="lunchManageList"></div>
+    <div id="lunchManageStatus" aria-live="polite"></div>
+  </section>
+</div>
+<div id="lunchResult" aria-live="polite" aria-hidden="true"><span class="lunchLabel">🍽️ Thực đơn hôm nay</span><span class="lunchDish"><span class="lunchLine savory"><span class="lineLabel">Món mặn</span><span class="lineValue"></span></span><span class="lunchLine soup"><span class="lineLabel">Món canh</span><span class="lineValue"></span></span><span class="lunchLine out"><span class="lineLabel">Ăn ngoài</span><span class="lineValue"></span></span></span></div>
 
 
 <div id="kdvRulesOverlay" aria-hidden="true">
@@ -1777,6 +1933,11 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const lunchAddStatus = document.getElementById("lunchAddStatus");
   const lunchResult = document.getElementById("lunchResult");
   const lunchDish = lunchResult.querySelector(".lunchDish");
+  const lunchManageBtn = document.getElementById("lunchManageBtn");
+  const lunchManageOverlay = document.getElementById("lunchManageOverlay");
+  const lunchManageClose = document.getElementById("lunchManageClose");
+  const lunchManageList = document.getElementById("lunchManageList");
+  const lunchManageStatus = document.getElementById("lunchManageStatus");
   const linkEditorOverlay = document.getElementById("linkEditorOverlay");
   const linkEditorName = document.getElementById("linkEditorName");
   const linkEditorInput = document.getElementById("linkEditorInput");
@@ -3471,62 +3632,117 @@ function renderTop(){
   }
 
 
-  const LUNCH_HOME = [
-    "Thịt xào lá khế","Thịt kho trứng","Thịt rang cháy cạnh","Thịt xào hành tây","Thịt xào sả ớt","Thịt xào rau củ","Sườn xào chua ngọt","Sườn ram","Sườn nướng","Gà chiên nước mắm","Gà kho gừng","Gà kho sả","Gà chiên giòn","Gà xào sả ớt","Gà nướng","Cá kho tộ","Cá kho tiêu","Cá chiên mắm","Cá chiên sốt cà","Cá nướng","Tôm rim mặn ngọt","Tôm rang me","Tôm rang thịt","Mực xào rau củ","Mực chiên nước mắm","Trứng chiên thịt bằm","Trứng chiên hành","Trứng chiên cà chua","Trứng kho","Đậu hũ sốt cà chua","Đậu hũ chiên sả ớt","Đậu hũ sốt thịt bằm","Rau muống xào tỏi","Rau muống xào thịt bò","Cải thìa xào tỏi","Bắp cải xào trứng","Khổ qua xào trứng","Bí xanh xào tỏi","Cà tím xào thịt","Đậu que xào thịt bò","Cơm chiên trứng","Cơm chiên Dương Châu","Cơm chiên thịt bò","Cơm chiên hải sản","Cơm chiên kim chi","Mì xào bò","Mì xào hải sản","Nui xào bò","Cháo gà","Canh chua cá"
+  const LUNCH_SAVORY = [
+    "Thịt kho trứng","Thịt rang cháy cạnh","Thịt xào hành tây","Thịt xào sả ớt","Thịt xào rau củ","Thịt xào lá khế","Sườn xào chua ngọt","Sườn ram mặn","Sườn nướng","Sườn kho tiêu",
+    "Gà chiên nước mắm","Gà kho gừng","Gà kho sả","Gà chiên giòn","Gà xào sả ớt","Gà nướng","Gà kho tiêu","Gà rim nước mắm","Gà rang gừng","Gà xào nấm",
+    "Cá kho tộ","Cá kho tiêu","Cá chiên mắm","Cá chiên sốt cà","Cá nướng","Cá hấp gừng","Cá sốt cà chua","Cá kho nghệ","Cá chiên giòn","Cá kho riềng",
+    "Tôm rim mặn ngọt","Tôm rang me","Tôm rang thịt","Tôm kho tàu","Mực xào rau củ","Mực chiên nước mắm","Mực xào cần tây","Trứng chiên thịt bằm","Trứng chiên cà chua","Trứng kho",
+    "Đậu hũ sốt cà chua","Đậu hũ chiên sả ớt","Đậu hũ sốt thịt bằm","Rau muống xào tỏi","Rau muống xào thịt bò","Cải thìa xào tỏi","Bắp cải xào trứng","Khổ qua xào trứng","Cà tím xào thịt","Đậu que xào thịt bò"
+  ];
+  const LUNCH_SOUP = [
+    "Canh chua cá","Canh chua tôm","Canh chua thịt","Canh bí đỏ nấu thịt bằm","Canh bí xanh nấu tôm","Canh bầu nấu tôm","Canh mồng tơi nấu tôm","Canh rau ngót thịt bằm","Canh cải xanh thịt bằm","Canh cải thìa thịt bằm",
+    "Canh khổ qua nhồi thịt","Canh khổ qua nấu tôm","Canh bí đao thịt bằm","Canh bí đao nấu tôm","Canh khoai mỡ thịt bằm","Canh khoai mỡ tôm","Canh rau đay mồng tơi","Canh cua rau đay","Canh cua mồng tơi","Canh cua rau ngót",
+    "Canh cải chua thịt bằm","Canh cải chua cá","Canh cải chua sườn","Canh cà chua trứng","Canh cà chua thịt bằm","Canh nấm thịt bằm","Canh nấm đậu hũ","Canh rong biển thịt bằm","Canh rong biển đậu hũ","Canh rong biển trứng",
+    "Canh bắp cải thịt bằm","Canh bắp cải cuộn thịt","Canh rau củ thịt bằm","Canh rau củ hầm xương","Canh củ sen hầm sườn","Canh mướp nấu mồng tơi","Canh mướp nấu tôm","Canh mướp đắng nhồi thịt","Canh rau muống nấu chua","Canh rau muống nấu tôm",
+    "Canh bí xanh thịt bằm","Canh cải ngọt thịt bằm","Canh cải ngọt nấu tôm","Canh cải thảo thịt bằm","Canh cải thảo nấu tôm","Canh đậu hũ cà chua","Canh giá đỗ thịt bằm","Canh bầu thịt bằm","Canh rau củ chay","Canh nấm rau củ"
   ];
   const LUNCH_OUT = [
     "Cơm tấm sườn","Cơm tấm sườn bì chả","Cơm gà xối mỡ","Cơm gà nướng","Cơm gà chiên mắm","Cơm bò lúc lắc","Cơm thịt nướng","Cơm heo quay","Cơm xá xíu","Cơm cá","Phở bò","Phở gà","Hủ tiếu Nam Vang","Hủ tiếu bò kho","Bún bò Huế","Bún thịt nướng","Bún chả","Bún riêu","Bún mắm","Bún đậu mắm tôm","Bún nem nướng","Bún bò xào","Bún hải sản","Mì Quảng","Cao lầu","Bánh canh cua","Bánh canh giò heo","Mì hoành thánh","Mì vịt tiềm","Mì cay","Mì trộn","Bánh mì thịt","Bánh mì xíu mại","Bánh mì chảo","Bò né","Bò kho + bánh mì","Bánh xèo","Bánh cuốn","Bánh ướt thịt nướng","Cháo gà","Cháo lòng","Súp cua","Gà rán","Gà nướng","Há cảo","Kimbap","Cơm trộn Hàn Quốc","Tokbokki","Pizza","Hamburger"
   ];
-  const LUNCH_DISHES = [...LUNCH_HOME,...LUNCH_OUT];
-  const LUNCH_CUSTOM_KEY = "DAOMEo_LUNCH_CUSTOM_V1";
-  let LUNCH_CUSTOM = {home:[],out:[]};
+  const LUNCH_CUSTOM_KEY = "DAOMEo_LUNCH_CUSTOM_V2";
+  let LUNCH_DATA = {savory:[...LUNCH_SAVORY],soup:[...LUNCH_SOUP],out:[...LUNCH_OUT]};
   try{
     const saved=JSON.parse(localStorage.getItem(LUNCH_CUSTOM_KEY)||"null");
-    if(saved && Array.isArray(saved.home) && Array.isArray(saved.out)) LUNCH_CUSTOM=saved;
+    if(saved && Array.isArray(saved.savory) && Array.isArray(saved.soup) && Array.isArray(saved.out)){
+      LUNCH_DATA={savory:saved.savory.filter(Boolean),soup:saved.soup.filter(Boolean),out:saved.out.filter(Boolean)};
+      // Nếu dữ liệu cũ bị rỗng do phiên bản trước, khôi phục danh sách mặc định tương ứng.
+      if(!LUNCH_DATA.savory.length) LUNCH_DATA.savory=[...LUNCH_SAVORY];
+      if(!LUNCH_DATA.soup.length) LUNCH_DATA.soup=[...LUNCH_SOUP];
+      if(!LUNCH_DATA.out.length) LUNCH_DATA.out=[...LUNCH_OUT];
+      saveLunchData();
+    }else{
+      // Migrate danh sách món tự thêm từ phiên bản cũ: món ăn tại nhà được xếp vào nhóm món mặn.
+      const old=JSON.parse(localStorage.getItem("DAOMEo_LUNCH_CUSTOM_V1")||"null");
+      if(old && Array.isArray(old.home)) LUNCH_DATA.savory.push(...old.home.filter(Boolean));
+      if(old && Array.isArray(old.out)) LUNCH_DATA.out.push(...old.out.filter(Boolean));
+      localStorage.setItem(LUNCH_CUSTOM_KEY,JSON.stringify(LUNCH_DATA));
+    }
   }catch(e){}
-  function lunchList(mode){
-    if(mode==="home") return [...LUNCH_HOME,...LUNCH_CUSTOM.home];
-    if(mode==="out") return [...LUNCH_OUT,...LUNCH_CUSTOM.out];
-    return [...LUNCH_HOME,...LUNCH_OUT,...LUNCH_CUSTOM.home,...LUNCH_CUSTOM.out];
+  function saveLunchData(){try{localStorage.setItem(LUNCH_CUSTOM_KEY,JSON.stringify(LUNCH_DATA));}catch(e){}}
+  function updateLunchCounts(){
+    const h=document.querySelector('.lunchModeBtn.home small'),o=document.querySelector('.lunchModeBtn.out small');
+    if(h) h.textContent=LUNCH_DATA.savory.length+LUNCH_DATA.soup.length+" món";
+    if(o) o.textContent=LUNCH_DATA.out.length+" món";
+  }
+  function randomFrom(list){return list[Math.floor(Math.random()*list.length)]||"";}
+  function randomLunchChoice(mode){
+    if(mode==="home") return {type:"home",savory:randomFrom(LUNCH_DATA.savory),soup:randomFrom(LUNCH_DATA.soup)};
+    if(mode==="out") return {type:"out",out:randomFrom(LUNCH_DATA.out)};
+    return Math.random()<0.5
+      ? {type:"home",savory:randomFrom(LUNCH_DATA.savory),soup:randomFrom(LUNCH_DATA.soup)}
+      : {type:"out",out:randomFrom(LUNCH_DATA.out)};
   }
   let lunchMode="all";
   let lunchRolling=false;
   let lunchTimer=null;
-  function randomLunchDish(){
-    const list=lunchList(lunchMode);
-    return list[Math.floor(Math.random()*list.length)];
+  function renderLunchChoice(choice){
+    const s=lunchDish.querySelector('.lunchLine.savory'),c=lunchDish.querySelector('.lunchLine.soup'),o=lunchDish.querySelector('.lunchLine.out');
+    const isHome=choice.type==="home";
+    s.style.display=isHome?"block":"none";
+    c.style.display=isHome?"block":"none";
+    o.style.display=isHome?"none":"block";
+    if(isHome){
+      // Ăn tại nhà luôn hiển thị đủ 2 món: 1 món mặn + 1 món canh.
+      s.querySelector('.lineValue').textContent=choice.savory || randomFrom(LUNCH_DATA.savory);
+      c.querySelector('.lineValue').textContent=choice.soup || randomFrom(LUNCH_DATA.soup);
+      o.querySelector('.lineValue').textContent="";
+    }else{
+      s.querySelector('.lineValue').textContent="";
+      c.querySelector('.lineValue').textContent="";
+      o.querySelector('.lineValue').textContent=choice.out || randomFrom(LUNCH_DATA.out);
+    }
   }
-  function saveLunchCustom(){localStorage.setItem(LUNCH_CUSTOM_KEY,JSON.stringify(LUNCH_CUSTOM));}
   function updateLunchAddStatus(msg){lunchAddStatus.textContent=msg;clearTimeout(updateLunchAddStatus.t);if(msg) updateLunchAddStatus.t=setTimeout(()=>lunchAddStatus.textContent="",2200);}
-  function openLunchChoice(){lunchChoiceOverlay.classList.add("show");lunchChoiceOverlay.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";}
+  function openLunchChoice(){updateLunchCounts();lunchChoiceOverlay.classList.add("show");lunchChoiceOverlay.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";}
   function closeLunchChoice(){lunchChoiceOverlay.classList.remove("show");lunchChoiceOverlay.setAttribute("aria-hidden","true");document.body.style.overflow="";}
   function chooseLunchMode(mode){lunchMode=mode;closeLunchChoice();pickLunch();}
   function pickLunch(){
     if(lunchRolling) return;
-    lunchRolling=true;
-    lunchBtn.classList.add("running");
-    lunchResult.classList.add("show","rolling");
-    lunchResult.dataset.hasResult="1";
-    lunchResult.setAttribute("aria-hidden","false");
-    let elapsed=0;
-    let delay=55;
+    lunchRolling=true;lunchBtn.classList.add("running");lunchResult.classList.add("show","rolling");lunchResult.dataset.hasResult="1";lunchResult.setAttribute("aria-hidden","false");
+    let elapsed=0,delay=55;
     const roll=()=>{
-      if(elapsed>=2850){
-        const finalDish=randomLunchDish();
-        lunchDish.textContent=finalDish;
-        lunchResult.classList.remove("rolling");
-        lunchResult.classList.add("show");
-        lunchRolling=false;
-        lunchBtn.classList.remove("running");
-        return;
-      }
-      lunchDish.textContent=randomLunchDish();
-      elapsed+=delay;
-      delay=Math.min(210,delay+7);
-      lunchTimer=setTimeout(roll,delay);
+      if(elapsed>=2850){renderLunchChoice(randomLunchChoice(lunchMode));lunchResult.classList.remove("rolling");lunchResult.classList.add("show");lunchRolling=false;lunchBtn.classList.remove("running");return;}
+      renderLunchChoice(randomLunchChoice(lunchMode));elapsed+=delay;delay=Math.min(210,delay+7);lunchTimer=setTimeout(roll,delay);
     };
-    clearTimeout(lunchTimer);
-    roll();
+    clearTimeout(lunchTimer);roll();
+  }
+
+  let lunchManageCategory="savory";
+  function openLunchManage(){renderLunchManage();lunchManageOverlay.classList.add("show");lunchManageOverlay.setAttribute("aria-hidden","false");}
+  function closeLunchManage(){lunchManageOverlay.classList.remove("show");lunchManageOverlay.setAttribute("aria-hidden","true");}
+  function updateLunchManageStatus(msg){lunchManageStatus.textContent=msg;clearTimeout(updateLunchManageStatus.t);if(msg) updateLunchManageStatus.t=setTimeout(()=>lunchManageStatus.textContent="",1800);}
+  function renderLunchManage(){
+    document.querySelectorAll('.lunchManageTab').forEach(t=>t.classList.toggle('active',t.dataset.manageCategory===lunchManageCategory));
+    const list=lunchManageList;list.innerHTML="";
+    const arr=LUNCH_DATA[lunchManageCategory]||[];
+    if(!arr.length){list.innerHTML='<div id="lunchManageEmpty">Danh sách đang trống.</div>';return;}
+    arr.forEach((name,i)=>{
+      const row=document.createElement('div');row.className='lunchManageRow';
+      const no=document.createElement('div');no.className='lunchManageNo';no.textContent=String(i+1);
+      const input=document.createElement('input');input.className='lunchManageInput';input.value=name;input.maxLength=60;input.dataset.index=i;
+      const save=document.createElement('button');save.className='lunchManageSave';save.type='button';save.textContent='Lưu';save.addEventListener('click',()=>{
+        const value=input.value.trim().replace(/\\s+/g,' ');if(!value){updateLunchManageStatus('Tên món không được để trống');return;}
+        const duplicate=Object.entries(LUNCH_DATA).some(([cat,items])=>items.some((x,j)=>x.toLowerCase()===value.toLowerCase() && !(cat===lunchManageCategory && j===i)));
+        if(duplicate){updateLunchManageStatus('Tên món này đã tồn tại');return;}
+        LUNCH_DATA[lunchManageCategory][i]=value;saveLunchData();renderLunchManage();updateLunchCounts();updateLunchManageStatus('Đã cập nhật món ✓');
+      });
+      const del=document.createElement('button');del.className='lunchManageDelete';del.type='button';del.textContent='Xóa';del.addEventListener('click',()=>{
+        if(LUNCH_DATA[lunchManageCategory].length<=1){updateLunchManageStatus('Danh sách cần có ít nhất 1 món');return;}
+        if(!confirm('Xóa món “'+LUNCH_DATA[lunchManageCategory][i]+'” khỏi danh sách?')) return;
+        LUNCH_DATA[lunchManageCategory].splice(i,1);saveLunchData();renderLunchManage();updateLunchCounts();updateLunchManageStatus('Đã xóa món ✓');
+      });
+      row.append(no,input,save,del);list.appendChild(row);
+    });
   }
 
   function markNavButton(btn){
@@ -3546,20 +3762,17 @@ function renderTop(){
   document.querySelectorAll(".lunchAddCat").forEach(btn=>btn.addEventListener("click",()=>{
     const category=btn.dataset.addCategory;
     const name=lunchAddInput.value.trim().replace(/\s+/g," ");
-    if(!name){updateLunchAddStatus("Nhập tên món trước nhé");lunchAddInput.focus();return;}
-    const all=[...LUNCH_HOME,...LUNCH_OUT,...LUNCH_CUSTOM.home,...LUNCH_CUSTOM.out].map(x=>x.toLowerCase());
+    if(!name){updateLunchAddStatus("Vui lòng nhập tên món");lunchAddInput.focus();return;}
+    const all=Object.values(LUNCH_DATA).flat().map(x=>x.toLowerCase());
     if(all.includes(name.toLowerCase())){updateLunchAddStatus("Món này đã có trong danh sách");return;}
-    LUNCH_CUSTOM[category].push(name);
-    saveLunchCustom();
-    const countHome=LUNCH_HOME.length+LUNCH_CUSTOM.home.length;
-    const countOut=LUNCH_OUT.length+LUNCH_CUSTOM.out.length;
-    document.querySelector('.lunchModeBtn.home small').textContent=countHome+" món";
-    document.querySelector('.lunchModeBtn.out small').textContent=countOut+" món";
-    document.querySelector('.lunchModeBtn.all small').textContent=(countHome+countOut)+" món";
-    lunchAddInput.value="";
-    updateLunchAddStatus("Đã thêm “"+name+"” vào "+(category==="home"?"Ăn nhà":"Ăn ngoài")+" ✓");
+    LUNCH_DATA[category].push(name);saveLunchData();updateLunchCounts();lunchAddInput.value="";
+    updateLunchAddStatus("Đã thêm “"+name+"” vào "+(category==="savory"?"Món mặn":category==="soup"?"Món canh":"Ăn ngoài")+" ✓");
   }));
-  lunchAddInput.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();document.querySelector('.lunchAddCat.home').click();}});
+  lunchAddInput.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();document.querySelector('.lunchAddCat.savory')?.click();}});
+  lunchManageBtn.addEventListener("click",openLunchManage);
+  lunchManageClose.addEventListener("click",closeLunchManage);
+  lunchManageOverlay.addEventListener("click",e=>{if(e.target===lunchManageOverlay)closeLunchManage()});
+  document.querySelectorAll('.lunchManageTab').forEach(tab=>tab.addEventListener('click',()=>{lunchManageCategory=tab.dataset.manageCategory;renderLunchManage();}));
   quizBtn.addEventListener("click",openQuiz);
   quizClose.addEventListener("click",closeQuiz);
   quizOverlay.addEventListener("click",e=>{if(e.target===quizOverlay)closeQuiz()});
