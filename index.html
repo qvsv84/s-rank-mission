@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#050208">
 <title>S Rank — Daily Mission</title>
 <style>
@@ -67,12 +67,16 @@ box-shadow:0 0 20px #fff,0 0 60px #ff4fa3,0 0 120px #ff4fa3;transform:translate(
 #connectionState.off .dot{background:#ff6f91;color:#ff6f91}
 #status.show{opacity:1}
 
-#checklistPanel{position:absolute;left:50%;top:50%;z-index:9999;width:min(90vw,460px);max-height:82vh;
-transform:translate(-50%,-50%) scale(.94);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,transform .3s}
+#checklistPanel{position:absolute;left:50%;top:50%;z-index:9999;width:min(92vw,500px);max-height:82vh;
+padding:20px;border:1px solid rgba(255,255,255,.14);border-radius:26px;
+background:linear-gradient(145deg,rgba(20,8,24,.97),rgba(6,4,12,.98));
+box-shadow:0 18px 60px rgba(0,0,0,.62),0 0 40px rgba(255,60,160,.16);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+transform:translate(-50%,-50%) scale(.94);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,transform .3s;overflow:hidden}
 #checklistPanel.show{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
-#checklistTitle{text-align:center;color:#fff;font-size:clamp(24px,6vw,36px);font-weight:800;margin-bottom:6px;
+#checklistTitle{text-align:center;color:#fff;font-size:clamp(24px,6vw,30px);font-weight:850;margin-bottom:5px;
 text-shadow:0 0 10px #fff,0 0 28px #ff4fa3}
-#checklistSub{text-align:center;color:rgba(255,255,255,.5);font-size:12px;margin-bottom:14px}
+#checklistSub{text-align:center;color:rgba(255,255,255,.48);font-size:12px;margin:5px 0 15px}
+@media(max-width:420px){#checklistPanel{width:calc(100vw - 22px);padding:16px;max-height:calc(100dvh - 22px);border-radius:23px}#checklistTitle{font-size:23px}#checklistSub{font-size:11px;margin-bottom:12px}}
 #checklistScroll{max-height:65vh;overflow:auto;border-radius:20px;scrollbar-width:none}
 #checklistScroll::-webkit-scrollbar{display:none}
 #checklist{width:100%;border-collapse:separate;border-spacing:0;border:1px solid rgba(255,255,255,.14);
@@ -1321,6 +1325,15 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 
 </style>
 
+<script>
+/* Disable pinch/gesture zoom without blocking normal single-finger scrolling. */
+(function(){
+  const stopZoomGesture = e => e.preventDefault();
+  document.addEventListener("gesturestart", stopZoomGesture, {passive:false});
+  document.addEventListener("gesturechange", stopZoomGesture, {passive:false});
+  document.addEventListener("gestureend", stopZoomGesture, {passive:false});
+})();
+</script>
 </head>
 <body>
 <main id="space">
@@ -1840,8 +1853,17 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   function loadMonitorLinks(){
     try{
       const saved = JSON.parse(localStorage.getItem(MONITOR_LINKS_KEY) || "{}");
-      monitorLinks = saved && typeof saved === "object" ? saved : {};
-    }catch(_){ monitorLinks = {}; }
+      const existing = saved && typeof saved === "object" ? saved : {};
+
+      // 12 link đã được admin gán chính thức trong file luôn được ưu tiên.
+      // Người chưa có link trong danh sách trên vẫn giữ nguyên link localStorage cũ.
+      monitorLinks = Object.assign({}, existing, MONITOR_DEFAULT_LINKS);
+
+      // Ghi lại để lần mở sau không bị link cũ trong localStorage ghi đè.
+      localStorage.setItem(MONITOR_LINKS_KEY, JSON.stringify(monitorLinks));
+    }catch(_){
+      monitorLinks = Object.assign({}, MONITOR_DEFAULT_LINKS);
+    }
   }
 
   function saveMonitorLinks(){
