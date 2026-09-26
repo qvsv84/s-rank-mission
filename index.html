@@ -1332,6 +1332,15 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #lunchChoiceTitle{font-size:20px;font-weight:950;letter-spacing:.5px;text-shadow:0 0 18px rgba(255,100,180,.45)}
 #lunchChoiceSub{margin:5px 0 16px;color:rgba(255,255,255,.48);font-size:10px}
 #lunchChoiceButtons{display:grid;grid-template-columns:1fr;gap:8px}
+#lunchAddBtn{width:100%;min-height:42px;margin-top:10px;border-radius:15px;border:1px dashed rgba(255,150,205,.28);background:rgba(255,255,255,.035);color:#ffc4df;font-size:11px;font-weight:900}
+#lunchAddForm{display:none;margin-top:10px;padding:12px;border-radius:16px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);text-align:left}
+#lunchAddForm.show{display:block}
+#lunchAddInput{width:100%;height:42px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);outline:none;background:rgba(0,0,0,.25);color:#fff;font-size:12px}
+#lunchAddInput::placeholder{color:rgba(255,255,255,.32)}
+#lunchAddCategories{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.lunchAddCat{min-height:38px;border-radius:11px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);color:#fff;font-size:10px;font-weight:850}
+.lunchAddCat.home{border-color:rgba(110,220,150,.20);color:#bff5d0}.lunchAddCat.out{border-color:rgba(255,145,90,.20);color:#ffd0b5}
+#lunchAddStatus{min-height:14px;margin-top:7px;text-align:center;color:#ff9dcc;font-size:9px}
 .lunchModeBtn{min-height:62px;padding:9px 12px;border-radius:17px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);color:#fff;text-align:left;display:grid;grid-template-columns:42px 1fr;grid-template-rows:1fr 1fr;column-gap:8px;align-items:center}
 .lunchModeBtn span{grid-row:1/3;grid-column:1;font-size:25px;text-align:center}.lunchModeBtn b{grid-column:2;font-size:12px;align-self:end}.lunchModeBtn small{grid-column:2;color:rgba(255,255,255,.45);font-size:9px;align-self:start;margin-top:2px}
 .lunchModeBtn.home{border-color:rgba(110,220,150,.18)}.lunchModeBtn.out{border-color:rgba(255,145,90,.20)}.lunchModeBtn.all{border-color:rgba(255,100,190,.22);background:linear-gradient(135deg,rgba(255,70,160,.10),rgba(255,180,90,.06))}.lunchModeBtn:active{transform:scale(.985)}
@@ -1496,9 +1505,18 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     <div id="lunchChoiceTitle">BỮA TRƯA ĂN GÌ?</div>
     <div id="lunchChoiceSub">Chọn kiểu ăn rồi để vòng quay chọn món cho m</div>
     <div id="lunchChoiceButtons">
-      <button type="button" class="lunchModeBtn home" data-mode="home"><span>🏠</span><b>Ăn nhà</b><small>50 món cơm nhà</small></button>
-      <button type="button" class="lunchModeBtn out" data-mode="out"><span>🍜</span><b>Ăn ngoài</b><small>50 món dễ tìm</small></button>
+      <button type="button" class="lunchModeBtn home" data-mode="home"><span>🏠</span><b>Ăn nhà</b><small>50 món</small></button>
+      <button type="button" class="lunchModeBtn out" data-mode="out"><span>🍜</span><b>Ăn ngoài</b><small>50 món</small></button>
       <button type="button" class="lunchModeBtn all" data-mode="all"><span>🎲</span><b>Random tất cả</b><small>100 món</small></button>
+    </div>
+    <button id="lunchAddBtn" type="button">＋ Thêm món ăn</button>
+    <div id="lunchAddForm">
+      <input id="lunchAddInput" type="text" maxlength="60" autocomplete="off" placeholder="Nhập tên món muốn thêm...">
+      <div id="lunchAddCategories">
+        <button type="button" class="lunchAddCat home" data-add-category="home">🏠 Thêm vào Ăn nhà</button>
+        <button type="button" class="lunchAddCat out" data-add-category="out">🍜 Thêm vào Ăn ngoài</button>
+      </div>
+      <div id="lunchAddStatus" aria-live="polite"></div>
     </div>
   </section>
 </div>
@@ -1753,6 +1771,10 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   const lunchChoiceOverlay = document.getElementById("lunchChoiceOverlay");
   const lunchChoiceClose = document.getElementById("lunchChoiceClose");
   const lunchModeButtons = [...document.querySelectorAll(".lunchModeBtn")];
+  const lunchAddBtn = document.getElementById("lunchAddBtn");
+  const lunchAddForm = document.getElementById("lunchAddForm");
+  const lunchAddInput = document.getElementById("lunchAddInput");
+  const lunchAddStatus = document.getElementById("lunchAddStatus");
   const lunchResult = document.getElementById("lunchResult");
   const lunchDish = lunchResult.querySelector(".lunchDish");
   const linkEditorOverlay = document.getElementById("linkEditorOverlay");
@@ -3456,13 +3478,26 @@ function renderTop(){
     "Cơm tấm sườn","Cơm tấm sườn bì chả","Cơm gà xối mỡ","Cơm gà nướng","Cơm gà chiên mắm","Cơm bò lúc lắc","Cơm thịt nướng","Cơm heo quay","Cơm xá xíu","Cơm cá","Phở bò","Phở gà","Hủ tiếu Nam Vang","Hủ tiếu bò kho","Bún bò Huế","Bún thịt nướng","Bún chả","Bún riêu","Bún mắm","Bún đậu mắm tôm","Bún nem nướng","Bún bò xào","Bún hải sản","Mì Quảng","Cao lầu","Bánh canh cua","Bánh canh giò heo","Mì hoành thánh","Mì vịt tiềm","Mì cay","Mì trộn","Bánh mì thịt","Bánh mì xíu mại","Bánh mì chảo","Bò né","Bò kho + bánh mì","Bánh xèo","Bánh cuốn","Bánh ướt thịt nướng","Cháo gà","Cháo lòng","Súp cua","Gà rán","Gà nướng","Há cảo","Kimbap","Cơm trộn Hàn Quốc","Tokbokki","Pizza","Hamburger"
   ];
   const LUNCH_DISHES = [...LUNCH_HOME,...LUNCH_OUT];
+  const LUNCH_CUSTOM_KEY = "DAOMEo_LUNCH_CUSTOM_V1";
+  let LUNCH_CUSTOM = {home:[],out:[]};
+  try{
+    const saved=JSON.parse(localStorage.getItem(LUNCH_CUSTOM_KEY)||"null");
+    if(saved && Array.isArray(saved.home) && Array.isArray(saved.out)) LUNCH_CUSTOM=saved;
+  }catch(e){}
+  function lunchList(mode){
+    if(mode==="home") return [...LUNCH_HOME,...LUNCH_CUSTOM.home];
+    if(mode==="out") return [...LUNCH_OUT,...LUNCH_CUSTOM.out];
+    return [...LUNCH_HOME,...LUNCH_OUT,...LUNCH_CUSTOM.home,...LUNCH_CUSTOM.out];
+  }
   let lunchMode="all";
   let lunchRolling=false;
   let lunchTimer=null;
   function randomLunchDish(){
-    const list=lunchMode==="home"?LUNCH_HOME:lunchMode==="out"?LUNCH_OUT:LUNCH_DISHES;
+    const list=lunchList(lunchMode);
     return list[Math.floor(Math.random()*list.length)];
   }
+  function saveLunchCustom(){localStorage.setItem(LUNCH_CUSTOM_KEY,JSON.stringify(LUNCH_CUSTOM));}
+  function updateLunchAddStatus(msg){lunchAddStatus.textContent=msg;clearTimeout(updateLunchAddStatus.t);if(msg) updateLunchAddStatus.t=setTimeout(()=>lunchAddStatus.textContent="",2200);}
   function openLunchChoice(){lunchChoiceOverlay.classList.add("show");lunchChoiceOverlay.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";}
   function closeLunchChoice(){lunchChoiceOverlay.classList.remove("show");lunchChoiceOverlay.setAttribute("aria-hidden","true");document.body.style.overflow="";}
   function chooseLunchMode(mode){lunchMode=mode;closeLunchChoice();pickLunch();}
@@ -3504,6 +3539,27 @@ function renderTop(){
   lunchChoiceClose.addEventListener("click",closeLunchChoice);
   lunchChoiceOverlay.addEventListener("click",e=>{if(e.target===lunchChoiceOverlay)closeLunchChoice()});
   lunchModeButtons.forEach(btn=>btn.addEventListener("click",()=>chooseLunchMode(btn.dataset.mode)));
+  lunchAddBtn.addEventListener("click",()=>{
+    lunchAddForm.classList.toggle("show");
+    if(lunchAddForm.classList.contains("show")){lunchAddInput.focus();updateLunchAddStatus("");}
+  });
+  document.querySelectorAll(".lunchAddCat").forEach(btn=>btn.addEventListener("click",()=>{
+    const category=btn.dataset.addCategory;
+    const name=lunchAddInput.value.trim().replace(/\s+/g," ");
+    if(!name){updateLunchAddStatus("Nhập tên món trước nhé");lunchAddInput.focus();return;}
+    const all=[...LUNCH_HOME,...LUNCH_OUT,...LUNCH_CUSTOM.home,...LUNCH_CUSTOM.out].map(x=>x.toLowerCase());
+    if(all.includes(name.toLowerCase())){updateLunchAddStatus("Món này đã có trong danh sách");return;}
+    LUNCH_CUSTOM[category].push(name);
+    saveLunchCustom();
+    const countHome=LUNCH_HOME.length+LUNCH_CUSTOM.home.length;
+    const countOut=LUNCH_OUT.length+LUNCH_CUSTOM.out.length;
+    document.querySelector('.lunchModeBtn.home small').textContent=countHome+" món";
+    document.querySelector('.lunchModeBtn.out small').textContent=countOut+" món";
+    document.querySelector('.lunchModeBtn.all small').textContent=(countHome+countOut)+" món";
+    lunchAddInput.value="";
+    updateLunchAddStatus("Đã thêm “"+name+"” vào "+(category==="home"?"Ăn nhà":"Ăn ngoài")+" ✓");
+  }));
+  lunchAddInput.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();document.querySelector('.lunchAddCat.home').click();}});
   quizBtn.addEventListener("click",openQuiz);
   quizClose.addEventListener("click",closeQuiz);
   quizOverlay.addEventListener("click",e=>{if(e.target===quizOverlay)closeQuiz()});
