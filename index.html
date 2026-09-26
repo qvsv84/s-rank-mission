@@ -2678,6 +2678,37 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 @media(max-width:420px){.att-page-inner{padding-left:11px;padding-right:11px}.att-card{border-radius:21px}.att-day{min-height:65px;padding:6px 3px}.att-time{font-size:7px}.att-status{font-size:7px}.att-month-badge{display:none}.att-summary{gap:6px}.att-stat{padding:10px 6px}}
 </style>
 
+
+<style id="attendanceInteractionStyle">
+#attendanceStatusOverlay{
+  position:fixed;inset:0;z-index:19600;display:none;align-items:center;justify-content:center;
+  padding:18px;background:rgba(17,52,45,.28);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)
+}
+#attendanceStatusOverlay.show{display:flex}
+#attendanceStatusPanel{
+  width:min(92vw,390px);padding:20px;border:1px solid rgba(255,255,255,.78);border-radius:26px;
+  background:rgba(250,255,253,.97);box-shadow:0 24px 70px rgba(32,91,78,.22);color:#214a40
+}
+#attendanceStatusHead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#attendanceStatusTitle{font-size:18px;font-weight:900}
+#attendanceStatusSub{text-align:center;margin:6px 0 16px;color:#7b9b94;font-size:11px}
+#attendanceStatusClose{
+  width:34px;height:34px;border:0;border-radius:50%;background:#edf7f3;color:#477a6d;font-size:22px;line-height:1
+}
+#attendanceStatusOptions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.att-status-option{
+  min-height:48px;border:1px solid rgba(46,112,96,.12);border-radius:14px;background:#f4faf7;
+  color:#315f54;font-size:12px;font-weight:850
+}
+.att-status-option:active{transform:scale(.97)}
+.att-status-option.work{background:#e0f7ee;color:#26836b}
+.att-status-option.leave{background:#fff0d9;color:#a66b20}
+.att-status-option.off{background:#f1f3f5;color:#7d8987}
+.att-status-option.ot{background:#e8efff;color:#476bb0}
+.att-status-option.clear{grid-column:1/-1;background:#fff;border-color:rgba(166,94,94,.14);color:#a05e5e}
+#attendanceStatusSaving{text-align:center;min-height:16px;margin-top:11px;color:#7b9b94;font-size:10px}
+.att-status.ot{background:#e8efff;color:#476bb0}
+</style>
 </head>
 <body>
 <main id="space">
@@ -3016,6 +3047,23 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   </section>
 </div>
 
+<div id="attendanceStatusOverlay" aria-hidden="true">
+  <section id="attendanceStatusPanel" role="dialog" aria-modal="true" aria-label="Cập nhật chấm công">
+    <div id="attendanceStatusHead">
+      <div id="attendanceStatusTitle">Cập nhật chấm công</div>
+      <button id="attendanceStatusClose" type="button" aria-label="Đóng">×</button>
+    </div>
+    <div id="attendanceStatusSub"></div>
+    <div id="attendanceStatusOptions">
+      <button class="att-status-option work" type="button" data-status="">Đi làm</button>
+      <button class="att-status-option leave" type="button" data-status="P">Nghỉ phép</button>
+      <button class="att-status-option off" type="button" data-status="Off">Ngày nghỉ</button>
+      <button class="att-status-option ot" type="button" data-status="OT">Tăng ca</button>
+      <button class="att-status-option clear" type="button" data-status="__clear">Xóa trạng thái</button>
+    </div>
+    <div id="attendanceStatusSaving"></div>
+  </section>
+</div>
 
 <script>
 (() => {
@@ -5052,6 +5100,215 @@ function showSystemFinalMessage(el, message){
 
   /* Chỗ này để gắn dữ liệu chấm công thật về sau. Không tự tạo lịch làm việc cho nhân viên. */
   const ATTENDANCE_DATA = {};
+  const ATTENDANCE_CACHE_PREFIX = 'srank_attendance_v1_';
+  let attendanceServerLoaded = false;
+  let attendanceLoadToken = 0;
+  let attendanceEditingDay = 0;
+
+  const attendanceStatusOverlay = document.getElementById('attendanceStatusOverlay');
+  const attendanceStatusClose = document.getElementById('attendanceStatusClose');
+  const attendanceStatusSub = document.getElementById('attendanceStatusSub');
+  const attendanceStatusSaving = document.getElementById('attendanceStatusSaving');
+
+  function attendanceCacheKey(year, month){
+    return ATTENDANCE_CACHE_PREFIX + year + '-' + String(month + 1).padStart(2,'0');
+  }
+
+  function attendanceMonthObject(year, month){
+    const result = {};
+    ATTENDANCE_EMPLOYEES.forEach(name => {
+      result[name] = {};
+    });
+    const cache = loadAttendanceCache(year, month);
+    if(cache && cache.employees){
+      Object.keys(cache.employees).forEach(name => {
+        if(!result[name]) result[name] = {};
+        result[name] = cache.employees[name].days || {};
+      });
+    }
+    return result;
+  }
+
+  function loadAttendanceCache(year, month){
+    try{
+      const raw = localStorage.getItem(attendanceCacheKey(year, month));
+      if(!raw) return null;
+      const data = JSON.parse(raw);
+      return data && typeof data === 'object' ? data : null;
+    }catch(_){ return null; }
+  }
+
+  function saveAttendanceCache(year, month, data){
+    try{
+      localStorage.setItem(
+        attendanceCacheKey(year, month),
+        JSON.stringify({
+          month: month + 1,
+          year,
+          employees: data
+        })
+      );
+    }catch(_){}
+  }
+
+  function applyAttendanceData(payload, year, month){
+    const map = {};
+    (payload?.employees || []).forEach(person => {
+      const name = String(person?.name || '').trim();
+      if(!name) return;
+      map[name] = {};
+      const days = person?.days || {};
+      Object.keys(days).forEach(day => {
+        const status = String(days[day] ?? '').trim();
+        map[name][key(year, month, Number(day))] = status;
+      });
+    });
+    Object.keys(ATTENDANCE_DATA).forEach(k => delete ATTENDANCE_DATA[k]);
+    Object.keys(map).forEach(name => ATTENDANCE_DATA[name] = map[name]);
+    saveAttendanceCache(year, month, payload?.employees || []);
+  }
+
+  function applyAttendanceCache(year, month){
+    const cache = loadAttendanceCache(year, month);
+    if(!cache || !cache.employees) return false;
+    Object.keys(ATTENDANCE_DATA).forEach(k => delete ATTENDANCE_DATA[k]);
+    Object.keys(cache.employees).forEach(name => {
+      const days = cache.employees[name]?.days || {};
+      ATTENDANCE_DATA[name] = {};
+      Object.keys(days).forEach(day => {
+        ATTENDANCE_DATA[name][key(year, month, Number(day))] = String(days[day] ?? '').trim();
+      });
+    });
+    return true;
+  }
+
+  function statusInfo(status){
+    const s = String(status || '').trim();
+    if(s === '') return {className:'work', label:'Đi làm'};
+    if(s === 'P') return {className:'leave', label:'Nghỉ phép'};
+    if(s.toUpperCase() === 'OFF') return {className:'off', label:'Ngày nghỉ'};
+    if(s.toUpperCase() === 'OT') return {className:'ot', label:'Tăng ca'};
+    return {className:'empty', label:'Chưa cập nhật'};
+  }
+
+  function rebuildAttendanceCacheFromCurrent(year, month){
+    const employees = ATTENDANCE_EMPLOYEES.map(name => {
+      const days = {};
+      for(let d=1; d<=31; d++){
+        const value = ATTENDANCE_DATA[name]?.[key(year, month, d)];
+        if(value !== undefined) days[String(d)] = value;
+      }
+      return {name, days};
+    });
+    saveAttendanceCache(year, month, employees);
+  }
+
+  async function loadAttendanceMonth(force = false){
+    const y = viewDate.getFullYear();
+    const m = viewDate.getMonth();
+    const token = ++attendanceLoadToken;
+
+    if(!force){
+      applyAttendanceCache(y, m);
+      render();
+    }
+
+    try{
+      const r = await api('getAttendance',{month:m+1},8000);
+      if(token !== attendanceLoadToken) return;
+      if(!r.ok) throw new Error(r.error || 'Không tải được dữ liệu chấm công');
+
+      applyAttendanceData(r.data || {}, y, m);
+      attendanceServerLoaded = true;
+
+      // Nếu Sheet có tên khác checklist, vẫn ưu tiên danh sách hiện có của Sheet Data.
+      const serverNames = Array.isArray(r.data?.employees)
+        ? r.data.employees.map(x => String(x?.name || '').trim()).filter(Boolean)
+        : [];
+      if(serverNames.length){
+        const currentSelected = selectedName;
+        ATTENDANCE_EMPLOYEES = [...new Set(serverNames)];
+        if(!ATTENDANCE_EMPLOYEES.includes(currentSelected)){
+          selectedName = ATTENDANCE_EMPLOYEES[0] || '';
+        }
+        wheelIndex = Math.max(0, ATTENDANCE_EMPLOYEES.indexOf(selectedName));
+        employee.innerHTML = '';
+        ATTENDANCE_EMPLOYEES.forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name; opt.textContent = name;
+          employee.appendChild(opt);
+        });
+        employee.value = selectedName;
+        updateWheelButton();
+        renderNameWheel();
+      }
+
+      render();
+    }catch(e){
+      if(!applyAttendanceCache(y,m)){
+        Object.keys(ATTENDANCE_DATA).forEach(k => delete ATTENDANCE_DATA[k]);
+      }
+      render();
+    }
+  }
+
+  function openAttendanceStatus(day){
+    if(!selectedName || !Number.isInteger(day)) return;
+    attendanceEditingDay = day;
+    const y = viewDate.getFullYear();
+    const m = viewDate.getMonth();
+    const dateText = String(day).padStart(2,'0') + '/' + String(m+1).padStart(2,'0') + '/' + y;
+    const current = ATTENDANCE_DATA[selectedName]?.[key(y,m,day)];
+    const info = current === undefined ? {label:'Chưa cập nhật'} : statusInfo(current);
+    attendanceStatusSub.textContent = selectedName + ' • ' + dateText + ' • ' + info.label;
+    attendanceStatusSaving.textContent = '';
+    attendanceStatusOverlay.classList.add('show');
+    attendanceStatusOverlay.setAttribute('aria-hidden','false');
+  }
+
+  function closeAttendanceStatus(){
+    attendanceStatusOverlay.classList.remove('show');
+    attendanceStatusOverlay.setAttribute('aria-hidden','true');
+    attendanceEditingDay = 0;
+  }
+
+  async function saveAttendanceStatus(status){
+    const day = attendanceEditingDay;
+    if(!day || !selectedName) return;
+
+    const y = viewDate.getFullYear();
+    const m = viewDate.getMonth();
+    const cleanStatus = status === '__clear' ? '' : String(status || '').trim();
+
+    attendanceStatusSaving.textContent = 'Đang lưu…';
+
+    // Cập nhật giao diện ngay; nếu server lỗi sẽ tải lại từ Sheet/cache.
+    if(!ATTENDANCE_DATA[selectedName]) ATTENDANCE_DATA[selectedName] = {};
+    ATTENDANCE_DATA[selectedName][key(y,m,day)] = cleanStatus;
+    rebuildAttendanceCacheFromCurrent(y,m);
+    render();
+
+    try{
+      const action = cleanStatus === '' ? 'clearAttendance' : 'setAttendance';
+      const payload = {
+        month: m + 1,
+        day,
+        name: selectedName
+      };
+      if(cleanStatus !== '') payload.status = cleanStatus;
+
+      const r = await api(action,payload,8000);
+      if(!r.ok) throw new Error(r.error || 'Lưu chấm công thất bại');
+
+      attendanceStatusSaving.textContent = 'Đã lưu ✓';
+      setTimeout(closeAttendanceStatus, 350);
+    }catch(e){
+      attendanceStatusSaving.textContent = 'Lưu thất bại — đang đồng bộ lại';
+      await loadAttendanceMonth(true);
+      setTimeout(closeAttendanceStatus, 700);
+    }
+  }
+
 
   let viewDate = new Date();
   viewDate.setDate(1);
@@ -5161,8 +5418,13 @@ function showSystemFinalMessage(el, message){
   function mondayIndex(date){return (date.getDay()+6)%7}
   function dataFor(date){
     const y=date.getFullYear(), m=date.getMonth(), d=date.getDate();
-    return ATTENDANCE_DATA[selectedName]?.[key(y,m,d)] || null;
+    const raw = ATTENDANCE_DATA[selectedName]?.[key(y,m,d)];
+    // Trong Sheet: ô trống = đi làm.
+    // Vì vậy chỉ coi là "chưa cập nhật" khi chưa có dữ liệu cho ngày đó.
+    if(raw === undefined) return null;
+    return {status:String(raw || '').trim()};
   }
+
   function render(){
     const y=viewDate.getFullYear(), m=viewDate.getMonth();
     monthLabel.childNodes[0].nodeValue=`Tháng ${m+1}`;
@@ -5176,32 +5438,74 @@ function showSystemFinalMessage(el, message){
     let work=0, off=0, leave=0;
 
     for(let i=leading-1;i>=0;i--){
-      const cell=document.createElement('div'); cell.className='att-day muted';
-      cell.innerHTML=`<div class="att-day-num">${prevDays-i}</div>`; grid.appendChild(cell);
-    }
-    for(let d=1;d<=days;d++){
-      const date=new Date(y,m,d), item=dataFor(date);
-      const cell=document.createElement('div'); cell.className='att-day';
-      const now=new Date();
-      if(date.getFullYear()===now.getFullYear() && date.getMonth()===now.getMonth() && d===now.getDate()) cell.classList.add('today');
-      let status='empty', label='Chưa cập nhật', time='';
-      if(item){
-        if(item.status==='work'){status='work';label='Đi làm';work++}
-        else if(item.status==='off'){status='off';label='Nghỉ';off++}
-        else if(item.status==='leave'){status='leave';label='Nghỉ phép';leave++}
-        time=item.time||'';
-      }
-      cell.innerHTML=`<div class="att-day-num">${d}</div><div class="att-status ${status}">${label}</div>${time?`<div class="att-time">${time}</div>`:''}`;
+      const cell=document.createElement('div');
+      cell.className='att-day muted';
+      cell.innerHTML=`<div class="att-day-num">${prevDays-i}</div>`;
       grid.appendChild(cell);
     }
+
+    for(let d=1;d<=days;d++){
+      const date=new Date(y,m,d), item=dataFor(date);
+      const cell=document.createElement('button');
+      cell.type='button';
+      cell.className='att-day';
+      cell.dataset.day=String(d);
+      cell.setAttribute('aria-label',`Ngày ${d}`);
+      const now=new Date();
+
+      if(date.getFullYear()===now.getFullYear() &&
+         date.getMonth()===now.getMonth() &&
+         d===now.getDate()){
+        cell.classList.add('today');
+      }
+
+      let status='empty', label='Chưa cập nhật';
+
+      if(item){
+        const info=statusInfo(item.status);
+        status=info.className;
+        label=info.label;
+
+        if(item.status === '') work++;
+        else if(item.status.toUpperCase() === 'OFF') off++;
+        else if(item.status.toUpperCase() === 'P') leave++;
+      }
+
+      cell.innerHTML=
+        `<div class="att-day-num">${d}</div>`+
+        `<div class="att-status ${status}">${label}</div>`;
+
+      grid.appendChild(cell);
+    }
+
     const total=leading+days, trailing=(7-total%7)%7;
     for(let d=1;d<=trailing;d++){
-      const cell=document.createElement('div'); cell.className='att-day muted'; cell.innerHTML=`<div class="att-day-num">${d}</div>`; grid.appendChild(cell);
+      const cell=document.createElement('div');
+      cell.className='att-day muted';
+      cell.innerHTML=`<div class="att-day-num">${d}</div>`;
+      grid.appendChild(cell);
     }
-    workCount.textContent=work; offCount.textContent=off; leaveCount.textContent=leave;
+
+    workCount.textContent=work;
+    offCount.textContent=off;
+    leaveCount.textContent=leave;
   }
 
-  function openPage(){
+  grid.addEventListener('click',e=>{
+    const dayEl=e.target.closest('.att-day[data-day]');
+    if(!dayEl) return;
+    openAttendanceStatus(Number(dayEl.dataset.day));
+  });
+
+  attendanceStatusClose.addEventListener('click',closeAttendanceStatus);
+  attendanceStatusOverlay.addEventListener('click',e=>{
+    if(e.target===attendanceStatusOverlay) closeAttendanceStatus();
+  });
+  document.querySelectorAll('#attendanceStatusOptions [data-status]').forEach(btn=>{
+    btn.addEventListener('click',()=>saveAttendanceStatus(btn.dataset.status));
+  });
+
+  async function openPage(){
     const checklistNames = typeof window.__getChecklistNames === 'function'
       ? window.__getChecklistNames()
       : [];
@@ -5210,6 +5514,7 @@ function showSystemFinalMessage(el, message){
     updatePageNav();
     requestAnimationFrame(()=>render());
     if(typeof syncQuickTools==='function') syncQuickTools();
+    loadAttendanceMonth(false);
   }
   function closePage(){
     page.classList.remove('show');
@@ -5271,8 +5576,14 @@ function showSystemFinalMessage(el, message){
     wheelOffset=0;
     renderNameWheel();
   },{passive:false});
-  prev.addEventListener('click',()=>{viewDate.setMonth(viewDate.getMonth()-1);render()});
-  next.addEventListener('click',()=>{viewDate.setMonth(viewDate.getMonth()+1);render()});
+  prev.addEventListener('click',()=>{
+    viewDate.setMonth(viewDate.getMonth()-1);
+    loadAttendanceMonth(false);
+  });
+  next.addEventListener('click',()=>{
+    viewDate.setMonth(viewDate.getMonth()+1);
+    loadAttendanceMonth(false);
+  });
 
   /* Điều hướng giữa Page 1 và Page 2: vuốt ngang trên điện thoại + phím mũi tên trên PC. */
   let swipeX=0, swipeY=0, swipeTracking=false;
@@ -5344,6 +5655,7 @@ function showSystemFinalMessage(el, message){
     renderNameWheel();
     render();
   }
+  // Tải nhanh từ cache rồi đồng bộ Sheet khi Page 2 được mở.
 })();
 
 </script>
