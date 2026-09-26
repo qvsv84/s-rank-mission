@@ -1573,6 +1573,27 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 @media(max-width:360px){
   #lunchResult{top:162px !important;font-size:18px !important;}
 }
+
+/* ===== ADMIN CHECKLIST — đồng bộ giao diện xanh mát ===== */
+#adminChecklistEditor > div:first-child{
+  color:#35684d !important;
+  font-weight:800 !important;
+}
+#adminChecklistRows{
+  border-color:rgba(104,157,124,.24) !important;
+  background:rgba(247,252,248,.72) !important;
+}
+#adminChecklistRows > div{
+  border-bottom-color:rgba(104,157,124,.14) !important;
+}
+#adminChecklistRows > div > div{
+  color:#365f4a !important;
+  font-weight:750 !important;
+}
+#adminChecklistRows > div > button{
+  border-color:rgba(104,157,124,.28) !important;
+  box-shadow:0 2px 8px rgba(67,120,88,.08) !important;
+}
 </style>
 <style>
 /* ===== THEME XANH MÁT + KHÔI PHỤC KHUNG CHECKLIST ===== */
@@ -3377,8 +3398,8 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       btn.type = "button";
       btn.textContent = checked[i] ? "✓ Đã check" : "○ Chưa check";
       btn.style.cssText = "min-width:96px;min-height:34px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:" +
-        (checked[i] ? "linear-gradient(135deg,#ff3c91,#ff70b9)" : "rgba(255,255,255,.07)") +
-        ";color:#fff;font-size:11px;font-weight:800;";
+        (checked[i] ? "linear-gradient(135deg,#4f9f76,#69b98d)" : "rgba(238,247,240,.95)") +
+        ";color:" + (checked[i] ? "#fff" : "#47725b") + ";font-size:11px;font-weight:800;box-shadow:none;";
 
       btn.addEventListener("click", async () => {
         const next = !checked[i];
