@@ -4951,6 +4951,9 @@ function renderTop(){
   saveQuizBtn.addEventListener("click",saveQuizBuilder);
   loadQuizStore();renderQuizAdminButton();syncQuickTools();
 
+  // Cầu nối an toàn để Page 2 đọc đúng danh sách names của checklist.
+  window.__getChecklistNames = () => Array.isArray(names) ? names.slice() : [];
+
 })();
 
 /* 3D space-to-text assembly for the final system notification */
@@ -5064,7 +5067,9 @@ function showSystemFinalMessage(el, message){
   const wheelStep = 58;
 
   function syncAttendanceEmployees(){
-    const source = Array.isArray(names) ? names : [];
+    const source = typeof window.__getChecklistNames === 'function'
+      ? window.__getChecklistNames()
+      : [];
     const unique = [...new Set(source.map(v => String(v || '').trim()).filter(Boolean))];
     ATTENDANCE_EMPLOYEES = unique;
 
@@ -5189,7 +5194,10 @@ function showSystemFinalMessage(el, message){
   }
 
   function openPage(){
-    if(Array.isArray(names) && names.length) syncAttendanceEmployees();
+    const checklistNames = typeof window.__getChecklistNames === 'function'
+      ? window.__getChecklistNames()
+      : [];
+    if(checklistNames.length) syncAttendanceEmployees();
     page.classList.add('show');
     updatePageNav();
     requestAnimationFrame(()=>render());
@@ -5292,7 +5300,10 @@ function showSystemFinalMessage(el, message){
     }
   });
 
-  if(names.length) syncAttendanceEmployees();
+  const checklistNames = typeof window.__getChecklistNames === 'function'
+    ? window.__getChecklistNames()
+    : [];
+  if(checklistNames.length) syncAttendanceEmployees();
   else {
     employee.value=selectedName;
     updateWheelButton();
