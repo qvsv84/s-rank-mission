@@ -2393,9 +2393,13 @@ function renderTop(){
       hour:"2-digit",minute:"2-digit",hour12:false
     }).format(new Date());
 
-    times[index] = clientTime;
-    cacheSave();
-    renderChecklist();
+    // Nếu đã hoàn thành thì CHECK lại không được đổi giờ.
+    // Chỉ khi đang bỏ tích rồi tích lại mới ghi giờ mới.
+    const wasChecked = checked[index] === true;
+    if(!wasChecked){
+      times[index] = clientTime;
+      cacheSave();
+    }
 
     // Optimistic UI: tick ngay, không chờ server.
     checked[index] = true;
