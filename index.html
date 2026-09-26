@@ -2723,9 +2723,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .att-multi-action{height:38px;padding:0 10px;border:0;border-radius:11px;font-size:10px;font-weight:900;white-space:nowrap}
 .att-multi-action.p{background:#fff0a8;color:#8a6500}.att-multi-action.o{background:#ffd9df;color:#b33a4b}.att-multi-action.t{background:#d9f5e6;color:#24724d}.att-multi-action.clear{background:#f4f4f4;color:#8b6666}.att-multi-action.cancel{background:#edf7f3;color:#477a6d}
 @media(max-width:420px){#attendanceMultiBar{gap:4px;padding:7px}.att-multi-action{padding:0 7px;font-size:9px}}
-#attendanceMultiCount span{line-height:1.1}
-#attendanceMultiBar .att-multi-action:disabled{cursor:default}
-
 
 /* ===== CHẤM CÔNG: nút nằm bên phải Bữa trưa ===== */
 #secondaryNav{grid-template-columns:repeat(4,minmax(0,1fr)) !important;}
@@ -5354,55 +5351,10 @@ function showSystemFinalMessage(el, message){
     return promise;
   }
 
-  function compressAttendanceDays(days){
-    const arr = [...new Set((days || []).map(Number))]
-      .filter(d=>Number.isInteger(d) && d>=1 && d<=31)
-      .sort((a,b)=>a-b);
-    if(!arr.length) return '';
-
-    const groups = [];
-    let start = arr[0];
-    let prev = arr[0];
-
-    for(let i=1;i<arr.length;i++){
-      const d = arr[i];
-      if(d === prev + 1){
-        prev = d;
-        continue;
-      }
-      groups.push(start === prev ? String(start) : `${start}-${prev}`);
-      start = prev = d;
-    }
-    groups.push(start === prev ? String(start) : `${start}-${prev}`);
-    return groups.join(',');
-  }
-
-  function attendanceMultiCodePreview(status=''){
-    const y = viewDate.getFullYear();
-    const m = viewDate.getMonth();
-    const days = [...attendanceMultiDays];
-    const range = compressAttendanceDays(days);
-    if(!range) return 'Chưa chọn ngày';
-    return `Mã lưu: ${range}${status ? String(status).toUpperCase() + String(m+1) : ''}`;
-  }
-
   function updateAttendanceMultiUI(){
-    const days = [...attendanceMultiDays].sort((a,b)=>a-b);
-    const range = compressAttendanceDays(days);
-    attendanceMultiCount.innerHTML = days.length
-      ? `<span style="display:block">${range}</span><span style="display:block;font-size:8px;opacity:.72;margin-top:2px">Mã: ${range}</span>`
-      : 'Chưa chọn ngày';
-
+    attendanceMultiCount.textContent = `${attendanceMultiDays.size} ngày`;
     attendanceMultiBar.classList.toggle('show', attendanceMultiMode);
     attendanceMultiBar.setAttribute('aria-hidden', attendanceMultiMode ? 'false' : 'true');
-
-    const hasDays = days.length > 0;
-    document.querySelectorAll('[data-multi-status]').forEach(btn=>{
-      btn.disabled = !hasDays;
-      btn.style.opacity = hasDays ? '1' : '.42';
-      btn.style.pointerEvents = hasDays ? 'auto' : 'none';
-    });
-
     grid.querySelectorAll('.att-day[data-day]').forEach(el=>{
       el.classList.toggle('multi-selected', attendanceMultiDays.has(Number(el.dataset.day)));
     });
@@ -5429,90 +5381,44 @@ function showSystemFinalMessage(el, message){
 
   async function saveAttendanceBatchStatus(status){
     const days = [...attendanceMultiDays].sort((a,b)=>a-b);
-    if(!days.length || !selectedName){
-      updateAttendanceMultiUI();
-      return;
-    }
+    if(!days.length || !selectedName) return;
 
     const y = viewDate.getFullYear();
     const m = viewDate.getMonth();
     const nameAtRequest = selectedName;
     const monthAtRequest = m + 1;
-    const cleanStatus = String(status == null ? '' : status).trim().toUpperCase();
+    const cleanStatus = String(status || '').trim().toUpperCase();
 
-    if(cleanStatus && !['P','O','T'].includes(cleanStatus)){
-      return;
-    }
-
-    const codePreview = compressAttendanceDays(days) + (cleanStatus ? cleanStatus + monthAtRequest : '');
-    attendanceMultiCount.innerHTML =
-      `<span style="display:block">Đang lưu…</span><span style="display:block;font-size:8px;opacity:.72;margin-top:2px">${codePreview}</span>`;
-
-    // Khóa toàn bộ nút trạng thái trong lúc đang ghi để không gửi 2 request.
-    document.querySelectorAll('[data-multi-status]').forEach(btn=>{
-      btn.disabled = true;
-      btn.style.pointerEvents = 'none';
-      btn.style.opacity = '.55';
-    });
+    attendanceMultiCount.textContent = 'Đang lưu…';
 
     try{
-      // Chỉ 1 request ghi. Không gọi getAttendance lần 2 sau khi server đã xác nhận.
       const r = await window.__srankApi('setAttendanceBatch',{
-        month: monthAtRequest,
-        days,
-        name: nameAtRequest,
-        status: cleanStatus
-      },12000);
+        month: monthAtRequest, days, name: nameAtRequest, status: cleanStatus
+      },20000);
+      if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet không xác nhận đã lưu');
 
-      if(!r || r.ok !== true){
-        throw new Error(r?.error || 'Google Sheet không xác nhận đã lưu');
-      }
-
-      // Server đã rebuild chuỗi range. Cập nhật giao diện ngay từ chính các ngày vừa lưu,
-      // tránh thêm một request getAttendance khiến Google Sheet chậm.
-      if(!ATTENDANCE_DATA[nameAtRequest]) ATTENDANCE_DATA[nameAtRequest] = {};
-      days.forEach(day=>{
-        const k = key(y,m,day);
-        if(cleanStatus) ATTENDANCE_DATA[nameAtRequest][k] = cleanStatus;
-        else delete ATTENDANCE_DATA[nameAtRequest][k];
-      });
-
-      rebuildAttendanceCacheFromCurrent(y,m);
+      await loadAttendanceMonth(true);
       attendanceMultiMode = false;
       attendanceMultiDays.clear();
       updateAttendanceMultiUI();
-      render();
-
-      setAttendanceSyncStatus(
-        'ok',
-        `Đã lưu ${codePreview} vào Google Sheet`
-      );
+      setAttendanceSyncStatus('ok', `Đã lưu ${days.length} ngày vào Google Sheet`);
     }catch(e){
-      // Chỉ khi request thất bại/timeout mới đọc lại 1 lần để kiểm tra
-      // xem Apps Script đã ghi thành công nhưng phản hồi bị chậm hay chưa.
       try{
         await loadAttendanceMonth(true);
         const allConfirmed = days.every(day=>{
           const v = String(ATTENDANCE_DATA?.[nameAtRequest]?.[key(y,m,day)] || '').toUpperCase();
           return cleanStatus ? v === cleanStatus : !v;
         });
-
         if(allConfirmed){
           attendanceMultiMode = false;
           attendanceMultiDays.clear();
           updateAttendanceMultiUI();
-          setAttendanceSyncStatus('ok', `Đã lưu ${codePreview} vào Google Sheet`);
+          setAttendanceSyncStatus('ok', `Đã lưu ${days.length} ngày vào Google Sheet`);
           return;
         }
       }catch(_err){}
-
-      attendanceMultiCount.innerHTML =
-        `<span style="display:block">Lưu thất bại</span><span style="display:block;font-size:8px;opacity:.72;margin-top:2px">${codePreview}</span>`;
-      setAttendanceSyncStatus(
-        'error',
-        'Không ghi được Google Sheet: ' + attendanceErrorText(e)
-      );
-      updateAttendanceMultiUI();
+      attendanceMultiCount.textContent = 'Lưu thất bại';
+      setAttendanceSyncStatus('error','Không ghi được Google Sheet: ' + attendanceErrorText(e));
     }
   }
 
@@ -5800,7 +5706,7 @@ function showSystemFinalMessage(el, message){
         status=info.className;
         label=info.label;
 
-        if(item.status === 'V') work++;
+        if(item.status === 'V' || item.status === 'T') work++;
         else if(item.status === 'O') off++;
         else if(item.status === 'P') leave++;
       }
