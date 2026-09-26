@@ -2708,6 +2708,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .att-status-option.clear{grid-column:1/-1;background:#fff;border-color:rgba(166,94,94,.14);color:#a05e5e}
 #attendanceStatusSaving{text-align:center;min-height:16px;margin-top:11px;color:#7b9b94;font-size:10px}
 .att-status.ot{background:#e8efff;color:#476bb0}
+
+/* ===== CHẤM CÔNG: nút nằm bên phải Bữa trưa ===== */
+#secondaryNav{grid-template-columns:repeat(4,minmax(0,1fr)) !important;}
+#secondaryNav.admin-visible{grid-template-columns:repeat(5,minmax(0,1fr)) !important;}
 </style>
 </head>
 <body>
@@ -2756,6 +2760,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 <nav id="secondaryNav" aria-label="Công cụ">
   <button id="kdvRulesBtn" type="button" aria-label="Mở Luật KDV">📜 Luật KDV</button>
   <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?">🍜 Bữa trưa ăn gì?</button>
+  <button id="attendanceBtn" type="button" aria-label="Mở Chấm công">🗓 Chấm công</button>
   <button id="quizBtn" type="button" aria-label="Mở Bài kiểm tra">📝 Bài kiểm tra</button>
   <button id="quizAdminBtn" type="button" aria-label="Tạo bài kiểm tra" hidden>⚙ Tạo Ktra</button>
 </nav>
@@ -2982,10 +2987,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   </section>
 </div>
 <div id="hint" aria-hidden="true" hidden></div>
-<nav id="pageNav" aria-label="Chuyển trang">
-  <button id="page1Btn" type="button" class="active" aria-label="Trang 1" onclick="window.__closeAttendancePage?.()">1</button>
-  <button id="page2Btn" type="button" aria-label="Trang 2" onclick="window.__openAttendancePage?.()">2</button>
-</nav>
 </main>
 
 <!-- ===== TRANG 2: LỊCH CHẤM CÔNG ===== -->
@@ -3069,7 +3070,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 (() => {
   "use strict";
 
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJ1ebyNNe7fxlNR6TObBYebp7zRORGZTO0kTzlFl-S39I2vIJjDx9h0quV84od9JAfeg/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEOqN82lMImJCesteUDaersu4aqxNLdBc6SDxVszKy6_u5o7G_aNaSX8gq2Xik25qNdw/exec";
   const CACHE_KEY = "srank_check_v4";
   const DAY_KEY = "srank_check_day_v1";
   const root = document.getElementById("space");
@@ -4690,7 +4691,8 @@ function renderTop(){
       wheelArea.classList.contains("show") ||
       message.classList.contains("show") ||
       confirm.classList.contains("show") ||
-      document.getElementById('attendanceNameWheel')?.classList.contains('show');
+      document.getElementById('attendanceNameWheel')?.classList.contains('show') ||
+      document.getElementById('attendancePage')?.classList.contains('show');
 
     secondaryNav.classList.toggle("nav-hidden", otherViewOpen);
     document.getElementById('pageNav')?.classList.toggle('nav-hidden', otherViewOpen);
@@ -5083,18 +5085,8 @@ function showSystemFinalMessage(el, message){
   const leaveCount = document.getElementById('attendanceLeaveCount');
   const prev = document.getElementById('attendancePrev');
   const next = document.getElementById('attendanceNext');
-  const pageNav = document.getElementById('pageNav');
-  const page1Btn = document.getElementById('page1Btn');
-  const page2Btn = document.getElementById('page2Btn');
+  const attendanceBtn = document.getElementById('attendanceBtn');
   if(!page || !employee || !grid) return;
-
-  function updatePageNav(){
-    const onPage2 = page.classList.contains('show');
-    page1Btn?.classList.toggle('active', !onPage2);
-    page2Btn?.classList.toggle('active', onPage2);
-    page1Btn?.setAttribute('aria-current', !onPage2 ? 'page' : 'false');
-    page2Btn?.setAttribute('aria-current', onPage2 ? 'page' : 'false');
-  }
 
   let ATTENDANCE_EMPLOYEES = [];
 
@@ -5513,22 +5505,18 @@ function showSystemFinalMessage(el, message){
       : [];
     if(checklistNames.length) syncAttendanceEmployees();
     page.classList.add('show');
-    updatePageNav();
     requestAnimationFrame(()=>render());
     if(typeof syncQuickTools==='function') syncQuickTools();
     loadAttendanceMonth(false);
   }
   function closePage(){
     page.classList.remove('show');
-    updatePageNav();
     if(typeof syncQuickTools==='function') syncQuickTools();
   }
-  page1Btn?.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); closePage(); });
-  page2Btn?.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); openPage(); });
+  attendanceBtn?.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); openPage(); });
   window.__openAttendancePage = openPage;
   window.__closeAttendancePage = closePage;
   back.addEventListener('click',closePage);
-  updatePageNav();
   wheelBtn.addEventListener('click',openNameWheel);
   wheelClose.addEventListener('click',closeNameWheel);
   wheelOverlay.addEventListener('click',e=>{if(e.target===wheelOverlay)closeNameWheel()});
