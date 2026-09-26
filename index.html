@@ -2952,8 +2952,8 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 </div>
 <div id="hint" aria-hidden="true" hidden></div>
 <nav id="pageNav" aria-label="Chuyển trang">
-  <button id="page1Btn" type="button" class="active" aria-label="Trang 1">1</button>
-  <button id="page2Btn" type="button" aria-label="Trang 2">2</button>
+  <button id="page1Btn" type="button" class="active" aria-label="Trang 1" onclick="window.__closeAttendancePage?.()">1</button>
+  <button id="page2Btn" type="button" aria-label="Trang 2" onclick="window.__openAttendancePage?.()">2</button>
 </nav>
 </main>
 
@@ -5200,8 +5200,10 @@ function showSystemFinalMessage(el, message){
     updatePageNav();
     if(typeof syncQuickTools==='function') syncQuickTools();
   }
-  page1Btn?.addEventListener('click',closePage);
-  page2Btn?.addEventListener('click',openPage);
+  page1Btn?.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); closePage(); });
+  page2Btn?.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); openPage(); });
+  window.__openAttendancePage = openPage;
+  window.__closeAttendancePage = closePage;
   back.addEventListener('click',closePage);
   updatePageNav();
   wheelBtn.addEventListener('click',openNameWheel);
