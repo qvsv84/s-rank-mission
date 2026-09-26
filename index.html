@@ -5102,7 +5102,8 @@ function showSystemFinalMessage(el, message){
 
   let ATTENDANCE_EMPLOYEES = [];
 
-  // Chấm công đọc trực tiếp từ sheet Check!C19:C32 và quét toàn bộ hàng.
+  // Chấm công đọc trực tiếp từ Check!C19:C32 và dải ngày D:AH (31 cột).
+  // D = ngày 1, E = ngày 2, ... AH = ngày 31.
   // Mã compact: [ngày][P/O/T][tháng]. Ví dụ 26P9 = ngày 26, phép, tháng 9.
   const ATTENDANCE_DATA = {};
   const ATTENDANCE_CACHE_PREFIX = 'srank_attendance_check_v2_';
@@ -5210,9 +5211,9 @@ function showSystemFinalMessage(el, message){
   function statusInfo(status){
     const s = String(status || '').trim().toUpperCase();
     if(s === 'V') return {className:'work', label:'✓'};
-    if(s === 'P') return {className:'leave', label:'P'};
-    if(s === 'O') return {className:'off', label:'O'};
-    if(s === 'T') return {className:'ot', label:'T'};
+    if(s === 'P') return {className:'leave', label:'Phép'};
+    if(s === 'O') return {className:'off', label:'OFF'};
+    if(s === 'T') return {className:'ot', label:'OT'};
     return {className:'empty', label:'—'};
   }
 
@@ -5345,8 +5346,8 @@ function showSystemFinalMessage(el, message){
       };
       const r = await window.__srankApi('setAttendance',payload,8000);
       if(!r.ok) throw new Error(r.error || 'Lưu chấm công thất bại');
-      attendanceStatusSaving.textContent = 'Đã lưu ✓';
-      setTimeout(closeAttendanceStatus, 350);
+      attendanceStatusSaving.textContent = r.data?.cell ? ('Đã lưu ✓ • ô ' + r.data.cell) : 'Đã lưu ✓';
+      setTimeout(closeAttendanceStatus, 500);
     }catch(e){
       attendanceStatusSaving.textContent = 'Lưu thất bại — đang đồng bộ lại';
       await loadAttendanceMonth(true);
