@@ -1818,6 +1818,20 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   }
 
   const MONITOR_FB_LINK = "https://facebook.com/kinya03";
+  const MONITOR_DEFAULT_LINKS = {
+    "Huong Lye": "https://www.facebook.com/groups/263510030791508/admin_activities/?activity_actor=61593390746763&with_note=false&automatic_action=false",
+    "Quỳnh Trang": "https://www.facebook.com/groups/263510030791508/admin_activities/?activity_actor=100093857294560&with_note=false&automatic_action=false",
+    "Phương Thảo": "https://www.facebook.com/groups/263510030791508/admin_activities/?activity_actor=61585575394411&with_note=false&automatic_action=false",
+    "Thảo Uyên": "https://www.facebook.com/groups/263510030791508/admin_activities/?activity_actor=100006013845550&with_note=false&automatic_action=false",
+    "Minh Thư": "https://www.facebook.com/groups/263510030791508/admin_activities/?activity_actor=100012882251402&with_note=false&automatic_action=false",
+    "Như Dương": "https://www.facebook.com/groups/263510030791508/admin_activities/?activity_actor=100024250441939&with_note=false&automatic_action=false",
+    "Rosalie": "https://www.facebook.com/groups/263510030791508/admin_activities/?activity_actor=100050294476265&with_note=false&automatic_action=false",
+    "Tuan Nguyen": "https://www.facebook.com/groups/263510030791508/admin_activities/?activity_actor=100013605286802&with_note=false&automatic_action=false",
+    "Minh Quân": "https://www.facebook.com/groups/263510030791508/admin_activities/?activity_actor=100021729860926&with_note=false&automatic_action=false",
+    "Kim Chi": "https://www.facebook.com/groups/263510030791508/admin_activities/?activity_actor=61589092540444&with_note=false&automatic_action=false",
+    "Mỹ Dung": "https://www.facebook.com/groups/263510030791508/admin_activities/?activity_actor=100092430943394&with_note=false&automatic_action=false",
+    "Phạm Kim Chi": "https://www.facebook.com/groups/263510030791508/admin_activities/?activity_actor=100024183575661&with_note=false&automatic_action=false"
+  };
   const MONITOR_LINKS_KEY = "srank_monitor_links_v1";
   let monitorLinks = {};
   let editingMonitorName = "";
@@ -1835,8 +1849,9 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   }
 
   function getMonitorLink(name){
-    const custom = String(monitorLinks[String(name)] || "").trim();
-    return custom || MONITOR_FB_LINK;
+    const key = String(name || "").trim();
+    const custom = String(monitorLinks[key] || "").trim();
+    return custom || String(MONITOR_DEFAULT_LINKS[key] || "").trim() || MONITOR_FB_LINK;
   }
 
   function normalizeMonitorLink(value){
@@ -1929,6 +1944,8 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     names.forEach((name, i) => {
       const player = name || ("Người chơi " + (i+1));
       const customLink = String(monitorLinks[player] || "").trim();
+      const defaultLink = String(MONITOR_DEFAULT_LINKS[player] || "").trim();
+      const effectiveLink = customLink || defaultLink || MONITOR_FB_LINK;
 
       const tr = document.createElement("tr");
 
@@ -1945,7 +1962,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
       nameText.textContent = player;
       const linkState = document.createElement("span");
       linkState.className = "monitorLinkState";
-      linkState.textContent = customLink ? customLink : "Link mặc định";
+      linkState.textContent = effectiveLink;
 
       nameBox.appendChild(nameText);
       nameBox.appendChild(linkState);
