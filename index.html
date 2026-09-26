@@ -59,6 +59,12 @@ box-shadow:0 0 20px #fff,0 0 60px #ff4fa3,0 0 120px #ff4fa3;transform:translate(
 @keyframes flash{0%{opacity:1;transform:translate(-50%,-50%) scale(.5)}100%{opacity:0;transform:translate(-50%,-50%) scale(42)}}
 
 #hint{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);color:rgba(255,255,255,.38);font-size:12px;z-index:10;white-space:nowrap}
+#pageNav{position:fixed;left:50%;bottom:7%;transform:translateX(-50%);z-index:19001;display:flex;align-items:center;gap:5px;padding:4px;border:1px solid rgba(255,255,255,.10);border-radius:999px;background:rgba(10,4,15,.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 7px 20px rgba(0,0,0,.18);transition:opacity .18s,transform .18s}
+#pageNav.nav-hidden{opacity:0!important;pointer-events:none!important;transform:translate(-50%,8px)!important}
+#pageNav button{width:38px;height:32px;border:1px solid rgba(255,120,190,.20);border-radius:999px;background:rgba(255,70,155,.06);color:#ffc0df;font-size:12px;font-weight:900;line-height:1}
+#pageNav button.active{background:rgba(255,255,255,.94);border-color:rgba(79,155,112,.28);color:#315b46;box-shadow:0 5px 14px rgba(42,91,65,.10)}
+#pageNav button:active{transform:scale(.96)}
+@media(max-width:600px){#pageNav{bottom:7%;gap:3px;padding:3px}#pageNav button{width:42px;height:38px}}
 #status{position:absolute;right:12px;top:10px;z-index:100;color:rgba(255,255,255,.42);font-size:10px;opacity:0;transition:opacity .2s}
 #connectionState{position:absolute;left:12px;top:10px;z-index:100;display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:rgba(8,4,14,.45);backdrop-filter:blur(10px);font-size:10px;color:rgba(255,255,255,.58);pointer-events:none}
 #connectionState .dot{width:6px;height:6px;border-radius:50%;background:#ffb0d3;box-shadow:0 0 8px currentColor}
@@ -2944,7 +2950,11 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     </div>
   </section>
 </div>
-<div id="hint">Đang tải dữ liệu…</div>
+<div id="hint" aria-hidden="true" hidden></div>
+<nav id="pageNav" aria-label="Chuyển trang">
+  <button id="page1Btn" type="button" class="active" aria-label="Trang 1">1</button>
+  <button id="page2Btn" type="button" aria-label="Trang 2">2</button>
+</nav>
 </main>
 
 <!-- ===== TRANG 2: LỊCH CHẤM CÔNG ===== -->
@@ -4631,9 +4641,11 @@ function renderTop(){
       quizBuilderOverlay.classList.contains("show") ||
       wheelArea.classList.contains("show") ||
       message.classList.contains("show") ||
-      confirm.classList.contains("show");
+      confirm.classList.contains("show") ||
+      document.getElementById('attendanceNameWheel')?.classList.contains('show');
 
     secondaryNav.classList.toggle("nav-hidden", otherViewOpen);
+    document.getElementById('pageNav')?.classList.toggle('nav-hidden', otherViewOpen);
     secondaryNav.setAttribute("aria-hidden", otherViewOpen ? "true" : "false");
     lunchResult.classList.toggle("show", !otherViewOpen && lunchResult.dataset.hasResult === "1");
     lunchResult.setAttribute("aria-hidden", otherViewOpen ? "true" : "false");
@@ -5020,7 +5032,18 @@ function showSystemFinalMessage(el, message){
   const leaveCount = document.getElementById('attendanceLeaveCount');
   const prev = document.getElementById('attendancePrev');
   const next = document.getElementById('attendanceNext');
+  const pageNav = document.getElementById('pageNav');
+  const page1Btn = document.getElementById('page1Btn');
+  const page2Btn = document.getElementById('page2Btn');
   if(!page || !employee || !grid) return;
+
+  function updatePageNav(){
+    const onPage2 = page.classList.contains('show');
+    page1Btn?.classList.toggle('active', !onPage2);
+    page2Btn?.classList.toggle('active', onPage2);
+    page1Btn?.setAttribute('aria-current', !onPage2 ? 'page' : 'false');
+    page2Btn?.setAttribute('aria-current', onPage2 ? 'page' : 'false');
+  }
 
   let ATTENDANCE_EMPLOYEES = [];
 
@@ -5111,10 +5134,12 @@ function showSystemFinalMessage(el, message){
     renderNameWheel();
     wheelOverlay.classList.add('show');
     wheelOverlay.setAttribute('aria-hidden','false');
+    if(typeof syncQuickTools==='function') syncQuickTools();
   }
   function closeNameWheel(){
     wheelOverlay.classList.remove('show');
     wheelOverlay.setAttribute('aria-hidden','true');
+    if(typeof syncQuickTools==='function') syncQuickTools();
     wheelOffset=0;
   }
 
@@ -5166,10 +5191,19 @@ function showSystemFinalMessage(el, message){
   function openPage(){
     if(Array.isArray(names) && names.length) syncAttendanceEmployees();
     page.classList.add('show');
+    updatePageNav();
     requestAnimationFrame(()=>render());
+    if(typeof syncQuickTools==='function') syncQuickTools();
   }
-  function closePage(){page.classList.remove('show');}
+  function closePage(){
+    page.classList.remove('show');
+    updatePageNav();
+    if(typeof syncQuickTools==='function') syncQuickTools();
+  }
+  page1Btn?.addEventListener('click',closePage);
+  page2Btn?.addEventListener('click',openPage);
   back.addEventListener('click',closePage);
+  updatePageNav();
   wheelBtn.addEventListener('click',openNameWheel);
   wheelClose.addEventListener('click',closeNameWheel);
   wheelOverlay.addEventListener('click',e=>{if(e.target===wheelOverlay)closeNameWheel()});
