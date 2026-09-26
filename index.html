@@ -3265,6 +3265,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     });
   }
 
+  // Expose API globally so attendance handlers remain callable even if Safari/WebView
+  // changes lexical scope while handling dynamically attached events.
+  window.__srankApi = api;
+
   function todayKey(){
     const d = new Date();
     const parts = new Intl.DateTimeFormat("en-CA",{
@@ -5279,7 +5283,7 @@ function showSystemFinalMessage(el, message){
     }
 
     try{
-      const r = await api('getAttendance',{month:m+1},8000);
+      const r = await window.__srankApi('getAttendance',{month:m+1},8000);
       if(token !== attendanceLoadToken) return;
       if(!r.ok) throw new Error(r.error || 'Không tải được dữ liệu chấm công');
 
@@ -5376,7 +5380,7 @@ function showSystemFinalMessage(el, message){
     const y=viewDate.getFullYear(), m=viewDate.getMonth();
     attendanceStatusSaving.textContent='Đang huỷ '+compressAttendanceDays(days)+'…';
     try{
-      const r=await api('setAttendanceBatch',{month:m+1,days,name:selectedName,status:''},20000);
+      const r=await window.__srankApi('setAttendanceBatch',{month:m+1,days,name:selectedName,status:''},20000);
       if(!r || r.ok!==true) throw new Error(r?.error || 'Huỷ chuỗi thất bại');
       days.forEach(d=>delete ATTENDANCE_DATA[selectedName][key(y,m,d)]);
       rebuildAttendanceCacheFromCurrent(y,m);
@@ -5427,7 +5431,7 @@ function showSystemFinalMessage(el, message){
     const nameAtRequest=selectedName, monthAtRequest=m+1;
     attendanceStatusSaving.textContent='Đang lưu vào Google Sheet…';
     try{
-      const r=await api('setAttendanceBatch',{month:monthAtRequest,days,name:nameAtRequest,status:cleanStatus},20000);
+      const r=await window.__srankApi('setAttendanceBatch',{month:monthAtRequest,days,name:nameAtRequest,status:cleanStatus},20000);
       if(!r || r.ok!==true) throw new Error(r?.error || 'Google Sheet không xác nhận đã lưu');
       if(!ATTENDANCE_DATA[nameAtRequest]) ATTENDANCE_DATA[nameAtRequest]={};
       days.forEach(day=>{
