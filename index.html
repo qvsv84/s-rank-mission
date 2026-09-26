@@ -119,26 +119,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 .topRow1{background:linear-gradient(90deg,rgba(255,215,120,.10),transparent)}.topRow2{background:linear-gradient(90deg,rgba(210,220,235,.08),transparent)}.topRow3{background:linear-gradient(90deg,rgba(190,120,80,.08),transparent)}
 #topTable tr:last-child td{border-bottom:0}
 #topCloseBtn{display:block;margin:13px auto 0;min-width:110px;min-height:40px;padding:8px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(135deg,#ff3c91,#ff70b9);color:#fff;font-weight:800}
-/* Tất cả cửa sổ dùng nút X góc phải như Giám sát */
-#topPanel,#adminPanel,#adminPasswordBox,#linkEditorPanel{position:relative}
-#topCloseBtn,#adminCloseBtn,#adminPasswordCancel,#linkEditorCancel{
-  position:absolute;top:12px;right:12px;
-  width:34px;height:34px;min-width:34px;min-height:34px;
-  margin:0;padding:0;border-radius:50%;
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(255,255,255,.07);
-  color:rgba(255,255,255,.82);
-  font-size:20px;line-height:32px;font-weight:500;
-  display:flex;align-items:center;justify-content:center;
-  z-index:5;
-}
-#topCloseBtn:hover,#adminCloseBtn:hover,#adminPasswordCancel:hover,#linkEditorCancel:hover{
-  background:rgba(255,255,255,.12);
-}
-#topTitle,#adminTitle,#adminPasswordTitle,#linkEditorTitle{padding-right:42px}
-#adminActions{padding-top:4px}
-#linkEditorActions{grid-template-columns:1fr 1fr}
-
 
 #bottomNav button:active{transform:scale(.96)}
 #homeBtn{
@@ -1620,21 +1600,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   border-color:rgba(104,157,124,.28) !important;
   box-shadow:0 2px 8px rgba(67,120,88,.08) !important;
 }
-
-/* Nút X của cửa sổ chụp checklist */
-#captureCloseBtn{
-  position:absolute;
-  top:12px;right:12px;
-  width:34px;height:34px;min-width:34px;min-height:34px;
-  margin:0;padding:0;
-  border-radius:50%;
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(255,255,255,.78);
-  color:#426150;
-  font-size:20px;line-height:32px;font-weight:500;
-  display:flex;align-items:center;justify-content:center;
-  z-index:20;
-}
 </style>
 <style>
 /* ===== THEME XANH MÁT + KHÔI PHỤC KHUNG CHECKLIST ===== */
@@ -2653,11 +2618,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     radial-gradient(circle at 90% 80%,rgba(78,150,255,.14),transparent 34%),
     linear-gradient(145deg,#eefbf7 0%,#f5fbff 48%,#edf5ff 100%);
   color:#17352f;
-  transform:translateX(100%);
-  visibility:hidden;pointer-events:none;
-  transition:transform .48s cubic-bezier(.22,.82,.24,1),visibility 0s linear .48s;
+  display:none;
 }
-#attendancePage.show{transform:translateX(0);visibility:visible;pointer-events:auto;transition:transform .48s cubic-bezier(.22,.82,.24,1)}
+#attendancePage.show{display:block}
 #attendancePage *{box-sizing:border-box}
 .att-page-inner{width:100%;height:100%;overflow:auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
 .att-shell{width:min(100%,760px);margin:0 auto}
@@ -2782,7 +2745,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   <div id="topScroll"><table id="topTable">
     <thead><tr><th>#</th><th>Tên</th><th>⭐ Điểm</th><th>Rank</th></tr></thead><tbody></tbody>
   </table></div>
-  <button id="topCloseBtn" type="button" aria-label="Đóng BXH TOP" title="Đóng">×</button>
+  <button id="topCloseBtn" type="button">Đóng</button>
 </section>
 
 <nav id="bottomNav" aria-label="Điều hướng chính">
@@ -2987,7 +2950,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     <input id="linkEditorInput" type="url" inputmode="url" autocomplete="off" placeholder="https://facebook.com/ten-nguoi">
     <div id="linkEditorHint">Mỗi người có thể dùng một liên kết riêng. Liên kết được lưu trên thiết bị này.</div>
     <div id="linkEditorActions">
-      <button id="linkEditorCancel" type="button" aria-label="Đóng Gán liên kết" title="Đóng">×</button>
+      <button id="linkEditorCancel" type="button">Huỷ</button>
       <button id="linkEditorClear" type="button">Xoá link</button>
       <button id="linkEditorSave" type="button">Lưu</button>
     </div>
@@ -2999,7 +2962,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     <div id="adminPasswordSub">Nhập mật khẩu để mở cài đặt</div>
     <input id="adminPasswordInput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••">
     <div id="adminPasswordMsg"></div>
-    <div id="adminPasswordActions"><button id="adminPasswordCancel" type="button" aria-label="Đóng Admin" title="Đóng">×</button><button id="adminPasswordOk" type="button">Xác nhận</button></div>
+    <div id="adminPasswordActions"><button id="adminPasswordCancel" type="button">Huỷ</button><button id="adminPasswordOk" type="button">Xác nhận</button></div>
   </section>
 </div>
 <div id="adminOverlay" aria-hidden="true">
@@ -3012,7 +2975,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     </div>
     <div id="adminStatus"></div>
     <div id="adminActions">
-      <button id="adminCloseBtn" type="button" aria-label="Đóng Cài đặt Admin" title="Đóng">×</button>
+      <button id="adminCloseBtn" type="button">Đóng</button>
       <button id="adminSaveBtn" type="button">Lưu cài đặt</button>
     </div>
     <div id="adminChecklistEditor" style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);">
@@ -3105,7 +3068,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 (() => {
   "use strict";
 
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJ1ebyNNe7fxlNR6TObBYebp7zRORGZTO0kTzlFl-S39I2vIJjDx9h0quV84od9JAfeg/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEOqN82lMImJCesteUDaersu4aqxNLdBc6SDxVszKy6_u5o7G_aNaSX8gq2Xik25qNdw/exec";
   const CACHE_KEY = "srank_check_v4";
   const DAY_KEY = "srank_check_day_v1";
   const root = document.getElementById("space");
@@ -4472,7 +4435,9 @@ function renderTop(){
             ↓ Lưu ảnh
           </a>
 
-          <button type="button" id="captureCloseBtn" aria-label="Đóng" title="Đóng">×</button>
+          <button type="button" id="captureCloseBtn">
+            Đóng
+          </button>
         </div>
       </div>
     `;
@@ -4980,11 +4945,8 @@ function renderTop(){
       });
       const del=document.createElement('button');del.className='lunchManageDelete';del.type='button';del.textContent='Xóa';del.addEventListener('click',()=>{
         if(LUNCH_DATA[lunchManageCategory].length<=1){updateLunchManageStatus('Danh sách cần có ít nhất 1 món');return;}
-        LUNCH_DATA[lunchManageCategory].splice(i,1);
-        saveLunchData();
-        renderLunchManage();
-        updateLunchCounts();
-        updateLunchManageStatus('Đã xóa món ✓');
+        if(!confirm('Xóa món “'+LUNCH_DATA[lunchManageCategory][i]+'” khỏi danh sách?')) return;
+        LUNCH_DATA[lunchManageCategory].splice(i,1);saveLunchData();renderLunchManage();updateLunchCounts();updateLunchManageStatus('Đã xóa món ✓');
       });
       row.append(no,input,save,del);list.appendChild(row);
     });
@@ -5609,66 +5571,6 @@ function showSystemFinalMessage(el, message){
   next.addEventListener('click',()=>{
     viewDate.setMonth(viewDate.getMonth()+1);
     loadAttendanceMonth(false);
-  });
-
-  /* Điều hướng giữa Page 1 và Page 2: vuốt ngang trên điện thoại + phím mũi tên trên PC. */
-  let swipeX=0, swipeY=0, swipeTracking=false;
-
-  function swipeBlocked(target){
-    return !!target?.closest?.('#attendanceNameWheel, #attendancePrev, #attendanceNext');
-  }
-
-  function beginSwipe(x,y,target){
-    if(swipeBlocked(target)) return;
-    swipeX=x;
-    swipeY=y;
-    swipeTracking=true;
-  }
-
-  function endSwipe(x,y){
-    if(!swipeTracking) return;
-    swipeTracking=false;
-    const dx=x-swipeX;
-    const dy=y-swipeY;
-    if(Math.abs(dx)<55 || Math.abs(dx)<=Math.abs(dy)) return;
-
-    if(dx<0 && !page.classList.contains('show')){
-      openPage();
-    }else if(dx>0 && page.classList.contains('show')){
-      closePage();
-    }
-  }
-
-  /* Touch riêng để iPhone không phụ thuộc Pointer Events. */
-  document.addEventListener('touchstart',e=>{
-    if(e.touches.length!==1) return;
-    const t=e.touches[0];
-    beginSwipe(t.clientX,t.clientY,e.target);
-  },{capture:true,passive:true});
-
-  document.addEventListener('touchend',e=>{
-    const t=e.changedTouches[0];
-    if(t) endSwipe(t.clientX,t.clientY);
-  },{capture:true,passive:true});
-
-  /* Pointer dự phòng cho trình duyệt/thiết bị khác. */
-  document.addEventListener('pointerdown',e=>{
-    if(e.pointerType==='mouse' && e.button!==0) return;
-    beginSwipe(e.clientX,e.clientY,e.target);
-  },{capture:true,passive:true});
-
-  document.addEventListener('pointerup',e=>{
-    endSwipe(e.clientX,e.clientY);
-  },{capture:true,passive:true});
-
-  window.addEventListener('keydown',e=>{
-    if(e.key==='ArrowRight' && !page.classList.contains('show')){
-      e.preventDefault();
-      openPage();
-    }else if(e.key==='ArrowLeft' && page.classList.contains('show')){
-      e.preventDefault();
-      closePage();
-    }
   });
 
   const checklistNames = typeof window.__getChecklistNames === 'function'
