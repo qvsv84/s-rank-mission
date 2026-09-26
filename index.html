@@ -2714,6 +2714,15 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .att-status-option.clear{grid-column:1/-1;background:#fff;border-color:rgba(166,94,94,.14);color:#a05e5e}
 #attendanceStatusSaving{text-align:center;min-height:16px;margin-top:11px;color:#7b9b94;font-size:10px}
 .att-status.ot{background:#d9f5e6;color:#24724d}
+#attendanceMultiBtn{grid-column:1/-1;background:#edf7f3;color:#2d7565;border-color:rgba(46,112,96,.16)}
+.att-day.multi-selected{border-color:#55b99d!important;background:#dff7ee!important;box-shadow:inset 0 0 0 2px rgba(55,171,141,.22),0 5px 14px rgba(55,171,141,.14)!important}
+.att-day.multi-selected .att-day-num{background:#55b99d;color:#fff;border-radius:8px;padding:5px 7px}
+#attendanceMultiBar{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:19700;display:none;align-items:center;gap:6px;width:min(94vw,520px);padding:8px;border:1px solid rgba(255,255,255,.8);border-radius:18px;background:rgba(250,255,253,.97);box-shadow:0 18px 55px rgba(32,91,78,.22);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#attendanceMultiBar.show{display:flex}
+#attendanceMultiCount{flex:1;min-width:55px;color:#2f685b;font-size:10px;font-weight:900;text-align:center}
+.att-multi-action{height:38px;padding:0 10px;border:0;border-radius:11px;font-size:10px;font-weight:900;white-space:nowrap}
+.att-multi-action.p{background:#fff0a8;color:#8a6500}.att-multi-action.o{background:#ffd9df;color:#b33a4b}.att-multi-action.t{background:#d9f5e6;color:#24724d}.att-multi-action.clear{background:#f4f4f4;color:#8b6666}.att-multi-action.cancel{background:#edf7f3;color:#477a6d}
+@media(max-width:420px){#attendanceMultiBar{gap:4px;padding:7px}.att-multi-action{padding:0 7px;font-size:9px}}
 
 /* ===== CHẤM CÔNG: nút nằm bên phải Bữa trưa ===== */
 #secondaryNav{grid-template-columns:repeat(4,minmax(0,1fr)) !important;}
@@ -3070,10 +3079,20 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       <button class="att-status-option leave" type="button" data-status="P">Phép</button>
       <button class="att-status-option off" type="button" data-status="O">OFF</button>
       <button class="att-status-option ot" type="button" data-status="T">OT</button>
+      <button id="attendanceMultiBtn" class="att-status-option" type="button">☷ Chọn nhiều ngày</button>
       <button class="att-status-option clear" type="button" data-status="__clear">Xóa trạng thái</button>
     </div>
     <div id="attendanceStatusSaving"></div>
   </section>
+</div>
+
+<div id="attendanceMultiBar" aria-hidden="true">
+  <button class="att-multi-action cancel" id="attendanceMultiCancel" type="button">Hủy</button>
+  <div id="attendanceMultiCount">0 ngày</div>
+  <button class="att-multi-action p" data-multi-status="P" type="button">Phép</button>
+  <button class="att-multi-action o" data-multi-status="O" type="button">OFF</button>
+  <button class="att-multi-action t" data-multi-status="T" type="button">OT</button>
+  <button class="att-multi-action clear" data-multi-status="" type="button">Xóa</button>
 </div>
 
 <script>
@@ -5112,8 +5131,14 @@ function showSystemFinalMessage(el, message){
   let attendanceLoadPromise = null;
   let attendanceLoadPromiseKey = '';
   let attendanceEditingDay = 0;
+  let attendanceMultiMode = false;
+  const attendanceMultiDays = new Set();
 
   const attendanceStatusOverlay = document.getElementById('attendanceStatusOverlay');
+  const attendanceMultiBtn = document.getElementById('attendanceMultiBtn');
+  const attendanceMultiBar = document.getElementById('attendanceMultiBar');
+  const attendanceMultiCount = document.getElementById('attendanceMultiCount');
+  const attendanceMultiCancel = document.getElementById('attendanceMultiCancel');
   const attendanceStatusClose = document.getElementById('attendanceStatusClose');
   const attendanceStatusSub = document.getElementById('attendanceStatusSub');
   const attendanceStatusSaving = document.getElementById('attendanceStatusSaving');
@@ -5324,6 +5349,77 @@ function showSystemFinalMessage(el, message){
     attendanceLoadPromise = promise;
     attendanceLoadPromiseKey = requestKey;
     return promise;
+  }
+
+  function updateAttendanceMultiUI(){
+    attendanceMultiCount.textContent = `${attendanceMultiDays.size} ngày`;
+    attendanceMultiBar.classList.toggle('show', attendanceMultiMode);
+    attendanceMultiBar.setAttribute('aria-hidden', attendanceMultiMode ? 'false' : 'true');
+    grid.querySelectorAll('.att-day[data-day]').forEach(el=>{
+      el.classList.toggle('multi-selected', attendanceMultiDays.has(Number(el.dataset.day)));
+    });
+  }
+
+  function startAttendanceMulti(){
+    closeAttendanceStatus();
+    attendanceMultiMode = true;
+    attendanceMultiDays.clear();
+    updateAttendanceMultiUI();
+  }
+
+  function cancelAttendanceMulti(){
+    attendanceMultiMode = false;
+    attendanceMultiDays.clear();
+    updateAttendanceMultiUI();
+  }
+
+  function toggleAttendanceMultiDay(day){
+    if(attendanceMultiDays.has(day)) attendanceMultiDays.delete(day);
+    else attendanceMultiDays.add(day);
+    updateAttendanceMultiUI();
+  }
+
+  async function saveAttendanceBatchStatus(status){
+    const days = [...attendanceMultiDays].sort((a,b)=>a-b);
+    if(!days.length || !selectedName) return;
+
+    const y = viewDate.getFullYear();
+    const m = viewDate.getMonth();
+    const nameAtRequest = selectedName;
+    const monthAtRequest = m + 1;
+    const cleanStatus = String(status || '').trim().toUpperCase();
+
+    attendanceMultiCount.textContent = 'Đang lưu…';
+
+    try{
+      const r = await window.__srankApi('setAttendanceBatch',{
+        month: monthAtRequest, days, name: nameAtRequest, status: cleanStatus
+      },20000);
+      if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet không xác nhận đã lưu');
+
+      await loadAttendanceMonth(true);
+      attendanceMultiMode = false;
+      attendanceMultiDays.clear();
+      updateAttendanceMultiUI();
+      setAttendanceSyncStatus('ok', `Đã lưu ${days.length} ngày vào Google Sheet`);
+    }catch(e){
+      try{
+        await loadAttendanceMonth(true);
+        const allConfirmed = days.every(day=>{
+          const v = String(ATTENDANCE_DATA?.[nameAtRequest]?.[key(y,m,day)] || '').toUpperCase();
+          return cleanStatus ? v === cleanStatus : !v;
+        });
+        if(allConfirmed){
+          attendanceMultiMode = false;
+          attendanceMultiDays.clear();
+          updateAttendanceMultiUI();
+          setAttendanceSyncStatus('ok', `Đã lưu ${days.length} ngày vào Google Sheet`);
+          return;
+        }
+      }catch(_err){}
+      attendanceMultiCount.textContent = 'Lưu thất bại';
+      setAttendanceSyncStatus('error','Không ghi được Google Sheet: ' + attendanceErrorText(e));
+    }
   }
 
   function openAttendanceStatus(day){
@@ -5638,10 +5734,17 @@ function showSystemFinalMessage(el, message){
   grid.addEventListener('click',e=>{
     const dayEl=e.target.closest('.att-day[data-day]');
     if(!dayEl) return;
-    openAttendanceStatus(Number(dayEl.dataset.day));
+    const day = Number(dayEl.dataset.day);
+    if(attendanceMultiMode) toggleAttendanceMultiDay(day);
+    else openAttendanceStatus(day);
   });
 
   attendanceStatusClose.addEventListener('click',closeAttendanceStatus);
+  attendanceMultiBtn.addEventListener('click',startAttendanceMulti);
+  attendanceMultiCancel.addEventListener('click',cancelAttendanceMulti);
+  document.querySelectorAll('[data-multi-status]').forEach(btn=>{
+    btn.addEventListener('click',()=>saveAttendanceBatchStatus(btn.dataset.multiStatus));
+  });
   attendanceStatusOverlay.addEventListener('click',e=>{
     if(e.target===attendanceStatusOverlay) closeAttendanceStatus();
   });
