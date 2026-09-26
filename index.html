@@ -2629,8 +2629,27 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .att-card{background:rgba(255,255,255,.78);border:1px solid rgba(40,105,91,.09);border-radius:24px;box-shadow:0 18px 50px rgba(47,96,86,.10),inset 0 1px 0 rgba(255,255,255,.8);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
 .att-picker{padding:16px;margin-bottom:12px}
 .att-label{display:block;margin-bottom:8px;font-size:11px;font-weight:850;color:#64877f}
-#attendanceEmployee{width:100%;height:48px;padding:0 14px;border:1px solid rgba(46,112,96,.14);border-radius:15px;background:#fff;color:#21463d;font-size:14px;font-weight:750;outline:none;box-shadow:0 5px 18px rgba(46,112,96,.05)}
-#attendanceEmployee:focus{border-color:rgba(48,151,126,.42);box-shadow:0 0 0 4px rgba(75,187,157,.10)}
+#attendanceEmployee{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+#attendanceEmployeeWheelBtn{width:100%;height:48px;padding:0 14px;border:1px solid rgba(46,112,96,.14);border-radius:15px;background:#fff;color:#21463d;font-size:14px;font-weight:800;outline:none;box-shadow:0 5px 18px rgba(46,112,96,.05);display:flex;align-items:center;justify-content:space-between;text-align:left}
+#attendanceEmployeeWheelBtn:active{transform:scale(.985)}
+#attendanceEmployeeWheelBtn .wheel-value{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#attendanceEmployeeWheelBtn .wheel-chevron{font-size:18px;color:#73a297}
+#attendanceNameWheel{position:fixed;inset:0;z-index:19500;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(17,52,45,.28);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#attendanceNameWheel.show{display:flex}
+.att-name-wheel-panel{width:min(92vw,390px);padding:18px 14px 16px;border:1px solid rgba(255,255,255,.7);border-radius:28px;background:rgba(250,255,253,.94);box-shadow:0 24px 70px rgba(32,91,78,.22),inset 0 1px 0 rgba(255,255,255,.9)}
+.att-name-wheel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.att-name-wheel-title{font-size:17px;font-weight:900;color:#214a40}
+#attendanceNameWheelClose{width:34px;height:34px;border:0;border-radius:50%;background:#edf7f3;color:#477a6d;font-size:22px;line-height:1}
+.att-name-wheel-viewport{position:relative;height:292px;overflow:hidden;border-radius:22px;background:linear-gradient(180deg,#f0f8f5 0%,#fff 22%,#fff 78%,#edf7f3 100%);border:1px solid rgba(58,125,108,.10);touch-action:none}
+.att-name-wheel-viewport:before,.att-name-wheel-viewport:after{content:"";position:absolute;left:0;right:0;height:72px;z-index:4;pointer-events:none}
+.att-name-wheel-viewport:before{top:0;background:linear-gradient(#f0f8f5,rgba(240,248,245,0))}
+.att-name-wheel-viewport:after{bottom:0;background:linear-gradient(rgba(237,247,243,0),#edf7f3)}
+.att-name-wheel-selection{position:absolute;left:10px;right:10px;top:50%;height:58px;transform:translateY(-50%);border-top:1px solid rgba(65,151,128,.32);border-bottom:1px solid rgba(65,151,128,.32);border-radius:15px;background:rgba(83,180,151,.08);box-shadow:inset 0 0 20px rgba(83,180,151,.06);z-index:3;pointer-events:none}
+.att-name-wheel-items{position:absolute;inset:0;z-index:2}
+.att-name-wheel-item{position:absolute;left:0;right:0;height:58px;display:flex;align-items:center;justify-content:center;color:rgba(33,74,64,.28);font-size:17px;font-weight:750;user-select:none;will-change:transform,opacity;font-variant-numeric:tabular-nums}
+.att-name-wheel-item.selected{color:#205e50;font-size:20px;font-weight:900}
+.att-name-wheel-hint{text-align:center;margin-top:10px;font-size:10px;color:#86a49d;font-weight:700}
+#attendanceNameWheelConfirm{width:100%;height:44px;margin-top:12px;border:0;border-radius:999px;background:linear-gradient(135deg,#55b99d,#77cbb5);color:#fff;font-size:12px;font-weight:900;box-shadow:0 9px 22px rgba(69,169,140,.22)}
 .att-month-nav{display:grid;grid-template-columns:46px minmax(0,1fr) 46px;align-items:center;gap:8px;margin-bottom:12px}
 .att-month-nav button{height:44px;border:1px solid rgba(40,105,91,.09);border-radius:15px;background:rgba(255,255,255,.78);color:#377265;font-size:21px;font-weight:700;box-shadow:0 8px 22px rgba(37,93,82,.07)}
 #attendanceMonthLabel{text-align:center;font-size:18px;font-weight:900;color:#214a40}
@@ -2942,8 +2961,11 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       </header>
 
       <section class="att-card att-picker">
-        <label class="att-label" for="attendanceEmployee">Nhân viên</label>
-        <select id="attendanceEmployee"></select>
+        <label class="att-label" for="attendanceEmployeeWheelBtn">Nhân viên</label>
+        <select id="attendanceEmployee" aria-hidden="true" tabindex="-1"></select>
+        <button id="attendanceEmployeeWheelBtn" type="button" aria-label="Chọn nhân viên">
+          <span class="wheel-value">Lợi</span><span class="wheel-chevron">⌄</span>
+        </button>
       </section>
 
       <div class="att-month-nav">
@@ -2968,6 +2990,21 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     </div>
   </div>
 </section>
+
+<div id="attendanceNameWheel" aria-hidden="true">
+  <section class="att-name-wheel-panel" role="dialog" aria-modal="true" aria-label="Chọn nhân viên">
+    <div class="att-name-wheel-head">
+      <div class="att-name-wheel-title">Chọn nhân viên</div>
+      <button id="attendanceNameWheelClose" type="button" aria-label="Đóng">×</button>
+    </div>
+    <div id="attendanceNameWheelViewport" class="att-name-wheel-viewport">
+      <div class="att-name-wheel-selection"></div>
+      <div id="attendanceNameWheelItems" class="att-name-wheel-items"></div>
+    </div>
+    <div class="att-name-wheel-hint">Vuốt lên / xuống để chọn</div>
+    <button id="attendanceNameWheelConfirm" type="button">Xác nhận</button>
+  </section>
+</div>
 
 
 <script>
@@ -3764,6 +3801,7 @@ function renderTop(){
       const serverTimes = Array.isArray(r.data.times) ? r.data.times : [];
 
       names = serverNames;
+      window.syncAttendanceEmployees?.();
       points = serverPoints;
       ranks = points.map(rankClient);
 
@@ -4984,22 +5022,101 @@ function showSystemFinalMessage(el, message){
   const next = document.getElementById('attendanceNext');
   if(!page || !employee || !grid) return;
 
-  const ATTENDANCE_EMPLOYEES = [
-    'Huong Lye','Quỳnh Trang','Phương Thảo','Thảo Uyên','Minh Thư','Như Dương',
-    'Rosalie','Tuan Nguyen','Minh Quân','Kim Chi','Mỹ Dung','Phạm Kim Chi'
-  ];
+  let ATTENDANCE_EMPLOYEES = [];
 
   /* Chỗ này để gắn dữ liệu chấm công thật về sau. Không tự tạo lịch làm việc cho nhân viên. */
   const ATTENDANCE_DATA = {};
 
-  ATTENDANCE_EMPLOYEES.forEach(name=>{
-    const opt=document.createElement('option');
-    opt.value=name; opt.textContent=name; employee.appendChild(opt);
-  });
-
   let viewDate = new Date();
   viewDate.setDate(1);
-  let selectedName = ATTENDANCE_EMPLOYEES[0] || '';
+  let selectedName = '';
+  const wheelBtn = document.getElementById('attendanceEmployeeWheelBtn');
+  const wheelOverlay = document.getElementById('attendanceNameWheel');
+  const wheelViewport = document.getElementById('attendanceNameWheelViewport');
+  const wheelItems = document.getElementById('attendanceNameWheelItems');
+  const wheelClose = document.getElementById('attendanceNameWheelClose');
+  const wheelConfirm = document.getElementById('attendanceNameWheelConfirm');
+  let wheelIndex = 0;
+  let wheelStartY = 0, wheelLastY = 0, wheelDragging = false, wheelOffset = 0;
+  const wheelStep = 58;
+
+  function syncAttendanceEmployees(){
+    const source = Array.isArray(names) ? names : [];
+    const unique = [...new Set(source.map(v => String(v || '').trim()).filter(Boolean))];
+    ATTENDANCE_EMPLOYEES = unique;
+
+    employee.innerHTML = '';
+    ATTENDANCE_EMPLOYEES.forEach(name=>{
+      const opt=document.createElement('option');
+      opt.value=name; opt.textContent=name; employee.appendChild(opt);
+    });
+
+    if(!ATTENDANCE_EMPLOYEES.length){
+      selectedName = '';
+      wheelIndex = 0;
+    }else{
+      const currentIndex = ATTENDANCE_EMPLOYEES.indexOf(selectedName);
+      if(currentIndex >= 0){
+        wheelIndex = currentIndex;
+      }else{
+        wheelIndex = 0;
+        selectedName = ATTENDANCE_EMPLOYEES[0];
+      }
+    }
+
+    employee.value = selectedName;
+    updateWheelButton();
+    renderNameWheel();
+    render();
+  }
+  window.syncAttendanceEmployees = syncAttendanceEmployees;
+
+  function updateWheelButton(){
+    const value = wheelBtn?.querySelector('.wheel-value');
+    if(value) value.textContent = selectedName || 'Chọn nhân viên';
+  }
+  function renderNameWheel(){
+    if(!wheelItems) return;
+    wheelItems.innerHTML='';
+    const n=ATTENDANCE_EMPLOYEES.length;
+    ATTENDANCE_EMPLOYEES.forEach((name,i)=>{
+      const el=document.createElement('div');
+      el.className='att-name-wheel-item'+(i===wheelIndex?' selected':'');
+      el.textContent=name;
+      wheelItems.appendChild(el);
+    });
+    const center=(wheelViewport?.clientHeight||292)/2;
+    [...wheelItems.children].forEach((el,i)=>{
+      const rel=i-wheelIndex;
+      const y=center-wheelStep/2 + rel*wheelStep + wheelOffset;
+      const distance=Math.abs(rel*wheelStep+wheelOffset);
+      const scale=Math.max(.78,1-distance/520);
+      const opacity=Math.max(.12,1-distance/145);
+      el.style.transform=`translateY(${y-el.offsetTop-el.offsetHeight/2}px) scale(${scale})`;
+      el.style.opacity=opacity;
+      el.classList.toggle('selected',i===wheelIndex && Math.abs(wheelOffset)<wheelStep*.45);
+    });
+  }
+  function settleNameWheel(){
+    if(!ATTENDANCE_EMPLOYEES.length) return;
+    if(Math.abs(wheelOffset)>=wheelStep*.5){
+      wheelIndex=Math.max(0,Math.min(ATTENDANCE_EMPLOYEES.length-1,wheelIndex+(wheelOffset<0?1:-1)));
+    }
+    wheelOffset=0;
+    renderNameWheel();
+  }
+  function openNameWheel(){
+    wheelIndex=Math.max(0,ATTENDANCE_EMPLOYEES.indexOf(selectedName));
+    wheelOffset=0;
+    renderNameWheel();
+    wheelOverlay.classList.add('show');
+    wheelOverlay.setAttribute('aria-hidden','false');
+  }
+  function closeNameWheel(){
+    wheelOverlay.classList.remove('show');
+    wheelOverlay.setAttribute('aria-hidden','true');
+    wheelOffset=0;
+  }
 
   function pad(n){return String(n).padStart(2,'0')}
   function key(y,m,d){return `${y}-${pad(m+1)}-${pad(d)}`}
@@ -5049,7 +5166,29 @@ function showSystemFinalMessage(el, message){
   function openPage(){page.classList.add('show');}
   function closePage(){page.classList.remove('show');}
   back.addEventListener('click',closePage);
-  employee.addEventListener('change',()=>{selectedName=employee.value;render()});
+  wheelBtn.addEventListener('click',openNameWheel);
+  wheelClose.addEventListener('click',closeNameWheel);
+  wheelOverlay.addEventListener('click',e=>{if(e.target===wheelOverlay)closeNameWheel()});
+  wheelConfirm.addEventListener('click',()=>{
+    selectedName=ATTENDANCE_EMPLOYEES[wheelIndex] || '';
+    employee.value=selectedName;
+    updateWheelButton();
+    closeNameWheel();
+    render();
+  });
+  wheelViewport.addEventListener('pointerdown',e=>{
+    wheelDragging=true; wheelStartY=wheelLastY=e.clientY; wheelViewport.setPointerCapture?.(e.pointerId);
+  });
+  wheelViewport.addEventListener('pointermove',e=>{
+    if(!wheelDragging) return;
+    const dy=e.clientY-wheelLastY; wheelLastY=e.clientY; wheelOffset=Math.max(-wheelStep*.95,Math.min(wheelStep*.95,wheelOffset+dy));
+    if(Math.abs(wheelOffset)>=wheelStep){ wheelOffset=0; }
+    renderNameWheel();
+  });
+  wheelViewport.addEventListener('pointerup',e=>{
+    if(!wheelDragging) return; wheelDragging=false; wheelViewport.releasePointerCapture?.(e.pointerId); settleNameWheel();
+  });
+  wheelViewport.addEventListener('pointercancel',()=>{if(wheelDragging){wheelDragging=false;settleNameWheel()}});
   prev.addEventListener('click',()=>{viewDate.setMonth(viewDate.getMonth()-1);render()});
   next.addEventListener('click',()=>{viewDate.setMonth(viewDate.getMonth()+1);render()});
 
@@ -5073,7 +5212,13 @@ function showSystemFinalMessage(el, message){
     if(e.key==='ArrowRight' && page.classList.contains('show')) closePage();
   });
 
-  render();
+  if(names.length) syncAttendanceEmployees();
+  else {
+    employee.value=selectedName;
+    updateWheelButton();
+    renderNameWheel();
+    render();
+  }
 })();
 
 </script>
