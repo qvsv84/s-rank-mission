@@ -5109,6 +5109,8 @@ function showSystemFinalMessage(el, message){
   const ATTENDANCE_CACHE_PREFIX = 'srank_attendance_check_v2_';
   let attendanceServerLoaded = false;
   let attendanceLoadToken = 0;
+  let attendanceLoadPromise = null;
+  let attendanceLoadPromiseKey = '';
   let attendanceEditingDay = 0;
 
   const attendanceStatusOverlay = document.getElementById('attendanceStatusOverlay');
@@ -5253,6 +5255,19 @@ function showSystemFinalMessage(el, message){
   async function loadAttendanceMonth(force = false){
     const y = viewDate.getFullYear();
     const m = viewDate.getMonth();
+    const requestKey = y + '-' + (m + 1);
+
+    // Nếu đã có request cùng tháng đang chạy, chờ chính request đó.
+    // Tránh tình trạng lần đồng bộ đầu bị request sau làm vô hiệu hóa.
+    if(attendanceLoadPromise && attendanceLoadPromiseKey === requestKey){
+      if(force){
+        setAttendanceSyncStatus('warn','Đang chờ đồng bộ từ Google Sheet…');
+        attendanceSyncBtn?.classList.add('busy');
+        if(attendanceSyncBtn) attendanceSyncBtn.textContent = '↻ Đang đồng bộ…';
+      }
+      return attendanceLoadPromise;
+    }
+
     const token = ++attendanceLoadToken;
 
     if(force){
@@ -5262,39 +5277,53 @@ function showSystemFinalMessage(el, message){
     }else{
       const hasCache = applyAttendanceCache(y, m);
       if(hasCache){
-        setAttendanceSyncStatus('warn',`Đang dùng dữ liệu đã lưu • đang kiểm tra máy chủ…`);
+        setAttendanceSyncStatus('warn','Đang dùng dữ liệu đã lưu • đang kiểm tra máy chủ…');
       }else{
         setAttendanceSyncStatus('warn','Đang tải danh sách nhân viên…');
       }
       render();
     }
 
-    try{
-      const r = await window.__srankApi('getAttendance',{month:m+1},10000);
-      if(token !== attendanceLoadToken) return;
-      if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet trả về dữ liệu không hợp lệ');
-      if(!r.data || !Array.isArray(r.data.employees)) throw new Error('Phản hồi getAttendance thiếu danh sách employees');
+    const promise = (async()=>{
+      try{
+        const r = await window.__srankApi('getAttendance',{month:m+1, _ts:Date.now()},10000);
+        if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet trả về dữ liệu không hợp lệ');
+        if(!r.data || !Array.isArray(r.data.employees)) throw new Error('Phản hồi getAttendance thiếu danh sách employees');
 
-      applyAttendanceData(r.data, y, m);
-      attendanceServerLoaded = true;
-      render();
-    }catch(e){
-      if(token !== attendanceLoadToken) return;
-      const msg = attendanceErrorText(e);
-      const hasCache = applyAttendanceCache(y,m);
-      setAttendanceSyncStatus(
-        'error',
-        hasCache
-          ? `Lỗi đồng bộ: ${msg} • đang dùng dữ liệu đã lưu`
-          : `Lỗi đồng bộ: ${msg}`
-      );
-      render();
-    }finally{
-      if(token === attendanceLoadToken){
-        attendanceSyncBtn?.classList.remove('busy');
-        if(attendanceSyncBtn) attendanceSyncBtn.textContent = '↻ Đồng bộ';
+        // Không bỏ qua response thành công chỉ vì có request khác chạy sau.
+        // Nếu response thuộc đúng tháng hiện tại thì luôn áp dụng dữ liệu server.
+        if(viewDate.getFullYear() === y && viewDate.getMonth() === m){
+          applyAttendanceData(r.data, y, m);
+          attendanceServerLoaded = true;
+          render();
+        }
+        return r;
+      }catch(e){
+        const msg = attendanceErrorText(e);
+        const hasCache = applyAttendanceCache(y,m);
+        setAttendanceSyncStatus(
+          'error',
+          hasCache
+            ? `Lỗi đồng bộ: ${msg} • đang dùng dữ liệu đã lưu`
+            : `Lỗi đồng bộ: ${msg}`
+        );
+        render();
+        throw e;
+      }finally{
+        if(token === attendanceLoadToken){
+          attendanceSyncBtn?.classList.remove('busy');
+          if(attendanceSyncBtn) attendanceSyncBtn.textContent = '↻ Đồng bộ';
+        }
+        if(attendanceLoadPromiseKey === requestKey){
+          attendanceLoadPromise = null;
+          attendanceLoadPromiseKey = '';
+        }
       }
-    }
+    })();
+
+    attendanceLoadPromise = promise;
+    attendanceLoadPromiseKey = requestKey;
+    return promise;
   }
 
   function openAttendanceStatus(day){
@@ -5338,20 +5367,75 @@ function showSystemFinalMessage(el, message){
 
     try{
       const payload = {
-        mode: 'attendance',
         month: m + 1,
         day,
         name: selectedName,
         status: cleanStatus
       };
-      const r = await window.__srankApi('setAttendance',payload,8000);
-      if(!r.ok) throw new Error(r.error || 'Lưu chấm công thất bại');
-      attendanceStatusSaving.textContent = r.data?.cell ? ('Đã lưu ✓ • ô ' + r.data.cell) : 'Đã lưu ✓';
+
+      // Ghi trực tiếp bằng setAttendance. Cho phép tối đa 15 giây vì Apps Script
+      // đôi lúc phản hồi chậm dù dữ liệu vẫn được ghi thành công.
+      let r = await window.__srankApi('setAttendance', payload, 15000);
+      if(!r || r.ok !== true){
+        throw new Error(r?.error || 'Lưu chấm công thất bại');
+      }
+
+      // Sau khi server báo thành công, đọc lại đúng tháng một lần để xác nhận
+      // dữ liệu thực tế trên Sheet rồi mới cập nhật trạng thái HTML.
+      try{
+        const verify = await window.__srankApi('getAttendance', {month: m + 1, _ts: Date.now()}, 12000);
+        if(verify?.ok === true && verify.data?.employees){
+          applyAttendanceData(verify.data, y, m);
+          render();
+        }
+      }catch(_verifyErr){
+        // Không coi lỗi xác minh là lỗi ghi: server đã trả ok cho setAttendance.
+      }
+
+      attendanceStatusSaving.textContent = r.data?.cell
+        ? ('Đã lưu ✓ • ô ' + r.data.cell)
+        : 'Đã lưu ✓';
       setTimeout(closeAttendanceStatus, 500);
-    }catch(e){
-      attendanceStatusSaving.textContent = 'Lưu thất bại — đang đồng bộ lại';
-      await loadAttendanceMonth(true);
-      setTimeout(closeAttendanceStatus, 700);
+
+    }catch(firstError){
+      // Một số deployment cũ vẫn route chấm công qua action=checkin + mode=attendance.
+      // Thử đường tương thích này một lần trước khi báo thất bại.
+      try{
+        const fallbackPayload = {
+          mode: 'attendance',
+          month: m + 1,
+          day,
+          name: selectedName,
+          status: cleanStatus
+        };
+        const r2 = await window.__srankApi('checkin', fallbackPayload, 15000);
+        if(!r2 || r2.ok !== true){
+          throw new Error(r2?.error || 'Fallback checkin thất bại');
+        }
+
+        try{
+          const verify2 = await window.__srankApi('getAttendance', {month: m + 1, _ts: Date.now()}, 12000);
+          if(verify2?.ok === true && verify2.data?.employees){
+            applyAttendanceData(verify2.data, y, m);
+            render();
+          }
+        }catch(_verifyErr2){}
+
+        attendanceStatusSaving.textContent = r2.data?.cell
+          ? ('Đã lưu ✓ • ô ' + r2.data.cell)
+          : 'Đã lưu ✓';
+        setTimeout(closeAttendanceStatus, 500);
+        return;
+
+      }catch(secondError){
+        const msg1 = String(firstError?.message || firstError || 'Lỗi không xác định');
+        const msg2 = String(secondError?.message || secondError || 'Lỗi không xác định');
+        attendanceStatusSaving.textContent = 'Lưu thất bại: ' + msg2;
+        setAttendanceSyncStatus('error', 'Không ghi được Sheet: ' + msg2);
+        // Chỉ đồng bộ lại sau khi cả 2 đường ghi đều thất bại.
+        try{ await loadAttendanceMonth(true); }catch(_syncErr){}
+        setTimeout(closeAttendanceStatus, 1200);
+      }
     }
   }
 
