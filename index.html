@@ -2601,6 +2601,58 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 }
 </style>
 
+
+
+<style>
+/* ===== TRANG 2 — LỊCH CHẤM CÔNG ===== */
+#attendancePage{
+  position:fixed;inset:0;z-index:18000;overflow:hidden;
+  background:
+    radial-gradient(circle at 20% 10%,rgba(93,225,190,.16),transparent 32%),
+    radial-gradient(circle at 90% 80%,rgba(78,150,255,.14),transparent 34%),
+    linear-gradient(145deg,#eefbf7 0%,#f5fbff 48%,#edf5ff 100%);
+  color:#17352f;
+  transform:translateX(100%);
+  visibility:hidden;pointer-events:none;
+  transition:transform .48s cubic-bezier(.22,.82,.24,1),visibility 0s linear .48s;
+}
+#attendancePage.show{transform:translateX(0);visibility:visible;pointer-events:auto;transition:transform .48s cubic-bezier(.22,.82,.24,1)}
+#attendancePage *{box-sizing:border-box}
+.att-page-inner{width:100%;height:100%;overflow:auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+.att-shell{width:min(100%,760px);margin:0 auto}
+.att-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.att-back{width:42px;height:42px;border:1px solid rgba(31,94,79,.10);border-radius:15px;background:rgba(255,255,255,.78);box-shadow:0 8px 24px rgba(37,93,82,.08);color:#245b4e;font-size:22px;font-weight:700}
+.att-head-copy{flex:1;min-width:0}
+.att-kicker{font-size:10px;letter-spacing:2px;font-weight:850;color:#5c9488;text-transform:uppercase}
+.att-title{margin-top:2px;font-size:clamp(24px,7vw,34px);line-height:1.05;font-weight:900;letter-spacing:-.7px;color:#183d35}
+.att-month-badge{padding:9px 12px;border-radius:14px;background:rgba(255,255,255,.72);border:1px solid rgba(31,94,79,.08);font-size:11px;font-weight:850;color:#47786d;white-space:nowrap}
+.att-card{background:rgba(255,255,255,.78);border:1px solid rgba(40,105,91,.09);border-radius:24px;box-shadow:0 18px 50px rgba(47,96,86,.10),inset 0 1px 0 rgba(255,255,255,.8);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.att-picker{padding:16px;margin-bottom:12px}
+.att-label{display:block;margin-bottom:8px;font-size:11px;font-weight:850;color:#64877f}
+#attendanceEmployee{width:100%;height:48px;padding:0 14px;border:1px solid rgba(46,112,96,.14);border-radius:15px;background:#fff;color:#21463d;font-size:14px;font-weight:750;outline:none;box-shadow:0 5px 18px rgba(46,112,96,.05)}
+#attendanceEmployee:focus{border-color:rgba(48,151,126,.42);box-shadow:0 0 0 4px rgba(75,187,157,.10)}
+.att-month-nav{display:grid;grid-template-columns:46px minmax(0,1fr) 46px;align-items:center;gap:8px;margin-bottom:12px}
+.att-month-nav button{height:44px;border:1px solid rgba(40,105,91,.09);border-radius:15px;background:rgba(255,255,255,.78);color:#377265;font-size:21px;font-weight:700;box-shadow:0 8px 22px rgba(37,93,82,.07)}
+#attendanceMonthLabel{text-align:center;font-size:18px;font-weight:900;color:#214a40}
+#attendanceYearLabel{display:block;margin-top:2px;font-size:10px;letter-spacing:1.5px;font-weight:800;color:#82a49d}
+.att-calendar-card{padding:12px;overflow:hidden}
+.att-week{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:6px}
+.att-week div{text-align:center;padding:5px 0;font-size:9px;font-weight:850;letter-spacing:.5px;color:#88a49f}
+.att-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.att-day{min-height:70px;padding:7px 5px;border:1px solid rgba(46,112,96,.07);border-radius:13px;background:rgba(247,252,250,.85);display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+.att-day.muted{opacity:.34;background:transparent}
+.att-day.today{border-color:rgba(44,156,126,.38);box-shadow:inset 0 0 0 1px rgba(78,190,157,.12),0 6px 15px rgba(48,151,126,.08)}
+.att-day-num{font-size:12px;font-weight:900;color:#37695e;line-height:1}
+.att-day.today .att-day-num{width:25px;height:25px;display:flex;align-items:center;justify-content:center;border-radius:9px;background:#58b99d;color:#fff;box-shadow:0 5px 12px rgba(55,171,141,.22)}
+.att-status{width:100%;padding:4px 2px;border-radius:8px;text-align:center;font-size:8px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.att-status.work{background:#e0f7ee;color:#26836b}.att-status.off{background:#f1f3f5;color:#8b9896}.att-status.leave{background:#fff0d9;color:#a66b20}.att-status.empty{background:#eef4f2;color:#8da09b}
+.att-time{font-size:8px;font-weight:750;color:#72918a;white-space:nowrap}
+.att-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.att-stat{padding:12px;border-radius:17px;background:rgba(255,255,255,.72);border:1px solid rgba(40,105,91,.07);text-align:center}.att-stat strong{display:block;font-size:20px;line-height:1;color:#276958}.att-stat span{display:block;margin-top:5px;font-size:9px;font-weight:750;color:#809b95}
+.att-note{margin-top:10px;text-align:center;font-size:9px;color:#8aa29c;line-height:1.45}
+@media(max-width:420px){.att-page-inner{padding-left:11px;padding-right:11px}.att-card{border-radius:21px}.att-day{min-height:65px;padding:6px 3px}.att-time{font-size:7px}.att-status{font-size:7px}.att-month-badge{display:none}.att-summary{gap:6px}.att-stat{padding:10px 6px}}
+</style>
+
 </head>
 <body>
 <main id="space">
@@ -2877,6 +2929,48 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 </div>
 <div id="hint">Đang tải dữ liệu…</div>
 </main>
+
+<!-- ===== TRANG 2: LỊCH CHẤM CÔNG ===== -->
+<section id="attendancePage" aria-label="Lịch chấm công">
+  <div class="att-page-inner">
+    <div class="att-shell">
+      <header class="att-head">
+        <button id="attendanceBack" class="att-back" type="button" aria-label="Quay lại">‹</button>
+        <div class="att-head-copy">
+          <div class="att-kicker">HỆ THỐNG 02</div>
+          <div class="att-title">Lịch chấm công</div>
+        </div>
+        <div id="attendanceMonthBadge" class="att-month-badge">THÁNG HIỆN TẠI</div>
+      </header>
+
+      <section class="att-card att-picker">
+        <label class="att-label" for="attendanceEmployee">Nhân viên</label>
+        <select id="attendanceEmployee"></select>
+      </section>
+
+      <div class="att-month-nav">
+        <button id="attendancePrev" type="button" aria-label="Tháng trước">‹</button>
+        <div id="attendanceMonthLabel">Tháng 9<span id="attendanceYearLabel">2026</span></div>
+        <button id="attendanceNext" type="button" aria-label="Tháng sau">›</button>
+      </div>
+
+      <section class="att-card att-calendar-card">
+        <div class="att-week" aria-hidden="true">
+          <div>T2</div><div>T3</div><div>T4</div><div>T5</div><div>T6</div><div>T7</div><div>CN</div>
+        </div>
+        <div id="attendanceGrid" class="att-grid"></div>
+      </section>
+
+      <div class="att-summary">
+        <div class="att-stat"><strong id="attendanceWorkCount">0</strong><span>Ngày làm</span></div>
+        <div class="att-stat"><strong id="attendanceOffCount">0</strong><span>Ngày nghỉ</span></div>
+        <div class="att-stat"><strong id="attendanceLeaveCount">0</strong><span>Nghỉ phép</span></div>
+      </div>
+      <div class="att-note">Dữ liệu lịch làm việc đang được chuẩn bị cho hệ thống chấm công.</div>
+    </div>
+  </div>
+</section>
+
 
 <script>
 (() => {
@@ -4873,6 +4967,116 @@ function showSystemFinalMessage(el, message){
     el.appendChild(span);
   });
 }
+
+
+
+/* ===== ĐIỀU HƯỚNG TRANG 2 + LỊCH CHẤM CÔNG ===== */
+(function(){
+  const page = document.getElementById('attendancePage');
+  const back = document.getElementById('attendanceBack');
+  const employee = document.getElementById('attendanceEmployee');
+  const grid = document.getElementById('attendanceGrid');
+  const monthLabel = document.getElementById('attendanceMonthLabel');
+  const yearLabel = document.getElementById('attendanceYearLabel');
+  const badge = document.getElementById('attendanceMonthBadge');
+  const workCount = document.getElementById('attendanceWorkCount');
+  const offCount = document.getElementById('attendanceOffCount');
+  const leaveCount = document.getElementById('attendanceLeaveCount');
+  const prev = document.getElementById('attendancePrev');
+  const next = document.getElementById('attendanceNext');
+  if(!page || !employee || !grid) return;
+
+  const ATTENDANCE_EMPLOYEES = [
+    'Huong Lye','Quỳnh Trang','Phương Thảo','Thảo Uyên','Minh Thư','Như Dương',
+    'Rosalie','Tuan Nguyen','Minh Quân','Kim Chi','Mỹ Dung','Phạm Kim Chi'
+  ];
+
+  /* Chỗ này để gắn dữ liệu chấm công thật về sau. Không tự tạo lịch làm việc cho nhân viên. */
+  const ATTENDANCE_DATA = {};
+
+  ATTENDANCE_EMPLOYEES.forEach(name=>{
+    const opt=document.createElement('option');
+    opt.value=name; opt.textContent=name; employee.appendChild(opt);
+  });
+
+  let viewDate = new Date();
+  viewDate.setDate(1);
+  let selectedName = ATTENDANCE_EMPLOYEES[0] || '';
+
+  function pad(n){return String(n).padStart(2,'0')}
+  function key(y,m,d){return `${y}-${pad(m+1)}-${pad(d)}`}
+  function mondayIndex(date){return (date.getDay()+6)%7}
+  function dataFor(date){
+    const y=date.getFullYear(), m=date.getMonth(), d=date.getDate();
+    return ATTENDANCE_DATA[selectedName]?.[key(y,m,d)] || null;
+  }
+  function render(){
+    const y=viewDate.getFullYear(), m=viewDate.getMonth();
+    monthLabel.childNodes[0].nodeValue=`Tháng ${m+1}`;
+    yearLabel.textContent=String(y);
+    badge.textContent=(y===new Date().getFullYear() && m===new Date().getMonth())?'THÁNG HIỆN TẠI':`THÁNG ${m+1}/${y}`;
+    grid.innerHTML='';
+
+    const first=new Date(y,m,1), days=new Date(y,m+1,0).getDate();
+    const prevDays=new Date(y,m,0).getDate();
+    const leading=mondayIndex(first);
+    let work=0, off=0, leave=0;
+
+    for(let i=leading-1;i>=0;i--){
+      const cell=document.createElement('div'); cell.className='att-day muted';
+      cell.innerHTML=`<div class="att-day-num">${prevDays-i}</div>`; grid.appendChild(cell);
+    }
+    for(let d=1;d<=days;d++){
+      const date=new Date(y,m,d), item=dataFor(date);
+      const cell=document.createElement('div'); cell.className='att-day';
+      const now=new Date();
+      if(date.getFullYear()===now.getFullYear() && date.getMonth()===now.getMonth() && d===now.getDate()) cell.classList.add('today');
+      let status='empty', label='Chưa cập nhật', time='';
+      if(item){
+        if(item.status==='work'){status='work';label='Đi làm';work++}
+        else if(item.status==='off'){status='off';label='Nghỉ';off++}
+        else if(item.status==='leave'){status='leave';label='Nghỉ phép';leave++}
+        time=item.time||'';
+      }
+      cell.innerHTML=`<div class="att-day-num">${d}</div><div class="att-status ${status}">${label}</div>${time?`<div class="att-time">${time}</div>`:''}`;
+      grid.appendChild(cell);
+    }
+    const total=leading+days, trailing=(7-total%7)%7;
+    for(let d=1;d<=trailing;d++){
+      const cell=document.createElement('div'); cell.className='att-day muted'; cell.innerHTML=`<div class="att-day-num">${d}</div>`; grid.appendChild(cell);
+    }
+    workCount.textContent=work; offCount.textContent=off; leaveCount.textContent=leave;
+  }
+
+  function openPage(){page.classList.add('show');}
+  function closePage(){page.classList.remove('show');}
+  back.addEventListener('click',closePage);
+  employee.addEventListener('change',()=>{selectedName=employee.value;render()});
+  prev.addEventListener('click',()=>{viewDate.setMonth(viewDate.getMonth()-1);render()});
+  next.addEventListener('click',()=>{viewDate.setMonth(viewDate.getMonth()+1);render()});
+
+  /* Vuốt trái trên trang chính để mở hệ thống 02; vuốt phải trên trang 02 để quay lại. */
+  let sx=0, sy=0, tracking=false;
+  document.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1) return;
+    sx=e.touches[0].clientX; sy=e.touches[0].clientY; tracking=true;
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(!tracking || e.changedTouches.length!==1) return;
+    tracking=false;
+    const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)<75 || Math.abs(dx)<Math.abs(dy)*1.35) return;
+    if(dx<0 && !page.classList.contains('show')) openPage();
+    else if(dx>0 && page.classList.contains('show')) closePage();
+  },{passive:true});
+
+  window.addEventListener('keydown',e=>{
+    if(e.key==='ArrowLeft' && !page.classList.contains('show')) openPage();
+    if(e.key==='ArrowRight' && page.classList.contains('show')) closePage();
+  });
+
+  render();
+})();
 
 </script>
 </body>
