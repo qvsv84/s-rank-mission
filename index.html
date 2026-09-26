@@ -3068,7 +3068,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 (() => {
   "use strict";
 
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEOqN82lMImJCesteUDaersu4aqxNLdBc6SDxVszKy6_u5o7G_aNaSX8gq2Xik25qNdw/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJ1ebyNNe7fxlNR6TObBYebp7zRORGZTO0kTzlFl-S39I2vIJjDx9h0quV84od9JAfeg/exec";
   const CACHE_KEY = "srank_check_v4";
   const DAY_KEY = "srank_check_day_v1";
   const root = document.getElementById("space");
@@ -5088,9 +5088,10 @@ function showSystemFinalMessage(el, message){
 
   let ATTENDANCE_EMPLOYEES = [];
 
-  /* Chỗ này để gắn dữ liệu chấm công thật về sau. Không tự tạo lịch làm việc cho nhân viên. */
+  // Chấm công đọc trực tiếp từ sheet Check!C19:C32 và quét toàn bộ hàng.
+  // Mã compact: [ngày][P/O/T][tháng]. Ví dụ 26P9 = ngày 26, phép, tháng 9.
   const ATTENDANCE_DATA = {};
-  const ATTENDANCE_CACHE_PREFIX = 'srank_attendance_v1_';
+  const ATTENDANCE_CACHE_PREFIX = 'srank_attendance_check_v2_';
   let attendanceServerLoaded = false;
   let attendanceLoadToken = 0;
   let attendanceEditingDay = 0;
@@ -5102,21 +5103,6 @@ function showSystemFinalMessage(el, message){
 
   function attendanceCacheKey(year, month){
     return ATTENDANCE_CACHE_PREFIX + year + '-' + String(month + 1).padStart(2,'0');
-  }
-
-  function attendanceMonthObject(year, month){
-    const result = {};
-    ATTENDANCE_EMPLOYEES.forEach(name => {
-      result[name] = {};
-    });
-    const cache = loadAttendanceCache(year, month);
-    if(cache && cache.employees){
-      Object.keys(cache.employees).forEach(name => {
-        if(!result[name]) result[name] = {};
-        result[name] = cache.employees[name].days || {};
-      });
-    }
-    return result;
   }
 
   function loadAttendanceCache(year, month){
@@ -5132,11 +5118,7 @@ function showSystemFinalMessage(el, message){
     try{
       localStorage.setItem(
         attendanceCacheKey(year, month),
-        JSON.stringify({
-          month: month + 1,
-          year,
-          employees: data
-        })
+        JSON.stringify({month:month+1, year, employees:data})
       );
     }catch(_){}
   }
@@ -5149,36 +5131,58 @@ function showSystemFinalMessage(el, message){
       map[name] = {};
       const days = person?.days || {};
       Object.keys(days).forEach(day => {
-        const status = String(days[day] ?? '').trim();
-        map[name][key(year, month, Number(day))] = status;
+        const status = String(days[day] ?? '').trim().toUpperCase();
+        if(status === 'P' || status === 'O' || status === 'T'){
+          map[name][key(year, month, Number(day))] = status;
+        }
       });
     });
+
     Object.keys(ATTENDANCE_DATA).forEach(k => delete ATTENDANCE_DATA[k]);
     Object.keys(map).forEach(name => ATTENDANCE_DATA[name] = map[name]);
+
+    ATTENDANCE_EMPLOYEES = (payload?.employees || [])
+      .map(x => String(x?.name || '').trim())
+      .filter(Boolean);
+    ATTENDANCE_EMPLOYEES = [...new Set(ATTENDANCE_EMPLOYEES)];
+
     saveAttendanceCache(year, month, payload?.employees || []);
+    syncAttendanceEmployeeControls();
   }
 
   function applyAttendanceCache(year, month){
     const cache = loadAttendanceCache(year, month);
-    if(!cache || !cache.employees) return false;
+    if(!cache || !Array.isArray(cache.employees)) return false;
+
     Object.keys(ATTENDANCE_DATA).forEach(k => delete ATTENDANCE_DATA[k]);
-    Object.keys(cache.employees).forEach(name => {
-      const days = cache.employees[name]?.days || {};
+    ATTENDANCE_EMPLOYEES = [];
+
+    cache.employees.forEach(person => {
+      const name = String(person?.name || '').trim();
+      if(!name) return;
+      ATTENDANCE_EMPLOYEES.push(name);
       ATTENDANCE_DATA[name] = {};
+      const days = person?.days || {};
       Object.keys(days).forEach(day => {
-        ATTENDANCE_DATA[name][key(year, month, Number(day))] = String(days[day] ?? '').trim();
+        const status = String(days[day] ?? '').trim().toUpperCase();
+        if(status === 'P' || status === 'O' || status === 'T'){
+          ATTENDANCE_DATA[name][key(year, month, Number(day))] = status;
+        }
       });
     });
+
+    ATTENDANCE_EMPLOYEES = [...new Set(ATTENDANCE_EMPLOYEES)];
+    syncAttendanceEmployeeControls();
     return true;
   }
 
   function statusInfo(status){
-    const s = String(status || '').trim();
-    if(s === '') return {className:'work', label:'Đi làm'};
-    if(s === 'P') return {className:'leave', label:'Nghỉ phép'};
-    if(s.toUpperCase() === 'OFF') return {className:'off', label:'Ngày nghỉ'};
-    if(s.toUpperCase() === 'OT') return {className:'ot', label:'Tăng ca'};
-    return {className:'empty', label:'Chưa cập nhật'};
+    const s = String(status || '').trim().toUpperCase();
+    if(s === 'V') return {className:'work', label:'V'};
+    if(s === 'P') return {className:'leave', label:'P'};
+    if(s === 'O') return {className:'off', label:'O'};
+    if(s === 'T') return {className:'ot', label:'T'};
+    return {className:'empty', label:'—'};
   }
 
   function rebuildAttendanceCacheFromCurrent(year, month){
@@ -5186,11 +5190,32 @@ function showSystemFinalMessage(el, message){
       const days = {};
       for(let d=1; d<=31; d++){
         const value = ATTENDANCE_DATA[name]?.[key(year, month, d)];
-        if(value !== undefined) days[String(d)] = value;
+        if(value === 'P' || value === 'O' || value === 'T') days[String(d)] = value;
       }
       return {name, days};
     });
     saveAttendanceCache(year, month, employees);
+  }
+
+  function syncAttendanceEmployeeControls(){
+    const current = selectedName;
+    if(ATTENDANCE_EMPLOYEES.includes(current)){
+      wheelIndex = ATTENDANCE_EMPLOYEES.indexOf(current);
+    }else{
+      selectedName = ATTENDANCE_EMPLOYEES[0] || '';
+      wheelIndex = 0;
+    }
+
+    employee.innerHTML = '';
+    ATTENDANCE_EMPLOYEES.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      employee.appendChild(opt);
+    });
+    employee.value = selectedName;
+    updateWheelButton();
+    renderNameWheel();
   }
 
   async function loadAttendanceMonth(force = false){
@@ -5210,33 +5235,13 @@ function showSystemFinalMessage(el, message){
 
       applyAttendanceData(r.data || {}, y, m);
       attendanceServerLoaded = true;
-
-      // Nếu Sheet có tên khác checklist, vẫn ưu tiên danh sách hiện có của Sheet Data.
-      const serverNames = Array.isArray(r.data?.employees)
-        ? r.data.employees.map(x => String(x?.name || '').trim()).filter(Boolean)
-        : [];
-      if(serverNames.length){
-        const currentSelected = selectedName;
-        ATTENDANCE_EMPLOYEES = [...new Set(serverNames)];
-        if(!ATTENDANCE_EMPLOYEES.includes(currentSelected)){
-          selectedName = ATTENDANCE_EMPLOYEES[0] || '';
-        }
-        wheelIndex = Math.max(0, ATTENDANCE_EMPLOYEES.indexOf(selectedName));
-        employee.innerHTML = '';
-        ATTENDANCE_EMPLOYEES.forEach(name => {
-          const opt = document.createElement('option');
-          opt.value = name; opt.textContent = name;
-          employee.appendChild(opt);
-        });
-        employee.value = selectedName;
-        updateWheelButton();
-        renderNameWheel();
-      }
-
       render();
     }catch(e){
       if(!applyAttendanceCache(y,m)){
         Object.keys(ATTENDANCE_DATA).forEach(k => delete ATTENDANCE_DATA[k]);
+        ATTENDANCE_EMPLOYEES = [];
+        selectedName = '';
+        syncAttendanceEmployeeControls();
       }
       render();
     }
@@ -5249,7 +5254,8 @@ function showSystemFinalMessage(el, message){
     const m = viewDate.getMonth();
     const dateText = String(day).padStart(2,'0') + '/' + String(m+1).padStart(2,'0') + '/' + y;
     const current = ATTENDANCE_DATA[selectedName]?.[key(y,m,day)];
-    const info = current === undefined ? {label:'Chưa cập nhật'} : statusInfo(current);
+    const isFuture = new Date(y,m,day) > new Date();
+    const info = current ? statusInfo(current) : (isFuture ? {label:'Chưa tới ngày'} : {label:'V — Đi làm bình thường'});
     attendanceStatusSub.textContent = selectedName + ' • ' + dateText + ' • ' + info.label;
     attendanceStatusSaving.textContent = '';
     attendanceStatusOverlay.classList.add('show');
@@ -5268,19 +5274,19 @@ function showSystemFinalMessage(el, message){
 
     const y = viewDate.getFullYear();
     const m = viewDate.getMonth();
-    const cleanStatus = status === '__clear' ? '' : String(status || '').trim();
+    const cleanStatus = status === '__clear' ? '' : String(status || '').trim().toUpperCase();
+    if(cleanStatus && !['P','O','T'].includes(cleanStatus)) return;
 
     attendanceStatusSaving.textContent = 'Đang lưu…';
 
-    // Cập nhật giao diện ngay; nếu server lỗi sẽ tải lại từ Sheet/cache.
     if(!ATTENDANCE_DATA[selectedName]) ATTENDANCE_DATA[selectedName] = {};
-    ATTENDANCE_DATA[selectedName][key(y,m,day)] = cleanStatus;
+    const k = key(y,m,day);
+    if(cleanStatus) ATTENDANCE_DATA[selectedName][k] = cleanStatus;
+    else delete ATTENDANCE_DATA[selectedName][k];
     rebuildAttendanceCacheFromCurrent(y,m);
     render();
 
     try{
-      // Dùng đúng luồng API của Page 1 (action = checkin).
-      // mode=attendance để Apps Script ghi vào sheet Data thay vì Check.
       const payload = {
         mode: 'attendance',
         month: m + 1,
@@ -5288,10 +5294,8 @@ function showSystemFinalMessage(el, message){
         name: selectedName,
         status: cleanStatus
       };
-
-      const r = await api('checkin',payload,8000);
+      const r = await api('setAttendance',payload,8000);
       if(!r.ok) throw new Error(r.error || 'Lưu chấm công thất bại');
-
       attendanceStatusSaving.textContent = 'Đã lưu ✓';
       setTimeout(closeAttendanceStatus, 350);
     }catch(e){
@@ -5300,7 +5304,6 @@ function showSystemFinalMessage(el, message){
       setTimeout(closeAttendanceStatus, 700);
     }
   }
-
 
   let viewDate = new Date();
   viewDate.setDate(1);
@@ -5410,11 +5413,17 @@ function showSystemFinalMessage(el, message){
   function mondayIndex(date){return (date.getDay()+6)%7}
   function dataFor(date){
     const y=date.getFullYear(), m=date.getMonth(), d=date.getDate();
-    const raw = ATTENDANCE_DATA[selectedName]?.[key(y,m,d)];
-    // Trong Sheet: ô trống = đi làm.
-    // Vì vậy chỉ coi là "chưa cập nhật" khi chưa có dữ liệu cho ngày đó.
-    if(raw === undefined) return null;
-    return {status:String(raw || '').trim()};
+    const raw = String(ATTENDANCE_DATA[selectedName]?.[key(y,m,d)] || '').trim().toUpperCase();
+    if(raw === 'P' || raw === 'O' || raw === 'T') return {status:raw};
+
+    // Ngày đã tới nhưng không có mã P/O/T trong Sheet => V (đi làm bình thường).
+    const today = new Date();
+    const dateOnly = new Date(y,m,d);
+    const todayOnly = new Date(today.getFullYear(),today.getMonth(),today.getDate());
+    if(dateOnly <= todayOnly) return {status:'V'};
+
+    // Ngày tương lai chưa tự chấm.
+    return null;
   }
 
   function render(){
@@ -5451,16 +5460,16 @@ function showSystemFinalMessage(el, message){
         cell.classList.add('today');
       }
 
-      let status='empty', label='Chưa cập nhật';
+      let status='empty', label='—';
 
       if(item){
         const info=statusInfo(item.status);
         status=info.className;
         label=info.label;
 
-        if(item.status === '') work++;
-        else if(item.status.toUpperCase() === 'OFF') off++;
-        else if(item.status.toUpperCase() === 'P') leave++;
+        if(item.status === 'V') work++;
+        else if(item.status === 'O') off++;
+        else if(item.status === 'P') leave++;
       }
 
       cell.innerHTML=
@@ -5498,10 +5507,6 @@ function showSystemFinalMessage(el, message){
   });
 
   async function openPage(){
-    const checklistNames = typeof window.__getChecklistNames === 'function'
-      ? window.__getChecklistNames()
-      : [];
-    if(checklistNames.length) syncAttendanceEmployees();
     page.classList.add('show');
     requestAnimationFrame(()=>render());
     if(typeof syncQuickTools==='function') syncQuickTools();
@@ -5573,17 +5578,11 @@ function showSystemFinalMessage(el, message){
     loadAttendanceMonth(false);
   });
 
-  const checklistNames = typeof window.__getChecklistNames === 'function'
-    ? window.__getChecklistNames()
-    : [];
-  if(checklistNames.length) syncAttendanceEmployees();
-  else {
-    employee.value=selectedName;
-    updateWheelButton();
-    renderNameWheel();
-    render();
-  }
-  // Tải nhanh từ cache rồi đồng bộ Sheet khi Page 2 được mở.
+  employee.value=selectedName;
+  updateWheelButton();
+  renderNameWheel();
+  render();
+  // Tên và dữ liệu chấm công chỉ lấy từ Check!C19:C32 + toàn bộ hàng tương ứng.
 })();
 
 </script>
