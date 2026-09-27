@@ -2975,7 +2975,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   let requestSeq = 0;
   let syncInFlight = false;
   let autoSyncTimer = null;
-  const AUTO_SYNC_MS = 30000;
+  const AUTO_SYNC_MS = 120000;      // 30s → 120s
+  const AUTO_SYNC_MIN_GAP = 15000;  // throttle cứng: không gọi lại trong 15s
+  let lastAutoSyncAt = 0;
   const Q1_CACHE_KEY = "srank_q1_answer_v1";
   const CHECKLIST_LOCK_KEY = "srank_checklist_lock_time_v1";
   try{ localStorage.removeItem(Q1_CACHE_KEY); }catch(_){}
@@ -3746,6 +3748,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       }
 
       initialSheetLoaded = true;
+      lastAutoSyncAt = Date.now();   // ← thêm dòng này
       window.syncAttendanceEmployees?.();
       cacheSave();
       renderChecklist();
@@ -3766,8 +3769,24 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   function startAutoSync(){
     clearInterval(autoSyncTimer);
     autoSyncTimer = setInterval(() => {
-      // Không làm gián đoạn màn hình chọn tên / hiệu ứng kết quả.
-      if(document.hidden || wheelArea.classList.contains("show") || message.classList.contains("show")) return;
+      // 1) Tab đang ẩn → bỏ qua
+      if(document.hidden) return;
+
+      // 2) Đang ở màn chọn tên / hiệu ứng / overlay → bỏ qua
+      if(wheelArea.classList.contains("show")) return;
+      if(message.classList.contains("show")) return;
+      if(checklistPanel.classList.contains("show")) return;
+      if(topPanel.classList.contains("show")) return;
+      if(document.getElementById("attendancePage")?.classList.contains("show")) return;
+
+      // 3) Throttle cứng: vừa sync xong < 15s → bỏ qua
+      //    (bảo vệ khi user bấm "Đồng bộ lại" thủ công rồi interval vẫn kích)
+      if(Date.now() - lastAutoSyncAt < AUTO_SYNC_MIN_GAP) return;
+
+      // 4) Đang có request khác chạy → bỏ qua
+      if(syncInFlight) return;
+
+      lastAutoSyncAt = Date.now();
       loadData(false, true);
     }, AUTO_SYNC_MS);
   }
@@ -4481,7 +4500,10 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   topCloseBtn.addEventListener("click", ()=>{closeTop();if(typeof syncQuickTools==="function")syncQuickTools()});
   topPanel.addEventListener("click", e => { if(e.target === topPanel) closeTop(); });
 
-  syncBtn.addEventListener("click",()=>loadData(true, true));
+  syncBtn.addEventListener("click",()=>{
+    lastAutoSyncAt = Date.now();
+    loadData(true, true);
+  });
 
   // Hiển thị trạng thái ngay lập tức; sau đó đồng bộ giờ reset + giờ khoá từ server.
   // Giờ khoá trên server là nguồn dùng chung cho tất cả thiết bị.
