@@ -3363,15 +3363,14 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     question.style.transform = "scale(.8)";
     wheelArea.classList.remove("show");
     hint.textContent = "";
-    // Ký chủ dùng CHÍNH DỮ LIỆU BXH TOP tháng hiện tại.
-    // Không tự tính OT/P và không đọc points/ranks cũ của Checklist.
-    const topPlayer = getCurrentTopPlayer(savedName);
-    if(!topPlayer) return false;
+    const localScore = window.__getLocalAttendanceScore
+      ? window.__getLocalAttendanceScore(savedName)
+      : readLocalAttendanceScoreFallback(savedName);
 
     showActivationMessage(
       savedName,
-      topPlayer.rank,
-      topPlayer.points,
+      localScore.rank,
+      localScore.score,
       showQuestion2
     );
     return true;
@@ -3826,108 +3825,49 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     return "B";
   }
 
-  // ================================================================
-  // NGUỒN ĐIỂM DUY NHẤT CHO BXH + KÝ CHỦ
-  // ---------------------------------------------------------------
-  // BXH TOP là nguồn chuẩn: lấy dữ liệu chấm công -> tính điểm/rank
-  // đúng một lần -> cả BXH và màn Ký chủ cùng dùng kết quả đó.
-  // Ký chủ KHÔNG tự tính OT/P và KHÔNG đọc points/ranks cũ của Checklist.
-  // ================================================================
-  const TOP_CURRENT_CACHE_KEY = 'srank_top_current_v1';
-  let topCurrentRows = [];
-  let topCurrentPromise = null;
-
-  function topRowsFromEmployees(employees, year, month){
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const rows = (Array.isArray(employees) ? employees : []).map((employee,index)=>{
-      const days = employee && employee.days ? employee.days : {};
-      let ot = 0;
-      let leave = 0;
-      for(let day=1; day<=daysInMonth; day++){
-        const status = String(days[String(day)] || '').toUpperCase();
-        if(status === 'T') ot++;
-        else if(status === 'P') leave++;
-      }
-      const points = 300 + ot * 40 - leave * 10;
-      return {
-        name: String(employee?.name || '').trim(),
-        points,
-        rank: attendanceRankClient(points),
-        ot,
-        leave,
-        index
-      };
-    }).filter(row=>row.name);
-
-    rows.sort((a,b)=>b.points-a.points || a.index-b.index);
-    return rows;
-  }
-
-  function saveCurrentTopCache(year, month, rows){
-    try{
-      localStorage.setItem(TOP_CURRENT_CACHE_KEY, JSON.stringify({
-        year,
-        month,
-        rows
-      }));
-    }catch(_){}
-  }
-
-  function loadCurrentTopCache(){
-    try{
-      const raw = localStorage.getItem(TOP_CURRENT_CACHE_KEY);
-      if(!raw) return false;
-      const data = JSON.parse(raw);
-      const now = new Date();
-      if(Number(data?.year) !== now.getFullYear() || Number(data?.month) !== now.getMonth()+1) return false;
-      if(!Array.isArray(data?.rows)) return false;
-      topCurrentRows = data.rows.filter(x=>x && x.name).map(x=>({
-        name:String(x.name),
-        points:Number(x.points)||0,
-        rank:String(x.rank || attendanceRankClient(Number(x.points)||0)),
-        ot:Number(x.ot)||0,
-        leave:Number(x.leave)||0,
-        index:Number(x.index)||0
-      }));
-      return topCurrentRows.length > 0;
-    }catch(_){ return false; }
-  }
-
-  async function loadTopData(monthNumber, force=false){
+  // Điểm dùng cho màn Kích hoạt: chỉ đọc dữ liệu chấm công đã được preload/cache.
+  // Tuyệt đối không tạo request API ở thao tác Xác nhận.
+  function readLocalAttendanceScoreFallback(name){
     const now = new Date();
     const year = now.getFullYear();
-    const month = Number(monthNumber) || (now.getMonth()+1);
-
-    if(!force && month === now.getMonth()+1 && topCurrentRows.length){
-      return {year, month, rows:topCurrentRows};
-    }
-
-    const result = await window.__srankApi('getAttendance',{month, _ts:Date.now()},12000);
-    if(!result || result.ok !== true){
-      throw new Error(result?.error || 'Không tải được dữ liệu chấm công');
-    }
-
-    const employees = Array.isArray(result?.data?.employees) ? result.data.employees : [];
-    const rows = topRowsFromEmployees(employees, year, month);
-
-    // Tháng hiện tại là nguồn cho màn Ký chủ.
-    if(month === now.getMonth()+1){
-      topCurrentRows = rows;
-      saveCurrentTopCache(year, month, rows);
-    }
-
-    return {year, month, rows};
-  }
-
-  function getCurrentTopPlayer(name){
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
     const wanted = String(name || '').trim();
-    if(!wanted) return null;
-    return topCurrentRows.find(row => String(row.name).trim() === wanted) || null;
+    let days = null;
+
+    try{
+      const cacheKey = `srank_attendance_check_v2_${year}-${String(month + 1).padStart(2,'0')}`;
+      const raw = localStorage.getItem(cacheKey);
+      const cache = raw ? JSON.parse(raw) : null;
+      const person = cache?.employees?.find(x => String(x?.name || '').trim() === wanted);
+      if(person) days = person.days || {};
+    }catch(_){}
+
+    if(!days && window.__attendanceLocalScoreData){
+      const person = window.__attendanceLocalScoreData[wanted];
+      if(person && typeof person === 'object') days = person.days || person;
+    }
+
+    let ot = 0, leave = 0;
+    for(let day=1; day<=daysInMonth; day++){
+      const status = String(days?.[String(day)] || '').trim().toUpperCase();
+      if(status === 'T') ot++;
+      else if(status === 'P') leave++;
+    }
+    const score = 300 + ot * 40 - leave * 10;
+    return {score, rank: attendanceRankClient(score), ot, leave};
   }
 
-  // Cầu nối công khai chỉ đọc dữ liệu BXH hiện tại; không gọi API.
-  window.__getTopCurrentPlayer = getCurrentTopPlayer;
-  window.__loadTopData = loadTopData;
+  function getLocalAttendanceScore(name){
+    if(typeof window.__getLocalAttendanceScore === 'function'){
+      return window.__getLocalAttendanceScore(name);
+    }
+    return readLocalAttendanceScoreFallback(name);
+  }
+
+  function currentSelectedPoints(){
+    return getLocalAttendanceScore(names[current]).score;
+  }
 
   function initTopMonthSelect(){
     if(!topMonthSelect) return;
@@ -3955,29 +3895,55 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   async function renderTop(monthNumber){
     const now = new Date();
     const month = Number(monthNumber) || (now.getMonth() + 1);
+    const year = now.getFullYear();
 
     if(topMonthSelect) topMonthSelect.value = String(month);
     if(topTitle) topTitle.textContent = `🏆 BXH TOP THÁNG ${month}`;
     topBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:18px">Đang tải BXH…</td></tr>';
 
     try{
-      const result = await loadTopData(month, false);
-      const rows = result.rows;
-      const frag = document.createDocumentFragment();
+      // BXH có state tháng RIÊNG, không dùng viewDate của trang Chấm công.
+      // Vì vậy đang xem tháng 8 ở Chấm công rồi thoát ra vẫn không làm BXH
+      // bị kẹt ở tháng 8: mỗi lần mở BXH sẽ reset về tháng hiện tại.
+      const result = await window.__srankApi('getAttendance',{month, _ts:Date.now()},12000);
+      if(!result || result.ok !== true) throw new Error(result?.error || 'Không tải được dữ liệu chấm công');
+      const employees = Array.isArray(result?.data?.employees) ? result.data.employees : [];
+      const daysInMonth = new Date(year, month, 0).getDate();
 
+      const rows = employees.map((employee,index)=>{
+        const days = employee && employee.days ? employee.days : {};
+        let ot = 0;
+        let leave = 0;
+        for(let day=1; day<=daysInMonth; day++){
+          const status = String(days[String(day)] || '').toUpperCase();
+          if(status === 'T') ot++;
+          else if(status === 'P') leave++;
+        }
+        return {
+          name: String(employee?.name || '').trim(),
+          points: 300 + ot * 40 - leave * 10,
+          ot,
+          leave,
+          index
+        };
+      }).filter(row=>row.name);
+
+      rows.sort((a,b)=>b.points-a.points || a.index-b.index);
+
+      const frag = document.createDocumentFragment();
       rows.forEach((row,i)=>{
         const tr = document.createElement('tr');
         if(i < 3) tr.classList.add('topRow' + (i + 1));
         tr.innerHTML = `<td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td><td class="topName"></td><td class="topPoints"></td><td><span class="topRank"></span></td>`;
         tr.querySelector('.topName').textContent = row.name;
         tr.querySelector('.topPoints').textContent = Number(row.points || 0).toLocaleString('vi-VN');
-        tr.querySelector('.topRank').textContent = row.rank;
+        tr.querySelector('.topRank').textContent = attendanceRankClient(row.points);
         frag.appendChild(tr);
       });
 
       topBody.innerHTML = '';
       topBody.appendChild(frag);
-    }catch(e){
+    }catch(_){
       topBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:18px">Không tải được dữ liệu chấm công</td></tr>';
     }
   }
@@ -4395,22 +4361,20 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     const selected = names[current];
     saveQ1Answer(selected);
 
-    // Chỉ chờ dữ liệu BXH tháng hiện tại đã được preload.
-    // Không tạo request API mới tại thao tác Xác nhận.
-    if(window.__topCurrentDataPromise){
-      await window.__topCurrentDataPromise;
+    // Chờ request preload đã được khởi động từ lúc HTML mở.
+    // Tại đây không tạo request API mới.
+    if(window.__attendancePreloadPromise){
+      await window.__attendancePreloadPromise;
     }
 
-    const topPlayer = getCurrentTopPlayer(selected);
-    if(!topPlayer){
-      setStatus('Chưa tải được dữ liệu BXH tháng hiện tại');
-      return;
-    }
+    const localScore = getLocalAttendanceScore(selected);
+    const playerRank = localScore.rank;
+    const playerPoints = localScore.score;
 
     showActivationMessage(
       selected,
-      topPlayer.rank,
-      topPlayer.points,
+      playerRank,
+      playerPoints,
       showQuestion2
     );
   });
@@ -5409,6 +5373,7 @@ function showSystemFinalMessage(el, message){
     ATTENDANCE_EMPLOYEES = [...new Set(ATTENDANCE_EMPLOYEES)];
 
     saveAttendanceCache(year, month, payload?.employees || []);
+    if(year === new Date().getFullYear() && month === new Date().getMonth()) refreshLocalScoreBridge();
     syncAttendanceEmployeeControls();
     setAttendanceSyncStatus(
       ATTENDANCE_EMPLOYEES.length ? 'ok' : 'error',
@@ -5440,6 +5405,7 @@ function showSystemFinalMessage(el, message){
     });
 
     ATTENDANCE_EMPLOYEES = [...new Set(ATTENDANCE_EMPLOYEES)];
+    if(year === new Date().getFullYear() && month === new Date().getMonth()) refreshLocalScoreBridge();
     syncAttendanceEmployeeControls();
     return true;
   }
@@ -5566,28 +5532,74 @@ function showSystemFinalMessage(el, message){
     return promise;
   }
 
-  // Ký chủ không còn tự tính điểm từ ATTENDANCE_DATA.
-  // Nguồn chuẩn duy nhất là dữ liệu BXH TOP do IIFE chính preload.
+  // Cầu nối cho màn Kích hoạt: chỉ đọc state/cache hiện có, tuyệt đối không gọi API.
   window.__getLocalAttendanceScore = function(name){
-    const player = typeof window.__getTopCurrentPlayer === 'function'
-      ? window.__getTopCurrentPlayer(name)
-      : null;
-    if(player) return {
-      score:Number(player.points)||0,
-      rank:String(player.rank || attendanceRankClient(Number(player.points)||0)),
-      ot:Number(player.ot)||0,
-      leave:Number(player.leave)||0
-    };
-    return {score:0, rank:'B', ot:0, leave:0};
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const wanted = String(name || '').trim();
+    let days = null;
+
+    const cache = loadAttendanceCache(year, month);
+    const person = cache?.employees?.find(x => String(x?.name || '').trim() === wanted);
+    if(person) days = person.days || {};
+
+    if(!days && ATTENDANCE_DATA[wanted]){
+      days = {};
+      for(let d=1; d<=daysInMonth; d++){
+        const status = String(ATTENDANCE_DATA[wanted][key(year,month,d)] || '').toUpperCase();
+        if(status === 'P' || status === 'O' || status === 'T') days[String(d)] = status;
+      }
+    }
+
+    let ot=0, leave=0;
+    for(let d=1; d<=daysInMonth; d++){
+      const status = String(days?.[String(d)] || '').toUpperCase();
+      if(status === 'T') ot++;
+      else if(status === 'P') leave++;
+    }
+    const score = 300 + ot * 40 - leave * 10;
+    return {score, rank: attendanceRankClient(score), ot, leave};
   };
 
-  // Cầu nối duy nhất cho BXH: trả đúng dữ liệu đã được BXH tính.
-  // Không tự tạo công thức thứ hai ở đây.
-  window.__getAttendanceTopData = async function(){
+  window.__attendanceLocalScoreData = {};
+  function refreshLocalScoreBridge(){
+    const out = {};
     const now = new Date();
-    const month = now.getMonth()+1;
-    if(typeof window.__loadTopData !== 'function') return {year:now.getFullYear(), month, rows:[]};
-    return await window.__loadTopData(month, false);
+    const cache = loadAttendanceCache(now.getFullYear(), now.getMonth());
+    (cache?.employees || []).forEach(person=>{
+      const name=String(person?.name || '').trim();
+      if(name) out[name]={days:person.days || {}};
+    });
+    window.__attendanceLocalScoreData = out;
+  }
+
+  // Cầu nối duy nhất cho BXH: giữ toàn bộ state chấm công trong IIFE này,
+  // không đưa viewDate / ATTENDANCE_DATA ra global.
+  window.__getAttendanceTopData = async function(){
+    await loadAttendanceMonth(false).catch(()=>{});
+    const y = viewDate.getFullYear();
+    const m = viewDate.getMonth();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const rows = ATTENDANCE_EMPLOYEES.map((name, index) => {
+      const data = ATTENDANCE_DATA[name] || {};
+      let ot = 0;
+      let leave = 0;
+      for(let d=1; d<=daysInMonth; d++){
+        const status = String(data[key(y,m,d)] || '').toUpperCase();
+        if(status === 'T') ot++;
+        else if(status === 'P') leave++;
+      }
+      return {
+        name,
+        points: 300 + ot * 40 - leave * 10,
+        ot,
+        leave,
+        index
+      };
+    });
+    return {year:y, month:m, rows};
   };
 
   function updateAttendanceMultiUI(){
@@ -6087,17 +6099,10 @@ function showSystemFinalMessage(el, message){
   renderNameWheel();
   render();
 
-  // PRELOAD chính dữ liệu BXH tháng hiện tại ngay khi HTML mở.
-  // Ký chủ chỉ đọc kết quả này khi Xác nhận; không gọi API mới lúc bấm.
-  try{ loadCurrentTopCache(); }catch(_){}
-  window.__topCurrentDataPromise = loadTopData(new Date().getMonth()+1, false)
-    .catch(()=>({ok:false}));
-
-  // Nếu đang có Ký chủ được lưu từ trước nhưng lúc khởi động cache BXH
-  // chưa kịp có, thử khôi phục lại sau khi preload hoàn tất.
-  window.__topCurrentDataPromise.then(()=>{
-    if(!q1Opened && loadQ1Answer()) resumeQ1FromCache();
-  });
+  // PRELOAD tháng hiện tại khi HTML vừa khởi động. Nút Xác nhận chỉ chờ
+  // request này, không phát sinh API request mới.
+  try{ refreshLocalScoreBridge(); }catch(_){}
+  window.__attendancePreloadPromise = loadAttendanceMonth(false).catch(()=>{});
 
   // Tên và dữ liệu chấm công chỉ lấy từ Check!C19:C32 + toàn bộ hàng tương ứng.
 })();
