@@ -2974,6 +2974,13 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   let _lastLockCheck = 0;
   let _cachedLocked = false;   // sẽ được set đúng ở lần gọi đầu
 
+  // ===== Signal: loadData đã xong chưa =====
+  // Dùng để tránh 2 request (loadData + getSettings) chạy song song,
+  // làm connection contention trên Apps Script.
+  let _dataLoadResolve;
+  const _dataLoadPromise = new Promise(r => { _dataLoadResolve = r; });
+  let _dataLoadResolved = false;
+
   // ---------- Timeout constants (dùng chung toàn module) ----------
   // Nguyên tắc: đủ dài để không fail giả, đủ ngắn để không treo UI.
   const TIMEOUT = {
@@ -3895,6 +3902,12 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       return false;
     }finally{
       syncInFlight = false;
+
+      // Signal cho các tác vụ đang chờ (getSettings) biết loadData đã xong
+      if(!_dataLoadResolved){
+        _dataLoadResolved = true;
+        _dataLoadResolve();
+      }
     }
   }
 
@@ -4634,13 +4647,33 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     loadData(true, true);
   });
 
-  // Hiển thị trạng thái ngay lập tức; sau đó đồng bộ giờ reset + giờ khoá từ server.
-  // Giờ khoá trên server là nguồn dùng chung cho tất cả thiết bị.
+  // Hiển thị trạng thái ngay lập tức
   loadChecklistLockTime();
   checklistLockTimeInput.value = checklistLockTime;
   renderLandingState();
+
+  // ===== Gọi loadData TRƯỚC (không await) =====
+  // getSettings sẽ chờ loadData xong mới gọi → tránh 2 request song song
+  let _loadDataPromise = null;
+  if(cacheLoad()){
+    initialSheetLoaded = true;
+    renderChecklist();
+    buildWheel();
+    renderAdminChecklistEditor();
+    hint.textContent = names.length ? "Chạm vào câu hỏi" : "Đang tải dữ liệu…";
+    setStatus("Đã tải dữ liệu lưu ✓");
+    _loadDataPromise = loadData(false, true);
+  }else{
+    _loadDataPromise = loadData(true);
+  }
+
+  // ===== Chờ loadData xong rồi mới gọi getSettings =====
   (async()=>{
     try{
+      // Chờ loadData hoàn tất (thành công hoặc thất bại đều signal)
+      await _dataLoadPromise;
+
+      // Bây giờ connection đã rảnh → gọi getSettings
       const s = await getSettingsCached(false);
       if(isValid24hTime(s.resetTime)) resetTime = s.resetTime;
       if(isValid24hTime(s.checklistLockTime)){
@@ -4651,17 +4684,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       renderLandingState();
     }catch(_){}
   })();
-  if(cacheLoad()){
-    initialSheetLoaded = true;
-    renderChecklist();
-    buildWheel();
-    renderAdminChecklistEditor();
-    hint.textContent = names.length ? "Chạm vào câu hỏi" : "Đang tải dữ liệu…";
-    setStatus("Đã tải dữ liệu lưu ✓");
-    loadData(false, true);
-  }else{
-    loadData(true);
-  }
+
   scheduleNextReset();
 
   // ===== Tối ưu: chỉ render khi thực sự cần =====
