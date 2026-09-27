@@ -2476,6 +2476,34 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 /* ===== CHẤM CÔNG: nút nằm bên phải Bữa trưa ===== */
 #secondaryNav{grid-template-columns:repeat(4,minmax(0,1fr)) !important;}
 #secondaryNav.admin-visible{grid-template-columns:repeat(5,minmax(0,1fr)) !important;}
+
+/* =========================================================
+   HERO CARD HOME — redesign màn hình chính
+   ========================================================= */
+#questionWrap{top:42% !important;width:min(94vw,560px) !important}
+#question{position:relative !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;gap:20px !important;width:100% !important;padding:32px 28px 28px !important;box-sizing:border-box !important;border-radius:32px !important;background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(255,255,255,.98) 0%,rgba(255,255,255,.72) 45%,transparent 75%),linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(248,252,246,.94) 55%,rgba(240,248,238,.92) 100%) !important;border:1px solid rgba(120,175,135,.18) !important;box-shadow:0 24px 60px -20px rgba(42,78,57,.18),0 12px 32px -12px rgba(42,78,57,.12),0 2px 8px rgba(42,78,57,.05),inset 0 1px 0 rgba(255,255,255,.95) !important;backdrop-filter:blur(20px) saturate(120%) !important;-webkit-backdrop-filter:blur(20px) saturate(120%) !important;animation:none !important;overflow:hidden !important}
+#question::before{content:"" !important;position:absolute !important;top:-50% !important;right:-50% !important;width:200% !important;height:200% !important;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.65) 0%,transparent 45%) !important;pointer-events:none !important;z-index:0 !important}
+#question > *{position:relative !important;z-index:1 !important}
+#question .landing-title::before{content:"🐱  DAILY TEAM HUB" !important;display:block !important;margin-bottom:14px !important;color:#8ca598 !important;font-size:clamp(9px,2.3vw,11px) !important;font-weight:900 !important;letter-spacing:.32em !important;text-align:center !important;text-transform:uppercase !important;opacity:.85 !important}
+#question .landing-title{position:relative !important;display:block !important;width:auto !important;max-width:100% !important;padding:0 !important;color:var(--p-forest,#245943) !important;-webkit-text-fill-color:var(--p-forest,#245943) !important;background:none !important;font-family:var(--font,inherit) !important;font-size:clamp(30px,8.4vw,54px) !important;font-weight:950 !important;letter-spacing:-.055em !important;line-height:.98 !important;text-align:center !important;text-shadow:0 2px 0 rgba(255,255,255,.95),0 10px 28px rgba(42,91,65,.10) !important;white-space:nowrap !important}
+#question .landing-title::after{content:"" !important;display:block !important;width:min(140px,28vw) !important;height:5px !important;margin:12px auto 0 !important;border-radius:99px !important;background:linear-gradient(90deg,transparent,#efd48a 15%,#efd48a 85%,transparent) !important;opacity:.9 !important}
+#question .landing-meta{display:flex !important;align-items:center !important;justify-content:center !important;gap:12px !important;padding:10px 18px !important;border-radius:999px !important;background:linear-gradient(135deg,rgba(79,155,112,.06),rgba(79,155,112,.10)) !important;border:1px solid rgba(79,155,112,.14) !important;color:#5b8a6e !important;font-size:clamp(10px,2.6vw,12px) !important;font-weight:750 !important;letter-spacing:.01em !important;margin-top:-4px !important}
+#question .landing-meta .dot-sep{display:inline-block !important;width:3px !important;height:3px !important;border-radius:50% !important;background:#a4c4b1 !important;margin:0 2px !important}
+#question .landing-meta .mini-ring{display:inline-flex !important;align-items:center !important;justify-content:center !important;width:20px !important;height:20px !important;border-radius:50% !important;background:conic-gradient(#4f9b70 var(--p,0%),rgba(79,155,112,.12) var(--p,0%)) !important;position:relative !important;flex-shrink:0 !important}
+#question .landing-meta .mini-ring::after{content:"" !important;position:absolute !important;inset:3px !important;border-radius:50% !important;background:#fbfdfb !important}
+#question .landing-cta{position:relative !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;gap:8px !important;width:auto !important;min-width:180px !important;min-height:52px !important;padding:13px 32px !important;margin-top:2px !important;border:1px solid rgba(67,137,93,.42) !important;border-radius:999px !important;background:linear-gradient(180deg,#5aad7f 0%,#4a9a6c 100%) !important;color:#fff !important;-webkit-text-fill-color:#fff !important;font-family:var(--font,inherit) !important;font-size:clamp(13px,3.4vw,15px) !important;font-weight:950 !important;letter-spacing:.16em !important;text-shadow:0 1px 2px rgba(42,78,57,.20) !important;box-shadow:0 12px 28px -8px rgba(74,154,108,.42),0 4px 10px -2px rgba(42,78,57,.14),inset 0 1px 0 rgba(255,255,255,.30) !important;transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease,background .22s ease !important;cursor:pointer !important;overflow:hidden !important}
+#question .landing-cta::before{content:"→" !important;display:inline-block !important;font-size:16px !important;font-weight:900 !important;transition:transform .22s cubic-bezier(.2,.8,.2,1) !important}
+#question .landing-cta::after{content:"" !important;position:absolute !important;top:0 !important;left:-100% !important;width:60% !important;height:100% !important;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent) !important;pointer-events:none !important;transition:left .6s ease !important}
+#question .landing-cta:hover{transform:translateY(-2px) scale(1.02) !important;box-shadow:0 18px 36px -8px rgba(74,154,108,.52),0 6px 14px -2px rgba(42,78,57,.18),inset 0 1px 0 rgba(255,255,255,.35) !important}
+#question .landing-cta:hover::before{transform:translateX(4px) !important}
+#question .landing-cta:hover::after{left:100% !important}
+#question .landing-cta:active{transform:translateY(0) scale(.98) !important;box-shadow:0 6px 14px -4px rgba(74,154,108,.35),inset 0 2px 4px rgba(42,78,57,.10) !important}
+#question .landing-cta.locked{background:linear-gradient(180deg,#f4f8f3 0%,#e9efea 100%) !important;color:#6f8176 !important;-webkit-text-fill-color:#6f8176 !important;border-color:#cbd8ce !important;box-shadow:0 4px 12px rgba(53,91,61,.08),inset 0 1px 0 rgba(255,255,255,.95) !important;text-shadow:none !important;min-width:220px !important}
+#question .landing-cta.locked::before{content:"🔒" !important;font-size:14px !important}
+#question .landing-cta.locked:hover{transform:none !important;box-shadow:0 4px 12px rgba(53,91,61,.08),inset 0 1px 0 rgba(255,255,255,.95) !important}
+#question .landing-lock-note{display:block !important;margin-top:-4px !important;width:100% !important;color:#799083 !important;font-size:clamp(10px,2.7vw,12px) !important;font-weight:700 !important;line-height:1.4 !important;letter-spacing:.1px !important;text-align:center !important}
+@media(max-width:600px){#questionWrap{top:42% !important;width:calc(100vw - 24px) !important}#question{padding:28px 22px 24px !important;border-radius:28px !important;gap:18px !important}#question .landing-title{font-size:clamp(28px,8vw,46px) !important}#question .landing-title::before{font-size:9px !important;letter-spacing:.28em !important;margin-bottom:12px !important}#question .landing-meta{padding:8px 14px !important;font-size:10px !important;gap:8px !important}#question .landing-cta{min-width:160px !important;min-height:48px !important;padding:11px 26px !important}}
+@media(max-width:390px){#questionWrap{width:calc(100vw - 20px) !important}#question{padding:24px 18px 20px !important;border-radius:24px !important}#question .landing-title{font-size:clamp(24px,7.6vw,38px) !important}#question .landing-meta{flex-direction:column !important;gap:4px !important;padding:8px 14px !important}#question .landing-meta .dot-sep{display:none !important}}
 </style>
 
 </head>
@@ -3973,6 +4001,12 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       renderChecklist();
     }
 
+    // ===== Cập nhật meta info ngay khi check xong =====
+    // (chỉ khi user đang ở Home)
+    if(!q1Opened && !checklistPanel.classList.contains("show")){
+      renderLandingState();
+    }
+
     setStatus(`Đã ghi ${clientTime} ✓`);
 
     try{
@@ -4119,12 +4153,48 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   function renderLandingState(){
     const locked = isChecklistLocked();
     question.classList.toggle("checklist-locked-home", locked);
+
+    // ===== Meta info =====
+    // Đếm số người đã check hôm nay
+    const total = names.length;
+    const done = checked.filter(Boolean).length;
+    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+
+    // Thời gian cập nhật cuối (dùng timestamp cache gần nhất)
+    let lastUpdateText = "Đang tải…";
+    try{
+      const cacheRaw = localStorage.getItem(CACHE_KEY);
+      if(cacheRaw){
+        const cache = JSON.parse(cacheRaw);
+        if(cache && cache.ts){
+          const diffMs = Date.now() - cache.ts;
+          const diffMin = Math.floor(diffMs / 60000);
+          if(diffMin < 1) lastUpdateText = "Vừa cập nhật";
+          else if(diffMin < 60) lastUpdateText = `Cập nhật ${diffMin}p trước`;
+          else {
+            const diffHour = Math.floor(diffMin / 60);
+            lastUpdateText = `Cập nhật ${diffHour}h trước`;
+          }
+        }
+      }
+    }catch(_){}
+
+    // Chỉ hiện meta khi có names
+    const metaHTML = total > 0
+      ? `<div class="landing-meta">
+           <span class="mini-ring" style="--p:${percent}%"></span>
+           <span>${done}/${total} đã check</span>
+           <span class="dot-sep"></span>
+           <span>${lastUpdateText}</span>
+         </div>`
+      : "";
+
     question.innerHTML = locked
-      ? `<span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta locked">Tạm khoá Checklist</span><span class="landing-lock-note">Sau ${checklistLockTime} sẽ khoá Checklist nha mn 🥰</span>`
-      : '<span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta">CLICK HERE</span>';
+      ? `<span class="landing-title">CHECKLIST ĐẢO MÈO</span>${metaHTML}<span class="landing-cta locked">Tạm khoá Checklist</span><span class="landing-lock-note">Sau ${checklistLockTime} sẽ khoá Checklist nha mn 🥰</span>`
+      : `<span class="landing-title">CHECKLIST ĐẢO MÈO</span>${metaHTML}<span class="landing-cta">CLICK HERE</span>`;
+
     question.style.opacity = "1";
     question.style.transform = "scale(1)";
-    question.style.animation = "breathe 2.8s ease-in-out infinite";
     question.style.pointerEvents = locked ? "none" : "auto";
   }
 
