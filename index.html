@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#050208">
+<meta name="theme-color" content="#f3f8f1">
 <title>S Rank — Daily Mission</title>
 <style>
 *{box-sizing:border-box}
@@ -13,7 +13,6 @@ button{font:inherit}
 #space{position:relative;width:100%;height:100%;overflow:hidden;background:
 radial-gradient(circle at 50% 50%,rgba(255,55,160,.10),transparent 27%),
 radial-gradient(circle at 50% 50%,#080812 0,#020207 58%,#000 100%)}
-#stars{position:absolute;inset:0;width:100%;height:100%}
 #questionWrap{position:absolute;left:50%;top:36%;z-index:10;width:min(92vw,650px);transform:translate(-50%,-50%);text-align:center}
 #counter{display:none !important;font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.45);margin-bottom:16px}
 #question{color:#fff;font-size:clamp(25px,7vw,54px);font-weight:750;line-height:1.18;
@@ -101,7 +100,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #captureBtn{background:linear-gradient(135deg,rgba(255,60,145,.9),rgba(255,112,185,.72)) !important;color:#fff !important}
 #checklistActions button:active{transform:scale(.96)}
 
-@keyframes pointBump{0%{transform:scale(1)}35%{transform:scale(1.45);text-shadow:0 0 20px #ff4fa3}100%{transform:scale(1)}}
 #topBtn{color:#ffb5d8}
 #topPanel{position:absolute;left:50%;top:50%;z-index:10001;width:min(92vw,500px);max-height:82vh;transform:translate(-50%,-50%) scale(.94);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,transform .3s;padding:20px;border:1px solid rgba(255,255,255,.14);border-radius:26px;background:linear-gradient(145deg,rgba(20,8,24,.97),rgba(6,4,12,.98));box-shadow:0 18px 60px rgba(0,0,0,.62),0 0 40px rgba(255,60,160,.16);backdrop-filter:blur(18px)}
 #topPanel.show{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
@@ -269,286 +267,8 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 }
 
 
-/* ---------- Consistent question / congratulations screens ---------- */
-.question-text,
-.congrats-text,
-.activation-line{
-  text-align:center !important;
-}
-
-.question-text{
-  color:#fff !important;
-  font-weight:900 !important;
-  line-height:1.18 !important;
-  text-shadow:0 0 4px rgba(255,255,255,.9),
-              0 0 14px rgba(255,105,180,.55),
-              0 0 28px rgba(255,60,145,.3);
-}
-
-.congrats-text{
-  color:#fff !important;
-  font-weight:900 !important;
-  line-height:1.2 !important;
-  text-shadow:0 0 4px rgba(255,255,255,.95),
-              0 0 14px rgba(255,105,180,.65),
-              0 0 30px rgba(255,60,145,.4);
-}
-
-@media(max-width:520px){
-  .question-text,
-  .congrats-text{
-    padding-left:12px;
-    padding-right:12px;
-  }
-}
-
-
-/* ---------- System notification: 3D letters assemble from deep space ---------- */
-.system-assemble{
-  display:inline-block;
-  perspective:900px;
-  transform-style:preserve-3d;
-  will-change:transform,opacity,filter;
-}
-
-.system-assemble .assemble-char{
-  display:inline-block;
-  opacity:0;
-  transform:
-    translate3d(var(--sx),var(--sy),-1100px)
-    rotateX(var(--rx))
-    rotateY(var(--ry))
-    rotateZ(var(--rz))
-    scale(.08);
-  filter:blur(7px);
-  text-shadow:0 0 2px rgba(255,255,255,.95),
-              0 0 16px rgba(255,105,180,.8),
-              0 0 34px rgba(255,60,145,.55);
-  animation:spaceAssemble 1.15s cubic-bezier(.16,.78,.18,1) forwards;
-  animation-delay:var(--delay);
-}
-
-.system-assemble .assemble-space{
-  display:inline-block;
-  width:.28em;
-}
-
-@keyframes spaceAssemble{
-  0%{
-    opacity:0;
-    transform:
-      translate3d(var(--sx),var(--sy),-1100px)
-      rotateX(var(--rx))
-      rotateY(var(--ry))
-      rotateZ(var(--rz))
-      scale(.08);
-    filter:blur(7px);
-  }
-  55%{
-    opacity:1;
-    filter:blur(1px);
-  }
-  100%{
-    opacity:1;
-    transform:
-      translate3d(0,0,0)
-      rotateX(0)
-      rotateY(0)
-      rotateZ(0)
-      scale(1);
-    filter:blur(0);
-  }
-}
-
-.system-appear{
-  opacity:0;
-  transform:translateY(8px) scale(.98);
-  animation:systemAppear .45s ease-out forwards;
-}
-
-@keyframes systemAppear{
-  to{
-    opacity:1;
-    transform:translateY(0) scale(1);
-  }
-}
-
-
-/* ---------- System-style question ---------- */
-.system-question{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  width:100%;
-  text-align:center;
-}
-.system-question-title{
-  font-size:clamp(18px,5vw,28px);
-  font-weight:900;
-  letter-spacing:2px;
-  color:#fff;
-  text-shadow:0 0 4px rgba(255,255,255,.95),
-              0 0 14px rgba(255,90,170,.75),
-              0 0 30px rgba(255,40,140,.45);
-}
-.system-question-sub{
-  font-size:clamp(21px,5.5vw,32px);
-  font-weight:850;
-  line-height:1.2;
-  color:#fff;
-  max-width:min(92vw,760px);
-  text-shadow:0 0 3px rgba(255,255,255,.95),
-              0 0 12px rgba(255,105,180,.65),
-              0 0 25px rgba(255,60,145,.4);
-}
-.system-final-wrap{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:10px;
-  width:min(92vw,760px);
-  text-align:center;
-}
-.system-final-kicker{
-  font-size:clamp(16px,4.5vw,25px);
-  font-weight:900;
-  letter-spacing:2px;
-  color:#fff;
-  text-shadow:0 0 4px rgba(255,255,255,.95),
-              0 0 14px rgba(255,100,180,.7);
-}
-.system-final-name{
-  font-size:clamp(20px,5.5vw,32px);
-  font-weight:900;
-  color:#fff;
-  text-shadow:0 0 4px rgba(255,255,255,.95),
-              0 0 15px rgba(255,80,165,.7);
-}
-
-
-/* ===== ĐẢO MÈO SYSTEM UI — final visual layer ===== */
-#question{
-  text-align:center !important;
-}
-
-.landing-title,
-.landing-cta,
-.system-title,
-.system-subtitle,
-.system-line,
-.system-final{
-  text-align:center !important;
-}
-
-.system-title{
-  color:#fff;
-  font-weight:900;
-  letter-spacing:1.5px;
-  text-shadow:0 0 4px rgba(255,255,255,.95),
-              0 0 14px rgba(255,105,180,.75),
-              0 0 30px rgba(255,60,145,.45);
-}
-
-.system-subtitle{
-  color:#ffd9ec;
-  font-weight:800;
-  text-shadow:0 0 5px rgba(255,150,210,.7),
-              0 0 18px rgba(255,60,145,.35);
-}
-
-.system-final{
-  font-weight:900;
-  color:#fff;
-  text-shadow:0 0 4px rgba(255,255,255,.98),
-              0 0 12px rgba(255,120,190,.85),
-              0 0 28px rgba(255,60,145,.55);
-}
-
-/* Final line: characters arrive from deep 3D space and assemble. */
-.system-assemble .assemble-char{
-  display:inline-block;
-  opacity:0;
-  transform:
-    translate3d(var(--sx),var(--sy),-1200px)
-    rotateX(var(--rx))
-    rotateY(var(--ry))
-    rotateZ(var(--rz))
-    scale(.04);
-  filter:blur(8px);
-  animation:systemSpaceAssemble 1.25s cubic-bezier(.12,.76,.18,1) forwards;
-  animation-delay:var(--delay);
-  will-change:transform,opacity,filter;
-}
-
-@keyframes systemSpaceAssemble{
-  0%{
-    opacity:0;
-    transform:
-      translate3d(var(--sx),var(--sy),-1200px)
-      rotateX(var(--rx))
-      rotateY(var(--ry))
-      rotateZ(var(--rz))
-      scale(.04);
-    filter:blur(8px);
-  }
-  52%{
-    opacity:1;
-    filter:blur(1.5px);
-  }
-  100%{
-    opacity:1;
-    transform:translate3d(0,0,0)
-              rotateX(0) rotateY(0) rotateZ(0) scale(1);
-    filter:blur(0);
-  }
-}
-
-.system-line-appear{
-  opacity:0;
-  transform:translateY(10px);
-  animation:systemLineAppear .48s ease-out forwards;
-}
-
-@keyframes systemLineAppear{
-  to{opacity:1;transform:translateY(0)}
-}
-
-
-.system-final-wrap{
-  width:min(92vw,760px);
-  margin:0 auto;
-  text-align:center;
-}
-.system-final-kicker{
-  font-size:clamp(24px,6vw,48px);
-  font-weight:950;
-  letter-spacing:1px;
-  line-height:1.12;
-  color:#fff;
-}
-.system-final-lines{
-  margin-top:20px;
-  display:flex;
-  flex-direction:column;
-  gap:9px;
-  align-items:center;
-}
-.system-final-line{
-  color:#fff;
-  font-size:clamp(16px,4vw,22px);
-  font-weight:750;
-  line-height:1.3;
-  text-align:center;
-  text-shadow:0 0 5px rgba(255,255,255,.85),
-              0 0 14px rgba(255,105,180,.5);
-}
-.system-final-line strong{
-  color:#ffb9db;
-  font-weight:950;
-  text-shadow:0 0 8px rgba(255,70,160,.8);
-}
+/* ---------- Activation message ---------- */
+.activation-line{text-align:center !important;}
 
 
 /* ---------- Capture preview: Chrome / Cốc Cốc mobile ---------- */
@@ -560,7 +280,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   align-items:center;
   justify-content:center;
   padding:14px;
-  background:rgba(0,0,0,.86);
+  background:rgba(236,244,233,.82);
   backdrop-filter:blur(12px);
   -webkit-backdrop-filter:blur(12px);
   box-sizing:border-box;
@@ -572,23 +292,21 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   overflow:auto;
   box-sizing:border-box;
   padding:16px;
-  border:1px solid rgba(255,120,190,.35);
+  border:1px solid #cbdcc9;
   border-radius:24px;
-  background:linear-gradient(145deg,#09040d,#160714 55%,#07030b);
+  background:linear-gradient(145deg,#ffffff,#f4faf3 55%,#edf6eb);
   box-shadow:
-    0 0 35px rgba(255,60,160,.28),
-    inset 0 0 30px rgba(255,120,190,.04);
+    0 18px 55px rgba(53,91,61,.16),
+    inset 0 1px 0 rgba(255,255,255,.96);
 }
 
 .capturePreviewTitle{
   text-align:center;
-  color:#fff;
+  color:#315744;
   font-weight:900;
   font-size:19px;
   margin-bottom:12px;
-  text-shadow:
-    0 0 8px rgba(255,105,180,.7),
-    0 0 18px rgba(255,60,145,.35);
+  text-shadow:none;
 }
 
 .capturePreviewImageWrap{
@@ -598,7 +316,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   display:flex;
   justify-content:center;
   border-radius:18px;
-  background:#050208;
+  background:#f3f8f1;
   -webkit-overflow-scrolling:touch;
 }
 
@@ -614,7 +332,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 }
 
 .capturePreviewHint{
-  color:#ffd5e9;
+  color:#6e8277;
   text-align:center;
   font-size:12px;
   line-height:1.45;
@@ -636,9 +354,9 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   justify-content:center;
   box-sizing:border-box;
   border-radius:999px;
-  border:1px solid rgba(255,130,195,.3);
-  background:rgba(255,70,155,.12);
-  color:#fff;
+  border:1px solid #c7d9c4;
+  background:#f6faf5;
+  color:#557164;
   font:inherit;
   font-weight:800;
   text-decoration:none;
@@ -647,8 +365,9 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 }
 
 #captureDownloadBtn{
-  background:linear-gradient(135deg,#ff3c91,#ff70b9);
-  box-shadow:0 0 16px rgba(255,50,145,.28);
+  background:#4e9d6b;
+  color:#fff;
+  box-shadow:0 5px 12px rgba(75,160,105,.15);
 }
 
 @media(max-width:420px){
@@ -670,7 +389,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     min-height:43px;
   }
 }
-
 
 
 #kdvRulesOverlay{
@@ -1109,10 +827,6 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   max-width:100%;
   overflow-wrap:anywhere;
 }
-
-
-
-
 
 
 /* ===== CLEAN FIXED NAVIGATION ===== */
@@ -1762,13 +1476,8 @@ html,body{background:#061015}
 /* External font intentionally removed for reliable offline/mobile rendering. */
 :root{
   --mint-bg:#f4f8f1;
-  --mint-card:#ffffff;
-  --mint-card-soft:#f7fbf6;
   --mint-green:#2f6b4f;
-  --mint-green-2:#4ca46f;
-  --mint-green-3:#dcefe0;
   --mint-border:#cbdcc9;
-  --mint-border-soft:#dfe9dc;
   --mint-text:#315744;
   --mint-muted:#7b8e82;
   --mint-yellow:#ffe6a0;
@@ -1789,8 +1498,6 @@ button,input,textarea,select{font-family:inherit!important}
     radial-gradient(circle at 50% 8%,rgba(255,255,255,.96),transparent 30%),
     linear-gradient(180deg,#f8fbf5 0%,#eef6eb 100%)!important;
 }
-#stars{opacity:.08!important;filter:saturate(.45)!important}
-
 /* Trang chính: bỏ neon, chuyển sang hiệu ứng chữ nhẹ */
 #question{
   color:var(--mint-green)!important;
@@ -2059,26 +1766,18 @@ button,input,textarea,select{font-family:inherit!important}
    ========================================================= */
 :root{
   --bg:#f3f7f1;
-  --bg-2:#edf5eb;
   --surface:#ffffff;
-  --surface-2:#f8fbf7;
-  --surface-3:#f1f7f1;
   --ink:#284b3a;
-  --ink-2:#456655;
   --muted:#7d9184;
   --green:#4b9a6b;
   --green-strong:#2f6b4f;
   --green-soft:#e4f2e6;
-  --green-soft-2:#d7ebdb;
   --line:#d4e1d3;
   --line-2:#e4ece2;
   --yellow:#f8dda0;
-  --danger:#b76d63;
   --shadow:0 14px 38px rgba(47,78,59,.09);
   --shadow-sm:0 6px 18px rgba(47,78,59,.07);
   --radius-xl:24px;
-  --radius-lg:18px;
-  --radius-md:14px;
   --font:ui-rounded,"SF Pro Rounded","Arial Rounded MT Bold","Avenir Next",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 
@@ -2098,8 +1797,6 @@ button,input,textarea,select{font-family:var(--font)!important}
     radial-gradient(circle at 10% 72%,rgba(217,238,220,.48),transparent 27%),
     linear-gradient(180deg,#f8fbf6 0%,#f1f7ef 58%,#eaf3e8 100%)!important;
 }
-#stars{opacity:.10!important;filter:saturate(.35) sepia(.08)!important}
-
 /* ---------- Navigation ---------- */
 #bottomNav,#secondaryNav{
   background:rgba(255,255,255,.92)!important;
@@ -2346,6 +2043,13 @@ button,input,textarea,select{font-family:var(--font)!important}
 .monitorDot{background:#62aa7c!important;box-shadow:none!important}
 .monitorCheckBtn,.monitorAssignBtn{background:#eef7ef!important;color:#427257!important;border-color:#c8ddcb!important;box-shadow:none!important}
 
+/* ---------- BXH capture ---------- */
+#topActions{display:flex;justify-content:center;gap:8px;margin:13px auto 0;flex-wrap:wrap}
+#topActions button{min-height:42px;padding:9px 14px;border-radius:14px;border:1px solid var(--line);font:inherit;font-weight:850;color:#557164;background:#f7faf6;box-shadow:none;cursor:pointer}
+#topActions #topCaptureBtn{background:#4e9d6b!important;color:#fff!important;border-color:#4e9d6b!important;box-shadow:0 5px 12px rgba(75,160,105,.15)!important}
+#topActions #topCloseBtn{margin:0;min-width:90px}
+#topActions button:active{transform:scale(.97)}
+
 /* ---------- KDV ---------- */
 #kdvRulesPanel{background:#fff!important;border-color:var(--line)!important}
 #kdvRulesTitle{color:#315f48!important}
@@ -2382,6 +2086,10 @@ button,input,textarea,select{font-family:var(--font)!important}
   box-shadow:var(--shadow-sm)!important;
 }
 #q2answers #doneBtn{background:#4e9d6b!important;color:#fff!important;border-color:#4e9d6b!important}
+#q2answers #laterBtn{color:#3d674e!important;background:#fff!important;border:1px solid #b9d3bd!important;box-shadow:var(--shadow-sm)!important}
+#message .later-message{text-align:center;font-family:var(--font)!important;line-height:1.1}
+#message .later-title{display:block;font-size:clamp(40px,10.5vw,72px);font-weight:950;color:#2f6b4f!important;text-shadow:none!important}
+#message .later-name{display:block;margin-top:12px;font-size:clamp(19px,5.2vw,30px);font-weight:900;color:#315744!important;text-shadow:none!important}
 
 /* Message / wheel: calm, not neon */
 #message{color:var(--green-strong)!important;text-shadow:none!important}
@@ -2396,6 +2104,15 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
   outline:3px solid rgba(78,157,107,.18)!important;
   outline-offset:2px;
 }
+
+/* Capture preview — đồng bộ hoàn toàn với giao diện xanh */
+#capturePreview{background:rgba(236,244,233,.82)!important;backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important}
+.capturePreviewBox{background:linear-gradient(145deg,#ffffff,#f4faf3)!important;border:1px solid #cbdcc9!important;box-shadow:0 18px 55px rgba(53,91,61,.16),inset 0 1px 0 rgba(255,255,255,.96)!important}
+.capturePreviewTitle{color:#315744!important;text-shadow:none!important}
+.capturePreviewImageWrap{background:#f3f8f1!important;border:1px solid #dbe7d8!important}
+.capturePreviewHint{color:#6e8277!important}
+.capturePreviewActions button,.capturePreviewActions a{border-color:#c7d9c4!important;background:#f6faf5!important;color:#557164!important}
+.capturePreviewActions #captureDownloadBtn,.capturePreviewActions #captureShareBtn{background:#4e9d6b!important;color:#fff!important;border-color:#4e9d6b!important;box-shadow:0 5px 12px rgba(75,160,105,.15)!important}
 
 @media(max-width:600px){
   #bottomNav,#secondaryNav{width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important}
@@ -2426,16 +2143,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 :root{
   --p-forest:#245943;
   --p-green:#4f9b70;
-  --p-green-2:#76b88f;
-  --p-mint:#e7f4e9;
-  --p-mint-2:#f1f8f1;
-  --p-cream:#fbfcf7;
-  --p-gold:#efd48a;
-  --p-ink:#29483a;
-  --p-muted:#81968a;
-  --p-line:rgba(62,112,79,.16);
   --p-shadow:0 18px 50px rgba(42,78,57,.10),0 3px 12px rgba(42,78,57,.05);
-  --p-shadow-soft:0 10px 28px rgba(42,78,57,.08);
 }
 
 html,body{font-family:ui-rounded,"SF Pro Rounded","Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif!important}
@@ -2455,8 +2163,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 }
 #space::before{width:280px;height:280px;left:-150px;top:43%;background:rgba(151,203,168,.10)}
 #space::after{width:360px;height:360px;right:-190px;bottom:7%;background:rgba(239,215,151,.10)}
-#stars{opacity:.08!important;filter:saturate(.25)!important}
-
 /* Top navigation becomes a deliberate control surface */
 #bottomNav,#secondaryNav{
   background:rgba(255,255,255,.78)!important;
@@ -2611,7 +2317,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 </style>
 
 
-
 <style>
 /* ===== TRANG 2 — LỊCH CHẤM CÔNG ===== */
 #attendancePage{
@@ -2672,7 +2377,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .att-day.today .att-day-num{width:25px;height:25px;display:flex;align-items:center;justify-content:center;border-radius:9px;background:#58b99d;color:#fff;box-shadow:0 5px 12px rgba(55,171,141,.22)}
 .att-status{width:100%;padding:4px 2px;border-radius:8px;text-align:center;font-size:8px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .att-status.work{background:#e0f7ee;color:#26836b}.att-status.off{background:#ffd9df;color:#b33a4b}.att-status.leave{background:#fff0a8;color:#8a6500}.att-status.empty{background:#eef4f2;color:#8da09b}
-.att-time{font-size:8px;font-weight:750;color:#72918a;white-space:nowrap}
 .att-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .att-stat{padding:12px;border-radius:17px;background:rgba(255,255,255,.72);border:1px solid rgba(40,105,91,.07);text-align:center}.att-stat strong{display:block;font-size:20px;line-height:1;color:#276958}.att-stat span{display:block;margin-top:5px;font-size:9px;font-weight:750;color:#809b95}
 #attendanceSyncBar{display:flex;align-items:center;gap:8px;margin-top:10px}
@@ -2734,7 +2438,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 </head>
 <body>
 <main id="space">
-<canvas id="stars"></canvas>
 <div id="status"></div>
 <div id="connectionState" class="off"><span class="dot"></span><span id="connectionText">Đang kết nối…</span></div>
 
@@ -2768,7 +2471,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   <div id="topScroll"><table id="topTable">
     <thead><tr><th>#</th><th>Tên</th><th>⭐ Điểm</th><th>Rank</th></tr></thead><tbody></tbody>
   </table></div>
-  <button id="topCloseBtn" type="button">Đóng</button>
+  <div id="topActions"><button id="topCaptureBtn" type="button">📸 Chụp BXH</button><button id="topCloseBtn" type="button">Đóng</button></div>
 </section>
 
 <nav id="bottomNav" aria-label="Điều hướng chính">
@@ -3107,10 +2810,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJ1ebyNNe7fxlNR6TObBYebp7zRORGZTO0kTzlFl-S39I2vIJjDx9h0quV84od9JAfeg/exec";
   const CACHE_KEY = "srank_check_v4";
-  const DAY_KEY = "srank_check_day_v1";
   const root = document.getElementById("space");
-  const canvas = document.getElementById("stars");
-  const ctx = canvas.getContext("2d",{alpha:true});
   const question = document.getElementById("question");
   const counter = document.getElementById("counter");
   const wheelArea = document.getElementById("wheelArea");
@@ -3216,7 +2916,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   let requestSeq = 0;
   let syncInFlight = false;
   let autoSyncTimer = null;
-  let lastServerSync = 0;
   const AUTO_SYNC_MS = 30000;
   const Q1_CACHE_KEY = "srank_q1_answer_v1";
   const connectionState = document.getElementById("connectionState");
@@ -3247,7 +2946,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       };
       window[cb] = result => {
         setConnection("ok", "Đã kết nối");
-        lastServerSync = Date.now();
         finish(resolve, result);
       };
       script.onerror = () => {
@@ -3274,8 +2972,8 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
   function cacheSave(){
     try{
-      localStorage.setItem(CACHE_KEY, JSON.stringify({names,checked,times,points,ranks,day:todayKey(),ts:Date.now()}));
-      localStorage.setItem(DAY_KEY, todayKey());
+      const day = todayKey();
+      localStorage.setItem(CACHE_KEY, JSON.stringify({names,checked,times,points,ranks,day,ts:Date.now()}));
     }catch(_){}
   }
   function cacheLoad(){
@@ -3291,7 +2989,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       }
       // Cache của ngày cũ không được dùng lại.
       localStorage.removeItem(CACHE_KEY);
-      localStorage.setItem(DAY_KEY, todayKey());
     }catch(_){}
     return false;
   }
@@ -3330,12 +3027,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     question.style.transform = "scale(.8)";
     wheelArea.classList.remove("show");
     hint.textContent = "";
-    showActivationMessage(
-      savedName,
-      ranks[idx] || rankClient(points[idx]),
-      points[idx] || 0,
-      showQuestion2
-    );
+    showActivationForName(savedName, showQuestion2);
     return true;
   }
 
@@ -3367,16 +3059,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         scheduleNextReset();
       }
     }, Math.max(1000,next.getTime()-now.getTime()));
-  }
-
-  async function loadAdminSettings(){
-    try{
-      const r = await window.__srankApi("getSettings",{},5000);
-      if(r.ok && r.data && /^([01]\d|2[0-3]):[0-5]\d$/.test(r.data.resetTime)){
-        resetTime = r.data.resetTime;
-        scheduleNextReset();
-      }
-    }catch(_){}
   }
 
   const MONITOR_FB_LINK = "https://facebook.com/kinya03";
@@ -3574,19 +3256,19 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     renderMonitor();
     monitorOverlay.classList.add("show");
     monitorOverlay.setAttribute("aria-hidden","false");
-    if(typeof syncQuickTools==="function") syncQuickTools();
+    syncQuickTools();
   }
   function closeMonitor(){
     monitorOverlay.classList.remove("show");
     monitorOverlay.setAttribute("aria-hidden","true");
-    if(typeof syncQuickTools==="function") syncQuickTools();
+    syncQuickTools();
   }
 
   function closeAdmin(){
     adminOverlay.classList.remove("show");
     adminOverlay.setAttribute("aria-hidden","true");
     if(typeof renderQuizAdminButton==="function") renderQuizAdminButton();
-    if(typeof syncQuickTools==="function") syncQuickTools();
+    syncQuickTools();
   }
 
   const adminPasswordOverlay = document.getElementById("adminPasswordOverlay");
@@ -3702,14 +3384,14 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     kdvRulesOverlay.classList.add("show");
     kdvRulesOverlay.setAttribute("aria-hidden","false");
     document.body.style.overflow="hidden";
-    if(typeof syncQuickTools==="function") syncQuickTools();
+    syncQuickTools();
   }
 
   function closeKdvRules(){
     kdvRulesOverlay.classList.remove("show");
     kdvRulesOverlay.setAttribute("aria-hidden","true");
     document.body.style.overflow="";
-    if(typeof syncQuickTools==="function") syncQuickTools();
+    syncQuickTools();
   }
 
   kdvRulesBtn.addEventListener("click",openKdvRules);
@@ -3765,15 +3447,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
 
   function rankClient(value){
-    const p = Number(value) || 0;
-    if(p >= 700) return "VIP";
-    if(p >= 600) return "SSS";
-    if(p >= 500) return "SS";
-    if(p >= 400) return "S";
-    if(p >= 300) return "A";
-    if(p >= 200) return "B";
-    if(p >= 100) return "C";
-    return "D";
+    return attendanceRankClient(value);
   }
 
   // BXH chấm công dùng đúng 6 rank:
@@ -3788,61 +3462,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     return "B";
   }
 
-  // Điểm dùng cho màn Kích hoạt: CHỈ tính từ dữ liệu chấm công đã có trong HTML/cache.
-  // Không gọi API và không dùng points/ranks cũ từ Check!F.
-  function getLocalAttendanceScore(name){
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    let attendance = null;
-
-    // Ưu tiên cache của đúng tháng hiện tại để việc xem tháng cũ
-    // không làm thay đổi dữ liệu dùng cho màn Kích hoạt.
-    const cache = loadAttendanceCache(year, month);
-    if(cache && Array.isArray(cache.employees)){
-      const person = cache.employees.find(x =>
-        String(x?.name || '').trim() === String(name || '').trim()
-      );
-      if(person){
-        attendance = {};
-        const days = person.days || {};
-        Object.keys(days).forEach(day => {
-          const status = String(days[day] ?? '').trim().toUpperCase();
-          if(status === 'P' || status === 'O' || status === 'T'){
-            attendance[key(year, month, Number(day))] = status;
-          }
-        });
-      }
-    }
-
-    // Nếu chưa có cache riêng thì dùng ATTENDANCE_DATA đang nằm trong HTML.
-    if(!attendance){
-      attendance = ATTENDANCE_DATA[String(name || '').trim()] || {};
-    }
-
-    let ot = 0;
-    let leave = 0;
-
-    for(let day = 1; day <= daysInMonth; day++){
-      const status = String(attendance[key(year, month, day)] || '').toUpperCase();
-      if(status === 'T') ot++;
-      else if(status === 'P') leave++;
-    }
-
-    const score = 300 + ot * 40 - leave * 10;
-    return {
-      score,
-      rank: attendanceRankClient(score),
-      ot,
-      leave
-    };
-  }
-
-  function currentSelectedPoints(){
-    return getLocalAttendanceScore(names[current]).score;
-  }
 
   function initTopMonthSelect(){
     if(!topMonthSelect) return;
@@ -3867,58 +3486,69 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     if(topTitle) topTitle.textContent = `🏆 BXH TOP THÁNG ${currentMonth}`;
   }
 
+  let topRenderToken = 0;
+
+  function renderTopRows(employees, year, month){
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const rows = (Array.isArray(employees) ? employees : []).map((employee,index)=>{
+      const days = employee && employee.days ? employee.days : {};
+      let ot = 0;
+      let leave = 0;
+      for(let day=1; day<=daysInMonth; day++){
+        const status = String(days[String(day)] || '').toUpperCase();
+        if(status === 'T') ot++;
+        else if(status === 'P') leave++;
+      }
+      return {
+        name: String(employee?.name || '').trim(),
+        points: 300 + ot * 40 - leave * 10,
+        ot,
+        leave,
+        index
+      };
+    }).filter(row=>row.name);
+
+    rows.sort((a,b)=>b.points-a.points || a.index-b.index);
+
+    const frag = document.createDocumentFragment();
+    rows.forEach((row,i)=>{
+      const tr = document.createElement('tr');
+      if(i < 3) tr.classList.add('topRow' + (i + 1));
+      tr.innerHTML = `<td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td><td class="topName"></td><td class="topPoints"></td><td><span class="topRank"></span></td>`;
+      tr.querySelector('.topName').textContent = row.name;
+      tr.querySelector('.topPoints').textContent = Number(row.points || 0).toLocaleString('vi-VN');
+      tr.querySelector('.topRank').textContent = attendanceRankClient(row.points);
+      frag.appendChild(tr);
+    });
+    topBody.innerHTML = '';
+    topBody.appendChild(frag);
+  }
+
   async function renderTop(monthNumber){
     const now = new Date();
     const month = Number(monthNumber) || (now.getMonth() + 1);
-    const year = now.getFullYear();
+    const token = ++topRenderToken;
 
     if(topMonthSelect) topMonthSelect.value = String(month);
     if(topTitle) topTitle.textContent = `🏆 BXH TOP THÁNG ${month}`;
     topBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:18px">Đang tải BXH…</td></tr>';
 
     try{
-      // BXH có state tháng RIÊNG, không dùng viewDate của trang Chấm công.
-      // Vì vậy đang xem tháng 8 ở Chấm công rồi thoát ra vẫn không làm BXH
-      // bị kẹt ở tháng 8: mỗi lần mở BXH sẽ reset về tháng hiện tại.
-      const result = await window.__srankApi('getAttendance',{month, _ts:Date.now()},12000);
-      if(!result || result.ok !== true) throw new Error(result?.error || 'Không tải được dữ liệu chấm công');
-      const employees = Array.isArray(result?.data?.employees) ? result.data.employees : [];
-      const daysInMonth = new Date(year, month, 0).getDate();
+      // Cache-first: render ngay từ RAM/localStorage nếu tháng này đã tải trước đó.
+      // Nếu có cache, refresh 1 lần ở nền bằng chính getAttendance để dữ liệu vẫn mới.
+      const first = await window.__getAttendanceTopDataForMonth(month, false);
+      if(token !== topRenderToken) return;
+      renderTopRows(first.employees, first.year, first.month);
 
-      const rows = employees.map((employee,index)=>{
-        const days = employee && employee.days ? employee.days : {};
-        let ot = 0;
-        let leave = 0;
-        for(let day=1; day<=daysInMonth; day++){
-          const status = String(days[String(day)] || '').toUpperCase();
-          if(status === 'T') ot++;
-          else if(status === 'P') leave++;
-        }
-        return {
-          name: String(employee?.name || '').trim(),
-          points: 300 + ot * 40 - leave * 10,
-          ot,
-          leave,
-          index
-        };
-      }).filter(row=>row.name);
-
-      rows.sort((a,b)=>b.points-a.points || a.index-b.index);
-
-      const frag = document.createDocumentFragment();
-      rows.forEach((row,i)=>{
-        const tr = document.createElement('tr');
-        if(i < 3) tr.classList.add('topRow' + (i + 1));
-        tr.innerHTML = `<td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td><td class="topName"></td><td class="topPoints"></td><td><span class="topRank"></span></td>`;
-        tr.querySelector('.topName').textContent = row.name;
-        tr.querySelector('.topPoints').textContent = Number(row.points || 0).toLocaleString('vi-VN');
-        tr.querySelector('.topRank').textContent = attendanceRankClient(row.points);
-        frag.appendChild(tr);
-      });
-
-      topBody.innerHTML = '';
-      topBody.appendChild(frag);
+      if(first.cached){
+        window.__getAttendanceTopDataForMonth(month, true).then(fresh=>{
+          if(token !== topRenderToken) return;
+          if(topMonthSelect && Number(topMonthSelect.value) !== month) return;
+          renderTopRows(fresh.employees, fresh.year, fresh.month);
+        }).catch(()=>{});
+      }
     }catch(_){
+      if(token !== topRenderToken) return;
       topBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:18px">Không tải được dữ liệu chấm công</td></tr>';
     }
   }
@@ -4038,7 +3668,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
       initialSheetLoaded = true;
       window.syncAttendanceEmployees?.();
-      lastServerSync = Date.now();
       cacheSave();
       renderChecklist();
       buildWheel();
@@ -4077,7 +3706,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     const wasChecked = checked[index] === true;
     if(!wasChecked){
       times[index] = clientTime;
-      cacheSave();
     }
 
     // Optimistic UI: tick ngay, không chờ server.
@@ -4119,40 +3747,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     }
   }
 
-  // ---------- Visuals ----------
-  let W=innerWidth,H=innerHeight,DPR=1;
-  const stars=[];
-  const STAR_COUNT=110; // giảm tải GPU/CPU
-  function resize(){
-    W=innerWidth; H=innerHeight; DPR=Math.min(devicePixelRatio||1,2);
-    canvas.width=Math.round(W*DPR); canvas.height=Math.round(H*DPR);
-    canvas.style.width=W+"px"; canvas.style.height=H+"px";
-    ctx.setTransform(DPR,0,0,DPR,0,0);
-  }
-  addEventListener("resize",resize,{passive:true});
-  resize();
-  for(let i=0;i<STAR_COUNT;i++) stars.push({
-    angle:Math.random()*Math.PI*2,radius:.38+Math.random()*.9,
-    tilt:(Math.random()-.5)*1.5,speed:.00010+Math.random()*.00016,
-    size:.45+Math.random()*1.7,phase:Math.random()*Math.PI*2,alpha:.2+Math.random()*.75
-  });
-  function drawStars(time){
-    ctx.clearRect(0,0,W,H);
-    const cx=W*.5,cy=H*.5,base=Math.min(W,H);
-    for(const s of stars){
-      const a=s.angle+time*s.speed, ox=base*(.72+s.radius*.20), oy=base*(.25+s.radius*.16);
-      const x=Math.cos(a)*ox,y=Math.sin(a)*oy;
-      const yy=y*Math.cos(s.tilt)-x*.12*Math.sin(s.tilt);
-      const xx=x*Math.cos(s.tilt)+y*.12*Math.sin(s.tilt);
-      const z=(Math.sin(a)+1)/2, p=.48+z*.85;
-      const px=cx+xx*p,py=cy+yy*p,alpha=s.alpha*(.72+.28*Math.sin(time*.002+s.phase))*(.25+z*.75);
-      ctx.beginPath();ctx.arc(px,py,s.size*(.55+z*1.45),0,Math.PI*2);
-      ctx.fillStyle=`rgba(255,245,252,${alpha})`;ctx.shadowColor="rgba(255,110,190,.9)";
-      ctx.shadowBlur=3+z*7;ctx.fill();
-    }
-    requestAnimationFrame(drawStars);
-  }
-  requestAnimationFrame(drawStars);
 
   function burst(){
     const f=document.createElement("div"); f.className="flash"; root.appendChild(f);
@@ -4263,7 +3857,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     setTimeout(()=>{
       wheelArea.classList.add("show"); renderWheel();
       hint.textContent="Vuốt lên / xuống • ↑ ↓ để chọn • Enter để xác nhận";
-      if(typeof syncQuickTools==="function") syncQuickTools();
+      syncQuickTools();
     },180);
   }
   question.addEventListener("pointerup",openQuestion1,{passive:false});
@@ -4369,22 +3963,27 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   confirm.addEventListener("click",()=>{
     const selected = names[current];
     saveQ1Answer(selected);
-
-    // Ẩn thẻ điểm khi chuyển sang lời chào.
-
-    // Điểm + Rank của màn Kích hoạt lấy HOÀN TOÀN từ HTML/cache chấm công.
-    // Không gọi API và không dùng points/ranks cũ của checklist.
-    const localScore = getLocalAttendanceScore(selected);
-    const playerRank = localScore.rank;
-    const playerPoints = localScore.score;
-
-    showActivationMessage(
-      selected,
-      playerRank,
-      playerPoints,
-      showQuestion2
-    );
+    showActivationForName(selected, showQuestion2);
   });
+
+  async function showActivationForName(name, next){
+    let rank = "B";
+    let score = 300;
+
+    try{
+      if(typeof window.__getCurrentAttendanceScore === "function"){
+        const info = await window.__getCurrentAttendanceScore(name);
+        if(info && Number.isFinite(Number(info.score))){
+          score = Number(info.score);
+          rank = String(info.rank || attendanceRankClient(score));
+        }
+      }
+    }catch(_){
+      // Giữ luồng giao diện hoạt động nếu dữ liệu chấm công tạm thời chưa sẵn sàng.
+    }
+
+    showActivationMessage(name, rank, score, next);
+  }
 
   function showQuestion2(){
     counter.textContent="CÂU 2";
@@ -4395,7 +3994,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     question.style.opacity="1";question.style.pointerEvents="none";question.style.transform="scale(1)";
     const box=document.createElement("div");
     box.id="q2answers";
-    box.innerHTML=`<button id="doneBtn">Tôi đã hoàn thành</button><button id="laterBtn">Chưa, tôi sẽ quay lại sau</button>`;
+    box.innerHTML=`<button id="doneBtn">Tôi đã hoàn thành</button><button id="laterBtn">Tôi chưa hoàn thành</button>`;
     root.appendChild(box);
     Object.assign(box.style,{position:"absolute",left:"50%",top:"64%",transform:"translate(-50%,0)",zIndex:"22",
       display:"flex",flexDirection:"column",gap:"12px",width:"min(88vw,390px)",opacity:"0",transition:"opacity .25s"});
@@ -4405,7 +4004,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     box.querySelector("#doneBtn").style.background="linear-gradient(135deg,#ff3c91,#ff70b9)";
     requestAnimationFrame(()=>box.style.opacity="1");
 
-    box.querySelector("#doneBtn").addEventListener("click",async()=>{
+    box.querySelector("#doneBtn").addEventListener("click",()=>{
       const completedIndex=current, selected=names[current];
       box.remove();
 
@@ -4435,7 +4034,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
     box.querySelector("#laterBtn").addEventListener("click",()=>{
       box.remove();
-      showMessage(`Không sao!<br><span class="small">Cố lên “${names[current]}” 💪</span>`,0);
+      showMessage(`<div class="later-message"><span class="later-title">Không sao!</span><span class="later-name">Cố lên “${names[current]}” 💪</span></div>`,0);
     });
   }
 
@@ -4488,10 +4087,11 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       opacity:1 !important;
       visibility:visible !important;
       pointer-events:none !important;
-      background:linear-gradient(145deg,#09040d,#140713 55%,#07030b) !important;
+      background:linear-gradient(145deg,#ffffff,#f4faf3 55%,#edf6eb) !important;
       padding:22px !important;
       border-radius:26px !important;
-      box-shadow:0 0 40px rgba(255,60,160,.16) !important;
+      border:1px solid #cbdcc9 !important;
+      box-shadow:0 16px 45px rgba(53,91,61,.12) !important;
       overflow:visible !important;
     `;
 
@@ -4567,7 +4167,99 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     }
   }
 
-  function showCapturePreview(imageUrl, blob){
+  async function captureTop(){
+    if(!topPanel.classList.contains("show")) return;
+
+    const btn = document.getElementById("topCaptureBtn");
+    if(!btn) return;
+
+    btn.disabled = true;
+    const oldText = btn.textContent;
+    btn.textContent = "⏳ Đang tạo ảnh…";
+
+    let clone = null;
+    let imageUrl = null;
+
+    try{
+      await ensureHtml2Canvas();
+
+      clone = topPanel.cloneNode(true);
+      clone.id = "topCaptureTemp";
+      clone.querySelector("#topActions")?.remove();
+
+      Object.assign(clone.style,{
+        position:"absolute",
+        left:"-100000px",
+        top:"0",
+        width:Math.min(window.innerWidth * 0.92,500) + "px",
+        maxHeight:"none",
+        height:"auto",
+        transform:"none",
+        opacity:"1",
+        visibility:"visible",
+        pointerEvents:"none",
+        background:"linear-gradient(145deg,#ffffff,#f4faf3 55%,#edf6eb)",
+        border:"1px solid #cbdcc9",
+        boxShadow:"0 16px 45px rgba(53,91,61,.12)",
+        overflow:"visible"
+      });
+
+      const select = clone.querySelector("#topMonthSelect");
+      if(select){
+        Object.assign(select.style,{
+          background:"#f7fbf6",
+          color:"#315744",
+          borderColor:"#cbdcc9",
+          boxShadow:"none",
+          backgroundImage:"none",
+          paddingRight:"14px"
+        });
+      }
+
+      const scroll = clone.querySelector("#topScroll");
+      if(scroll){
+        scroll.style.maxHeight = "none";
+        scroll.style.height = "auto";
+        scroll.style.overflow = "visible";
+      }
+
+      document.body.appendChild(clone);
+      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+      const canvas = await html2canvas(clone,{
+        backgroundColor:null,
+        scale:Math.min(3,Math.max(2,window.devicePixelRatio||2)),
+        useCORS:true,
+        allowTaint:false,
+        logging:false,
+        imageTimeout:10000,
+        width:clone.offsetWidth,
+        height:clone.scrollHeight,
+        windowWidth:clone.offsetWidth,
+        windowHeight:clone.scrollHeight
+      });
+
+      const blob = await new Promise(resolve=>canvas.toBlob(resolve,"image/png",1));
+      if(!blob) throw new Error("Không tạo được ảnh BXH");
+
+      imageUrl = URL.createObjectURL(blob);
+      showCapturePreview(imageUrl,blob,"📸 BXH TOP đã chụp","bxh-top-dao-meo.png","Chrome / Cốc Cốc: bấm Lưu ảnh hoặc nhấn giữ vào ảnh để lưu.");
+      setStatus("Đã tạo ảnh BXH ✓");
+    }catch(err){
+      console.error(err);
+      setStatus(err?.message || "Chụp BXH thất bại");
+      if(imageUrl){
+        try{URL.revokeObjectURL(imageUrl)}catch(_){}
+        imageUrl=null;
+      }
+    }finally{
+      clone?.remove();
+      btn.disabled=false;
+      btn.textContent=oldText;
+    }
+  }
+
+function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã chụp", filename="checklist-dao-meo.png", previewHint="Chrome / Cốc Cốc: bấm Lưu ảnh hoặc nhấn giữ vào ảnh để lưu."){
 
     document.getElementById("capturePreview")?.remove();
 
@@ -4575,7 +4267,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     overlay.id = "capturePreview";
     overlay.innerHTML = `
       <div class="capturePreviewBox">
-        <div class="capturePreviewTitle">📸 Checklist đã chụp</div>
+        <div class="capturePreviewTitle"></div>
 
         <div class="capturePreviewImageWrap">
           <img
@@ -4585,9 +4277,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
           >
         </div>
 
-        <div class="capturePreviewHint">
-          Chrome / Cốc Cốc: bấm <b>Lưu ảnh</b> hoặc nhấn giữ vào ảnh để lưu.
-        </div>
+        <div class="capturePreviewHint"></div>
 
         <div class="capturePreviewActions">
           <button type="button" id="captureShareBtn">
@@ -4608,6 +4298,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         </div>
       </div>
     `;
+
+    overlay.querySelector(".capturePreviewTitle").textContent = previewTitle;
+    overlay.querySelector(".capturePreviewHint").textContent = previewHint;
+    overlay.querySelector("#captureDownloadBtn").download = filename;
 
     document.body.appendChild(overlay);
 
@@ -4695,6 +4389,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
 
   captureBtn.addEventListener("click",captureChecklist);
+  document.getElementById("topCaptureBtn")?.addEventListener("click",captureTop);
 
 
   // ---------- Navigation ----------
@@ -4711,7 +4406,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     wheelArea.classList.remove("show");
     confirm.classList.remove("show");
 
-    if(typeof syncQuickTools==="function") syncQuickTools();
+    syncQuickTools();
 
     q1Opened = false;
     current = 0;
@@ -4752,7 +4447,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       checklistPanel.style.visibility = "hidden";
       checklistPanel.style.opacity = "0";
       checklistPanel.style.pointerEvents = "none";
-    }    if(typeof syncQuickTools==="function")syncQuickTools();
+    }    syncQuickTools();
   });
 
   topBtn.addEventListener("click", (e) => {
@@ -4768,7 +4463,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     topPanel.classList.add("show");
     topPanel.setAttribute("aria-hidden","false");
     renderTop();
-    if(typeof syncQuickTools==="function") syncQuickTools();
+    syncQuickTools();
   });
 
   topMonthSelect?.addEventListener("change", ()=>{
@@ -5180,70 +4875,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
 })();
 
-/* 3D space-to-text assembly for the final system notification */
-function animateSystemAssemble(el, textValue){
-  if (!el) return;
-  const text = String(textValue || '');
-  el.classList.add('system-assemble');
-  el.innerHTML = '';
-
-  [...text].forEach((ch, i) => {
-    if (ch === ' ') {
-      const s = document.createElement('span');
-      s.className = 'assemble-space';
-      el.appendChild(s);
-      return;
-    }
-
-    const s = document.createElement('span');
-    s.className = 'assemble-char';
-    const angle = (i * 47) % 360;
-    const rad = angle * Math.PI / 180;
-    const distance = 360 + ((i * 83) % 520);
-
-    s.style.setProperty('--sx', `${Math.cos(rad) * distance}px`);
-    s.style.setProperty('--sy', `${Math.sin(rad) * distance}px`);
-    s.style.setProperty('--rx', `${((i * 71) % 720) - 360}deg`);
-    s.style.setProperty('--ry', `${((i * 53) % 720) - 360}deg`);
-    s.style.setProperty('--rz', `${((i * 37) % 360) - 180}deg`);
-    s.style.setProperty('--delay', `${Math.min(i * 0.018, 0.55)}s`);
-    s.textContent = ch;
-    el.appendChild(s);
-  });
-}
-
-
-function showSystemFinalMessage(el, message){
-  if (!el) return;
-  el.classList.add('system-assemble');
-  el.innerHTML = '';
-
-  [...String(message)].forEach((ch, i) => {
-    if (ch === ' ') {
-      const sp = document.createElement('span');
-      sp.className = 'assemble-space';
-      el.appendChild(sp);
-      return;
-    }
-
-    const span = document.createElement('span');
-    span.className = 'assemble-char';
-
-    const a = (i * 47) * Math.PI / 180;
-    const d = 420 + ((i * 83) % 620);
-
-    span.style.setProperty('--sx', `${Math.cos(a) * d}px`);
-    span.style.setProperty('--sy', `${Math.sin(a) * d}px`);
-    span.style.setProperty('--rx', `${((i * 71) % 720) - 360}deg`);
-    span.style.setProperty('--ry', `${((i * 53) % 720) - 360}deg`);
-    span.style.setProperty('--rz', `${((i * 37) % 360) - 180}deg`);
-    span.style.setProperty('--delay', `${Math.min(i * 0.014, .55)}s`);
-    span.textContent = ch;
-    el.appendChild(span);
-  });
-}
-
-
 
 /* ===== ĐIỀU HƯỚNG TRANG 2 + LỊCH CHẤM CÔNG ===== */
 (function(){
@@ -5271,6 +4902,7 @@ function showSystemFinalMessage(el, message){
   // Mã compact: [ngày][P/O/T][tháng]. Ví dụ 26P9 = ngày 26, phép, tháng 9.
   const ATTENDANCE_DATA = {};
   const ATTENDANCE_CACHE_PREFIX = 'srank_attendance_check_v2_';
+  const ATTENDANCE_RAW_MEMORY = new Map();
   let attendanceServerLoaded = false;
   let attendanceServerLoadedKey = '';
   let attendanceLoadToken = 0;
@@ -5322,6 +4954,18 @@ function showSystemFinalMessage(el, message){
     }catch(_){}
   }
 
+  function rememberAttendanceRaw(year, month, employees){
+    ATTENDANCE_RAW_MEMORY.set(
+      year + '-' + (month + 1),
+      Array.isArray(employees) ? employees : []
+    );
+  }
+
+  function getAttendanceRawMemory(year, month){
+    return ATTENDANCE_RAW_MEMORY.get(year + '-' + (month + 1)) || null;
+  }
+
+
   function applyAttendanceData(payload, year, month){
     const map = {};
     (payload?.employees || []).forEach(person => {
@@ -5345,7 +4989,9 @@ function showSystemFinalMessage(el, message){
       .filter(Boolean);
     ATTENDANCE_EMPLOYEES = [...new Set(ATTENDANCE_EMPLOYEES)];
 
-    saveAttendanceCache(year, month, payload?.employees || []);
+    const rawEmployees = Array.isArray(payload?.employees) ? payload.employees : [];
+    rememberAttendanceRaw(year, month, rawEmployees);
+    saveAttendanceCache(year, month, rawEmployees);
     syncAttendanceEmployeeControls();
     setAttendanceSyncStatus(
       ATTENDANCE_EMPLOYEES.length ? 'ok' : 'error',
@@ -5358,6 +5004,7 @@ function showSystemFinalMessage(el, message){
   function applyAttendanceCache(year, month){
     const cache = loadAttendanceCache(year, month);
     if(!cache || !Array.isArray(cache.employees)) return false;
+    rememberAttendanceRaw(year, month, cache.employees);
 
     Object.keys(ATTENDANCE_DATA).forEach(k => delete ATTENDANCE_DATA[k]);
     ATTENDANCE_EMPLOYEES = [];
@@ -5399,6 +5046,7 @@ function showSystemFinalMessage(el, message){
       }
       return {name, days};
     });
+    rememberAttendanceRaw(year, month, employees);
     saveAttendanceCache(year, month, employees);
   }
 
@@ -5411,16 +5059,26 @@ function showSystemFinalMessage(el, message){
       wheelIndex = 0;
     }
 
-    employee.innerHTML = '';
-    ATTENDANCE_EMPLOYEES.forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name;
-      opt.textContent = name;
-      employee.appendChild(opt);
-    });
+    const sameList = employee.options.length === ATTENDANCE_EMPLOYEES.length &&
+      ATTENDANCE_EMPLOYEES.every((name, i) => employee.options[i]?.value === name);
+
+    if(!sameList){
+      employee.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      ATTENDANCE_EMPLOYEES.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        frag.appendChild(opt);
+      });
+      employee.appendChild(frag);
+      buildNameWheel();
+    }else{
+      renderNameWheel();
+    }
+
     employee.value = selectedName;
     updateWheelButton();
-    renderNameWheel();
   }
 
   async function loadAttendanceMonth(force = false){
@@ -5503,6 +5161,34 @@ function showSystemFinalMessage(el, message){
     return promise;
   }
 
+  window.__getCurrentAttendanceScore = async function(name){
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    let result = null;
+    if(window.__attendanceCurrentMonthReady){
+      result = await window.__attendanceCurrentMonthReady;
+    }
+    if(!result){
+      result = await window.__getAttendanceTopDataForMonth(month, false);
+    }
+    const person = (result?.employees || []).find(x=>String(x?.name || '').trim() === String(name || '').trim());
+    if(!person) return null;
+
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const days = person.days || {};
+    let ot = 0;
+    let leave = 0;
+    for(let day=1; day<=daysInMonth; day++){
+      const status = String(days[String(day)] || '').toUpperCase();
+      if(status === 'T') ot++;
+      else if(status === 'P') leave++;
+    }
+    const score = 300 + ot * 40 - leave * 10;
+    return {score, rank:attendanceRankClient(score), ot, leave, off:daysInMonth - ot - leave, year, month};
+  };
+
+  // Preload tháng hiện tại nếu chưa có cache/RAM để kích hoạt và BXH mở gần như tức thời.
   // Cầu nối duy nhất cho BXH: giữ toàn bộ state chấm công trong IIFE này,
   // không đưa viewDate / ATTENDANCE_DATA ra global.
   window.__getAttendanceTopData = async function(){
@@ -5529,6 +5215,39 @@ function showSystemFinalMessage(el, message){
     });
     return {year:y, month:m, rows};
   };
+
+  window.__getAttendanceTopDataForMonth = async function(monthNumber, force = false){
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = Math.max(1, Math.min(12, Number(monthNumber) || (now.getMonth() + 1)));
+    const monthIndex = month - 1;
+
+    let employees = !force ? getAttendanceRawMemory(year, monthIndex) : null;
+    let cached = false;
+
+    if(!employees && !force){
+      const cache = loadAttendanceCache(year, monthIndex);
+      if(cache && Array.isArray(cache.employees)){
+        employees = cache.employees;
+        rememberAttendanceRaw(year, monthIndex, employees);
+      }
+    }
+
+    if(Array.isArray(employees) && employees.length){
+      cached = true;
+    }else{
+      const r = await window.__srankApi('getAttendance',{month, _ts:Date.now()},10000);
+      if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet trả về dữ liệu không hợp lệ');
+      employees = Array.isArray(r.data?.employees) ? r.data.employees : [];
+      rememberAttendanceRaw(year, monthIndex, employees);
+      saveAttendanceCache(year, monthIndex, employees);
+    }
+
+    return {year, month, employees, cached};
+  };
+
+  // Preload tháng hiện tại nếu chưa có cache/RAM để kích hoạt và BXH mở gần như tức thời.
+  window.__attendanceCurrentMonthReady = window.__getAttendanceTopDataForMonth((new Date()).getMonth() + 1, false).catch(()=>null);
 
   function updateAttendanceMultiUI(){
     attendanceMultiCount.textContent = `${attendanceMultiDays.size} ngày`;
@@ -5774,15 +5493,22 @@ function showSystemFinalMessage(el, message){
     const value = wheelBtn?.querySelector('.wheel-value');
     if(value) value.textContent = selectedName || 'Chọn nhân viên';
   }
-  function renderNameWheel(){
+  function buildNameWheel(){
     if(!wheelItems) return;
     wheelItems.innerHTML='';
+    const frag = document.createDocumentFragment();
     ATTENDANCE_EMPLOYEES.forEach(name=>{
       const el=document.createElement('div');
       el.className='att-name-wheel-item';
       el.textContent=name;
-      wheelItems.appendChild(el);
+      frag.appendChild(el);
     });
+    wheelItems.appendChild(frag);
+    renderNameWheel();
+  }
+
+  function renderNameWheel(){
+    if(!wheelItems) return;
 
     // Dùng cùng cơ chế với vòng quay chọn tên ở Page 1:
     // vị trí của mọi tên được tính theo current + toàn bộ quãng vuốt,
@@ -6021,7 +5747,7 @@ function showSystemFinalMessage(el, message){
 
   employee.value=selectedName;
   updateWheelButton();
-  renderNameWheel();
+  buildNameWheel();
   render();
   // Tên và dữ liệu chấm công chỉ lấy từ Check!C19:C32 + toàn bộ hàng tương ứng.
 })();
