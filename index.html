@@ -3820,7 +3820,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     question.style.transform="scale(.8)";
     burst();
     setTimeout(()=>{
-      wheelArea.classList.add("show"); renderWheel();
+      wheelArea.style.opacity = "1";
+      wheelArea.style.pointerEvents = "auto";
+      wheelArea.classList.add("show");
+      renderWheel();
       hint.textContent="Vuốt lên / xuống • ↑ ↓ để chọn • Enter để xác nhận";
       syncQuickTools();
     },180);
@@ -4259,6 +4262,8 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     checklistPanel.style.pointerEvents = "none";
     message.classList.remove("show");
     wheelArea.classList.remove("show");
+    wheelArea.style.opacity = "1";
+    wheelArea.style.pointerEvents = "none";
     confirm.classList.remove("show");
 
     syncQuickTools();
