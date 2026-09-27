@@ -3758,6 +3758,61 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     checklistBody.appendChild(frag);
   }
 
+  /**
+   * Cập nhật CHỈ 1 dòng trong checklist theo index gốc (trong mảng names).
+   * Nhanh hơn nhiều so với renderChecklist() khi chỉ có 1 người đổi trạng thái.
+   *
+   * Điều kiện dùng: thứ tự hiển thị KHÔNG đổi.
+   * Nếu người vừa check cần nhảy lên đầu bảng → phải dùng renderChecklist().
+   */
+  function updateChecklistRow(index){
+    const tr = checklistBody.querySelector(`tr[data-index="${index}"]`);
+    if(!tr) return false;
+
+    const timeCell = tr.querySelector(".checkTime");
+    const box = tr.querySelector(".checkBox");
+
+    if(timeCell) timeCell.textContent = times[index] || "—";
+    if(box) box.classList.toggle("checked", !!checked[index]);
+
+    return true;
+  }
+
+  /**
+   * Kiểm tra xem thứ tự hiển thị có bị thay đổi không,
+   * sau khi 1 người (index) vừa được check/bỏ check.
+   * Nếu CÓ thay đổi → cần renderChecklist() đầy đủ.
+   * Nếu KHÔNG → chỉ cần updateChecklistRow().
+   */
+  function checklistOrderChanged(index){
+    if(!checked[index]) {
+      const tr = checklistBody.querySelector(`tr[data-index="${index}"]`);
+      if(!tr) return true;
+      const currentPosition = Array.from(checklistBody.children).indexOf(tr);
+      let checkedCount = 0;
+      for(let i=0; i<names.length; i++){
+        if(i !== index && checked[i]) checkedCount++;
+      }
+      return currentPosition <= checkedCount;
+    }
+
+    const tr = checklistBody.querySelector(`tr[data-index="${index}"]`);
+    if(!tr) return true;
+
+    const currentPosition = Array.from(checklistBody.children).indexOf(tr);
+    const myTime = times[index] || "99:99";
+    let shouldBeBefore = 0;
+    for(let i=0; i<names.length; i++){
+      if(i === index) continue;
+      if(!checked[i]) continue;
+      const t = times[i] || "99:99";
+      if(t < myTime) shouldBeBefore++;
+      else if(t === myTime && i < index) shouldBeBefore++;
+    }
+
+    return currentPosition !== shouldBeBefore;
+  }
+
   function renderWheel(){
     if(!names.length) return;
     const mid = wheelArea.clientHeight / 2;
@@ -3870,17 +3925,12 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
   async function checkin(name, index){
     // ===== GUARD: đã check rồi thì không gọi API lại =====
-    // Điều này tránh:
-    // - Ghi đè giờ hoàn thành thật bằng giờ bấm nhầm
-    // - Gọi request thừa làm chậm UI
-    // - Tạo nhiều bản ghi trùng trên Sheet
     if(checked[index] === true && times[index]){
       setStatus(`Đã ghi ${times[index]} ✓`);
       return;
     }
 
     // Chốt thời điểm CHECK ngay trên thiết bị của người thao tác.
-    // Không lấy thời gian trả về muộn từ server để ghi đè UI.
     const clientTime = new Intl.DateTimeFormat("vi-VN",{
       timeZone:"Asia/Ho_Chi_Minh",
       hour:"2-digit",minute:"2-digit",hour12:false
@@ -3890,11 +3940,17 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     times[index] = clientTime;
     checked[index] = true;
     cacheSave();
-    renderChecklist();
+
+    // ===== Tối ưu: chỉ update 1 row thay vì full render =====
+    // Nếu thứ tự KHÔNG đổi → updateChecklistRow (siêu nhanh)
+    // Nếu thứ tự CÓ đổi → renderChecklist đầy đủ.
+    if(!updateChecklistRow(index) || checklistOrderChanged(index)){
+      renderChecklist();
+    }
+
     setStatus(`Đã ghi ${clientTime} ✓`);
 
     try{
-      // Gửi cả thời điểm client để Apps Script có thể dùng làm timestamp chuẩn.
       const r = await window.__srankApi("checkin",{
         name,
         clientTime,
@@ -3902,25 +3958,19 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       }, TIMEOUT.NORMAL);
       if(!r.ok) throw new Error(r.error || "checkin lỗi");
 
-      // Cố ý KHÔNG làm: times[index] = r.data.time
-      // vì server có thể đang chạy deployment cũ / timezone khác.
-      // UI giữ nguyên thời điểm người dùng thực sự bấm CHECK.
-      // Không cộng điểm. Chỉ giữ lại điểm/rank hiện tại nếu backend trả về để không làm mất tính năng hiển thị.
       if(r.data && Number.isFinite(Number(r.data.points))) {
         points[index] = Number(r.data.points);
         ranks[index] = r.data.rank || rankClient(points[index]);
       }
       cacheSave();
-      renderChecklist();
-      if(r.data && r.data.time && String(r.data.time) !== String(clientTime)) {
-        // Chỉ báo để dễ phát hiện Apps Script đang lệch giờ; không ghi đè giờ client.
-        setStatus(`Đã ghi ${clientTime} ✓`);
-      } else {
-        setStatus(`Đã ghi ${clientTime} ✓`);
+
+      // Chỉ cần update time cell (points/rank chưa hiển thị ở checklist)
+      if(!updateChecklistRow(index)){
+        renderChecklist();
       }
-      // Không gọi getData lần 2.
+
+      setStatus(`Đã ghi ${clientTime} ✓`);
     }catch(e){
-      // Không lấy Sheet đè ngược vào HTML.
       setStatus("Máy chủ chưa xác nhận — trạng thái HTML vẫn giữ nguyên");
       cacheSave();
     }
@@ -4125,10 +4175,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       message.classList.remove("show");
 
       // Ghi nhận hoàn thành vào Sheet; UI đã được cập nhật optimistic.
+      // checkin() tự xử lý việc update row vs full render.
       checkin(selected, completedIndex);
 
-      // Mở Checklist ngay lập tức, không qua màn hình thông báo.
-      renderChecklist();
+      // Mở Checklist ngay lập tức
       checklistPanel.classList.add("show");
       checklistPanel.style.visibility = "visible";
       checklistPanel.style.opacity = "1";
@@ -4136,8 +4186,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
       const row = checklistBody.querySelector(`tr[data-index="${completedIndex}"]`);
       if(row) {
-        row.classList.add("completed");
-        row.querySelector(".checkBox")?.classList.add("checked");
         setTimeout(() => row.scrollIntoView({block:"center", behavior:"smooth"}), 80);
       }
     });
