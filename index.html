@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#050208">
+<meta name="theme-color" content="#f3f8f1">
 <title>S Rank — Daily Mission</title>
 <style>
 *{box-sizing:border-box}
@@ -280,7 +280,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   align-items:center;
   justify-content:center;
   padding:14px;
-  background:rgba(0,0,0,.86);
+  background:rgba(236,244,233,.82);
   backdrop-filter:blur(12px);
   -webkit-backdrop-filter:blur(12px);
   box-sizing:border-box;
@@ -292,23 +292,21 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   overflow:auto;
   box-sizing:border-box;
   padding:16px;
-  border:1px solid rgba(255,120,190,.35);
+  border:1px solid #cbdcc9;
   border-radius:24px;
-  background:linear-gradient(145deg,#09040d,#160714 55%,#07030b);
+  background:linear-gradient(145deg,#ffffff,#f4faf3 55%,#edf6eb);
   box-shadow:
-    0 0 35px rgba(255,60,160,.28),
-    inset 0 0 30px rgba(255,120,190,.04);
+    0 18px 55px rgba(53,91,61,.16),
+    inset 0 1px 0 rgba(255,255,255,.96);
 }
 
 .capturePreviewTitle{
   text-align:center;
-  color:#fff;
+  color:#315744;
   font-weight:900;
   font-size:19px;
   margin-bottom:12px;
-  text-shadow:
-    0 0 8px rgba(255,105,180,.7),
-    0 0 18px rgba(255,60,145,.35);
+  text-shadow:none;
 }
 
 .capturePreviewImageWrap{
@@ -318,7 +316,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   display:flex;
   justify-content:center;
   border-radius:18px;
-  background:#050208;
+  background:#f3f8f1;
   -webkit-overflow-scrolling:touch;
 }
 
@@ -334,7 +332,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 }
 
 .capturePreviewHint{
-  color:#ffd5e9;
+  color:#6e8277;
   text-align:center;
   font-size:12px;
   line-height:1.45;
@@ -356,9 +354,9 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   justify-content:center;
   box-sizing:border-box;
   border-radius:999px;
-  border:1px solid rgba(255,130,195,.3);
-  background:rgba(255,70,155,.12);
-  color:#fff;
+  border:1px solid #c7d9c4;
+  background:#f6faf5;
+  color:#557164;
   font:inherit;
   font-weight:800;
   text-decoration:none;
@@ -367,8 +365,9 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 }
 
 #captureDownloadBtn{
-  background:linear-gradient(135deg,#ff3c91,#ff70b9);
-  box-shadow:0 0 16px rgba(255,50,145,.28);
+  background:#4e9d6b;
+  color:#fff;
+  box-shadow:0 5px 12px rgba(75,160,105,.15);
 }
 
 @media(max-width:420px){
@@ -2044,6 +2043,13 @@ button,input,textarea,select{font-family:var(--font)!important}
 .monitorDot{background:#62aa7c!important;box-shadow:none!important}
 .monitorCheckBtn,.monitorAssignBtn{background:#eef7ef!important;color:#427257!important;border-color:#c8ddcb!important;box-shadow:none!important}
 
+/* ---------- BXH capture ---------- */
+#topActions{display:flex;justify-content:center;gap:8px;margin:13px auto 0;flex-wrap:wrap}
+#topActions button{min-height:42px;padding:9px 14px;border-radius:14px;border:1px solid var(--line);font:inherit;font-weight:850;color:#557164;background:#f7faf6;box-shadow:none;cursor:pointer}
+#topActions #topCaptureBtn{background:#4e9d6b!important;color:#fff!important;border-color:#4e9d6b!important;box-shadow:0 5px 12px rgba(75,160,105,.15)!important}
+#topActions #topCloseBtn{margin:0;min-width:90px}
+#topActions button:active{transform:scale(.97)}
+
 /* ---------- KDV ---------- */
 #kdvRulesPanel{background:#fff!important;border-color:var(--line)!important}
 #kdvRulesTitle{color:#315f48!important}
@@ -2080,6 +2086,10 @@ button,input,textarea,select{font-family:var(--font)!important}
   box-shadow:var(--shadow-sm)!important;
 }
 #q2answers #doneBtn{background:#4e9d6b!important;color:#fff!important;border-color:#4e9d6b!important}
+#q2answers #laterBtn{color:#3d674e!important;background:#fff!important;border:1px solid #b9d3bd!important;box-shadow:var(--shadow-sm)!important}
+#message .later-message{text-align:center;font-family:var(--font)!important;line-height:1.1}
+#message .later-title{display:block;font-size:clamp(40px,10.5vw,72px);font-weight:950;color:#2f6b4f!important;text-shadow:none!important}
+#message .later-name{display:block;margin-top:12px;font-size:clamp(19px,5.2vw,30px);font-weight:900;color:#315744!important;text-shadow:none!important}
 
 /* Message / wheel: calm, not neon */
 #message{color:var(--green-strong)!important;text-shadow:none!important}
@@ -2094,6 +2104,15 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
   outline:3px solid rgba(78,157,107,.18)!important;
   outline-offset:2px;
 }
+
+/* Capture preview — đồng bộ hoàn toàn với giao diện xanh */
+#capturePreview{background:rgba(236,244,233,.82)!important;backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important}
+.capturePreviewBox{background:linear-gradient(145deg,#ffffff,#f4faf3)!important;border:1px solid #cbdcc9!important;box-shadow:0 18px 55px rgba(53,91,61,.16),inset 0 1px 0 rgba(255,255,255,.96)!important}
+.capturePreviewTitle{color:#315744!important;text-shadow:none!important}
+.capturePreviewImageWrap{background:#f3f8f1!important;border:1px solid #dbe7d8!important}
+.capturePreviewHint{color:#6e8277!important}
+.capturePreviewActions button,.capturePreviewActions a{border-color:#c7d9c4!important;background:#f6faf5!important;color:#557164!important}
+.capturePreviewActions #captureDownloadBtn,.capturePreviewActions #captureShareBtn{background:#4e9d6b!important;color:#fff!important;border-color:#4e9d6b!important;box-shadow:0 5px 12px rgba(75,160,105,.15)!important}
 
 @media(max-width:600px){
   #bottomNav,#secondaryNav{width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important}
@@ -2452,7 +2471,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   <div id="topScroll"><table id="topTable">
     <thead><tr><th>#</th><th>Tên</th><th>⭐ Điểm</th><th>Rank</th></tr></thead><tbody></tbody>
   </table></div>
-  <button id="topCloseBtn" type="button">Đóng</button>
+  <div id="topActions"><button id="topCaptureBtn" type="button">📸 Chụp BXH</button><button id="topCloseBtn" type="button">Đóng</button></div>
 </section>
 
 <nav id="bottomNav" aria-label="Điều hướng chính">
@@ -3008,12 +3027,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     question.style.transform = "scale(.8)";
     wheelArea.classList.remove("show");
     hint.textContent = "";
-    showActivationMessage(
-      savedName,
-      ranks[idx] || rankClient(points[idx]),
-      points[idx] || 0,
-      showQuestion2
-    );
+    showActivationForName(savedName, showQuestion2);
     return true;
   }
 
@@ -3433,15 +3447,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
 
   function rankClient(value){
-    const p = Number(value) || 0;
-    if(p >= 700) return "VIP";
-    if(p >= 600) return "SSS";
-    if(p >= 500) return "SS";
-    if(p >= 400) return "S";
-    if(p >= 300) return "A";
-    if(p >= 200) return "B";
-    if(p >= 100) return "C";
-    return "D";
+    return attendanceRankClient(value);
   }
 
   // BXH chấm công dùng đúng 6 rank:
@@ -3957,23 +3963,27 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   confirm.addEventListener("click",()=>{
     const selected = names[current];
     saveQ1Answer(selected);
-
-    // Ẩn thẻ điểm khi chuyển sang lời chào.
-
-    // Rank và điểm lấy trực tiếp từ dữ liệu đã đồng bộ với Google Sheets.
-    const playerRank = (Array.isArray(ranks) && ranks[current])
-      ? ranks[current]
-      : rankClient(points[current]);
-
-    const playerPoints = Array.isArray(points) ? points[current] : 0;
-
-    showActivationMessage(
-      selected,
-      playerRank,
-      playerPoints,
-      showQuestion2
-    );
+    showActivationForName(selected, showQuestion2);
   });
+
+  async function showActivationForName(name, next){
+    let rank = "B";
+    let score = 300;
+
+    try{
+      if(typeof window.__getCurrentAttendanceScore === "function"){
+        const info = await window.__getCurrentAttendanceScore(name);
+        if(info && Number.isFinite(Number(info.score))){
+          score = Number(info.score);
+          rank = String(info.rank || attendanceRankClient(score));
+        }
+      }
+    }catch(_){
+      // Giữ luồng giao diện hoạt động nếu dữ liệu chấm công tạm thời chưa sẵn sàng.
+    }
+
+    showActivationMessage(name, rank, score, next);
+  }
 
   function showQuestion2(){
     counter.textContent="CÂU 2";
@@ -3984,7 +3994,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     question.style.opacity="1";question.style.pointerEvents="none";question.style.transform="scale(1)";
     const box=document.createElement("div");
     box.id="q2answers";
-    box.innerHTML=`<button id="doneBtn">Tôi đã hoàn thành</button><button id="laterBtn">Chưa, tôi sẽ quay lại sau</button>`;
+    box.innerHTML=`<button id="doneBtn">Tôi đã hoàn thành</button><button id="laterBtn">Tôi chưa hoàn thành</button>`;
     root.appendChild(box);
     Object.assign(box.style,{position:"absolute",left:"50%",top:"64%",transform:"translate(-50%,0)",zIndex:"22",
       display:"flex",flexDirection:"column",gap:"12px",width:"min(88vw,390px)",opacity:"0",transition:"opacity .25s"});
@@ -4024,7 +4034,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
     box.querySelector("#laterBtn").addEventListener("click",()=>{
       box.remove();
-      showMessage(`Không sao!<br><span class="small">Cố lên “${names[current]}” 💪</span>`,0);
+      showMessage(`<div class="later-message"><span class="later-title">Không sao!</span><span class="later-name">Cố lên “${names[current]}” 💪</span></div>`,0);
     });
   }
 
@@ -4077,10 +4087,11 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       opacity:1 !important;
       visibility:visible !important;
       pointer-events:none !important;
-      background:linear-gradient(145deg,#09040d,#140713 55%,#07030b) !important;
+      background:linear-gradient(145deg,#ffffff,#f4faf3 55%,#edf6eb) !important;
       padding:22px !important;
       border-radius:26px !important;
-      box-shadow:0 0 40px rgba(255,60,160,.16) !important;
+      border:1px solid #cbdcc9 !important;
+      box-shadow:0 16px 45px rgba(53,91,61,.12) !important;
       overflow:visible !important;
     `;
 
@@ -4156,7 +4167,99 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     }
   }
 
-  function showCapturePreview(imageUrl, blob){
+  async function captureTop(){
+    if(!topPanel.classList.contains("show")) return;
+
+    const btn = document.getElementById("topCaptureBtn");
+    if(!btn) return;
+
+    btn.disabled = true;
+    const oldText = btn.textContent;
+    btn.textContent = "⏳ Đang tạo ảnh…";
+
+    let clone = null;
+    let imageUrl = null;
+
+    try{
+      await ensureHtml2Canvas();
+
+      clone = topPanel.cloneNode(true);
+      clone.id = "topCaptureTemp";
+      clone.querySelector("#topActions")?.remove();
+
+      Object.assign(clone.style,{
+        position:"absolute",
+        left:"-100000px",
+        top:"0",
+        width:Math.min(window.innerWidth * 0.92,500) + "px",
+        maxHeight:"none",
+        height:"auto",
+        transform:"none",
+        opacity:"1",
+        visibility:"visible",
+        pointerEvents:"none",
+        background:"linear-gradient(145deg,#ffffff,#f4faf3 55%,#edf6eb)",
+        border:"1px solid #cbdcc9",
+        boxShadow:"0 16px 45px rgba(53,91,61,.12)",
+        overflow:"visible"
+      });
+
+      const select = clone.querySelector("#topMonthSelect");
+      if(select){
+        Object.assign(select.style,{
+          background:"#f7fbf6",
+          color:"#315744",
+          borderColor:"#cbdcc9",
+          boxShadow:"none",
+          backgroundImage:"none",
+          paddingRight:"14px"
+        });
+      }
+
+      const scroll = clone.querySelector("#topScroll");
+      if(scroll){
+        scroll.style.maxHeight = "none";
+        scroll.style.height = "auto";
+        scroll.style.overflow = "visible";
+      }
+
+      document.body.appendChild(clone);
+      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+      const canvas = await html2canvas(clone,{
+        backgroundColor:null,
+        scale:Math.min(3,Math.max(2,window.devicePixelRatio||2)),
+        useCORS:true,
+        allowTaint:false,
+        logging:false,
+        imageTimeout:10000,
+        width:clone.offsetWidth,
+        height:clone.scrollHeight,
+        windowWidth:clone.offsetWidth,
+        windowHeight:clone.scrollHeight
+      });
+
+      const blob = await new Promise(resolve=>canvas.toBlob(resolve,"image/png",1));
+      if(!blob) throw new Error("Không tạo được ảnh BXH");
+
+      imageUrl = URL.createObjectURL(blob);
+      showCapturePreview(imageUrl,blob,"📸 BXH TOP đã chụp","bxh-top-dao-meo.png","Chrome / Cốc Cốc: bấm Lưu ảnh hoặc nhấn giữ vào ảnh để lưu.");
+      setStatus("Đã tạo ảnh BXH ✓");
+    }catch(err){
+      console.error(err);
+      setStatus(err?.message || "Chụp BXH thất bại");
+      if(imageUrl){
+        try{URL.revokeObjectURL(imageUrl)}catch(_){}
+        imageUrl=null;
+      }
+    }finally{
+      clone?.remove();
+      btn.disabled=false;
+      btn.textContent=oldText;
+    }
+  }
+
+function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã chụp", filename="checklist-dao-meo.png", previewHint="Chrome / Cốc Cốc: bấm Lưu ảnh hoặc nhấn giữ vào ảnh để lưu."){
 
     document.getElementById("capturePreview")?.remove();
 
@@ -4164,7 +4267,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     overlay.id = "capturePreview";
     overlay.innerHTML = `
       <div class="capturePreviewBox">
-        <div class="capturePreviewTitle">📸 Checklist đã chụp</div>
+        <div class="capturePreviewTitle"></div>
 
         <div class="capturePreviewImageWrap">
           <img
@@ -4174,9 +4277,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
           >
         </div>
 
-        <div class="capturePreviewHint">
-          Chrome / Cốc Cốc: bấm <b>Lưu ảnh</b> hoặc nhấn giữ vào ảnh để lưu.
-        </div>
+        <div class="capturePreviewHint"></div>
 
         <div class="capturePreviewActions">
           <button type="button" id="captureShareBtn">
@@ -4197,6 +4298,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         </div>
       </div>
     `;
+
+    overlay.querySelector(".capturePreviewTitle").textContent = previewTitle;
+    overlay.querySelector(".capturePreviewHint").textContent = previewHint;
+    overlay.querySelector("#captureDownloadBtn").download = filename;
 
     document.body.appendChild(overlay);
 
@@ -4284,6 +4389,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
 
   captureBtn.addEventListener("click",captureChecklist);
+  document.getElementById("topCaptureBtn")?.addEventListener("click",captureTop);
 
 
   // ---------- Navigation ----------
@@ -5055,6 +5161,34 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     return promise;
   }
 
+  window.__getCurrentAttendanceScore = async function(name){
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    let result = null;
+    if(window.__attendanceCurrentMonthReady){
+      result = await window.__attendanceCurrentMonthReady;
+    }
+    if(!result){
+      result = await window.__getAttendanceTopDataForMonth(month, false);
+    }
+    const person = (result?.employees || []).find(x=>String(x?.name || '').trim() === String(name || '').trim());
+    if(!person) return null;
+
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const days = person.days || {};
+    let ot = 0;
+    let leave = 0;
+    for(let day=1; day<=daysInMonth; day++){
+      const status = String(days[String(day)] || '').toUpperCase();
+      if(status === 'T') ot++;
+      else if(status === 'P') leave++;
+    }
+    const score = 300 + ot * 40 - leave * 10;
+    return {score, rank:attendanceRankClient(score), ot, leave, off:daysInMonth - ot - leave, year, month};
+  };
+
+  // Preload tháng hiện tại nếu chưa có cache/RAM để kích hoạt và BXH mở gần như tức thời.
   // Cầu nối duy nhất cho BXH: giữ toàn bộ state chấm công trong IIFE này,
   // không đưa viewDate / ATTENDANCE_DATA ra global.
   window.__getAttendanceTopData = async function(){
@@ -5111,6 +5245,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
     return {year, month, employees, cached};
   };
+
+  // Preload tháng hiện tại nếu chưa có cache/RAM để kích hoạt và BXH mở gần như tức thời.
+  window.__attendanceCurrentMonthReady = window.__getAttendanceTopDataForMonth((new Date()).getMonth() + 1, false).catch(()=>null);
 
   function updateAttendanceMultiUI(){
     attendanceMultiCount.textContent = `${attendanceMultiDays.size} ngày`;
