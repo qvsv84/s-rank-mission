@@ -2970,6 +2970,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   let q1Opened = false;
   let dragging = false, startY = 0, dragOffset = 0;
   const ITEM_H = 58;
+  // Cache trạng thái khoá — tránh tính lại mỗi giây
+  let _lastLockCheck = 0;
+  let _cachedLocked = false;   // sẽ được set đúng ở lần gọi đầu
 
   // ---------- Timeout constants (dùng chung toàn module) ----------
   // Nguyên tắc: đủ dài để không fail giả, đủ ngắn để không treo UI.
@@ -3565,6 +3568,11 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       settingsFetchedAt = Date.now();
 
       scheduleNextReset();
+
+      // Reset cache lock để landing cập nhật ngay theo giờ khoá mới
+      _lastLockCheck = 0;
+      _cachedLocked = isChecklistLocked();
+
       renderLandingState();
       adminStatus.textContent = `Đã lưu • Reset ${resetTime} • Khoá Checklist ${checklistLockTime}`;
     }catch(e){
@@ -4607,14 +4615,50 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     loadData(true);
   }
   scheduleNextReset();
+
+  // ===== Tối ưu: chỉ render khi thực sự cần =====
+  // Trước: mỗi 1s gọi renderLandingState() + isChecklistLocked() → tốn CPU
+  // Sau:  - Tab ẩn → bỏ qua hoàn toàn (không tốn pin)
+  //       - Chỉ tính lại lock state mỗi 30s (đủ chính xác cho mốc giờ khoá)
+  //       - Chỉ render lại khi trạng thái lock THỰC SỰ thay đổi
+  _cachedLocked = isChecklistLocked();
+
   setInterval(()=>{
-    if(!q1Opened && !checklistPanel.classList.contains("show") && !topPanel.classList.contains("show")){
-      renderLandingState();
-      if(isChecklistLocked()) hint.textContent = "";
-      else if(names.length) hint.textContent = "Chạm vào câu hỏi";
+    // Tab đang ẩn → không làm gì
+    if(document.hidden) return;
+
+    const now = Date.now();
+
+    // Mỗi 30s mới tính lại trạng thái khoá (không phải mỗi 1s)
+    if(now - _lastLockCheck > 30000){
+      _lastLockCheck = now;
+      const nextLocked = isChecklistLocked();
+
+      // Chỉ render landing khi state thực sự đổi
+      if(nextLocked !== _cachedLocked){
+        _cachedLocked = nextLocked;
+        if(!q1Opened && !checklistPanel.classList.contains("show") && !topPanel.classList.contains("show")){
+          renderLandingState();
+        }
+      }
     }
-  },1000);
+
+    // Cập nhật hint (rất nhẹ, chỉ set textContent)
+    if(!q1Opened && !checklistPanel.classList.contains("show") && !topPanel.classList.contains("show")){
+      if(_cachedLocked){
+        if(hint.textContent !== "") hint.textContent = "";
+      }else if(names.length){
+        if(hint.textContent !== "Chạm vào câu hỏi") hint.textContent = "Chạm vào câu hỏi";
+      }
+    }
+  }, 1000);
+
   startAutoSync();
+  document.addEventListener("visibilitychange", () => {
+    if(document.hidden) return;
+    // Tab vừa hiện lại → reset timer để check ngay ở tick kế tiếp
+    _lastLockCheck = 0;
+  });
 
   const QUIZ_DATA_KEY="srank_quiz_questions_v1";
   const QUIZ_SCORE_KEY="srank_quiz_scores_v1";
