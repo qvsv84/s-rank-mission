@@ -3836,6 +3836,13 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   });
 
   function showQuestion2(){
+    // Đã sang Câu 2 thì ẩn hoàn toàn vòng chọn tên, không còn mờ phía sau
+    // và không thể chạm/chọn lại tên.
+    wheelArea.classList.remove("show");
+    wheelArea.style.opacity = "0";
+    wheelArea.style.pointerEvents = "none";
+    confirm.classList.remove("show");
+
     counter.textContent="CÂU 2";
     question.innerHTML=`<div class="system-question">
       <div class="system-question-title">HỆ THỐNG ĐẢO MÈO</div>
