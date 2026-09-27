@@ -2473,7 +2473,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 <main id="space">
 <div id="status"></div>
 <div id="connectionState" class="off"><span class="dot"></span><span id="connectionText">Đang kết nối…</span></div>
-<div id="appVersion" aria-label="Phiên bản">v1.05</div>
+<div id="appVersion" aria-label="Phiên bản">v1.04</div>
 
 <div id="questionWrap">
   <div id="counter">CÂU 1</div>
@@ -2827,7 +2827,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       <button class="att-status-option leave" type="button" data-status="P">Phép</button>
       <button class="att-status-option off" type="button" data-status="O">OFF</button>
       <button class="att-status-option ot" type="button" data-status="T">OT</button>
-      <button class="att-status-option clear" type="button" data-status="X">X</button>
       <button id="attendanceMultiBtn" class="att-status-option" type="button">☷ Chọn nhiều ngày</button>
       <button class="att-status-option clear" type="button" data-status="__clear">Xóa trạng thái</button>
     </div>
@@ -2841,7 +2840,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   <button class="att-multi-action p" data-multi-status="P" type="button">Phép</button>
   <button class="att-multi-action o" data-multi-status="O" type="button">OFF</button>
   <button class="att-multi-action t" data-multi-status="T" type="button">OT</button>
-  <button class="att-multi-action clear" data-multi-status="X" type="button">X</button>
   <button class="att-multi-action clear" data-multi-status="" type="button">Xóa</button>
 </div>
 
@@ -3511,12 +3509,14 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   // B < 400, A 400+, S 500+, SS 600+, SSS 750+, VIP 1000+.
   function attendanceRankClient(value){
     const score = Number(value) || 0;
-    if(score >= 1000) return "VIP";
-    if(score >= 750) return "SSS";
-    if(score >= 600) return "SS";
-    if(score >= 500) return "S";
-    if(score >= 400) return "A";
-    return "B";
+    if(score >= 700) return "VIP";
+    if(score >= 600) return "SSS";
+    if(score >= 500) return "SS";
+    if(score >= 400) return "S";
+    if(score >= 300) return "A";
+    if(score >= 200) return "B";
+    if(score >= 100) return "C";
+    return "D";
   }
 
 
@@ -3549,27 +3549,26 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     const daysInMonth = new Date(year, month, 0).getDate();
     const rows = (Array.isArray(employees) ? employees : []).map((employee,index)=>{
       const days = employee && employee.days ? employee.days : {};
-      let ot = 0;
-      let leave = 0;
-      let q = 0;
-      let x = 0;
-      let off = 0;
+      let tCount = 0;
+      let pCount = 0;
+      let qCount = 0;
+      let xCount = 0;
       for(let day=1; day<=daysInMonth; day++){
         const status = String(days[String(day)] || '').toUpperCase();
-        if(status === 'T') ot++;
-        else if(status === 'P') leave++;
-        else if(status === 'Q') q++;
-        else if(status === 'X') x++;
-        else if(status === 'O') off++;
+        if(status === 'T') tCount++;
+        else if(status === 'P') pCount++;
+        else if(status === 'Q') qCount++;
+        else if(status === 'X') xCount++;
       }
+      // Công thức backend v2.00: 300 + T*40 - P*10 - Q*100 - X*200
+      const points = 300 + tCount * 40 - pCount * 10 - qCount * 100 - xCount * 200;
       return {
         name: String(employee?.name || '').trim(),
-        points: 300 + ot * 40 - leave * 10 - q * 100 - x * 200,
-        ot,
-        leave,
-        q,
-        x,
-        off,
+        points,
+        tCount,
+        pCount,
+        qCount,
+        xCount,
         index
       };
     }).filter(row=>row.name);
@@ -4992,7 +4991,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       const days = person?.days || {};
       Object.keys(days).forEach(day => {
         const status = String(days[day] ?? '').trim().toUpperCase();
-        if(status === 'P' || status === 'O' || status === 'T' || status === 'Q' || status === 'X'){
+        if(status === 'P' || status === 'O' || status === 'T'){
           map[name][key(year, month, Number(day))] = status;
         }
       });
@@ -5034,7 +5033,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       const days = person?.days || {};
       Object.keys(days).forEach(day => {
         const status = String(days[day] ?? '').trim().toUpperCase();
-        if(status === 'P' || status === 'O' || status === 'T' || status === 'Q' || status === 'X'){
+        if(status === 'P' || status === 'O' || status === 'T'){
           ATTENDANCE_DATA[name][key(year, month, Number(day))] = status;
         }
       });
@@ -5051,8 +5050,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     if(s === 'P') return {className:'leave', label:'Phép'};
     if(s === 'O') return {className:'off', label:'OFF'};
     if(s === 'T') return {className:'ot', label:'OT'};
-    if(s === 'Q') return {className:'empty', label:'Q'};
-    if(s === 'X') return {className:'empty', label:'X'};
     return {className:'empty', label:'—'};
   }
 
@@ -5061,7 +5058,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       const days = {};
       for(let d=1; d<=31; d++){
         const value = ATTENDANCE_DATA[name]?.[key(year, month, d)];
-        if(value === 'P' || value === 'O' || value === 'T' || value === 'Q' || value === 'X') days[String(d)] = value;
+        if(value === 'P' || value === 'O' || value === 'T') days[String(d)] = value;
       }
       return {name, days};
     });
@@ -5196,21 +5193,19 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
     const daysInMonth = new Date(year, month, 0).getDate();
     const days = person.days || {};
-    let ot = 0;
-    let leave = 0;
-    let q = 0;
-    let x = 0;
-    let off = 0;
+    let tCount = 0;
+    let pCount = 0;
+    let qCount = 0;
+    let xCount = 0;
     for(let day=1; day<=daysInMonth; day++){
       const status = String(days[String(day)] || '').toUpperCase();
-      if(status === 'T') ot++;
-      else if(status === 'P') leave++;
-      else if(status === 'Q') q++;
-      else if(status === 'X') x++;
-      else if(status === 'O') off++;
+      if(status === 'T') tCount++;
+      else if(status === 'P') pCount++;
+      else if(status === 'Q') qCount++;
+      else if(status === 'X') xCount++;
     }
-    const score = 300 + ot * 40 - leave * 10 - q * 100 - x * 200;
-    return {score, rank:attendanceRankClient(score), ot, leave, q, x, off, year, month};
+    const score = 300 + tCount * 40 - pCount * 10 - qCount * 100 - xCount * 200;
+    return {score, rank:attendanceRankClient(score), tCount, pCount, qCount, xCount, off:daysInMonth - tCount - pCount - qCount - xCount, year, month};
   };
 
   // Preload tháng hiện tại nếu chưa có cache/RAM để kích hoạt và BXH mở gần như tức thời.
@@ -5223,27 +5218,25 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     const daysInMonth = new Date(y, m + 1, 0).getDate();
     const rows = ATTENDANCE_EMPLOYEES.map((name, index) => {
       const data = ATTENDANCE_DATA[name] || {};
-      let ot = 0;
-      let leave = 0;
-      let q = 0;
-      let x = 0;
-      let off = 0;
+      let tCount = 0;
+      let pCount = 0;
+      let qCount = 0;
+      let xCount = 0;
       for(let d=1; d<=daysInMonth; d++){
         const status = String(data[key(y,m,d)] || '').toUpperCase();
-        if(status === 'T') ot++;
-        else if(status === 'P') leave++;
-        else if(status === 'Q') q++;
-        else if(status === 'X') x++;
-        else if(status === 'O') off++;
+        if(status === 'T') tCount++;
+        else if(status === 'P') pCount++;
+        else if(status === 'Q') qCount++;
+        else if(status === 'X') xCount++;
       }
+      const points = 300 + tCount * 40 - pCount * 10 - qCount * 100 - xCount * 200;
       return {
         name,
-        points: 300 + ot * 40 - leave * 10 - q * 100 - x * 200,
-        ot,
-        leave,
-        q,
-        x,
-        off,
+        points,
+        tCount,
+        pCount,
+        qCount,
+        xCount,
         index
       };
     });
@@ -5394,7 +5387,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       ? ''
       : String(status || '').trim().toUpperCase();
 
-    if(cleanStatus && !['P','O','T','X'].includes(cleanStatus)) return;
+    if(cleanStatus && !['P','O','T'].includes(cleanStatus)) return;
 
     const nameAtRequest = selectedName;
     const monthAtRequest = m + 1;
@@ -5593,7 +5586,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   function dataFor(date){
     const y=date.getFullYear(), m=date.getMonth(), d=date.getDate();
     const raw = String(ATTENDANCE_DATA[selectedName]?.[key(y,m,d)] || '').trim().toUpperCase();
-    if(raw === 'P' || raw === 'O' || raw === 'T' || raw === 'Q' || raw === 'X') return {status:raw};
+    if(raw === 'P' || raw === 'O' || raw === 'T') return {status:raw};
 
     // Ngày đã tới nhưng không có mã P/O/T trong Sheet => ✓ (đi làm bình thường).
     const today = new Date();
@@ -5655,7 +5648,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
         label=info.label;
 
         if(item.status === 'V' || item.status === 'T') work++;
-        else if(item.status === 'O' || item.status === 'Q' || item.status === 'X') off++;
+        else if(item.status === 'O') off++;
         else if(item.status === 'P') leave++;
       }
 
