@@ -2971,6 +2971,15 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   let dragging = false, startY = 0, dragOffset = 0;
   const ITEM_H = 58;
 
+  // ---------- Timeout constants (dùng chung toàn module) ----------
+  // Nguyên tắc: đủ dài để không fail giả, đủ ngắn để không treo UI.
+  const TIMEOUT = {
+    FAST:      8000,
+    NORMAL:   12000,
+    SLOW:     20000,
+    DEFAULT:  12000
+  };
+
   // ---------- Fast JSONP transport ----------
   let requestSeq = 0;
   let syncInFlight = false;
@@ -2988,7 +2997,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     connectionState.className = state;
     connectionText.textContent = text;
   }
-  window.__srankApi = function(action, data = {}, timeout = 7000){
+  window.__srankApi = function(action, data = {}, timeout = TIMEOUT.DEFAULT){
     return new Promise((resolve,reject) => {
       setConnection("busy", "Đang đồng bộ…");
       const cb = "__srank_" + Date.now() + "_" + (++requestSeq);
@@ -3088,7 +3097,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     if(next.getTime() <= now.getTime()) next.setDate(next.getDate()+1);
     resetTimer = setTimeout(async()=>{
       try{
-        const r = await window.__srankApi("resetNow",{password:"8516"},7000);
+        const r = await window.__srankApi("resetNow",{password:"8516"},TIMEOUT.FAST);
         if(!r.ok) throw new Error(r.error || "Reset thất bại");
         checked = names.map(()=>false);
         times = names.map(()=>"");
@@ -3360,7 +3369,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
             password:"8516",
             name:names[i],
             checked:next ? "true" : "false"
-          }, 7000);
+          }, TIMEOUT.FAST);
           if(!r.ok) throw new Error(r.error || "Không cập nhật được checklist");
 
           checked[i] = next;
@@ -3406,7 +3415,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     adminOverlay.setAttribute("aria-hidden","false");
     checklistLockTimeInput.value = checklistLockTime;
     try{
-      const r=await window.__srankApi("getSettings",{},5000);
+      const r=await window.__srankApi("getSettings",{},TIMEOUT.FAST);
       if(!r.ok) throw new Error(r.error || "Không tải được cài đặt");
       resetTime=r.data.resetTime || "00:00";
       resetTimeInput.value=resetTime;
@@ -3488,7 +3497,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     adminStatus.textContent = "Đang lưu…";
     try{
       // Giờ reset vẫn lưu chung qua Apps Script.
-      const r = await window.__srankApi("setSettings",{password:"8516",resetTime:time,checklistLockTime:lockTime},7000);
+      const r = await window.__srankApi("setSettings",{password:"8516",resetTime:time,checklistLockTime:lockTime},TIMEOUT.FAST);
       if(!r.ok) throw new Error(r.error || "Không lưu được");
 
       resetTime = r.data.resetTime || time;
@@ -3728,7 +3737,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         buildWheel();
       }
 
-      const r = await window.__srankApi("getData");
+      const r = await window.__srankApi("getData", {}, TIMEOUT.NORMAL);
       if(!r.ok) throw new Error(r.error || "getData lỗi");
 
       const serverNames = Array.isArray(r.data.names) ? r.data.names : [];
@@ -3818,7 +3827,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         name,
         clientTime,
         clientEpoch:String(Date.now())
-      },6000);
+      }, TIMEOUT.NORMAL);
       if(!r.ok) throw new Error(r.error || "checkin lỗi");
 
       // Cố ý KHÔNG làm: times[index] = r.data.time
@@ -4512,7 +4521,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   renderLandingState();
   (async()=>{
     try{
-      const r = await window.__srankApi("getSettings",{},5000);
+      const r = await window.__srankApi("getSettings",{},TIMEOUT.FAST);
       if(r.ok && r.data){
         if(isValid24hTime(r.data.resetTime)) resetTime = r.data.resetTime;
         if(isValid24hTime(r.data.checklistLockTime)){
@@ -5180,7 +5189,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
     const promise = (async()=>{
       try{
-        const r = await window.__srankApi('getAttendance',{month:m+1, _ts:Date.now()},10000);
+        const r = await window.__srankApi('getAttendance',{month:m+1, _ts:Date.now()}, TIMEOUT.SLOW);
         if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet trả về dữ liệu không hợp lệ');
         if(!r.data || !Array.isArray(r.data.employees)) throw new Error('Phản hồi getAttendance thiếu danh sách employees');
 
@@ -5307,7 +5316,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     if(Array.isArray(employees) && employees.length){
       cached = true;
     }else{
-      const r = await window.__srankApi('getAttendance',{month, _ts:Date.now()},10000);
+      const r = await window.__srankApi('getAttendance',{month, _ts:Date.now()}, TIMEOUT.SLOW);
       if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet trả về dữ liệu không hợp lệ');
       employees = Array.isArray(r.data?.employees) ? r.data.employees : [];
       rememberAttendanceRaw(year, monthIndex, employees);
@@ -5364,7 +5373,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     try{
       const r = await window.__srankApi('setAttendanceBatch',{
         month: monthAtRequest, days, name: nameAtRequest, status: cleanStatus
-      },20000);
+      }, TIMEOUT.SLOW);
       if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet không xác nhận đã lưu');
 
       // Server đã xác nhận ghi thành công; cập nhật state tại chỗ.
@@ -5457,7 +5466,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       const r = await window.__srankApi(
         'setAttendance',
         payload,
-        20000
+        TIMEOUT.SLOW
       );
 
       if(!r || r.ok !== true){
