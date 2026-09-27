@@ -2409,7 +2409,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .att-day-num{font-size:12px;font-weight:900;color:#37695e;line-height:1}
 .att-day.today .att-day-num{width:25px;height:25px;display:flex;align-items:center;justify-content:center;border-radius:9px;background:#58b99d;color:#fff;box-shadow:0 5px 12px rgba(55,171,141,.22)}
 .att-status{width:100%;padding:4px 2px;border-radius:8px;text-align:center;font-size:8px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.att-status.work{background:#e0f7ee;color:#26836b}.att-status.off{background:#ffd9df;color:#b33a4b}.att-status.leave{background:#fff0a8;color:#8a6500}.att-status.q{background:#ffe7bf;color:#a85f00}.att-status.x{background:#f5d7d7;color:#a23a3a}.att-status.empty{background:#eef4f2;color:#8da09b}
+.att-status.work{background:#e0f7ee;color:#26836b}.att-status.off{background:#ffd9df;color:#b33a4b}.att-status.leave{background:#fff0a8;color:#8a6500}.att-status.empty{background:#eef4f2;color:#8da09b}
 .att-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .att-stat{padding:12px;border-radius:17px;background:rgba(255,255,255,.72);border:1px solid rgba(40,105,91,.07);text-align:center}.att-stat strong{display:block;font-size:20px;line-height:1;color:#276958}.att-stat span{display:block;margin-top:5px;font-size:9px;font-weight:750;color:#809b95}
 #attendanceSyncBar{display:flex;align-items:center;gap:8px;margin-top:10px}
@@ -2450,7 +2450,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .att-status-option.work{background:#e0f7ee;color:#26836b}
 .att-status-option.leave{background:#fff0a8;color:#8a6500}
 .att-status-option.off{background:#ffd9df;color:#b33a4b}
-.att-status-option.ot{background:#d9f5e6;color:#24724d}.att-status-option.x{background:#f5d7d7;color:#a23a3a}
+.att-status-option.ot{background:#d9f5e6;color:#24724d}
 .att-status-option.clear{grid-column:1/-1;background:#fff;border-color:rgba(166,94,94,.14);color:#a05e5e}
 #attendanceStatusSaving{text-align:center;min-height:16px;margin-top:11px;color:#7b9b94;font-size:10px}
 .att-status.ot{background:#d9f5e6;color:#24724d}
@@ -2461,7 +2461,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 #attendanceMultiBar.show{display:flex}
 #attendanceMultiCount{flex:1;min-width:55px;color:#2f685b;font-size:10px;font-weight:900;text-align:center}
 .att-multi-action{height:38px;padding:0 10px;border:0;border-radius:11px;font-size:10px;font-weight:900;white-space:nowrap}
-.att-multi-action.p{background:#fff0a8;color:#8a6500}.att-multi-action.o{background:#ffd9df;color:#b33a4b}.att-multi-action.t{background:#d9f5e6;color:#24724d}.att-multi-action.x{background:#f5d7d7;color:#a23a3a}.att-multi-action.clear{background:#f4f4f4;color:#8b6666}.att-multi-action.cancel{background:#edf7f3;color:#477a6d}
+.att-multi-action.p{background:#fff0a8;color:#8a6500}.att-multi-action.o{background:#ffd9df;color:#b33a4b}.att-multi-action.t{background:#d9f5e6;color:#24724d}.att-multi-action.clear{background:#f4f4f4;color:#8b6666}.att-multi-action.cancel{background:#edf7f3;color:#477a6d}
 @media(max-width:420px){#attendanceMultiBar{gap:4px;padding:7px}.att-multi-action{padding:0 7px;font-size:9px}}
 
 /* ===== CHẤM CÔNG: nút nằm bên phải Bữa trưa ===== */
@@ -2473,7 +2473,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 <main id="space">
 <div id="status"></div>
 <div id="connectionState" class="off"><span class="dot"></span><span id="connectionText">Đang kết nối…</span></div>
-<div id="appVersion" aria-label="Phiên bản">v1.05</div>
+<div id="appVersion" aria-label="Phiên bản">v1.04</div>
 
 <div id="questionWrap">
   <div id="counter">CÂU 1</div>
@@ -2827,7 +2827,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       <button class="att-status-option leave" type="button" data-status="P">Phép</button>
       <button class="att-status-option off" type="button" data-status="O">OFF</button>
       <button class="att-status-option ot" type="button" data-status="T">OT</button>
-      <button class="att-status-option x" type="button" data-status="X">X</button>
       <button id="attendanceMultiBtn" class="att-status-option" type="button">☷ Chọn nhiều ngày</button>
       <button class="att-status-option clear" type="button" data-status="__clear">Xóa trạng thái</button>
     </div>
@@ -2841,7 +2840,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   <button class="att-multi-action p" data-multi-status="P" type="button">Phép</button>
   <button class="att-multi-action o" data-multi-status="O" type="button">OFF</button>
   <button class="att-multi-action t" data-multi-status="T" type="button">OT</button>
-  <button class="att-multi-action x" data-multi-status="X" type="button">X</button>
   <button class="att-multi-action clear" data-multi-status="" type="button">Xóa</button>
 </div>
 
@@ -2849,7 +2847,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 (() => {
   "use strict";
 
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJ1ebyNNe7fxlNR6TObBYebp7zRORGZTO0kTzlFl-S39I2vUJjDx9h0quV84od9JAfeg/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJ1ebyNNe7fxlNR6TObBYebp7zRORGZTO0kTzlFl-S39I2vIJjDx9h0quV84od9JAfeg/exec";
   const CACHE_KEY = "srank_check_v4";
   const root = document.getElementById("space");
   const question = document.getElementById("question");
@@ -3549,21 +3547,18 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     const daysInMonth = new Date(year, month, 0).getDate();
     const rows = (Array.isArray(employees) ? employees : []).map((employee,index)=>{
       const days = employee && employee.days ? employee.days : {};
-      let ot = 0, leave = 0, q = 0, x = 0;
+      let ot = 0;
+      let leave = 0;
       for(let day=1; day<=daysInMonth; day++){
         const status = String(days[String(day)] || '').toUpperCase();
         if(status === 'T') ot++;
         else if(status === 'P') leave++;
-        else if(status === 'Q') q++;
-        else if(status === 'X') x++;
       }
       return {
         name: String(employee?.name || '').trim(),
-        points: 300 + ot * 40 - leave * 10 - q * 100 - x * 200,
+        points: 300 + ot * 40 - leave * 10,
         ot,
         leave,
-        q,
-        x,
         index
       };
     }).filter(row=>row.name);
@@ -3790,10 +3785,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       if(r.data && Number.isFinite(Number(r.data.points))) {
         points[index] = Number(r.data.points);
         ranks[index] = r.data.rank || rankClient(points[index]);
-      }
-      if(r.data && r.data.attendanceStatus){
-        const nowLocal = new Date();
-        window.__setCurrentAttendanceStatus?.(name, r.data.attendanceStatus, Number(r.data.attendanceYear), Number(r.data.attendanceMonth), Number(r.data.attendanceDay));
       }
       cacheSave();
       renderChecklist();
@@ -4923,7 +4914,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   let attendanceLoadToken = 0;
   let attendanceLoadPromise = null;
   let attendanceLoadPromiseKey = '';
-  let attendanceFinalizeSyncKey = '';
   let attendanceEditingDay = 0;
   let attendanceMultiMode = false;
   const attendanceMultiDays = new Set();
@@ -5033,7 +5023,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       const days = person?.days || {};
       Object.keys(days).forEach(day => {
         const status = String(days[day] ?? '').trim().toUpperCase();
-        if(['P','O','T','Q','X'].includes(status)){
+        if(status === 'P' || status === 'O' || status === 'T'){
           ATTENDANCE_DATA[name][key(year, month, Number(day))] = status;
         }
       });
@@ -5050,8 +5040,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     if(s === 'P') return {className:'leave', label:'Phép'};
     if(s === 'O') return {className:'off', label:'OFF'};
     if(s === 'T') return {className:'ot', label:'OT'};
-    if(s === 'Q') return {className:'q', label:'Q'};
-    if(s === 'X') return {className:'x', label:'X'};
     return {className:'empty', label:'—'};
   }
 
@@ -5060,7 +5048,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       const days = {};
       for(let d=1; d<=31; d++){
         const value = ATTENDANCE_DATA[name]?.[key(year, month, d)];
-        if(['P','O','T','Q','X'].includes(value)) days[String(d)] = value;
+        if(value === 'P' || value === 'O' || value === 'T') days[String(d)] = value;
       }
       return {name, days};
     });
@@ -5097,18 +5085,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
     employee.value = selectedName;
     updateWheelButton();
-  }
-
-  function currentAttendanceRequestKey(){
-    const now = new Date();
-    return now.getFullYear() + '-' + (now.getMonth() + 1);
-  }
-
-  function shouldFinalizeAttendanceNow(year, monthIndex){
-    const now = new Date();
-    if(year !== now.getFullYear() || monthIndex !== now.getMonth()) return false;
-    const locked = typeof isChecklistLocked === 'function' ? isChecklistLocked() : false;
-    return locked && attendanceFinalizeSyncKey !== currentAttendanceRequestKey();
   }
 
   async function loadAttendanceMonth(force = false){
@@ -5160,9 +5136,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
           applyAttendanceData(r.data, y, m);
           attendanceServerLoaded = true;
           attendanceServerLoadedKey = requestKey;
-          if(shouldFinalizeAttendanceNow(y,m) || (y===new Date().getFullYear() && m===new Date().getMonth() && isChecklistLocked())){
-            attendanceFinalizeSyncKey = requestKey;
-          }
           render();
         }
         return r;
@@ -5210,16 +5183,15 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
     const daysInMonth = new Date(year, month, 0).getDate();
     const days = person.days || {};
-    let ot = 0, leave = 0, q = 0, x = 0;
+    let ot = 0;
+    let leave = 0;
     for(let day=1; day<=daysInMonth; day++){
       const status = String(days[String(day)] || '').toUpperCase();
       if(status === 'T') ot++;
       else if(status === 'P') leave++;
-      else if(status === 'Q') q++;
-      else if(status === 'X') x++;
     }
-    const score = 300 + ot * 40 - leave * 10 - q * 100 - x * 200;
-    return {score, rank:attendanceRankClient(score), ot, leave, q, x, off:daysInMonth - ot - leave - q, year, month};
+    const score = 300 + ot * 40 - leave * 10;
+    return {score, rank:attendanceRankClient(score), ot, leave, off:daysInMonth - ot - leave, year, month};
   };
 
   // Preload tháng hiện tại nếu chưa có cache/RAM để kích hoạt và BXH mở gần như tức thời.
@@ -5232,21 +5204,18 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     const daysInMonth = new Date(y, m + 1, 0).getDate();
     const rows = ATTENDANCE_EMPLOYEES.map((name, index) => {
       const data = ATTENDANCE_DATA[name] || {};
-      let ot = 0, leave = 0, q = 0, x = 0;
+      let ot = 0;
+      let leave = 0;
       for(let d=1; d<=daysInMonth; d++){
         const status = String(data[key(y,m,d)] || '').toUpperCase();
         if(status === 'T') ot++;
         else if(status === 'P') leave++;
-        else if(status === 'Q') q++;
-        else if(status === 'X') x++;
       }
       return {
         name,
-        points: 300 + ot * 40 - leave * 10 - q * 100 - x * 200,
+        points: 300 + ot * 40 - leave * 10,
         ot,
         leave,
-        q,
-        x,
         index
       };
     });
@@ -5258,9 +5227,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     const year = now.getFullYear();
     const month = Math.max(1, Math.min(12, Number(monthNumber) || (now.getMonth() + 1)));
     const monthIndex = month - 1;
-
-    const forceFinalize = shouldFinalizeAttendanceNow(year, monthIndex);
-    if(forceFinalize) force = true;
 
     let employees = !force ? getAttendanceRawMemory(year, monthIndex) : null;
     let cached = false;
@@ -5280,7 +5246,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet trả về dữ liệu không hợp lệ');
       employees = Array.isArray(r.data?.employees) ? r.data.employees : [];
       rememberAttendanceRaw(year, monthIndex, employees);
-      if(year===new Date().getFullYear() && monthIndex===new Date().getMonth() && isChecklistLocked()) attendanceFinalizeSyncKey = year + '-' + month;
       saveAttendanceCache(year, monthIndex, employees);
     }
 
@@ -5289,20 +5254,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
   // Preload tháng hiện tại nếu chưa có cache/RAM để kích hoạt và BXH mở gần như tức thời.
   window.__attendanceCurrentMonthReady = window.__getAttendanceTopDataForMonth((new Date()).getMonth() + 1, false).catch(()=>null);
-
-  window.__setCurrentAttendanceStatus = function(name, status, year, monthNumber, day){
-    const cleanName = String(name || '').trim();
-    const cleanStatus = String(status || '').trim().toUpperCase();
-    if(!cleanName || !['P','O','T','Q','X'].includes(cleanStatus)) return;
-    const y = Number(year);
-    const m = Number(monthNumber) - 1;
-    const d = Number(day);
-    if(!Number.isInteger(y) || !Number.isInteger(m) || !Number.isInteger(d)) return;
-    if(!ATTENDANCE_DATA[cleanName]) ATTENDANCE_DATA[cleanName] = {};
-    ATTENDANCE_DATA[cleanName][key(y,m,d)] = cleanStatus;
-    rebuildAttendanceCacheFromCurrent(y,m);
-    if(viewDate.getFullYear()===y && viewDate.getMonth()===m && selectedName===cleanName) render();
-  };
 
   function updateAttendanceMultiUI(){
     attendanceMultiCount.textContent = `${attendanceMultiDays.size} ngày`;
@@ -5415,7 +5366,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       ? ''
       : String(status || '').trim().toUpperCase();
 
-    if(cleanStatus && !['P','O','T','X'].includes(cleanStatus)) return;
+    if(cleanStatus && !['P','O','T'].includes(cleanStatus)) return;
 
     const nameAtRequest = selectedName;
     const monthAtRequest = m + 1;
@@ -5614,7 +5565,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   function dataFor(date){
     const y=date.getFullYear(), m=date.getMonth(), d=date.getDate();
     const raw = String(ATTENDANCE_DATA[selectedName]?.[key(y,m,d)] || '').trim().toUpperCase();
-    if(['P','O','T','Q','X'].includes(raw)) return {status:raw};
+    if(raw === 'P' || raw === 'O' || raw === 'T') return {status:raw};
 
     // Ngày đã tới nhưng không có mã P/O/T trong Sheet => ✓ (đi làm bình thường).
     const today = new Date();
@@ -5675,8 +5626,8 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
         status=info.className;
         label=info.label;
 
-        if(item.status === 'V' || item.status === 'T' || item.status === 'Q') work++;
-        else if(item.status === 'O' || item.status === 'X') off++;
+        if(item.status === 'V' || item.status === 'T') work++;
+        else if(item.status === 'O') off++;
         else if(item.status === 'P') leave++;
       }
 
