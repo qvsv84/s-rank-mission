@@ -106,7 +106,10 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #topPanel{position:absolute;left:50%;top:50%;z-index:10001;width:min(92vw,500px);max-height:82vh;transform:translate(-50%,-50%) scale(.94);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,transform .3s;padding:20px;border:1px solid rgba(255,255,255,.14);border-radius:26px;background:linear-gradient(145deg,rgba(20,8,24,.97),rgba(6,4,12,.98));box-shadow:0 18px 60px rgba(0,0,0,.62),0 0 40px rgba(255,60,160,.16);backdrop-filter:blur(18px)}
 #topPanel.show{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
 #topTitle{text-align:center;color:#fff;font-size:26px;font-weight:850;text-shadow:0 0 10px #fff,0 0 28px #ff4fa3}
-#topSub{text-align:center;color:rgba(255,255,255,.48);font-size:12px;margin:5px 0 15px}
+#topSub{text-align:center;color:rgba(255,255,255,.48);font-size:12px;margin:5px 0 12px}
+#topMonthBar{display:flex;justify-content:center;align-items:center;gap:8px;margin:0 auto 14px}
+#topMonthSelect{appearance:none;-webkit-appearance:none;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:9px 34px 9px 14px;background:rgba(255,255,255,.08);color:#fff;font-size:13px;font-weight:800;text-align:center;outline:none;box-shadow:0 0 16px rgba(255,60,160,.08);background-image:linear-gradient(45deg,transparent 50%,rgba(255,255,255,.8) 50%),linear-gradient(135deg,rgba(255,255,255,.8) 50%,transparent 50%);background-position:calc(100% - 17px) 13px,calc(100% - 12px) 13px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+#topMonthSelect option{color:#111;background:#fff}
 #topScroll{max-height:60vh;overflow:auto;border-radius:18px;scrollbar-width:none}
 #topScroll::-webkit-scrollbar{display:none}
 #topTable{width:100%;border-collapse:separate;border-spacing:0;border:1px solid rgba(255,255,255,.12);border-radius:18px;overflow:hidden;background:rgba(8,4,12,.72)}
@@ -2757,8 +2760,11 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 </section>
 
 <section id="topPanel" aria-hidden="true">
-  <div id="topTitle">🏆 BXH TOP</div>
-  <div id="topSub">Xếp hạng theo tổng điểm</div>
+  <div id="topTitle">🏆 BXH TOP THÁNG 9</div>
+  <div id="topSub">Xếp hạng theo điểm chấm công</div>
+  <div id="topMonthBar">
+    <select id="topMonthSelect" aria-label="Chọn tháng BXH TOP"></select>
+  </div>
   <div id="topScroll"><table id="topTable">
     <thead><tr><th>#</th><th>Tên</th><th>⭐ Điểm</th><th>Rank</th></tr></thead><tbody></tbody>
   </table></div>
@@ -3122,6 +3128,8 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   const topPanel = document.getElementById("topPanel");
   const topBody = document.querySelector("#topTable tbody");
   const topCloseBtn = document.getElementById("topCloseBtn");
+  const topMonthSelect = document.getElementById("topMonthSelect");
+  const topTitle = document.getElementById("topTitle");
   const adminBtn = document.getElementById("adminBtn");
   const monitorBtn = document.getElementById("monitorBtn");
   const monitorOverlay = document.getElementById("monitorOverlay");
@@ -3768,6 +3776,8 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     return "D";
   }
 
+  // BXH chấm công dùng đúng 6 rank:
+  // B < 400, A 400+, S 500+, SS 600+, SSS 750+, VIP 1000+.
   function attendanceRankClient(value){
     const score = Number(value) || 0;
     if(score >= 1000) return "VIP";
@@ -3778,13 +3788,68 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     return "B";
   }
 
-  async function renderTop(){
-    topBody.innerHTML = '';
-    try{
-      const result = await window.__getAttendanceTopData();
-      const rows = Array.isArray(result?.rows) ? result.rows.slice() : [];
+  function currentSelectedPoints(){ return Number(points[current]) || 0; }
 
-      rows.sort((a,b)=>b.score-a.score || a.index-b.index);
+  function initTopMonthSelect(){
+    if(!topMonthSelect) return;
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    topMonthSelect.innerHTML = '';
+    for(let month=1; month<=12; month++){
+      const option = document.createElement('option');
+      option.value = String(month);
+      option.textContent = `Tháng ${month}`;
+      // Chỉ cho chọn tháng đã tới trong năm hiện tại.
+      option.disabled = month > currentMonth;
+      topMonthSelect.appendChild(option);
+    }
+    topMonthSelect.value = String(currentMonth);
+  }
+
+  function resetTopToCurrentMonth(){
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    if(topMonthSelect) topMonthSelect.value = String(currentMonth);
+    if(topTitle) topTitle.textContent = `🏆 BXH TOP THÁNG ${currentMonth}`;
+  }
+
+  async function renderTop(monthNumber){
+    const now = new Date();
+    const month = Number(monthNumber) || (now.getMonth() + 1);
+    const year = now.getFullYear();
+
+    if(topMonthSelect) topMonthSelect.value = String(month);
+    if(topTitle) topTitle.textContent = `🏆 BXH TOP THÁNG ${month}`;
+    topBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:18px">Đang tải BXH…</td></tr>';
+
+    try{
+      // BXH có state tháng RIÊNG, không dùng viewDate của trang Chấm công.
+      // Vì vậy đang xem tháng 8 ở Chấm công rồi thoát ra vẫn không làm BXH
+      // bị kẹt ở tháng 8: mỗi lần mở BXH sẽ reset về tháng hiện tại.
+      const result = await window.__srankApi('getAttendance',{month, _ts:Date.now()},12000);
+      if(!result || result.ok !== true) throw new Error(result?.error || 'Không tải được dữ liệu chấm công');
+      const employees = Array.isArray(result?.data?.employees) ? result.data.employees : [];
+      const daysInMonth = new Date(year, month, 0).getDate();
+
+      const rows = employees.map((employee,index)=>{
+        const days = employee && employee.days ? employee.days : {};
+        let ot = 0;
+        let leave = 0;
+        for(let day=1; day<=daysInMonth; day++){
+          const status = String(days[String(day)] || '').toUpperCase();
+          if(status === 'T') ot++;
+          else if(status === 'P') leave++;
+        }
+        return {
+          name: String(employee?.name || '').trim(),
+          points: 300 + ot * 40 - leave * 10,
+          ot,
+          leave,
+          index
+        };
+      }).filter(row=>row.name);
+
+      rows.sort((a,b)=>b.points-a.points || a.index-b.index);
 
       const frag = document.createDocumentFragment();
       rows.forEach((row,i)=>{
@@ -3792,10 +3857,12 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         if(i < 3) tr.classList.add('topRow' + (i + 1));
         tr.innerHTML = `<td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td><td class="topName"></td><td class="topPoints"></td><td><span class="topRank"></span></td>`;
         tr.querySelector('.topName').textContent = row.name;
-        tr.querySelector('.topPoints').textContent = Number(row.score || 0).toLocaleString('vi-VN');
-        tr.querySelector('.topRank').textContent = attendanceRankClient(row.score);
+        tr.querySelector('.topPoints').textContent = Number(row.points || 0).toLocaleString('vi-VN');
+        tr.querySelector('.topRank').textContent = attendanceRankClient(row.points);
         frag.appendChild(tr);
       });
+
+      topBody.innerHTML = '';
       topBody.appendChild(frag);
     }catch(_){
       topBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:18px">Không tải được dữ liệu chấm công</td></tr>';
@@ -4642,11 +4709,20 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     checklistPanel.style.visibility = "hidden";
     checklistPanel.style.opacity = "0";
     checklistPanel.style.pointerEvents = "none";
-    renderTop();
+
+    // Mỗi lần mở BXH luôn quay về tháng hiện tại.
+    resetTopToCurrentMonth();
     topPanel.classList.add("show");
     topPanel.setAttribute("aria-hidden","false");
+    renderTop();
     if(typeof syncQuickTools==="function") syncQuickTools();
   });
+
+  topMonthSelect?.addEventListener("change", ()=>{
+    renderTop(Number(topMonthSelect.value));
+  });
+
+  initTopMonthSelect();
 
   topCloseBtn.addEventListener("click", ()=>{closeTop();if(typeof syncQuickTools==="function")syncQuickTools()});
   topPanel.addEventListener("click", e => { if(e.target === topPanel) closeTop(); });
@@ -5392,7 +5468,7 @@ function showSystemFinalMessage(el, message){
       }
       return {
         name,
-        score: 300 + ot * 40 - leave * 10,
+        points: 300 + ot * 40 - leave * 10,
         ot,
         leave,
         index
@@ -5524,14 +5600,16 @@ function showSystemFinalMessage(el, message){
     // Không sửa ATTENDANCE_DATA, không sửa cache và không render trạng thái mới
     // trước khi Apps Script xác nhận đã ghi thành công.
     try{
+      const payload = {
+        month: monthAtRequest,
+        day: dayAtRequest,
+        name: nameAtRequest,
+        status: cleanStatus
+      };
+
       const r = await window.__srankApi(
-        'setAttendanceBatch',
-        {
-          month: monthAtRequest,
-          days: [dayAtRequest],
-          name: nameAtRequest,
-          status: cleanStatus
-        },
+        'setAttendance',
+        payload,
         20000
       );
 
@@ -5542,15 +5620,14 @@ function showSystemFinalMessage(el, message){
       }
 
       // Apps Script trả về dữ liệu sau khi ghi + SpreadsheetApp.flush().
-      // Batch 1 ngày cũng dùng cùng một response shape với batch nhiều ngày.
+      // Chỉ từ response của server mới cập nhật giao diện.
       const saved = r.data || {};
 
       if(
         saved.name &&
         String(saved.name).trim() === nameAtRequest &&
-        Number(saved.month) === monthAtRequest &&
-        Array.isArray(saved.days) &&
-        saved.days.some(value => Number(value) === dayAtRequest)
+        Number(saved.day) === dayAtRequest &&
+        Number(saved.month) === monthAtRequest
       ){
         const k = key(y, m, day);
 
@@ -5569,8 +5646,8 @@ function showSystemFinalMessage(el, message){
         if(viewDate.getFullYear() === y && viewDate.getMonth() === m && selectedName === nameAtRequest) render();
       }
 
-      attendanceStatusSaving.textContent = Array.isArray(saved.cells) && saved.cells.length
-        ? ('Đã lưu ✓ • ' + saved.cells[0])
+      attendanceStatusSaving.textContent = saved.cell
+        ? ('Đã lưu ✓ • ' + saved.cell)
         : 'Đã lưu ✓';
 
       setTimeout(closeAttendanceStatus, 500);
