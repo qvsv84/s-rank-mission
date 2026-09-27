@@ -270,7 +270,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #appVersion{
   position:fixed;
   left:10px;
-  bottom:10px;
+  top:34px;
   z-index:10002;
   color:rgba(78,112,91,.58);
   font-size:9px;
@@ -2473,7 +2473,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 <main id="space">
 <div id="status"></div>
 <div id="connectionState" class="off"><span class="dot"></span><span id="connectionText">Đang kết nối…</span></div>
-<div id="appVersion" aria-label="Phiên bản">v1.01</div>
+<div id="appVersion" aria-label="Phiên bản">v1.03</div>
 
 <div id="questionWrap">
   <div id="counter">CÂU 1</div>
@@ -2733,6 +2733,11 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       <label for="resetTimeInput">Giờ reset mỗi ngày</label>
       <input id="resetTimeInput" type="text" value="00:00" inputmode="numeric" maxlength="5" pattern="(?:[01]\d|2[0-3]):[0-5]\d" placeholder="00:00" autocomplete="off" aria-label="Giờ reset 24 giờ">
     </div>
+    <div class="adminField">
+      <label for="checklistLockTimeInput">Giờ khoá Checklist</label>
+      <input id="checklistLockTimeInput" type="text" value="21:00" inputmode="numeric" maxlength="5" pattern="(?:[01]\d|2[0-3]):[0-5]\d" placeholder="21:00" autocomplete="off" aria-label="Giờ khoá Checklist 24 giờ">
+    </div>
+    <div style="margin:-5px 0 12px;font-size:10px;line-height:1.4;color:rgba(255,255,255,.42);text-align:right;">Sau giờ này nút Checklist sẽ chuyển thành “Tạm khoá Checklist”.</div>
     <div id="adminStatus"></div>
     <div id="adminActions">
       <button id="adminCloseBtn" type="button">Đóng</button>
@@ -2923,6 +2928,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   const adminOverlay = document.getElementById("adminOverlay");
   const adminPanel = document.getElementById("adminPanel");
   const resetTimeInput = document.getElementById("resetTimeInput");
+  const checklistLockTimeInput = document.getElementById("checklistLockTimeInput");
   const adminStatus = document.getElementById("adminStatus");
   const adminCloseBtn = document.getElementById("adminCloseBtn");
   const adminSaveBtn = document.getElementById("adminSaveBtn");
@@ -2933,6 +2939,11 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     let v = resetTimeInput.value.replace(/\D/g, "").slice(0, 4);
     if(v.length > 2) v = v.slice(0,2) + ":" + v.slice(2);
     resetTimeInput.value = v;
+  });
+  checklistLockTimeInput.addEventListener("input", () => {
+    let v = checklistLockTimeInput.value.replace(/\D/g, "").slice(0, 4);
+    if(v.length > 2) v = v.slice(0,2) + ":" + v.slice(2);
+    checklistLockTimeInput.value = v;
   });
   const captureBtn = document.getElementById("captureBtn");
 
@@ -2952,6 +2963,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   let autoSyncTimer = null;
   const AUTO_SYNC_MS = 30000;
   const Q1_CACHE_KEY = "srank_q1_answer_v1";
+  const CHECKLIST_LOCK_KEY = "srank_checklist_lock_time_v1";
   try{ localStorage.removeItem(Q1_CACHE_KEY); }catch(_){}
   const connectionState = document.getElementById("connectionState");
   const connectionText = document.getElementById("connectionText");
@@ -3032,7 +3044,24 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
   let resetTime = "00:00";
   let resetTimer = null;
+  let checklistLockTime = "21:00";
   let initialSheetLoaded = false;
+
+  function isValid24hTime(value){
+    return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || "").trim());
+  }
+
+  function loadChecklistLockTime(){
+    try{
+      const saved = String(localStorage.getItem(CHECKLIST_LOCK_KEY) || "").trim();
+      if(isValid24hTime(saved)) checklistLockTime = saved;
+    }catch(_){ }
+  }
+
+  function saveChecklistLockTime(value){
+    checklistLockTime = String(value || "21:00").trim();
+    try{ localStorage.setItem(CHECKLIST_LOCK_KEY, checklistLockTime); }catch(_){ }
+  }
 
   function scheduleNextReset(){
     if(resetTimer) clearTimeout(resetTimer);
@@ -3350,14 +3379,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     adminChecklistRows.appendChild(frag);
   }
 
-  async function verifyAdmin(){
-    const password=adminPasswordInput.value.trim();
-    if(password !== "8516"){
-      adminPasswordMsg.textContent="Mật khẩu không đúng.";
-      adminPasswordInput.value="";
-      adminPasswordInput.focus();
-      return;
-    }
+  async function openAdminSettings(){
     closeAdminPassword();
     adminUnlocked = true;
     renderMonitor();
@@ -3366,17 +3388,37 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     adminStatus.textContent="Đang tải cài đặt…";
     adminOverlay.classList.add("show");
     adminOverlay.setAttribute("aria-hidden","false");
+    checklistLockTimeInput.value = checklistLockTime;
     try{
       const r=await window.__srankApi("getSettings",{},5000);
       if(!r.ok) throw new Error(r.error || "Không tải được cài đặt");
       resetTime=r.data.resetTime || "00:00";
       resetTimeInput.value=resetTime;
+      if(isValid24hTime(r.data.checklistLockTime)){
+        checklistLockTime = r.data.checklistLockTime;
+        saveChecklistLockTime(checklistLockTime);
+      }
+      checklistLockTimeInput.value=checklistLockTime;
+      renderLandingState();
       renderAdminChecklistEditor();
-      adminStatus.textContent="Đang áp dụng giờ Việt Nam (UTC+7)";
+      adminStatus.textContent=`Giờ reset: ${resetTime} • Giờ khoá Checklist: ${checklistLockTime}`;
     }catch(e){
       resetTimeInput.value=resetTime;
-      adminStatus.textContent="Không tải được cài đặt hiện tại. Kiểm tra Apps Script.";
+      checklistLockTimeInput.value=checklistLockTime;
+      renderAdminChecklistEditor();
+      adminStatus.textContent="Không tải được giờ reset hiện tại. Giờ khoá Checklist vẫn dùng cài đặt trên trình duyệt này.";
     }
+  }
+
+  async function verifyAdmin(){
+    const password=adminPasswordInput.value.trim();
+    if(password !== "8516"){
+      adminPasswordMsg.textContent="Mật khẩu không đúng.";
+      adminPasswordInput.value="";
+      adminPasswordInput.focus();
+      return;
+    }
+    await openAdminSettings();
   }
   loadMonitorLinks();
   function openKdvRules(){
@@ -3407,7 +3449,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   linkEditorOverlay.addEventListener("click",e=>{if(e.target===linkEditorOverlay) closeLinkEditor();});
   linkEditorInput.addEventListener("keydown",e=>{if(e.key==="Enter") saveEditedMonitorLink();});
   monitorOverlay.addEventListener("click",e=>{if(e.target===monitorOverlay) closeMonitor()});
-  adminBtn.addEventListener("click",openAdminPassword);
+  adminBtn.addEventListener("click",()=>{
+    if(adminUnlocked) openAdminSettings();
+    else openAdminPassword();
+  });
   adminPasswordOk.addEventListener("click",verifyAdmin);
   adminPasswordCancel.addEventListener("click",closeAdminPassword);
   adminPasswordOverlay.addEventListener("click",e=>{if(e.target===adminPasswordOverlay) closeAdminPassword()});
@@ -3418,20 +3463,31 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
   adminSaveBtn.addEventListener("click",async()=>{
     const time = resetTimeInput.value.trim();
-    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)){
+    const lockTime = checklistLockTimeInput.value.trim();
+    if(!isValid24hTime(time) || !isValid24hTime(lockTime)){
       adminStatus.textContent = "Giờ không hợp lệ.";
       return;
     }
     adminSaveBtn.disabled = true;
     adminStatus.textContent = "Đang lưu…";
     try{
-      const r = await window.__srankApi("setSettings",{password:"8516",resetTime:time},7000);
+      // Giờ reset vẫn lưu chung qua Apps Script.
+      const r = await window.__srankApi("setSettings",{password:"8516",resetTime:time,checklistLockTime:lockTime},7000);
       if(!r.ok) throw new Error(r.error || "Không lưu được");
-      resetTime = time;
+
+      resetTime = r.data.resetTime || time;
+      checklistLockTime = r.data.checklistLockTime || lockTime;
+      saveChecklistLockTime(checklistLockTime);
+      checklistLockTimeInput.value = checklistLockTime;
       scheduleNextReset();
-      adminStatus.textContent = `Đã lưu: reset mỗi ngày lúc ${time}`;
+      renderLandingState();
+      adminStatus.textContent = `Đã lưu • Reset ${resetTime} • Khoá Checklist ${checklistLockTime}`;
     }catch(e){
-      adminStatus.textContent = "Lưu thất bại. Kiểm tra Apps Script.";
+      // Không coi lưu local là lưu chung. Khi server lỗi, chỉ giữ giá trị hiện tại trên máy này.
+      saveChecklistLockTime(lockTime);
+      checklistLockTimeInput.value = checklistLockTime;
+      renderLandingState();
+      adminStatus.textContent = "Chưa lưu được lên hệ thống. Kiểm tra kết nối rồi thử lại.";
     }finally{
       adminSaveBtn.disabled = false;
     }
@@ -3852,7 +3908,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     }).formatToParts(new Date());
     const hour = Number(parts.find(p=>p.type==="hour")?.value || 0);
     const minute = Number(parts.find(p=>p.type==="minute")?.value || 0);
-    return { locked: (hour * 60 + minute) >= (21 * 60) };
+    const [lockHour, lockMinute] = String(checklistLockTime || "21:00").split(":").map(Number);
+    const lockMinutes = (Number.isFinite(lockHour) ? lockHour : 21) * 60 + (Number.isFinite(lockMinute) ? lockMinute : 0);
+    return { locked: (hour * 60 + minute) >= lockMinutes, time: checklistLockTime };
   }
 
   function isChecklistLocked(){
@@ -3863,7 +3921,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     const locked = isChecklistLocked();
     question.classList.toggle("checklist-locked-home", locked);
     question.innerHTML = locked
-      ? '<span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta locked">Tạm khoá Checklist</span><span class="landing-lock-note">Sau 21:00 sẽ khoá Checklist nha mn 🥰</span>'
+      ? `<span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta locked">Tạm khoá Checklist</span><span class="landing-lock-note">Sau ${checklistLockTime} sẽ khoá Checklist nha mn 🥰</span>`
       : '<span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta">CLICK HERE</span>';
     question.style.opacity = "1";
     question.style.transform = "scale(1)";
@@ -4401,9 +4459,25 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
   syncBtn.addEventListener("click",()=>loadData(true, true));
 
-  // Hiển thị cache ngay lập tức nếu có; server đồng bộ nền sau đó.
-  // Không gọi getSettings khi mở Home — chỉ tải khi Admin được mở.
+  // Hiển thị trạng thái ngay lập tức; sau đó đồng bộ giờ reset + giờ khoá từ server.
+  // Giờ khoá trên server là nguồn dùng chung cho tất cả thiết bị.
+  loadChecklistLockTime();
+  checklistLockTimeInput.value = checklistLockTime;
   renderLandingState();
+  (async()=>{
+    try{
+      const r = await window.__srankApi("getSettings",{},5000);
+      if(r.ok && r.data){
+        if(isValid24hTime(r.data.resetTime)) resetTime = r.data.resetTime;
+        if(isValid24hTime(r.data.checklistLockTime)){
+          checklistLockTime = r.data.checklistLockTime;
+          saveChecklistLockTime(checklistLockTime);
+          checklistLockTimeInput.value = checklistLockTime;
+        }
+        renderLandingState();
+      }
+    }catch(_){}
+  })();
   if(cacheLoad()){
     initialSheetLoaded = true;
     renderChecklist();
