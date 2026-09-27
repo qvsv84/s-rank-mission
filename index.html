@@ -4935,6 +4935,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   let attendanceEditingDay = 0;
   let attendanceMultiMode = false;
   const attendanceMultiDays = new Set();
+  let attendanceLockUntil = 0; // Khóa auto-sync trong 3s sau khi save thành công
 
   const attendanceStatusOverlay = document.getElementById('attendanceStatusOverlay');
   const attendanceMultiBtn = document.getElementById('attendanceMultiBtn');
@@ -5108,6 +5109,11 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   }
 
   async function loadAttendanceMonth(force = false){
+    // Nếu đang trong thời gian khóa (vừa save xong), bỏ qua request không force
+    if(!force && Date.now() < attendanceLockUntil){
+      return Promise.resolve({ok:true, locked:true});
+    }
+
     const y = viewDate.getFullYear();
     const m = viewDate.getMonth();
     const requestKey = y + '-' + (m + 1);
@@ -5341,6 +5347,9 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
         else delete ATTENDANCE_DATA[nameAtRequest][k];
       });
       rebuildAttendanceCacheFromCurrent(y,m);
+      // Khóa auto-sync 3s để tránh request cũ ghi đè dữ liệu vừa lưu
+      attendanceLockUntil = Date.now() + 3000;
+      // Render ngay lập tức
       if(viewDate.getFullYear() === y && viewDate.getMonth() === m && selectedName === nameAtRequest) render();
 
       attendanceMultiMode = false;
@@ -5453,6 +5462,9 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
         // Cache chỉ được cập nhật SAU khi Sheet xác nhận thành công.
         rebuildAttendanceCacheFromCurrent(y, m);
+        // Khóa auto-sync 3s để tránh request cũ ghi đè dữ liệu vừa lưu
+        attendanceLockUntil = Date.now() + 3000;
+        // Render ngay lập tức — không chờ setTimeout
         if(viewDate.getFullYear() === y && viewDate.getMonth() === m && selectedName === nameAtRequest) render();
       }
 
