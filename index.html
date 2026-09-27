@@ -3769,71 +3769,29 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
 
   function currentSelectedPoints(){ return Number(points[current]) || 0; }
-async function getAttendanceRankForScore(score){
-    try{
-      const r = await window.__srankApi("attendanceRank",{score:String(Math.round(Number(score)||0))},7000);
-      if(!r.ok) throw new Error(r.error || "attendanceRank lỗi");
-      return String(r.data?.rank || rankClient(score));
-    }catch(_){
-      return rankClient(score);
-    }
-  }
-
-  function attendanceScoreForName(name, year, month){
-    const base = 300;
-    const data = ATTENDANCE_DATA[name] || {};
-    let ot = 0, leave = 0;
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    for(let d=1; d<=daysInMonth; d++){
-      const status = String(data[key(year,month,d)] || '').toUpperCase();
-      if(status === 'T') ot++;
-      else if(status === 'P') leave++;
-    }
-    return {score: base + ot * 40 - leave * 10, ot, leave, off: daysInMonth - ot - leave};
-  }
 
   async function renderTop(){
-    const year = viewDate.getFullYear();
-    const month = viewDate.getMonth();
-    if(!ATTENDANCE_EMPLOYEES.length) await loadAttendanceMonth(false).catch(()=>{});
-    const employeeNames = ATTENDANCE_EMPLOYEES.length ? ATTENDANCE_EMPLOYEES : names;
-    const rows = employeeNames.map((name,index)=>{
-      const stat = attendanceScoreForName(name, year, month);
-      return {name, points:stat.score, rank:'', index, ot:stat.ot, leave:stat.leave};
-    });
-    rows.sort((a,b)=>b.points-a.points || a.index-b.index);
     topBody.innerHTML = '';
-    const frag = document.createDocumentFragment();
-    rows.forEach((row,i)=>{
-      const tr=document.createElement('tr');
-      if(i<3) tr.classList.add('topRow'+(i+1));
-      tr.innerHTML=`<td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td><td class="topName"></td><td class="topPoints"></td><td><span class="topRank">Đang tính…</span></td>`;
-      tr.querySelector('.topName').textContent=row.name;
-      tr.querySelector('.topPoints').textContent=row.points.toLocaleString('vi-VN');
-      frag.appendChild(tr);
-      getAttendanceRankForScore(row.points).then(rank=>{
-        const el=tr.querySelector('.topRank');
-        if(el) el.textContent=rank;
-      });
-    });
-    topBody.appendChild(frag);
-  }
+    try{
+      const result = await window.__getAttendanceTopData();
+      const rows = Array.isArray(result?.rows) ? result.rows.slice() : [];
 
-  function renderTopLegacy(){
-    const rows = names.map((name,i)=>({name,points:Number(points[i])||0,rank:ranks[i]||rankClient(points[i]),index:i}));
-    rows.sort((a,b)=>b.points-a.points || a.index-b.index);
-    topBody.innerHTML = "";
-    const frag = document.createDocumentFragment();
-    rows.forEach((row,i)=>{
-      const tr=document.createElement("tr");
-      if(i<3) tr.classList.add("topRow"+(i+1));
-      tr.innerHTML=`<td>${i===0?"🥇":i===1?"🥈":i===2?"🥉":i+1}</td><td class="topName"></td><td class="topPoints"></td><td><span class="topRank"></span></td>`;
-      tr.querySelector(".topName").textContent=row.name;
-      tr.querySelector(".topPoints").textContent=row.points.toLocaleString("vi-VN");
-      tr.querySelector(".topRank").textContent=row.rank;
-      frag.appendChild(tr);
-    });
-    topBody.appendChild(frag);
+      rows.sort((a,b)=>b.points-a.points || a.index-b.index);
+
+      const frag = document.createDocumentFragment();
+      rows.forEach((row,i)=>{
+        const tr = document.createElement('tr');
+        if(i < 3) tr.classList.add('topRow' + (i + 1));
+        tr.innerHTML = `<td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td><td class="topName"></td><td class="topPoints"></td><td><span class="topRank"></span></td>`;
+        tr.querySelector('.topName').textContent = row.name;
+        tr.querySelector('.topPoints').textContent = Number(row.points || 0).toLocaleString('vi-VN');
+        tr.querySelector('.topRank').textContent = rankClient(row.points);
+        frag.appendChild(tr);
+      });
+      topBody.appendChild(frag);
+    }catch(_){
+      topBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:18px">Không tải được dữ liệu chấm công</td></tr>';
+    }
   }
 
   function closeTop(){
@@ -5177,6 +5135,7 @@ function showSystemFinalMessage(el, message){
   const ATTENDANCE_DATA = {};
   const ATTENDANCE_CACHE_PREFIX = 'srank_attendance_check_v2_';
   let attendanceServerLoaded = false;
+  let attendanceServerLoadedKey = '';
   let attendanceLoadToken = 0;
   let attendanceLoadPromise = null;
   let attendanceLoadPromiseKey = '';
@@ -5345,6 +5304,11 @@ function showSystemFinalMessage(el, message){
 
     const token = ++attendanceLoadToken;
 
+    // Đã đồng bộ đúng tháng thì dùng state hiện có, không gọi lại API.
+    if(!force && attendanceServerLoaded && attendanceServerLoadedKey === requestKey){
+      return Promise.resolve({ok:true, cached:true});
+    }
+
     if(force){
       setAttendanceSyncStatus('warn','Đang đồng bộ từ Google Sheet…');
       attendanceSyncBtn?.classList.add('busy');
@@ -5370,6 +5334,7 @@ function showSystemFinalMessage(el, message){
         if(viewDate.getFullYear() === y && viewDate.getMonth() === m){
           applyAttendanceData(r.data, y, m);
           attendanceServerLoaded = true;
+          attendanceServerLoadedKey = requestKey;
           render();
         }
         return r;
@@ -5400,6 +5365,33 @@ function showSystemFinalMessage(el, message){
     attendanceLoadPromiseKey = requestKey;
     return promise;
   }
+
+  // Cầu nối duy nhất cho BXH: giữ toàn bộ state chấm công trong IIFE này,
+  // không đưa viewDate / ATTENDANCE_DATA ra global.
+  window.__getAttendanceTopData = async function(){
+    await loadAttendanceMonth(false).catch(()=>{});
+    const y = viewDate.getFullYear();
+    const m = viewDate.getMonth();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const rows = ATTENDANCE_EMPLOYEES.map((name, index) => {
+      const data = ATTENDANCE_DATA[name] || {};
+      let ot = 0;
+      let leave = 0;
+      for(let d=1; d<=daysInMonth; d++){
+        const status = String(data[key(y,m,d)] || '').toUpperCase();
+        if(status === 'T') ot++;
+        else if(status === 'P') leave++;
+      }
+      return {
+        name,
+        points: 300 + ot * 40 - leave * 10,
+        ot,
+        leave,
+        index
+      };
+    });
+    return {year:y, month:m, rows};
+  };
 
   function updateAttendanceMultiUI(){
     attendanceMultiCount.textContent = `${attendanceMultiDays.size} ngày`;
@@ -5447,7 +5439,16 @@ function showSystemFinalMessage(el, message){
       },20000);
       if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet không xác nhận đã lưu');
 
-      await loadAttendanceMonth(true);
+      // Server đã xác nhận ghi thành công; cập nhật state tại chỗ.
+      if(!ATTENDANCE_DATA[nameAtRequest]) ATTENDANCE_DATA[nameAtRequest] = {};
+      days.forEach(day => {
+        const k = key(y,m,day);
+        if(cleanStatus) ATTENDANCE_DATA[nameAtRequest][k] = cleanStatus;
+        else delete ATTENDANCE_DATA[nameAtRequest][k];
+      });
+      rebuildAttendanceCacheFromCurrent(y,m);
+      if(viewDate.getFullYear() === y && viewDate.getMonth() === m && selectedName === nameAtRequest) render();
+
       attendanceMultiMode = false;
       attendanceMultiDays.clear();
       updateAttendanceMultiUI();
@@ -5558,7 +5559,7 @@ function showSystemFinalMessage(el, message){
 
         // Cache chỉ được cập nhật SAU khi Sheet xác nhận thành công.
         rebuildAttendanceCacheFromCurrent(y, m);
-        render();
+        if(viewDate.getFullYear() === y && viewDate.getMonth() === m && selectedName === nameAtRequest) render();
       }
 
       attendanceStatusSaving.textContent = saved.cell
@@ -5756,7 +5757,7 @@ function showSystemFinalMessage(el, message){
         status=info.className;
         label=info.label;
 
-        if(item.status === 'V') work++;
+        if(item.status === 'V' || item.status === 'T') work++;
         else if(item.status === 'O') off++;
         else if(item.status === 'P') leave++;
       }
