@@ -270,7 +270,7 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
 #appVersion{
   position:fixed;
   left:10px;
-  top:34px;
+  bottom:10px;
   z-index:10002;
   color:rgba(78,112,91,.58);
   font-size:9px;
@@ -2473,7 +2473,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 <main id="space">
 <div id="status"></div>
 <div id="connectionState" class="off"><span class="dot"></span><span id="connectionText">Đang kết nối…</span></div>
-<div id="appVersion" aria-label="Phiên bản">v1.03</div>
+<div id="appVersion" aria-label="Phiên bản">v1.04</div>
 
 <div id="questionWrap">
   <div id="counter">CÂU 1</div>
@@ -4496,7 +4496,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       if(isChecklistLocked()) hint.textContent = "";
       else if(names.length) hint.textContent = "Chạm vào câu hỏi";
     }
-  },30000);
+  },1000);
   startAutoSync();
 
   const QUIZ_DATA_KEY="srank_quiz_questions_v1";
