@@ -4357,16 +4357,14 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     }
   }
 
-  confirm.addEventListener("click",async()=>{
+  confirm.addEventListener("click",()=>{
     const selected = names[current];
+    if(!selected) return;
+
     saveQ1Answer(selected);
 
-    // Chờ request preload đã được khởi động từ lúc HTML mở.
-    // Tại đây không tạo request API mới.
-    if(window.__attendancePreloadPromise){
-      await window.__attendancePreloadPromise;
-    }
-
+    // Xác nhận chỉ dùng dữ liệu chấm công đã có trong HTML/cache.
+    // Không chờ request Google Sheet và không tạo request API mới ở đây.
     const localScore = getLocalAttendanceScore(selected);
     const playerRank = localScore.rank;
     const playerPoints = localScore.score;
@@ -6099,10 +6097,10 @@ function showSystemFinalMessage(el, message){
   renderNameWheel();
   render();
 
-  // PRELOAD tháng hiện tại khi HTML vừa khởi động. Nút Xác nhận chỉ chờ
-  // request này, không phát sinh API request mới.
+  // Không preload chấm công ở lúc khởi động.
+  // Giữ luồng kết nối Google Sheet của HTML cũ nguyên trạng;
+  // màn Kích hoạt chỉ đọc cache/state chấm công đã có sẵn.
   try{ refreshLocalScoreBridge(); }catch(_){}
-  window.__attendancePreloadPromise = loadAttendanceMonth(false).catch(()=>{});
 
   // Tên và dữ liệu chấm công chỉ lấy từ Check!C19:C32 + toàn bộ hàng tương ứng.
 })();
