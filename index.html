@@ -5189,7 +5189,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
     const promise = (async()=>{
       try{
-        const r = await window.__srankApi('getAttendance',{month:m+1, _ts:Date.now()}, TIMEOUT.SLOW);
+        const r = await window.__srankApi('getAttendance',{month:m+1, _ts:Date.now()}, 20000);
         if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet trả về dữ liệu không hợp lệ');
         if(!r.data || !Array.isArray(r.data.employees)) throw new Error('Phản hồi getAttendance thiếu danh sách employees');
 
@@ -5316,7 +5316,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     if(Array.isArray(employees) && employees.length){
       cached = true;
     }else{
-      const r = await window.__srankApi('getAttendance',{month, _ts:Date.now()}, TIMEOUT.SLOW);
+      const r = await window.__srankApi('getAttendance',{month, _ts:Date.now()}, 20000);
       if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet trả về dữ liệu không hợp lệ');
       employees = Array.isArray(r.data?.employees) ? r.data.employees : [];
       rememberAttendanceRaw(year, monthIndex, employees);
@@ -5373,7 +5373,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     try{
       const r = await window.__srankApi('setAttendanceBatch',{
         month: monthAtRequest, days, name: nameAtRequest, status: cleanStatus
-      }, TIMEOUT.SLOW);
+      }, 20000);
       if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet không xác nhận đã lưu');
 
       // Server đã xác nhận ghi thành công; cập nhật state tại chỗ.
@@ -5466,7 +5466,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       const r = await window.__srankApi(
         'setAttendance',
         payload,
-        TIMEOUT.SLOW
+        20000
       );
 
       if(!r || r.ok !== true){
