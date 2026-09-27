@@ -5443,9 +5443,9 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       const saved = r.data || {};
 
       if(
+        saved &&
         saved.name &&
         String(saved.name).trim() === nameAtRequest &&
-        Number(saved.day) === dayAtRequest &&
         Number(saved.month) === monthAtRequest
       ){
         const k = key(y, m, day);
