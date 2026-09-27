@@ -266,6 +266,39 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   #question .landing-title{font-size:clamp(32px,9vw,54px)}
 }
 
+/* ---------- Version + checklist lock ---------- */
+#appVersion{
+  position:fixed;
+  left:10px;
+  bottom:10px;
+  z-index:10002;
+  color:rgba(78,112,91,.58);
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.4px;
+  user-select:none;
+  pointer-events:none;
+}
+#question .landing-cta.locked{
+  min-width:190px;
+  color:#6f8176!important;
+  border-color:#cbd8ce!important;
+  background:linear-gradient(135deg,#f4f7f3,#e9efea)!important;
+  box-shadow:0 7px 18px rgba(53,91,61,.08),inset 0 1px 0 rgba(255,255,255,.95)!important;
+  text-shadow:none!important;
+  cursor:default;
+}
+#question .landing-lock-note{
+  display:block;
+  margin-top:-2px;
+  width:100%;
+  color:#799083;
+  font-size:clamp(10px,2.7vw,12px);
+  font-weight:700;
+  line-height:1.35;
+  letter-spacing:.1px;
+}
+
 
 /* ---------- Activation message ---------- */
 .activation-line{text-align:center !important;}
@@ -2440,6 +2473,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 <main id="space">
 <div id="status"></div>
 <div id="connectionState" class="off"><span class="dot"></span><span id="connectionText">Đang kết nối…</span></div>
+<div id="appVersion" aria-label="Phiên bản">v1.01</div>
 
 <div id="questionWrap">
   <div id="counter">CÂU 1</div>
@@ -3811,8 +3845,38 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     }
   });
 
+  function checklistLockInfo(){
+    const parts = new Intl.DateTimeFormat("en-US",{
+      timeZone:"Asia/Ho_Chi_Minh",
+      hour:"2-digit",minute:"2-digit",hour12:false
+    }).formatToParts(new Date());
+    const hour = Number(parts.find(p=>p.type==="hour")?.value || 0);
+    const minute = Number(parts.find(p=>p.type==="minute")?.value || 0);
+    return { locked: (hour * 60 + minute) >= (21 * 60) };
+  }
+
+  function isChecklistLocked(){
+    return checklistLockInfo().locked;
+  }
+
+  function renderLandingState(){
+    const locked = isChecklistLocked();
+    question.classList.toggle("checklist-locked-home", locked);
+    question.innerHTML = locked
+      ? '<span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta locked">Tạm khoá Checklist</span><span class="landing-lock-note">Sau 21:00 sẽ khoá Checklist nha mn 🥰</span>'
+      : '<span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta">CLICK HERE</span>';
+    question.style.opacity = "1";
+    question.style.transform = "scale(1)";
+    question.style.animation = "breathe 2.8s ease-in-out infinite";
+    question.style.pointerEvents = locked ? "none" : "auto";
+  }
+
   function openQuestion1(e){
     e?.preventDefault();
+    if(isChecklistLocked()){
+      renderLandingState();
+      return;
+    }
     if(q1Opened || !names.length) return;
     q1Opened=true;
     question.style.pointerEvents="none";
@@ -3833,6 +3897,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
   // Sau khi chọn tên và xác nhận: vào thẳng CÂU 2, không hiện màn Ký chủ/Rank/Điểm.
   confirm.addEventListener("click",()=>{
+    if(isChecklistLocked()){
+      resetHome();
+      return;
+    }
     const selected = names[current];
     if(!selected) return;
     showQuestion2();
@@ -4274,13 +4342,9 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     dragging = false;
 
     counter.textContent = "CÂU 1";
-    question.innerHTML = '<span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta">CLICK HERE</span>';
-    question.style.opacity = "1";
-    question.style.pointerEvents = "auto";
-    question.style.transform = "scale(1)";
-    question.style.animation = "breathe 2.8s ease-in-out infinite";
+    renderLandingState();
 
-    hint.textContent = names.length ? "Chạm vào câu hỏi" : "Đang tải dữ liệu…";
+    hint.textContent = isChecklistLocked() ? "" : (names.length ? "Chạm vào câu hỏi" : "Đang tải dữ liệu…");
     renderWheel();
   }
 
@@ -4339,6 +4403,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
   // Hiển thị cache ngay lập tức nếu có; server đồng bộ nền sau đó.
   // Không gọi getSettings khi mở Home — chỉ tải khi Admin được mở.
+  renderLandingState();
   if(cacheLoad()){
     initialSheetLoaded = true;
     renderChecklist();
@@ -4351,6 +4416,13 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     loadData(true);
   }
   scheduleNextReset();
+  setInterval(()=>{
+    if(!q1Opened && !checklistPanel.classList.contains("show") && !topPanel.classList.contains("show")){
+      renderLandingState();
+      if(isChecklistLocked()) hint.textContent = "";
+      else if(names.length) hint.textContent = "Chạm vào câu hỏi";
+    }
+  },30000);
   startAutoSync();
 
   const QUIZ_DATA_KEY="srank_quiz_questions_v1";
