@@ -5409,7 +5409,6 @@ function showSystemFinalMessage(el, message){
     ATTENDANCE_EMPLOYEES = [...new Set(ATTENDANCE_EMPLOYEES)];
 
     saveAttendanceCache(year, month, payload?.employees || []);
-    if(year === new Date().getFullYear() && month === new Date().getMonth()) refreshLocalScoreBridge();
     syncAttendanceEmployeeControls();
     setAttendanceSyncStatus(
       ATTENDANCE_EMPLOYEES.length ? 'ok' : 'error',
@@ -5441,7 +5440,6 @@ function showSystemFinalMessage(el, message){
     });
 
     ATTENDANCE_EMPLOYEES = [...new Set(ATTENDANCE_EMPLOYEES)];
-    if(year === new Date().getFullYear() && month === new Date().getMonth()) refreshLocalScoreBridge();
     syncAttendanceEmployeeControls();
     return true;
   }
