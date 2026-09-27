@@ -3962,8 +3962,14 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
   confirm.addEventListener("click",()=>{
     const selected = names[current];
+    if(!selected) return;
+
     saveQ1Answer(selected);
-    showActivationForName(selected, showQuestion2);
+
+    // Bỏ hoàn toàn màn hình thông báo "Kích hoạt / Ký chủ / Rank / Điểm".
+    // Xác nhận tên xong đi thẳng sang Câu 2.
+    wheelArea.classList.remove("show");
+    showQuestion2();
   });
 
   async function showActivationForName(name, next){
