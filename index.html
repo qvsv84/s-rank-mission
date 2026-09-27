@@ -3672,7 +3672,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       renderChecklist();
       buildWheel();
       renderAdminChecklistEditor();
-      if(!resumeQ1FromCache()) hint.textContent = "Chạm vào câu hỏi";
+      hint.textContent = "Chạm vào câu hỏi";
       setStatus(force ? "Đã cập nhật ✓" : "Đã đồng bộ ✓");
       return true;
     }catch(e){
@@ -3962,14 +3962,8 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
   confirm.addEventListener("click",()=>{
     const selected = names[current];
-    if(!selected) return;
-
     saveQ1Answer(selected);
-
-    // Bỏ hoàn toàn màn hình thông báo "Kích hoạt / Ký chủ / Rank / Điểm".
-    // Xác nhận tên xong đi thẳng sang Câu 2.
-    wheelArea.classList.remove("show");
-    showQuestion2();
+    showActivationForName(selected, showQuestion2);
   });
 
   async function showActivationForName(name, next){
@@ -4490,7 +4484,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     renderChecklist();
     buildWheel();
     renderAdminChecklistEditor();
-    if(!resumeQ1FromCache()) hint.textContent = names.length ? "Chạm vào câu hỏi" : "Đang tải dữ liệu…";
+    hint.textContent = names.length ? "Chạm vào câu hỏi" : "Đang tải dữ liệu…";
     setStatus("Đã tải dữ liệu lưu ✓");
     loadData(false, true);
   }else{
