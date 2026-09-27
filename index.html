@@ -3157,7 +3157,12 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         times = names.map(()=>"");
         cacheSave();
         renderChecklist();
-        renderAdminChecklistEditor();
+
+        // Chỉ render Admin khi panel đang mở
+        if(adminOverlay.classList.contains("show")){
+          renderAdminChecklistEditor();
+        }
+
         setStatus("Checklist đã làm mới ✓");
       }catch(e){
         setStatus("Reset chưa thành công — sẽ thử lại ✓");
@@ -3887,12 +3892,19 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       }
 
       initialSheetLoaded = true;
-      lastAutoSyncAt = Date.now();   // ← thêm dòng này
+      lastAutoSyncAt = Date.now();
       window.syncAttendanceEmployees?.();
       cacheSave();
       renderChecklist();
       buildWheel();
-      renderAdminChecklistEditor();
+
+      // ===== Tối ưu: chỉ render Admin editor khi panel đang mở =====
+      // Nếu Admin đóng → tiết kiệm ~10ms mỗi lần auto-sync
+      // Khi user mở Admin, openAdminSettings() sẽ tự gọi renderAdminChecklistEditor()
+      if(adminOverlay.classList.contains("show")){
+        renderAdminChecklistEditor();
+      }
+
       hint.textContent = "Chạm vào câu hỏi";
       setStatus(force ? "Đã cập nhật ✓" : "Đã đồng bộ ✓");
       return true;
