@@ -2918,6 +2918,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   let autoSyncTimer = null;
   const AUTO_SYNC_MS = 30000;
   const Q1_CACHE_KEY = "srank_q1_answer_v1";
+  try{ localStorage.removeItem(Q1_CACHE_KEY); }catch(_){}
   const connectionState = document.getElementById("connectionState");
   const connectionText = document.getElementById("connectionText");
 
@@ -2993,43 +2994,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     return false;
   }
 
-  // Chỉ câu 1 được nhớ riêng theo ngày. Các câu khác không dùng cache này.
-  function saveQ1Answer(name){
-    try{
-      localStorage.setItem(Q1_CACHE_KEY, JSON.stringify({name:String(name || ""),day:todayKey()}));
-    }catch(_){}
-  }
-
-  function loadQ1Answer(){
-    try{
-      const x = JSON.parse(localStorage.getItem(Q1_CACHE_KEY) || "null");
-      if(x && x.day === todayKey() && x.name) return String(x.name);
-      localStorage.removeItem(Q1_CACHE_KEY);
-    }catch(_){}
-    return "";
-  }
-
-  function clearQ1Answer(){
-    try{ localStorage.removeItem(Q1_CACHE_KEY); }catch(_){}
-  }
-
-  function resumeQ1FromCache(){
-    if(q1Opened || !names.length) return false;
-    const savedName = loadQ1Answer();
-    if(!savedName) return false;
-    const idx = names.findIndex(n => String(n) === savedName);
-    if(idx < 0){ clearQ1Answer(); return false; }
-
-    current = idx;
-    q1Opened = true;
-    question.style.pointerEvents = "none";
-    question.style.opacity = "0";
-    question.style.transform = "scale(.8)";
-    wheelArea.classList.remove("show");
-    hint.textContent = "";
-    showActivationForName(savedName, showQuestion2);
-    return true;
-  }
+  // CÂU 1 không tự nhớ tên và không tự resume khi mở lại web.
 
   let resetTime = "00:00";
   let resetTimer = null;
@@ -3863,133 +3828,18 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   question.addEventListener("pointerup",openQuestion1,{passive:false});
   question.addEventListener("click",openQuestion1);
 
-  // Hiệu ứng lời chào: từng dòng xuất hiện theo kiểu gõ chữ,
-  // riêng điểm chạy từ 000 -> điểm thực tế trong khoảng 1.2 giây.
-  function showActivationMessage(name, rank, score, next){
-    wheelArea.classList.remove("show");
-    question.style.opacity="0";
-    hint.textContent="";
-
-    const safeScore = Math.max(0, Number(score) || 0);
-
-    message.innerHTML = `
-      <div class="activation-message">
-        <div class="activation-line" data-text="Kích hoạt hệ thống thành công"></div>
-        <div class="activation-line" data-text="Ký chủ: ${name}"></div>
-        <div class="activation-line" data-text="Rank: ${rank}"></div>
-        <div class="activation-line score-line">
-          <span>Điểm đánh giá: </span><span id="animatedScore">000</span>
-        </div>
-      </div>
-    `;
-
-    message.classList.remove("show");
-    void message.offsetWidth;
-    message.classList.add("show");
-    burst();
-
-    const lines = [...message.querySelectorAll(".activation-line:not(.score-line)")];
-    const scoreLine = message.querySelector(".score-line");
-    const scoreEl = message.querySelector("#animatedScore");
-
-    lines.forEach(line => {
-      line.style.opacity = "0";
-      line.style.visibility = "hidden";
-    });
-    scoreLine.style.opacity = "0";
-    scoreLine.style.visibility = "hidden";
-
-    let lineIndex = 0;
-
-    function typeLine(el, text, done){
-      el.style.visibility = "visible";
-      el.style.opacity = "1";
-      el.textContent = "";
-      let i = 0;
-
-      function tick(){
-        if(i < text.length){
-          el.textContent += text[i++];
-          setTimeout(tick, 30);
-        }else{
-          setTimeout(done, 110);
-        }
-      }
-      tick();
-    }
-
-    function animateScore(){
-      scoreLine.style.visibility = "visible";
-      scoreLine.style.opacity = "1";
-
-      const start = performance.now();
-      const duration = 1200;
-
-      function frame(now){
-        const progress = Math.min(1, (now - start) / duration);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        const value = Math.round(safeScore * eased);
-        scoreEl.textContent = String(value).padStart(3, "0");
-
-        if(progress < 1){
-          requestAnimationFrame(frame);
-        }else{
-          scoreEl.textContent = String(safeScore).padStart(3, "0");
-        }
-      }
-
-      requestAnimationFrame(frame);
-    }
-
-    function nextLine(){
-      if(lineIndex < lines.length){
-        const el = lines[lineIndex++];
-        typeLine(el, el.dataset.text, nextLine);
-      }else{
-        animateScore();
-      }
-    }
-
-    nextLine();
-
-    if(next){
-      setTimeout(()=>{
-        message.classList.remove("show");
-        setTimeout(next, 220);
-      }, 3600);
-    }
-  }
-
+  // Sau khi chọn tên và xác nhận: vào thẳng CÂU 2, không hiện màn Ký chủ/Rank/Điểm.
   confirm.addEventListener("click",()=>{
     const selected = names[current];
-    saveQ1Answer(selected);
-    showActivationForName(selected, showQuestion2);
+    if(!selected) return;
+    showQuestion2();
   });
-
-  async function showActivationForName(name, next){
-    let rank = "B";
-    let score = 300;
-
-    try{
-      if(typeof window.__getCurrentAttendanceScore === "function"){
-        const info = await window.__getCurrentAttendanceScore(name);
-        if(info && Number.isFinite(Number(info.score))){
-          score = Number(info.score);
-          rank = String(info.rank || attendanceRankClient(score));
-        }
-      }
-    }catch(_){
-      // Giữ luồng giao diện hoạt động nếu dữ liệu chấm công tạm thời chưa sẵn sàng.
-    }
-
-    showActivationMessage(name, rank, score, next);
-  }
 
   function showQuestion2(){
     counter.textContent="CÂU 2";
     question.innerHTML=`<div class="system-question">
       <div class="system-question-title">HỆ THỐNG ĐẢO MÈO</div>
-      <div class="system-question-sub">Ký chủ, hôm nay bạn đã đăng bài chưa?</div>
+      <div class="system-question-sub">Hôm nay bạn đã hoàn thành checklist chưa?</div>
     </div>`;
     question.style.opacity="1";question.style.pointerEvents="none";question.style.transform="scale(1)";
     const box=document.createElement("div");
@@ -4394,8 +4244,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
   // ---------- Navigation ----------
   function resetHome(){
-    // Home chỉ xoá cache của CÂU 1; các câu khác không bị ảnh hưởng.
-    clearQ1Answer();
     document.getElementById("q2answers")?.remove();
     closeTop();
     checklistPanel.classList.remove("show");
