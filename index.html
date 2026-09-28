@@ -4898,6 +4898,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
           window.syncAttendanceEmployees?.();
           cacheSave();
           setStatus("Đã cập nhật ✓");
+
+          // Cập nhật Top 3 ngay khi có data mới
+          maybeRenderLanding();
+
           return true;
         }
         // Nếu smooth thất bại (thêm/xóa người) → fallback full render bên dưới
@@ -4942,6 +4946,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       hint.textContent = "Chạm vào câu hỏi";
       setStatus(force ? "Đã cập nhật ✓" : "Đã đồng bộ ✓");
       lastSyncSuccessAt = Date.now();
+
+      // Cập nhật Top 3 ngay khi có data mới
+      maybeRenderLanding();
 
       if(newlyChecked.length > 0){
         notifyNewlyChecked(newlyChecked);
@@ -5193,6 +5200,24 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
   function isChecklistLocked(){
     return checklistLockInfo().locked;
+  }
+
+  // ===== Render landing nếu đang ở Home =====
+  // Điều kiện: không có wheel/message/panel nào đang mở.
+  // Dùng để kích hoạt update Top 3 ngay sau khi loadData xong.
+  function maybeRenderLanding(){
+    if(q1Opened) return;
+    if(checklistPanel.classList.contains("show")) return;
+    if(topPanel.classList.contains("show")) return;
+    if(wheelArea.classList.contains("show")) return;
+    if(message.classList.contains("show")) return;
+    if(confirm.classList.contains("show")) return;
+
+    renderLandingState();
+
+    // Đánh dấu vừa render → ticker không render lại ngay lập tức
+    _lastLockCheck = Date.now();
+    _cachedLocked = isChecklistLocked();
   }
 
   function renderLandingState(){
@@ -5878,11 +5903,10 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       const lockChanged = nextLocked !== _cachedLocked;
       _cachedLocked = nextLocked;
 
-      // Refresh landing nếu:
-      // - Lock state đổi (ví dụ qua giờ khoá)
-      // - HOẶC cần refresh Top 3 (mỗi 30s khi đang ở Home)
-      if(!q1Opened && !checklistPanel.classList.contains("show") && !topPanel.classList.contains("show")){
-        if(lockChanged || names.length > 0){
+      // Chỉ render khi lock state THỰC SỰ đổi (ví dụ qua giờ khoá).
+      // Không render định kỳ nữa — vì loadData đã tự render khi có data mới.
+      if(lockChanged){
+        if(!q1Opened && !checklistPanel.classList.contains("show") && !topPanel.classList.contains("show")){
           renderLandingState();
         }
       }
