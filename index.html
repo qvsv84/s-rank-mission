@@ -751,7 +751,40 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
   text-align:left;font-size:12px;font-weight:750
 }
 .quizNoNames{text-align:center;color:rgba(255,255,255,.40);padding:20px;font-size:11px}
-#quizTakeTop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-right:36px}
+#quizTakeTop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-right:44px}
+
+/* FIX #9: nút X cho Quiz Take — thoát giữa chừng trên mobile */
+#quizTakeClose{
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:3;
+  width:34px;
+  height:34px;
+  padding:0;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.13);
+  background:rgba(255,255,255,.07);
+  color:rgba(255,255,255,.86);
+  font-size:22px;
+  line-height:32px;
+  font-weight:500;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:background .18s ease,transform .18s ease;
+}
+#quizTakeClose:hover{background:rgba(255,255,255,.12)}
+#quizTakeClose:active{transform:scale(.94)}
+
+/* Theme xanh mát override */
+#quizTakeClose{
+  color:#70907c !important;
+  background:#f1f7f0 !important;
+  border-color:#d5e2d2 !important;
+}
+#quizTakeClose:hover{background:#e5f2e7 !important}
 #quizTakeTitle{text-align:left;font-size:17px}
 #quizProgress{font-size:10px;color:rgba(255,255,255,.42);white-space:nowrap}
 #quizQuestion{
@@ -2906,6 +2939,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
 <div id="quizTakeOverlay" aria-hidden="true">
   <section id="quizTakePanel" role="dialog" aria-modal="true" aria-labelledby="quizTakeTitle">
+    <button id="quizTakeClose" type="button" aria-label="Thoát bài kiểm tra">×</button>
     <div id="quizTakeTop">
       <div id="quizTakeTitle">📝 Bài kiểm tra</div>
       <div id="quizProgress"></div>
@@ -4182,6 +4216,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
    */
   function checklistOrderChanged(index){
     if(!checked[index]) {
+      // FIX #3: Bỏ check → người đó phải nằm DƯỚI nhóm đã check.
+      // Position đúng phải >= checkedCount (sau nhóm đã check).
+      // Nếu currentPosition < checkedCount → cần render lại.
       const tr = checklistBody.querySelector(`tr[data-index="${index}"]`);
       if(!tr) return true;
       const currentPosition = Array.from(checklistBody.children).indexOf(tr);
@@ -4189,7 +4226,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       for(let i=0; i<names.length; i++){
         if(i !== index && checked[i]) checkedCount++;
       }
-      return currentPosition <= checkedCount;
+      // SAI cũ: currentPosition <= checkedCount  → render thừa
+      // ĐÚNG: currentPosition < checkedCount   → chỉ render khi thật sự cần
+      return currentPosition < checkedCount;
     }
 
     const tr = checklistBody.querySelector(`tr[data-index="${index}"]`);
@@ -4331,6 +4370,11 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
 
   function startAutoSync(){
+    // FIX #2: đảm bảo không có interval cũ trước khi start
+    if(autoSyncTimer){
+      clearInterval(autoSyncTimer);
+      autoSyncTimer = null;
+    }
     restartAutoSync();
   }
 
@@ -4340,7 +4384,11 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
    * - 120s khi checklist đóng (tiết kiệm quota)
    */
   function restartAutoSync(){
-    clearInterval(autoSyncTimer);
+    // FIX #2: clear cả ID và reset về null để tránh leak interval
+    if(autoSyncTimer){
+      clearInterval(autoSyncTimer);
+      autoSyncTimer = null;
+    }
 
     const interval = checklistPanel.classList.contains("show")
       ? CHECKLIST_SYNC_MS
@@ -5248,10 +5296,13 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     if(quizBuilderOverlay.classList.contains("show")){ closeQuizBuilder(); e.preventDefault(); return; }
     if(quizResultOverlay.classList.contains("show")){ closeQuizResult(); e.preventDefault(); return; }
     if(quizTakeOverlay.classList.contains("show")){
-      // Cho phép thoát nhưng confirm để tránh mất bài
+      // FIX #9: dùng chung logic với nút X
       if(confirm("Bạn đang làm bài kiểm tra. Thoát sẽ mất toàn bộ câu trả lời. Tiếp tục thoát?")){
         quizTakeOverlay.classList.remove("show");
         quizTakeOverlay.setAttribute("aria-hidden", "true");
+        quizCurrentIndex = 0;
+        quizCurrentScore = 0;
+        quizSelectedAnswer = -1;
         syncQuickTools();
       }
       e.preventDefault();
@@ -5761,6 +5812,21 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   quizNameOverlay.addEventListener("click",e=>{if(e.target===quizNameOverlay)closeQuizNamePicker()});
   quizNextBtn.addEventListener("click",submitQuizAnswer);
   quizResultClose.addEventListener("click",closeQuizResult);
+
+  // FIX #9: nút X thoát Quiz Take với confirm
+  const quizTakeClose = document.getElementById("quizTakeClose");
+  if(quizTakeClose){
+    quizTakeClose.addEventListener("click", () => {
+      if(confirm("Bạn đang làm bài kiểm tra. Thoát sẽ mất toàn bộ câu trả lời. Tiếp tục thoát?")){
+        quizTakeOverlay.classList.remove("show");
+        quizTakeOverlay.setAttribute("aria-hidden", "true");
+        quizCurrentIndex = 0;
+        quizCurrentScore = 0;
+        quizSelectedAnswer = -1;
+        syncQuickTools();
+      }
+    });
+  }
   quizResultOverlay.addEventListener("click",e=>{if(e.target===quizResultOverlay)closeQuizResult()});
   quizAdminBtn.addEventListener("click",openQuizBuilder);
   quizBuilderClose.addEventListener("click",closeQuizBuilder);
@@ -6694,13 +6760,20 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     wheelOffset=0;
     renderNameWheel();
   },{passive:false});
-  prev.addEventListener('click',()=>{
-    viewDate.setMonth(viewDate.getMonth()-1);
+  // FIX #5: reset promise key khi đổi tháng để tránh dữ liệu tháng cũ
+  // ghi đè lên tháng mới khi user bấm prev/next nhanh.
+  function goToMonth(delta){
+    viewDate.setMonth(viewDate.getMonth() + delta);
+    attendanceLoadPromise = null;
+    attendanceLoadPromiseKey = '';
     loadAttendanceMonth(false);
+  }
+
+  prev.addEventListener('click',()=>{
+    goToMonth(-1);
   });
   next.addEventListener('click',()=>{
-    viewDate.setMonth(viewDate.getMonth()+1);
-    loadAttendanceMonth(false);
+    goToMonth(1);
   });
 
   employee.value=selectedName;
