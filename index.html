@@ -1589,6 +1589,8 @@ button,input,textarea,select{font-family:inherit!important}
   -webkit-backdrop-filter:blur(8px)!important;
 }#lunchManageOverlay{
   z-index:22000!important;
+  display:flex!important;
+  pointer-events:auto!important;
   background:rgba(232,241,229,.82)!important;
   backdrop-filter:blur(14px)!important;
   -webkit-backdrop-filter:blur(14px)!important;
@@ -4802,12 +4804,18 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
   let lunchManageCategory="savory";
   function openLunchManage(){
-  renderLunchManage();
-  // Đảm bảo overlay luôn nổi lên trên mọi thứ
-  lunchManageOverlay.style.zIndex = "22000";
-  lunchManageOverlay.classList.add("show");
-  lunchManageOverlay.setAttribute("aria-hidden","false");
-}
+    // Đóng trang Lunch phía dưới để tránh stacking/pointer-events chồng nhau.
+    lunchPage?.classList.remove("show");
+    lunchPage?.setAttribute("aria-hidden","true");
+    renderLunchManage();
+    // Đảm bảo overlay quản lý luôn là lớp tương tác cao nhất.
+    lunchManageOverlay.style.zIndex = "22000";
+    lunchManageOverlay.style.display = "flex";
+    lunchManageOverlay.style.pointerEvents = "auto";
+    lunchManageOverlay.classList.add("show");
+    lunchManageOverlay.setAttribute("aria-hidden","false");
+    document.body.style.overflow = "hidden";
+  }
   function closeLunchManage(){lunchManageOverlay.classList.remove("show");lunchManageOverlay.setAttribute("aria-hidden","true");}
   function updateLunchManageStatus(msg){lunchManageStatus.textContent=msg;clearTimeout(updateLunchManageStatus.t);if(msg) updateLunchManageStatus.t=setTimeout(()=>lunchManageStatus.textContent="",1800);}
   function renderLunchManage(){
