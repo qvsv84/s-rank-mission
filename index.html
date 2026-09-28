@@ -3461,9 +3461,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   let requestSeq = 0;
   let syncInFlight = false;
   let autoSyncTimer = null;
-  const AUTO_SYNC_MS = 45000;       // 45s — vẫn tiết kiệm quota nhưng đủ nhanh để thấy toast
-  const AUTO_SYNC_MIN_GAP = 15000;  // throttle cứng: không gọi lại trong 15s
+  const AUTO_SYNC_MS = 15000;       // 15s khi ở Home — đủ nhanh để thấy toast
+  const AUTO_SYNC_MIN_GAP = 5000;   // throttle cứng: tối thiểu 5s giữa 2 request
   let lastAutoSyncAt = 0;
+  let lastSyncSuccessAt = 0;        // timestamp sync thành công gần nhất
   const Q1_CACHE_KEY = "srank_q1_answer_v1";
   const CHECKLIST_LOCK_KEY = "srank_checklist_lock_time_v1";
   try{ localStorage.removeItem(Q1_CACHE_KEY); }catch(_){}
@@ -3555,9 +3556,35 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     connectionState.className = state;
     connectionText.textContent = text;
   }
+
+  // ===== Indicator: hiển thị "vừa đồng bộ Xs trước" =====
+  // Chỉ cập nhật khi tab visible và app ở Home.
+  setInterval(() => {
+    if(document.hidden) return;
+    if(!lastSyncSuccessAt) return;
+    if(wheelArea.classList.contains("show")) return;
+    if(checklistPanel.classList.contains("show")) return;
+
+    const sec = Math.round((Date.now() - lastSyncSuccessAt) / 1000);
+    let txt;
+    if(sec < 5) txt = "vừa đồng bộ";
+    else if(sec < 60) txt = `đồng bộ ${sec}s trước`;
+    else txt = `đồng bộ ${Math.round(sec/60)}p trước`;
+
+    // Chỉ đổi khi khác để tránh repaint
+    if(connectionText.textContent !== txt){
+      connectionText.textContent = txt;
+    }
+  }, 3000);
   window.__srankApi = function(action, data = {}, timeout = TIMEOUT.DEFAULT){
     return new Promise((resolve,reject) => {
       setConnection("busy", "Đang đồng bộ…");
+      // Watchdog: nếu vì lý do gì promise không resolve/reject,
+      // reject sau timeout + 3s để chắc chắn không leak syncInFlight.
+      const watchdog = setTimeout(() => {
+        setConnection("off", "Phản hồi chậm");
+        reject(new Error("Request watchdog timeout"));
+      }, timeout + 3000);
       const cb = "__srank_" + Date.now() + "_" + (++requestSeq);
       const script = document.createElement("script");
       const u = new URL(SCRIPT_URL);
@@ -3570,6 +3597,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         if(done) return;
         done = true;
         clearTimeout(timer);
+        clearTimeout(watchdog);
         delete window[cb];
         script.remove();
         fn(value);
@@ -4820,7 +4848,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         renderChecklistSkeleton();
       }
 
-      const r = await window.__srankApi("getData", {}, TIMEOUT.NORMAL);
+      // Auto-sync chấp nhận chờ lâu hơn (Apps Script cold start ~15-20s).
+      // Ép cache-buster _ts để tránh mọi lớp cache trung gian.
+      const r = await window.__srankApi("getData", { _ts: Date.now() }, TIMEOUT.SLOW);
       if(!r.ok) throw new Error(r.error || "getData lỗi");
 
       // ===== Sanitize input từ server (defensive programming) =====
@@ -4911,6 +4941,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
       hint.textContent = "Chạm vào câu hỏi";
       setStatus(force ? "Đã cập nhật ✓" : "Đã đồng bộ ✓");
+      lastSyncSuccessAt = Date.now();
 
       if(newlyChecked.length > 0){
         notifyNewlyChecked(newlyChecked);
@@ -4932,9 +4963,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
 
   function startAutoSync(){
-    // FIX #2: đảm bảo không có interval cũ trước khi start
+    // Đảm bảo không có timer cũ trước khi start
     if(autoSyncTimer){
-      clearInterval(autoSyncTimer);
+      clearTimeout(autoSyncTimer);
       autoSyncTimer = null;
     }
     restartAutoSync();
@@ -4946,9 +4977,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
    * - 120s khi checklist đóng (tiết kiệm quota)
    */
   function restartAutoSync(){
-    // FIX #2: clear cả ID và reset về null để tránh leak interval
+    // Clear mọi timer cũ
     if(autoSyncTimer){
-      clearInterval(autoSyncTimer);
+      clearTimeout(autoSyncTimer);
       autoSyncTimer = null;
     }
 
@@ -4956,27 +4987,31 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       ? CHECKLIST_SYNC_MS
       : AUTO_SYNC_MS;
 
-    autoSyncTimer = setInterval(() => {
-      // 1) Tab đang ẩn → bỏ qua
-      if(document.hidden) return;
+    // Dùng setTimeout đệ quy thay setInterval:
+    // - Không bị Chrome/Safari throttle khi tab không focus
+    // - Timer reset sau mỗi lần chạy → không bị dồn request
+    autoSyncTimer = setTimeout(async function tick(){
+      // Điều kiện skip (nhưng KHÔNG skip vòng lặp — vẫn schedule next)
+      let skip = false;
+      if(document.hidden) skip = true;
+      else if(wheelArea.classList.contains("show")) skip = true;
+      else if(message.classList.contains("show")) skip = true;
+      else if(topPanel.classList.contains("show")) skip = true;
+      else if(document.getElementById("attendancePage")?.classList.contains("show")) skip = true;
+      else if(Date.now() - _lastUserActionAt < USER_ACTION_PAUSE_MS) skip = true;
+      else if(syncInFlight) skip = true;
 
-      // 2) Các overlay khác đang mở → bỏ qua
-      if(wheelArea.classList.contains("show")) return;
-      if(message.classList.contains("show")) return;
-      if(topPanel.classList.contains("show")) return;
-      if(document.getElementById("attendancePage")?.classList.contains("show")) return;
+      if(!skip){
+        lastAutoSyncAt = Date.now();
+        try{
+          await loadData(false, true);
+        }catch(_){}
+      }
 
-      // 3) Throttle cứng 15s
-      if(Date.now() - lastAutoSyncAt < AUTO_SYNC_MIN_GAP) return;
-
-      // 4) Pause 5s sau khi user vừa CHECK
-      if(Date.now() - _lastUserActionAt < USER_ACTION_PAUSE_MS) return;
-
-      // 5) Đang có request khác chạy → bỏ qua
-      if(syncInFlight) return;
-
-      lastAutoSyncAt = Date.now();
-      loadData(false, true);
+      // Schedule next — luôn chạy dù skip hay không
+      if(autoSyncTimer !== null){
+        autoSyncTimer = setTimeout(tick, interval);
+      }
     }, interval);
   }
 
