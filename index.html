@@ -1097,6 +1097,28 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     min-height:32px !important;height:32px !important;font-size:7.3px !important;
   }
 }
+
+/* ===== BỮA TRƯA ĂN GÌ ===== */
+#lunchChoiceOverlay{position:fixed;inset:0;z-index:20500;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(3,1,7,.76);backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px)}
+#lunchChoiceOverlay.show{display:flex}
+#lunchChoicePanel{position:relative;width:min(430px,calc(100vw - 28px));padding:24px 18px 18px;border:1px solid rgba(255,150,205,.22);border-radius:26px;background:linear-gradient(180deg,rgba(25,8,24,.96),rgba(10,5,14,.98));box-shadow:0 22px 70px rgba(0,0,0,.5),0 0 45px rgba(255,55,155,.12);text-align:center;color:#fff}
+#lunchChoiceClose{position:absolute;right:10px;top:8px;width:34px;height:34px;border:0;background:transparent;color:rgba(255,255,255,.55);font-size:27px;line-height:1}
+.lunchChoiceIcon{font-size:30px;margin-bottom:5px}
+#lunchChoiceTitle{font-size:20px;font-weight:950;letter-spacing:.5px;text-shadow:0 0 18px rgba(255,100,180,.45)}
+#lunchChoiceSub{margin:5px 0 16px;color:rgba(255,255,255,.48);font-size:10px}
+#lunchChoiceButtons{display:grid;grid-template-columns:1fr;gap:8px}
+#lunchAddBtn{width:100%;min-height:42px;margin-top:10px;border-radius:15px;border:1px dashed rgba(255,150,205,.28);background:rgba(255,255,255,.035);color:#ffc4df;font-size:11px;font-weight:900}
+#lunchAddForm{display:none;margin-top:10px;padding:12px;border-radius:16px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);text-align:left}
+#lunchAddForm.show{display:block}
+#lunchAddInput{width:100%;height:42px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);outline:none;background:rgba(0,0,0,.25);color:#fff;font-size:12px}
+#lunchAddInput::placeholder{color:rgba(255,255,255,.32)}
+#lunchAddCategories{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:8px}
+.lunchAddCat{min-height:38px;border-radius:11px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);color:#fff;font-size:10px;font-weight:850}
+.lunchAddCat.home{border-color:rgba(110,220,150,.20);color:#bff5d0}.lunchAddCat.soup{border-color:rgba(110,180,255,.20);color:#c7e5ff}.lunchAddCat.out{border-color:rgba(255,145,90,.20);color:#ffd0b5}
+#lunchAddStatus{min-height:14px;margin-top:7px;text-align:center;color:#ff9dcc;font-size:9px}
+.lunchModeBtn{min-height:62px;padding:9px 12px;border-radius:17px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);color:#fff;text-align:left;display:grid;grid-template-columns:42px 1fr;grid-template-rows:1fr 1fr;column-gap:8px;align-items:center}
+.lunchModeBtn span{grid-row:1/3;grid-column:1;font-size:25px;text-align:center}.lunchModeBtn b{grid-column:2;font-size:12px;align-self:end}.lunchModeBtn small{grid-column:2;color:rgba(255,255,255,.45);font-size:9px;align-self:start;margin-top:2px}
+.lunchModeBtn.home{border-color:rgba(110,220,150,.18)}.lunchModeBtn.out{border-color:rgba(255,145,90,.20)}.lunchModeBtn.all{border-color:rgba(255,100,190,.22);background:linear-gradient(135deg,rgba(255,70,160,.10),rgba(255,180,90,.06))}.lunchModeBtn:active{transform:scale(.985)}
 #secondaryNav{
   width:min(620px,calc(100vw - 24px));
   grid-template-columns:repeat(3,minmax(0,1fr));
@@ -1115,6 +1137,47 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   background:linear-gradient(135deg,rgba(255,60,145,.72),rgba(255,145,190,.58)) !important;
   box-shadow:0 0 18px rgba(255,60,160,.22);
 }
+#lunchResult{
+  position:absolute;
+  left:50%;
+  top:calc(clamp(57px,12vw,70px) + 48px);
+  z-index:9998;
+  width:min(90vw,560px);
+  transform:translateX(-50%);
+  text-align:center;
+  color:#fff;
+  font-size:clamp(19px,5.2vw,30px);
+  font-weight:950;
+  letter-spacing:.3px;
+  line-height:1.15;
+  text-shadow:0 0 5px rgba(255,255,255,.95),0 0 15px rgba(255,105,180,.8),0 0 34px rgba(255,60,145,.5);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .22s,transform .22s;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#lunchResult.show{
+  opacity:1;
+  visibility:visible;
+  animation:lunchPop .32s ease-out;
+}
+#lunchResult.rolling{
+  filter:blur(.15px);
+  animation:lunchRoll .16s ease-in-out infinite alternate;
+}
+#lunchResult .lunchLabel{
+  display:block;
+  margin-bottom:4px;
+  color:rgba(255,205,230,.62);
+  font-size:clamp(8px,2.1vw,11px);
+  font-weight:800;
+  letter-spacing:2px;
+  text-transform:uppercase;
+}
+#lunchResult .lunchDish{display:block;}
 @keyframes lunchPop{
   0%{opacity:0;transform:translateX(-50%) translateY(-7px) scale(.88)}
   70%{transform:translateX(-50%) translateY(1px) scale(1.05)}
@@ -1135,10 +1198,15 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
     max-width:calc(100vw - 16px) !important;
     grid-template-columns:repeat(4,minmax(0,1fr)) !important;
   }
+  #lunchResult{
+    top:calc(clamp(54px,13vw,66px) + 45px);
+    width:calc(100vw - 28px);
+  }
 }
 @media(max-width:360px){
   #secondaryNav{gap:2px !important;padding:2px !important;}
   #secondaryNav > button{font-size:7px !important;}
+  #lunchResult{top:calc(clamp(54px,13vw,66px) + 43px);font-size:18px;}
 }
 
 
@@ -1247,9 +1315,19 @@ box-shadow:0 0 14px rgba(255,60,160,.08)}
   #bottomNav,#secondaryNav{width:calc(100vw - 20px) !important;}
   #bottomNav > button,#secondaryNav > button{font-size:9px !important;}
 }
+
+/* ===== FINAL SPACING — KẾT QUẢ BỮA TRƯA KHÔNG ĐÈ THANH ĐIỀU HƯỚNG ===== */
+#lunchResult{
+  top:165px !important;
+  z-index:9998 !important;
+  width:calc(100vw - 28px) !important;
+  max-width:560px !important;
+}
 @media(max-width:600px){
+  #lunchResult{top:165px !important;}
 }
 @media(max-width:360px){
+  #lunchResult{top:162px !important;font-size:18px !important;}
 }
 
 /* ===== ADMIN CHECKLIST — đồng bộ giao diện xanh mát ===== */
@@ -1366,44 +1444,36 @@ html,body{background:#061015}
 #kdvRulesBtn,#lunchBtn,#quizBtn,#quizAdminBtn{color:#cceff1 !important;border-color:rgba(105,210,225,.18) !important}
 #lunchBtn{background:linear-gradient(135deg,rgba(32,170,165,.11),rgba(75,180,220,.07)) !important}
 #lunchBtn.running{background:linear-gradient(135deg,rgba(21,160,151,.78),rgba(67,197,190,.62)) !important;box-shadow:0 0 18px rgba(40,190,195,.20)}
+
+/* Kết quả bữa trưa */
+#lunchResult{color:#eafffd;text-shadow:0 0 5px rgba(255,255,255,.95),0 0 15px rgba(70,215,205,.72),0 0 34px rgba(45,190,190,.42)}
+#lunchResult .lunchLabel{color:rgba(200,244,240,.66)}
 .lunchLine .lineLabel{color:rgba(180,235,230,.62)}
-.lunchLine.soup .lineLabel{color:rgba(175,220,242,.70)}/* Các cửa sổ phụ */
-#topPanel,
-#monitorPanel,
-#linkEditorPanel,
-#adminPanel,
-#adminPasswordBox,
-#lunchManagePanel,
-#quizPanel,
-#quizNamePanel,
-#quizTakePanel,
-#quizResultPanel,
-#quizBuilderPanel{
+.lunchLine.soup .lineLabel{color:rgba(175,220,242,.70)}
+
+/* Các cửa sổ phụ */
+#topPanel,#monitorPanel,#linkEditorPanel,#adminPanel,#adminPasswordBox,
+#lunchChoicePanel,#lunchManagePanel,#quizPanel,#quizNamePanel,#quizTakePanel,#quizResultPanel,#quizBuilderPanel{
   border-color:rgba(100,220,215,.18);
   background:linear-gradient(145deg,rgba(8,29,35,.98),rgba(3,13,18,.99));
   box-shadow:0 22px 70px rgba(0,0,0,.55),0 0 40px rgba(45,195,190,.10);
-}#topTitle,
-#monitorTitle,
-#linkEditorTitle,
-#adminTitle,
-#adminPasswordTitle,
-#lunchManageTitle,
-#quizTitle,
-#quizNameTitle,
-#quizBuilderTitle,
-#quizTakeTitle,
-#quizResultTitle{
+}
+#topTitle,#monitorTitle,#linkEditorTitle,#adminTitle,#adminPasswordTitle,#lunchChoiceTitle,#lunchManageTitle,#quizTitle,#quizNameTitle,#quizBuilderTitle,#quizTakeTitle,#quizResultTitle{
   text-shadow:0 0 14px rgba(70,215,205,.55);
 }
 #topCloseBtn,#monitorCloseBtn,#linkEditorSave,#adminPasswordOk,#startQuizBtn,#quizNextBtn,#quizResultClose{
   background:linear-gradient(135deg,#159f99,#45d4c8) !important;
 }
+.lunchModeBtn.home,.lunchAddCat.home{border-color:rgba(90,220,170,.24);color:#bff4dc}
+.lunchModeBtn.out,.lunchAddCat.out{border-color:rgba(90,200,225,.24);color:#c5eff6}
+.lunchModeBtn.all{border-color:rgba(100,220,215,.24);background:linear-gradient(135deg,rgba(45,190,190,.10),rgba(75,180,220,.06))}
 #lunchManageBtn{border-color:rgba(100,210,225,.20);background:rgba(60,180,195,.07);color:#c9eff2}
 .lunchManageTab.active{background:rgba(45,190,190,.13);border-color:rgba(100,220,215,.25);color:#c8f4f0}
 .lunchManageSave{background:rgba(70,190,145,.10);color:#bff5da}
-.lunchManageDelete{background:rgba(220,105,115,.08);color:#ffc9ce}#lunchManageInput,
-#linkEditorInput,
-#adminPasswordInput{background:rgba(2,15,20,.38);border-color:rgba(100,210,215,.13)}#lunchManageStatus{color:#8ee2da}
+.lunchManageDelete{background:rgba(220,105,115,.08);color:#ffc9ce}
+#lunchAddInput,#lunchManageInput,#linkEditorInput,#adminPasswordInput{background:rgba(2,15,20,.38);border-color:rgba(100,210,215,.13)}
+#lunchAddBtn{border-color:rgba(100,220,215,.24);color:#c8f3f0}
+#lunchAddStatus,#lunchManageStatus{color:#8ee2da}
 
 /* Luật KDV */
 #kdvRulesPanel{border-color:rgba(100,220,215,.20);background:radial-gradient(circle at 50% -10%,rgba(55,205,195,.14),transparent 38%),linear-gradient(145deg,rgba(8,29,35,.98),rgba(3,13,18,.99));box-shadow:0 24px 80px rgba(0,0,0,.62),0 0 42px rgba(45,195,190,.10)}
@@ -1508,19 +1578,11 @@ button,input,textarea,select{font-family:inherit!important}
   color:#fff!important;
   background:#55a973!important;
   box-shadow:0 5px 14px rgba(67,157,100,.18)!important;
-}/* Các panel chung */
-#checklistPanel,
-#topPanel,
-#monitorPanel,
-#linkEditorPanel,
-#adminPanel,
-#adminPasswordBox,
-#lunchManagePanel,
-#quizPanel,
-#quizNamePanel,
-#quizTakePanel,
-#quizResultPanel,
-#quizBuilderPanel{
+}
+
+/* Các panel chung */
+#checklistPanel,#topPanel,#monitorPanel,#linkEditorPanel,#adminPanel,#adminPasswordBox,
+#lunchChoicePanel,#lunchManagePanel,#quizPanel,#quizNamePanel,#quizTakePanel,#quizResultPanel,#quizBuilderPanel{
   color:var(--mint-text)!important;
   background:rgba(255,255,255,.97)!important;
   border:1px solid var(--mint-border)!important;
@@ -1528,32 +1590,16 @@ button,input,textarea,select{font-family:inherit!important}
   backdrop-filter:blur(10px)!important;
   -webkit-backdrop-filter:blur(10px)!important;
   text-shadow:none!important;
-}#checklistTitle,
-#topTitle,
-#monitorTitle,
-#linkEditorTitle,
-#adminTitle,
-#adminPasswordTitle,
-#lunchManageTitle,
-#quizTitle,
-#quizNameTitle,
-#quizBuilderTitle,
-#quizTakeTitle,
-#quizResultTitle{
+}
+#checklistTitle,#topTitle,#monitorTitle,#linkEditorTitle,#adminTitle,#adminPasswordTitle,
+#lunchChoiceTitle,#lunchManageTitle,#quizTitle,#quizNameTitle,#quizBuilderTitle,#quizTakeTitle,#quizResultTitle{
   color:var(--mint-green)!important;
   text-shadow:none!important;
   font-family:'Nunito','Avenir Next','Segoe UI',Arial,sans-serif!important;
   font-weight:900!important;
-}#checklistSub,
-#topSub,
-#monitorSub,
-#linkEditorName,
-#adminSub,
-#adminPasswordSub,
-#lunchManageSub,
-#quizSub,
-#quizNameSub,
-#quizBuilderSub{
+}
+#checklistSub,#topSub,#monitorSub,#linkEditorName,#adminSub,#adminPasswordSub,
+#lunchChoiceSub,#lunchManageSub,#quizSub,#quizNameSub,#quizBuilderSub{
   color:var(--mint-muted)!important;
 }
 
@@ -1583,36 +1629,58 @@ button,input,textarea,select{font-family:inherit!important}
   border-color:#cbdcc9!important;
   box-shadow:none!important;
 }
-#captureBtn{background:#55a973!important;color:#fff!important;box-shadow:0 5px 12px rgba(75,160,105,.15)!important}#lunchManageOverlay{
+#captureBtn{background:#55a973!important;color:#fff!important;box-shadow:0 5px 12px rgba(75,160,105,.15)!important}
+
+/* Bữa trưa — bám sát phong cách ảnh mẫu */
+#lunchChoiceOverlay,#lunchManageOverlay{
   background:rgba(235,243,232,.72)!important;
   backdrop-filter:blur(8px)!important;
   -webkit-backdrop-filter:blur(8px)!important;
-}#lunchManageOverlay{
-  z-index:22000!important;
-  display:flex!important;
-  pointer-events:auto!important;
-  background:rgba(232,241,229,.82)!important;
-  backdrop-filter:blur(14px)!important;
-  -webkit-backdrop-filter:blur(14px)!important;
 }
-#lunchManagePanel{
+#lunchChoicePanel,#lunchManagePanel{
   background:#fff!important;
   border-color:#d3e1d0!important;
   border-radius:24px!important;
   box-shadow:0 16px 42px rgba(55,89,65,.13)!important;
-}#lunchManageClose{color:#7ca08a!important}#lunchManageBtn{
+}
+.lunchChoiceIcon{filter:none!important}
+#lunchChoiceTitle{color:#285d45!important;font-weight:900!important;text-shadow:none!important}
+#lunchChoiceTitle::after{
+  content:'';display:block;width:150px;height:8px;margin:-8px auto 0;
+  border-radius:4px;background:var(--mint-yellow);opacity:.75;position:relative;z-index:-1;
+}
+#lunchChoiceClose,#lunchManageClose{color:#7ca08a!important}
+.lunchModeBtn{
+  min-height:62px!important;
+  background:#fff!important;
+  border:1px solid #cbdcc9!important;
+  color:#315744!important;
+  box-shadow:var(--mint-shadow-soft)!important;
+}
+.lunchModeBtn.home{border-color:#9dbca2!important;background:#f4faf2!important}
+.lunchModeBtn.out{border-color:#d9e1d7!important}
+.lunchModeBtn.all{border-color:#cbdcc9!important;background:#f7fbf6!important}
+.lunchModeBtn b{color:#315744!important;font-weight:900!important}
+.lunchModeBtn small{color:#829389!important}
+#lunchAddBtn,#lunchManageBtn{
   color:#3f7657!important;
   background:#f1f8f1!important;
   border-color:#bfd7c3!important;
   box-shadow:none!important;
-}#lunchManageInput,
-#linkEditorInput,
-#adminPasswordInput{
+}
+#lunchAddForm{background:#f7fbf6!important;border-color:#d8e5d6!important}
+#lunchAddInput,#lunchManageInput,#linkEditorInput,#adminPasswordInput{
   background:#fff!important;
   color:#315744!important;
   border-color:#cbdcc9!important;
   box-shadow:inset 0 1px 2px rgba(52,87,62,.04)!important;
-}#lunchManageStatus{color:#4d8b63!important}
+}
+#lunchAddInput::placeholder{color:#9aa99f!important}
+.lunchAddCat{background:#fff!important;color:#567363!important;border-color:#cbdcc9!important}
+.lunchAddCat.home{color:#3e7856!important;border-color:#b7d5bd!important}
+.lunchAddCat.soup{color:#4c7868!important;border-color:#c8ddd0!important}
+.lunchAddCat.out{color:#6f765d!important;border-color:#d8dec8!important}
+#lunchAddStatus,#lunchManageStatus{color:#4d8b63!important}
 #lunchManageTabs .lunchManageTab{background:#f6faf5!important;color:#6c8175!important;border-color:#d6e2d3!important}
 #lunchManageTabs .lunchManageTab.active{background:#e6f3e7!important;color:#316448!important;border-color:#b7d4bc!important}
 .lunchManageRow{background:#fbfdfb!important;border-color:#e0e9de!important}
@@ -1620,6 +1688,12 @@ button,input,textarea,select{font-family:inherit!important}
 .lunchManageSave{background:#e8f5e9!important;color:#3d7654!important;border-color:#c1dcc6!important}
 .lunchManageDelete{background:#fff4f1!important;color:#a8665c!important;border-color:#ead2cc!important}
 #lunchManageEmpty{color:#8a9a91!important}
+#lunchResult{
+  color:#315744!important;
+  text-shadow:none!important;
+  font-weight:900!important;
+}
+#lunchResult .lunchLabel{color:#789184!important}
 .lunchLine .lineLabel{color:#759181!important;text-shadow:none!important}
 .lunchLine.soup .lineLabel{color:#72917e!important}
 
@@ -1683,7 +1757,8 @@ button,input,textarea,select{font-family:inherit!important}
 .checkBox.checked{animation:checkPop .35s ease-out!important}
 
 @media(max-width:600px){
-  #bottomNav,#secondaryNav{box-shadow:0 7px 20px rgba(54,91,65,.09)!important}#lunchManagePanel{width:calc(100vw - 28px)!important}
+  #bottomNav,#secondaryNav{box-shadow:0 7px 20px rgba(54,91,65,.09)!important}
+  #lunchChoicePanel,#lunchManagePanel{width:calc(100vw - 28px)!important}
 }
 /* Final soft-mint landing text — keep the title readable on the light background */
 #question{
@@ -1882,35 +1957,20 @@ button,input,textarea,select{font-family:var(--font)!important}
   box-shadow:0 7px 18px rgba(63,128,82,.08)!important;
   text-shadow:none!important;
 }
-#hint{color:#8a9b90!important;font-size:11px!important}/* ---------- Generic panels / overlays ---------- */
-#checklistPanel,
-#topPanel,
-#monitorPanel,
-#linkEditorPanel,
-#adminPanel,
-#adminPasswordBox,
-#lunchManagePanel,
-#quizPanel,
-#quizNamePanel,
-#quizTakePanel,
-#quizResultPanel,
-#quizBuilderPanel,
+#hint{color:#8a9b90!important;font-size:11px!important}
+
+/* ---------- Generic panels / overlays ---------- */
+#checklistPanel,#topPanel,#monitorPanel,#linkEditorPanel,#adminPanel,#adminPasswordBox,
+#lunchChoicePanel,#lunchManagePanel,#quizPanel,#quizNamePanel,#quizTakePanel,#quizResultPanel,#quizBuilderPanel,
 #kdvRulesPanel{
   background:rgba(255,255,255,.98)!important;
   color:var(--ink)!important;
   border:1px solid var(--line)!important;
   box-shadow:var(--shadow)!important;
   text-shadow:none!important;
-}#monitorOverlay,
-#adminOverlay,
-#linkEditorOverlay,
-#kdvRulesOverlay,
-#quizOverlay,
-#quizNameOverlay,
-#quizTakeOverlay,
-#quizResultOverlay,
-#quizBuilderOverlay,
-#lunchManageOverlay{
+}
+#monitorOverlay,#adminOverlay,#linkEditorOverlay,#kdvRulesOverlay,
+#quizOverlay,#quizNameOverlay,#quizTakeOverlay,#quizResultOverlay,#quizBuilderOverlay,#lunchChoiceOverlay,#lunchManageOverlay{
   background:rgba(232,241,229,.74)!important;
   backdrop-filter:blur(14px)!important;
   -webkit-backdrop-filter:blur(14px)!important;
@@ -1922,33 +1982,17 @@ button,input,textarea,select{font-family:var(--font)!important}
   max-height:82vh!important;
   padding:20px!important;
   border-radius:var(--radius-xl)!important;
-}#checklistTitle,
-#topTitle,
-#monitorTitle,
-#linkEditorTitle,
-#adminTitle,
-#adminPasswordTitle,
-#lunchManageTitle,
-#quizTitle,
-#quizNameTitle,
-#quizBuilderTitle,
-#quizTakeTitle,
-#quizResultTitle{
+}
+#checklistTitle,#topTitle,#monitorTitle,#linkEditorTitle,#adminTitle,#adminPasswordTitle,
+#lunchChoiceTitle,#lunchManageTitle,#quizTitle,#quizNameTitle,#quizBuilderTitle,#quizTakeTitle,#quizResultTitle{
   font-family:var(--font)!important;
   color:var(--green-strong)!important;
   font-weight:900!important;
   text-shadow:none!important;
 }
-#checklistTitle{font-size:clamp(22px,6vw,28px)!important;letter-spacing:-.03em!important}#checklistSub,
-#topSub,
-#monitorSub,
-#linkEditorName,
-#adminSub,
-#adminPasswordSub,
-#lunchManageSub,
-#quizSub,
-#quizNameSub,
-#quizBuilderSub{
+#checklistTitle{font-size:clamp(22px,6vw,28px)!important;letter-spacing:-.03em!important}
+#checklistSub,#topSub,#monitorSub,#linkEditorName,#adminSub,#adminPasswordSub,
+#lunchChoiceSub,#lunchManageSub,#quizSub,#quizNameSub,#quizBuilderSub{
   color:var(--muted)!important;
 }
 #checklistScroll{background:transparent!important}
@@ -1971,21 +2015,52 @@ button,input,textarea,select{font-family:var(--font)!important}
 #checklistActions button{
   color:#557164!important;background:#f7faf6!important;border-color:var(--line)!important;box-shadow:none!important
 }
-#captureBtn{background:#4e9d6b!important;color:#fff!important}#lunchManagePanel{
+#captureBtn{background:#4e9d6b!important;color:#fff!important}
+
+/* ---------- Lunch: match the supplied reference style ---------- */
+#lunchChoicePanel,#lunchManagePanel{
   border-radius:26px!important;
   padding:22px 16px 16px!important;
-}#lunchManageClose{color:#78a087!important;background:#f0f7ef!important;border-radius:50%!important}#lunchManageInput,
-#linkEditorInput,
-#adminPasswordInput,
-#resetTimeInput{
+}
+#lunchChoiceTitle{font-size:clamp(22px,6vw,29px)!important;letter-spacing:-.035em!important}
+#lunchChoiceTitle::after{
+  content:"";display:block;width:150px;height:8px;margin:-8px auto 0;border-radius:8px;background:var(--yellow);opacity:.72;position:relative;z-index:-1;
+}
+#lunchChoiceClose,#lunchManageClose{color:#78a087!important;background:#f0f7ef!important;border-radius:50%!important}
+.lunchModeBtn{
+  min-height:70px!important;
+  border-radius:18px!important;
+  border:1px solid var(--line)!important;
+  background:#fff!important;
+  color:var(--ink)!important;
+  box-shadow:var(--shadow-sm)!important;
+  text-align:left!important;
+  padding:12px 15px!important;
+}
+.lunchModeBtn.home{background:#f4faf3!important;border-color:#a9c8ae!important}
+.lunchModeBtn.out{background:#fff!important}
+.lunchModeBtn.all{background:#f8fbf7!important}
+.lunchModeBtn b{color:#315744!important;font-weight:900!important}
+.lunchModeBtn small{color:#84958b!important}
+#lunchAddForm{background:#f5faf5!important;border-color:#d4e4d3!important;border-radius:18px!important}
+#lunchAddInput,#lunchManageInput,#linkEditorInput,#adminPasswordInput,#resetTimeInput{
   background:#fff!important;color:var(--ink)!important;border-color:#cdddcf!important;box-shadow:none!important
-}#lunchManageBtn{background:#4e9d6b!important;color:#fff!important;border-color:#4e9d6b!important;box-shadow:0 5px 12px rgba(70,150,96,.12)!important}#lunchManageStatus{color:#4e8c62!important}
+}
+#lunchAddInput::placeholder{color:#9aa89f!important}
+#lunchAddBtn,#lunchManageBtn{background:#4e9d6b!important;color:#fff!important;border-color:#4e9d6b!important;box-shadow:0 5px 12px rgba(70,150,96,.12)!important}
+.lunchAddCat{background:#fff!important;color:#5c7568!important;border-color:var(--line)!important}
+.lunchAddCat.home{color:#397252!important;border-color:#b9d4bc!important;background:#eef8ef!important}
+.lunchAddCat.soup{color:#467365!important;border-color:#c8ddd0!important;background:#f4f9f5!important}
+.lunchAddCat.out{color:#69765d!important;border-color:#d9dfce!important;background:#fafbf6!important}
+#lunchAddStatus,#lunchManageStatus{color:#4e8c62!important}
 #lunchManageTabs .lunchManageTab{background:#f7faf6!important;color:#708278!important;border-color:var(--line)!important}
 #lunchManageTabs .lunchManageTab.active{background:#e5f2e7!important;color:#35684b!important;border-color:#b8d3bc!important}
 .lunchManageRow{background:#fbfdfb!important;border-color:#e0e9de!important}
 .lunchManageInput{background:#fff!important;color:var(--ink)!important;border-color:#cdddcf!important}
 .lunchManageSave{background:#e7f4e9!important;color:#3d7653!important;border-color:#c2dcc6!important}
 .lunchManageDelete{background:#fff5f2!important;color:#a8685f!important;border-color:#ead5cf!important}
+#lunchResult{color:var(--green-strong)!important;text-shadow:none!important}
+#lunchResult .lunchLabel{color:#819388!important}
 .lunchLine .lineLabel,.lunchLine.soup .lineLabel{color:#729080!important;text-shadow:none!important}
 
 /* ---------- Tables / secondary content ---------- */
@@ -2194,34 +2269,17 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   transition:transform .2s ease,box-shadow .2s ease!important;
 }
 #question .landing-cta:active{transform:translateY(1px) scale(.98)!important;box-shadow:0 7px 18px rgba(42,91,65,.08)!important}
-#hint{color:#82978b!important}/* Cards: premium paper + glass hybrid */
-#checklistPanel,
-#topPanel,
-#monitorPanel,
-#linkEditorPanel,
-#adminPanel,
-#adminPasswordBox,
-#lunchManagePanel,
-#quizPanel,
-#quizNamePanel,
-#quizTakePanel,
-#quizResultPanel,
-#quizBuilderPanel,
-#kdvRulesPanel{
+#hint{color:#82978b!important}
+
+/* Cards: premium paper + glass hybrid */
+#checklistPanel,#topPanel,#monitorPanel,#linkEditorPanel,#adminPanel,#adminPasswordBox,
+#lunchChoicePanel,#lunchManagePanel,#quizPanel,#quizNamePanel,#quizTakePanel,#quizResultPanel,#quizBuilderPanel,#kdvRulesPanel{
   background:linear-gradient(180deg,rgba(255,255,255,.985),rgba(249,252,248,.985))!important;
   border:1px solid rgba(62,112,79,.16)!important;
   box-shadow:var(--p-shadow)!important;
   border-radius:26px!important;
-}#monitorOverlay,
-#adminOverlay,
-#linkEditorOverlay,
-#kdvRulesOverlay,
-#quizOverlay,
-#quizNameOverlay,
-#quizTakeOverlay,
-#quizResultOverlay,
-#quizBuilderOverlay,
-#lunchManageOverlay{
+}
+#monitorOverlay,#adminOverlay,#linkEditorOverlay,#kdvRulesOverlay,#quizOverlay,#quizNameOverlay,#quizTakeOverlay,#quizResultOverlay,#quizBuilderOverlay,#lunchChoiceOverlay,#lunchManageOverlay{
   background:rgba(228,239,226,.68)!important;backdrop-filter:blur(20px) saturate(110%)!important;-webkit-backdrop-filter:blur(20px) saturate(110%)!important;
 }
 
@@ -2238,7 +2296,29 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .checkTime{color:#80958a!important}
 .checkBox{border-color:#c5d9c9!important;background:#f5f9f4!important}
 .checkBox.checked{background:linear-gradient(145deg,#4f9b70,#6db487)!important;box-shadow:0 5px 13px rgba(64,137,91,.15)!important}
-#checklistActions button{border-radius:14px!important}#lunchManageBtn{border-radius:14px!important;background:#4f9b70!important;box-shadow:0 8px 16px rgba(64,137,91,.13)!important}
+#checklistActions button{border-radius:14px!important}
+
+/* Lunch popup: make it the visual signature of the app */
+#lunchChoicePanel{padding:23px 16px 17px!important;overflow:hidden!important}
+.lunchChoiceIcon{font-size:34px!important;filter:drop-shadow(0 5px 7px rgba(54,96,66,.10));margin-bottom:3px!important}
+#lunchChoiceTitle{font-size:clamp(23px,6vw,30px)!important;color:var(--p-forest)!important;letter-spacing:-.04em!important}
+#lunchChoiceTitle::after{height:8px!important;background:#efd48a!important;opacity:.8!important}
+#lunchChoiceSub{color:#82958a!important}
+#lunchChoiceButtons{gap:9px!important}
+.lunchModeBtn{
+  min-height:76px!important;border-radius:20px!important;padding:13px 15px!important;
+  border:1px solid rgba(62,112,79,.15)!important;background:rgba(255,255,255,.92)!important;
+  box-shadow:0 8px 20px rgba(42,78,57,.055)!important;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease!important;
+}
+.lunchModeBtn:hover{transform:translateY(-1px)!important;box-shadow:0 12px 25px rgba(42,78,57,.08)!important}
+.lunchModeBtn.home{background:linear-gradient(135deg,#f4faf3,#edf7ef)!important;border-color:#b7d2bb!important}
+.lunchModeBtn.out{background:#fff!important}
+.lunchModeBtn.all{background:linear-gradient(135deg,#fbfcf8,#f2f7f0)!important}
+.lunchModeBtn b{color:#315b46!important;font-weight:950!important}
+.lunchModeBtn small{color:#87998f!important}
+#lunchAddForm{border-radius:20px!important;background:#f4f9f5!important;border:1px solid #d8e6d7!important}
+#lunchAddBtn,#lunchManageBtn{border-radius:14px!important;background:#4f9b70!important;box-shadow:0 8px 16px rgba(64,137,91,.13)!important}
 
 /* Tables / buttons get consistent tactile depth */
 #topTable,#monitorTable,#quizLeaderboard{border-radius:18px!important;overflow:hidden!important}
@@ -2246,17 +2326,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .topRow1,.topRow2,.topRow3{background:#f7fbf7!important}
 .topRank{border-radius:10px!important}
 .monitorCheckBtn,.monitorAssignBtn{border-radius:12px!important}
-#topCloseBtn,#adminPasswordOk,#linkEditorSave,#startQuizBtn,#quizNextBtn,#quizResultClose,#adminSaveBtn{border-radius:14px!important}/* Keep all text comfortably readable on iPhone */
-#question .landing-title,
-#checklistTitle,
-#topTitle,
-#monitorTitle,
-#lunchManageTitle,
-#quizTitle,
-#quizNameTitle,
-#quizBuilderTitle,
-#quizTakeTitle,
-#quizResultTitle{
+#topCloseBtn,#adminPasswordOk,#linkEditorSave,#startQuizBtn,#quizNextBtn,#quizResultClose,#adminSaveBtn{border-radius:14px!important}
+
+/* Keep all text comfortably readable on iPhone */
+#question .landing-title,#checklistTitle,#topTitle,#monitorTitle,#lunchChoiceTitle,#lunchManageTitle,#quizTitle,#quizNameTitle,#quizBuilderTitle,#quizTakeTitle,#quizResultTitle{
   -webkit-font-smoothing:antialiased!important;font-variant-ligatures:none!important;
 }
 
@@ -2274,19 +2347,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   #bottomNav button,#secondaryNav button{min-height:40px!important;font-size:8px!important}
   #question .landing-title{font-size:clamp(26px,7.8vw,42px)!important}
 }
-
-/* =========================================================
-   HỆ THỐNG 03 — BỮA TRƯA ĂN GÌ (FULL-SCREEN / MINT)
-   ========================================================= */
-#lunchPage{position:fixed;inset:0;z-index:20500;overflow:hidden;isolation:auto;background:radial-gradient(circle at 20% 10%,rgba(190,225,198,.28),transparent 32%),radial-gradient(circle at 90% 80%,rgba(218,237,221,.32),transparent 34%),linear-gradient(145deg,#f8fbf7 0%,#f2f8f1 48%,#eaf3e9 100%);color:#284b3a;display:none}
-#lunchPage.show{display:block}
-#lunchPage *{box-sizing:border-box}
-.lunch-page-inner{width:100%;height:100%;overflow:auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(120px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}.lunch-shell{width:min(100%,640px);margin:0 auto}.lunch-head{display:flex;align-items:center;gap:12px;margin-bottom:20px}.lunch-back{width:42px;height:42px;border:1px solid rgba(62,112,79,.16);border-radius:15px;background:rgba(255,255,255,.85);box-shadow:0 8px 24px rgba(42,78,57,.08);color:#245943;font-size:22px;font-weight:700;cursor:pointer;flex:0 0 auto}.lunch-head-copy{flex:1;min-width:0}.lunch-kicker{font-size:10px;letter-spacing:2px;font-weight:850;color:#5c9488;text-transform:uppercase}.lunch-title{margin-top:2px;font-size:clamp(24px,7vw,32px);line-height:1.05;font-weight:900;letter-spacing:-.6px;color:#245943}
-.lunch-result-card{position:relative;padding:26px 22px 24px;margin-bottom:18px;border-radius:28px;background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(255,255,255,.98) 0%,rgba(255,255,255,.72) 45%,transparent 75%),linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(248,252,246,.94) 55%,rgba(240,248,238,.92) 100%);border:1px solid rgba(120,175,135,.18);box-shadow:0 24px 60px -20px rgba(42,78,57,.18),0 12px 32px -12px rgba(42,78,57,.12),inset 0 1px 0 rgba(255,255,255,.95);overflow:hidden;text-align:center;min-height:200px;display:flex;flex-direction:column;justify-content:center}.lunch-result-card.rolling{animation:lunchRollCard .16s ease-in-out infinite alternate}@keyframes lunchRollCard{from{transform:rotate(-.3deg) scale(.998)}to{transform:rotate(.3deg) scale(1.002)}}
-.lunch-result-icon{font-size:36px;margin-bottom:8px;filter:drop-shadow(0 4px 6px rgba(54,96,66,.12))}.lunch-result-label{display:block;margin-bottom:14px;color:#7a8d82;font-size:10px;font-weight:900;letter-spacing:.28em;text-transform:uppercase}.lunch-result-placeholder{color:#8aa299;font-size:clamp(14px,3.5vw,16px);font-weight:800;line-height:1.4;padding:20px 0}.lunch-result-line{display:block;margin:8px 0}.lunch-result-line .line-label{display:inline-block;margin-right:8px;padding:3px 10px;border-radius:999px;background:rgba(80,157,107,.12);color:#3f7657;font-size:10px;font-weight:900;letter-spacing:.06em;vertical-align:middle}.lunch-result-line.soup .line-label{background:rgba(150,180,220,.14);color:#4a6a90}.lunch-result-line.out .line-label{background:rgba(180,120,200,.12);color:#7a3a8a}.lunch-result-value{color:#245943;font-size:clamp(20px,5vw,26px);font-weight:900;line-height:1.2;letter-spacing:-.02em;vertical-align:middle}
-.lunch-reroll-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:180px;min-height:50px;padding:12px 28px;margin-top:16px;border:1px solid rgba(79,155,112,.4);border-radius:999px;background:linear-gradient(180deg,#5aad7f 0%,#4a9a6c 100%);color:#fff;font-size:clamp(13px,3.4vw,15px);font-weight:950;letter-spacing:.14em;box-shadow:0 12px 28px -8px rgba(74,154,108,.42);cursor:pointer}.lunch-reroll-btn:active{transform:scale(.97)}.lunch-section-title{display:block;margin:0 0 10px 4px;color:#5c7669;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.lunch-mode-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}.lunch-mode-card{padding:14px 10px;border:1px solid rgba(62,112,79,.15);border-radius:18px;background:rgba(255,255,255,.86);box-shadow:0 6px 18px rgba(42,78,57,.06);color:#315744;font-size:11px;font-weight:850;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}.lunch-mode-card:active{transform:scale(.97)}.lunch-mode-card .mode-icon{font-size:24px;line-height:1}.lunch-mode-card .mode-label{font-size:12px;font-weight:950}.lunch-mode-card .mode-desc{color:#87998f;font-size:9px;font-weight:750;line-height:1.3}.lunch-mode-card.home{background:linear-gradient(135deg,#f4faf3,#edf7ef);border-color:#b7d2bb}.lunch-mode-card.out{background:linear-gradient(135deg,#fbfdfb,#f5faf6);border-color:#c9dccb}.lunch-mode-card.all{background:linear-gradient(135deg,#fbfcf8,#f2f7f0);border-color:#cbdcc9}
-.lunch-actions-grid{display:grid;gap:8px;margin-top:8px}.lunch-action-btn{min-height:48px;padding:12px 18px;border:1px dashed rgba(79,155,112,.32);border-radius:16px;background:rgba(255,255,255,.6);color:#3f7657;font-size:12px;font-weight:900;cursor:pointer}.lunch-action-btn:active{transform:scale(.98)}.lunch-action-btn.solid{border-style:solid;background:linear-gradient(135deg,#4f9b70,#3d8a5f);color:#fff;border-color:rgba(79,155,112,.5);box-shadow:0 8px 18px -6px rgba(74,154,108,.42)}.lunch-add-form{display:none;margin-top:10px;padding:14px;border:1px solid rgba(62,112,79,.15);border-radius:18px;background:rgba(244,249,245,.96);box-shadow:0 8px 20px rgba(42,78,57,.06)}.lunch-add-form.show{display:block}.lunch-add-input{width:100%;height:44px;padding:0 14px;border:1px solid rgba(62,112,79,.20);border-radius:13px;background:#fff;color:#284b3a;font-family:inherit;font-size:16px;font-weight:700;outline:none}.lunch-add-input:focus{border-color:rgba(79,155,112,.6);box-shadow:0 0 0 3px rgba(79,155,112,.12)}.lunch-add-cats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:10px}.lunch-add-cat{min-height:42px;padding:8px 10px;border:1px solid rgba(62,112,79,.18);border-radius:13px;background:#fff;color:#5c7568;font-size:11px;font-weight:900;cursor:pointer}.lunch-add-cat.home{background:#eef8ef;border-color:#b7d5bd;color:#3a7856}.lunch-add-cat.soup{background:#f4f9f5;border-color:#c8ddd0;color:#467365}.lunch-add-cat.out{background:#fafbf6;border-color:#d9dfce;color:#69765d}.lunch-add-status{min-height:14px;margin-top:9px;text-align:center;color:#4e8c62;font-size:10px;font-weight:800}
-@media(max-width:600px){.lunch-page-inner{padding:16px 12px calc(120px + env(safe-area-inset-bottom))}.lunch-result-card{padding:22px 18px 20px;border-radius:24px}.lunch-mode-grid{gap:6px}.lunch-mode-card{padding:12px 8px;border-radius:16px}.lunch-mode-card .mode-icon{font-size:22px}.lunch-mode-card .mode-label{font-size:11px}}@media(max-width:390px){.lunch-title{font-size:22px}.lunch-mode-card{padding:10px 6px}.lunch-mode-card .mode-desc{font-size:8px}}
 </style>
 
 
@@ -2467,34 +2527,46 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   <button id="quizAdminBtn" type="button" aria-label="Tạo bài kiểm tra" hidden>⚙ Tạo Ktra</button>
 </nav>
 
-<section id="lunchPage" aria-label="Bữa trưa ăn gì" aria-hidden="true">
-  <div class="lunch-page-inner"><div class="lunch-shell">
-    <header class="lunch-head">
-      <button id="lunchBack" class="lunch-back" type="button" aria-label="Quay lại">‹</button>
-      <div class="lunch-head-copy"><div class="lunch-kicker">HỆ THỐNG 03</div><div class="lunch-title">Bữa trưa ăn gì?</div></div>
-    </header>
-    <div id="lunchResultCard" class="lunch-result-card">
-      <div class="lunch-result-icon">🍽️</div><span class="lunch-result-label">Thực đơn hôm nay</span>
-      <div id="lunchResultBody"><div class="lunch-result-placeholder">Chọn kiểu ăn bên dưới để quay món nha 🎲</div></div>
-      <button id="lunchRerollBtn" class="lunch-reroll-btn" type="button" style="display:none;">🎲 QUAY LẠI</button>
+<div id="lunchChoiceOverlay" aria-hidden="true">
+  <section id="lunchChoicePanel" role="dialog" aria-modal="true" aria-labelledby="lunchChoiceTitle">
+    <button id="lunchChoiceClose" type="button" aria-label="Đóng">×</button>
+    <div class="lunchChoiceIcon">🍽️</div>
+    <div id="lunchChoiceTitle">BỮA TRƯA ĂN GÌ?</div>
+    <div id="lunchChoiceSub">Chọn kiểu ăn rồi để vòng quay chọn món cho m</div>
+    <div id="lunchChoiceButtons">
+      <button type="button" class="lunchModeBtn home" data-mode="home"><span>🏠</span><b>Ăn tại nhà</b><small>50 món mặn + 50 món canh</small></button>
+      <button type="button" class="lunchModeBtn out" data-mode="out"><span>🍜</span><b>Ăn ngoài</b><small>50 món</small></button>
+      <button type="button" class="lunchModeBtn all" data-mode="all"><span>🎲</span><b>Ngẫu nhiên tất cả</b><small>Ăn tại nhà hoặc ăn ngoài</small></button>
     </div>
-    <span class="lunch-section-title">Chọn kiểu ăn</span>
-    <div class="lunch-mode-grid">
-      <button type="button" class="lunch-mode-card home" data-mode="home"><span class="mode-icon">🏠</span><span class="mode-label">Ăn tại nhà</span><span class="mode-desc">50 món mặn + 50 món canh</span></button>
-      <button type="button" class="lunch-mode-card out" data-mode="out"><span class="mode-icon">🍜</span><span class="mode-label">Ăn ngoài</span><span class="mode-desc">50 món</span></button>
-      <button type="button" class="lunch-mode-card all" data-mode="all"><span class="mode-icon">🎲</span><span class="mode-label">Ngẫu nhiên</span><span class="mode-desc">Nhà hoặc ngoài</span></button>
-    </div>
-    <div class="lunch-actions-grid">
-      <button id="lunchAddBtn2" class="lunch-action-btn" type="button">＋ Thêm món ăn</button>
-      <div id="lunchAddForm2" class="lunch-add-form">
-        <input id="lunchAddInput2" class="lunch-add-input" type="text" maxlength="60" autocomplete="off" placeholder="Nhập tên món muốn thêm...">
-        <div class="lunch-add-cats"><button type="button" class="lunch-add-cat home" data-add-category="savory">🍖 Món mặn</button><button type="button" class="lunch-add-cat soup" data-add-category="soup">🍲 Món canh</button><button type="button" class="lunch-add-cat out" data-add-category="out">🍜 Ăn ngoài</button></div>
-        <div id="lunchAddStatus2" class="lunch-add-status" aria-live="polite"></div>
+    <button id="lunchAddBtn" type="button">＋ Thêm món ăn</button>
+    <div id="lunchAddForm">
+      <input id="lunchAddInput" type="text" maxlength="60" autocomplete="off" placeholder="Nhập tên món muốn thêm...">
+      <div id="lunchAddCategories">
+        <button type="button" class="lunchAddCat home" data-add-category="savory">🍖 Món mặn</button>
+        <button type="button" class="lunchAddCat soup" data-add-category="soup">🍲 Món canh</button>
+        <button type="button" class="lunchAddCat out" data-add-category="out">🍜 Ăn ngoài</button>
       </div>
-      <button id="lunchManageBtn2" class="lunch-action-btn solid" type="button">⚙ Quản lý danh sách món</button>
+      <div id="lunchAddStatus" aria-live="polite"></div>
     </div>
-  </div></div>
-</section>
+    <button id="lunchManageBtn" type="button">⚙ Quản lý danh sách món</button>
+  </section>
+</div>
+
+<div id="lunchManageOverlay" aria-hidden="true">
+  <section id="lunchManagePanel" role="dialog" aria-modal="true" aria-labelledby="lunchManageTitle">
+    <button id="lunchManageClose" type="button" aria-label="Đóng">×</button>
+    <div id="lunchManageTitle">⚙ QUẢN LÝ DANH SÁCH MÓN</div>
+    <div id="lunchManageSub">Đổi tên hoặc xóa món. Thay đổi được lưu trên thiết bị này.</div>
+    <div id="lunchManageTabs">
+      <button class="lunchManageTab active" type="button" data-manage-category="savory">🍖 Món mặn</button>
+      <button class="lunchManageTab" type="button" data-manage-category="soup">🍲 Món canh</button>
+      <button class="lunchManageTab" type="button" data-manage-category="out">🍜 Ăn ngoài</button>
+    </div>
+    <div id="lunchManageList"></div>
+    <div id="lunchManageStatus" aria-live="polite"></div>
+  </section>
+</div>
+<div id="lunchResult" aria-live="polite" aria-hidden="true"><span class="lunchLabel">🍽️ Thực đơn hôm nay</span><span class="lunchDish"><span class="lunchLine savory"><span class="lineLabel">Món mặn</span><span class="lineValue"></span></span><span class="lunchLine soup"><span class="lineLabel">Món canh</span><span class="lineValue"></span></span><span class="lunchLine out"><span class="lineLabel">Ăn ngoài</span><span class="lineValue"></span></span></span></div>
 
 
 <div id="kdvRulesOverlay" aria-hidden="true">
@@ -2841,16 +2913,16 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   const kdvRulesOverlay = document.getElementById("kdvRulesOverlay");
   const kdvRulesClose = document.getElementById("kdvRulesClose");
   const lunchBtn = document.getElementById("lunchBtn");
-  const lunchPage = document.getElementById("lunchPage");
-  const lunchBack = document.getElementById("lunchBack");
-  const lunchResultCard = document.getElementById("lunchResultCard");
-  const lunchResultBody = document.getElementById("lunchResultBody");
-  const lunchRerollBtn = document.getElementById("lunchRerollBtn");
-  const lunchAddBtn2 = document.getElementById("lunchAddBtn2");
-  const lunchAddForm2 = document.getElementById("lunchAddForm2");
-  const lunchAddInput2 = document.getElementById("lunchAddInput2");
-  const lunchAddStatus2 = document.getElementById("lunchAddStatus2");
-  const lunchManageBtn2 = document.getElementById("lunchManageBtn2");
+  const lunchChoiceOverlay = document.getElementById("lunchChoiceOverlay");
+  const lunchChoiceClose = document.getElementById("lunchChoiceClose");
+  const lunchModeButtons = [...document.querySelectorAll(".lunchModeBtn")];
+  const lunchAddBtn = document.getElementById("lunchAddBtn");
+  const lunchAddForm = document.getElementById("lunchAddForm");
+  const lunchAddInput = document.getElementById("lunchAddInput");
+  const lunchAddStatus = document.getElementById("lunchAddStatus");
+  const lunchResult = document.getElementById("lunchResult");
+  const lunchDish = lunchResult.querySelector(".lunchDish");
+  const lunchManageBtn = document.getElementById("lunchManageBtn");
   const lunchManageOverlay = document.getElementById("lunchManageOverlay");
   const lunchManageClose = document.getElementById("lunchManageClose");
   const lunchManageList = document.getElementById("lunchManageList");
@@ -3911,11 +3983,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     }
   });
 
-  addEventListener("keydown",e=>{
-    if(e.key!=="Escape")return;
-    if(lunchPage?.classList.contains("show")){e.preventDefault();closeLunchChoice();}
-  });
-
   function checklistLockInfo(){
     const parts = new Intl.DateTimeFormat("en-US",{
       timeZone:"Asia/Ho_Chi_Minh",
@@ -4582,12 +4649,13 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       message.classList.contains("show") ||
       confirm.classList.contains("show") ||
       document.getElementById('attendanceNameWheel')?.classList.contains('show') ||
-      document.getElementById('attendancePage')?.classList.contains('show') ||
-      lunchPage?.classList.contains('show');
+      document.getElementById('attendancePage')?.classList.contains('show');
 
     secondaryNav.classList.toggle("nav-hidden", otherViewOpen);
     document.getElementById('pageNav')?.classList.toggle('nav-hidden', otherViewOpen);
     secondaryNav.setAttribute("aria-hidden", otherViewOpen ? "true" : "false");
+    lunchResult.classList.toggle("show", !otherViewOpen && lunchResult.dataset.hasResult === "1");
+    lunchResult.setAttribute("aria-hidden", otherViewOpen ? "true" : "false");
   }
   function renderQuizAdminButton(){
     quizAdminBtn.hidden=!adminUnlocked;
@@ -4768,62 +4836,56 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   }catch(e){}
   function saveLunchData(){try{localStorage.setItem(LUNCH_CUSTOM_KEY,JSON.stringify(LUNCH_DATA));}catch(e){}}
   function updateLunchCounts(){
-    const h=document.querySelector('.lunch-mode-card.home .mode-desc'),o=document.querySelector('.lunch-mode-card.out .mode-desc');
-    if(h) h.textContent=LUNCH_DATA.savory.length+" món mặn + "+LUNCH_DATA.soup.length+" món canh";
+    const h=document.querySelector('.lunchModeBtn.home small'),o=document.querySelector('.lunchModeBtn.out small');
+    if(h) h.textContent=LUNCH_DATA.savory.length+LUNCH_DATA.soup.length+" món";
     if(o) o.textContent=LUNCH_DATA.out.length+" món";
   }
   function randomFrom(list){return list[Math.floor(Math.random()*list.length)]||"";}
   function randomLunchChoice(mode){
     if(mode==="home") return {type:"home",savory:randomFrom(LUNCH_DATA.savory),soup:randomFrom(LUNCH_DATA.soup)};
     if(mode==="out") return {type:"out",out:randomFrom(LUNCH_DATA.out)};
-    return Math.random()<0.5 ? {type:"home",savory:randomFrom(LUNCH_DATA.savory),soup:randomFrom(LUNCH_DATA.soup)} : {type:"out",out:randomFrom(LUNCH_DATA.out)};
+    return Math.random()<0.5
+      ? {type:"home",savory:randomFrom(LUNCH_DATA.savory),soup:randomFrom(LUNCH_DATA.soup)}
+      : {type:"out",out:randomFrom(LUNCH_DATA.out)};
   }
-  let lunchMode="all", lunchRolling=false, lunchTimer=null;
+  let lunchMode="all";
+  let lunchRolling=false;
+  let lunchTimer=null;
   function renderLunchChoice(choice){
-    const body=lunchResultBody;if(!body) return;
-    if(choice.type==="home"){
-      const savory=choice.savory||randomFrom(LUNCH_DATA.savory), soup=choice.soup||randomFrom(LUNCH_DATA.soup);
-      body.innerHTML=`<div class="lunch-result-line savory"><span class="line-label">Món mặn</span><span class="lunch-result-value"></span></div><div class="lunch-result-line soup"><span class="line-label">Món canh</span><span class="lunch-result-value"></span></div>`;
-      const values=body.querySelectorAll('.lunch-result-value');if(values[0])values[0].textContent=savory;if(values[1])values[1].textContent=soup;
+    const s=lunchDish.querySelector('.lunchLine.savory'),c=lunchDish.querySelector('.lunchLine.soup'),o=lunchDish.querySelector('.lunchLine.out');
+    const isHome=choice.type==="home";
+    s.style.display=isHome?"block":"none";
+    c.style.display=isHome?"block":"none";
+    o.style.display=isHome?"none":"block";
+    if(isHome){
+      // Ăn tại nhà luôn hiển thị đủ 2 món: 1 món mặn + 1 món canh.
+      s.querySelector('.lineValue').textContent=choice.savory || randomFrom(LUNCH_DATA.savory);
+      c.querySelector('.lineValue').textContent=choice.soup || randomFrom(LUNCH_DATA.soup);
+      o.querySelector('.lineValue').textContent="";
     }else{
-      const out=choice.out||randomFrom(LUNCH_DATA.out);
-      body.innerHTML=`<div class="lunch-result-line out"><span class="line-label">Ăn ngoài</span><span class="lunch-result-value"></span></div>`;
-      const value=body.querySelector('.lunch-result-value');if(value)value.textContent=out;
+      s.querySelector('.lineValue').textContent="";
+      c.querySelector('.lineValue').textContent="";
+      o.querySelector('.lineValue').textContent=choice.out || randomFrom(LUNCH_DATA.out);
     }
   }
-  function updateLunchAddStatus(msg){if(!lunchAddStatus2)return;lunchAddStatus2.textContent=msg;clearTimeout(updateLunchAddStatus.t);if(msg)updateLunchAddStatus.t=setTimeout(()=>lunchAddStatus2.textContent="",2200);}
-  function openLunchChoice(){updateLunchCounts();lunchPage?.classList.add('show');lunchPage?.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';syncQuickTools();}
-  function closeLunchChoice(){lunchPage?.classList.remove('show');lunchPage?.setAttribute('aria-hidden','true');document.body.style.overflow='';syncQuickTools();}
-  function chooseLunchMode(mode){lunchMode=mode;pickLunch();}
+  function updateLunchAddStatus(msg){lunchAddStatus.textContent=msg;clearTimeout(updateLunchAddStatus.t);if(msg) updateLunchAddStatus.t=setTimeout(()=>lunchAddStatus.textContent="",2200);}
+  function openLunchChoice(){updateLunchCounts();lunchChoiceOverlay.classList.add("show");lunchChoiceOverlay.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";}
+  function closeLunchChoice(){lunchChoiceOverlay.classList.remove("show");lunchChoiceOverlay.setAttribute("aria-hidden","true");document.body.style.overflow="";}
+  function chooseLunchMode(mode){lunchMode=mode;closeLunchChoice();pickLunch();}
   function pickLunch(){
-    if(lunchRolling)return;lunchRolling=true;lunchResultCard?.classList.add('rolling');if(lunchRerollBtn)lunchRerollBtn.style.display='none';
+    if(lunchRolling) return;
+    lunchRolling=true;lunchBtn.classList.add("running");lunchResult.classList.add("show","rolling");lunchResult.dataset.hasResult="1";lunchResult.setAttribute("aria-hidden","false");
     let elapsed=0,delay=55;
-    const roll=()=>{if(elapsed>=2850){renderLunchChoice(randomLunchChoice(lunchMode));lunchResultCard?.classList.remove('rolling');if(lunchRerollBtn)lunchRerollBtn.style.display='inline-flex';lunchRolling=false;return;}renderLunchChoice(randomLunchChoice(lunchMode));elapsed+=delay;delay=Math.min(210,delay+7);lunchTimer=setTimeout(roll,delay);};
+    const roll=()=>{
+      if(elapsed>=2850){renderLunchChoice(randomLunchChoice(lunchMode));lunchResult.classList.remove("rolling");lunchResult.classList.add("show");lunchRolling=false;lunchBtn.classList.remove("running");return;}
+      renderLunchChoice(randomLunchChoice(lunchMode));elapsed+=delay;delay=Math.min(210,delay+7);lunchTimer=setTimeout(roll,delay);
+    };
     clearTimeout(lunchTimer);roll();
   }
 
   let lunchManageCategory="savory";
-  function openLunchManage(){
-    // Đóng trang Lunch phía dưới để tránh stacking/pointer-events chồng nhau.
-    lunchPage?.classList.remove("show");
-    lunchPage?.setAttribute("aria-hidden","true");
-    renderLunchManage();
-    // Đảm bảo overlay quản lý luôn là lớp tương tác cao nhất.
-    lunchManageOverlay.style.zIndex = "22000";
-    lunchManageOverlay.style.display = "flex";
-    lunchManageOverlay.style.pointerEvents = "auto";
-    lunchManageOverlay.classList.add("show");
-    lunchManageOverlay.setAttribute("aria-hidden","false");
-    document.body.style.overflow = "hidden";
-  }
-  function closeLunchManage(){
-  lunchManageOverlay.classList.remove("show");
-  lunchManageOverlay.setAttribute("aria-hidden","true");
-  // Mở lại trang Bữa trưa sau khi đóng quản lý
-  lunchPage?.classList.add("show");
-  lunchPage?.setAttribute("aria-hidden","false");
-  document.body.style.overflow = "";
-}
+  function openLunchManage(){renderLunchManage();lunchManageOverlay.classList.add("show");lunchManageOverlay.setAttribute("aria-hidden","false");}
+  function closeLunchManage(){lunchManageOverlay.classList.remove("show");lunchManageOverlay.setAttribute("aria-hidden","true");}
   function updateLunchManageStatus(msg){lunchManageStatus.textContent=msg;clearTimeout(updateLunchManageStatus.t);if(msg) updateLunchManageStatus.t=setTimeout(()=>lunchManageStatus.textContent="",1800);}
   function renderLunchManage(){
     document.querySelectorAll('.lunchManageTab').forEach(t=>t.classList.toggle('active',t.dataset.manageCategory===lunchManageCategory));
@@ -4855,20 +4917,25 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   }
   kdvRulesBtn.addEventListener("click",()=>markNavButton(kdvRulesBtn));
 
-  // ===== TRANG BỮA TRƯA — HỆ THỐNG 03 / Full-screen =====
   lunchBtn.addEventListener("click",openLunchChoice);
-  lunchBack?.addEventListener("click",closeLunchChoice);
-  document.querySelectorAll('.lunch-mode-card').forEach(btn=>btn.addEventListener('click',()=>chooseLunchMode(btn.dataset.mode)));
-  lunchRerollBtn?.addEventListener('click',pickLunch);
-  lunchAddBtn2?.addEventListener('click',()=>{lunchAddForm2?.classList.toggle('show');if(lunchAddForm2?.classList.contains('show')){setTimeout(()=>lunchAddInput2?.focus(),100);updateLunchAddStatus('');}});
-  document.querySelectorAll('.lunch-add-cat').forEach(btn=>btn.addEventListener('click',()=>{
-    const category=btn.dataset.addCategory,name=(lunchAddInput2?.value||'').trim().replace(/\s+/g,' ');
-    if(!name){updateLunchAddStatus('Vui lòng nhập tên món');lunchAddInput2?.focus();return;}
-    const all=Object.values(LUNCH_DATA).flat().map(x=>x.toLowerCase());if(all.includes(name.toLowerCase())){updateLunchAddStatus('Món này đã có trong danh sách');return;}
-    LUNCH_DATA[category].push(name);saveLunchData();updateLunchCounts();if(lunchAddInput2)lunchAddInput2.value='';updateLunchAddStatus('Đã thêm “'+name+'” vào '+(category==='savory'?'Món mặn':category==='soup'?'Món canh':'Ăn ngoài')+' ✓');
+  lunchChoiceClose.addEventListener("click",closeLunchChoice);
+  lunchChoiceOverlay.addEventListener("click",e=>{if(e.target===lunchChoiceOverlay)closeLunchChoice()});
+  lunchModeButtons.forEach(btn=>btn.addEventListener("click",()=>chooseLunchMode(btn.dataset.mode)));
+  lunchAddBtn.addEventListener("click",()=>{
+    lunchAddForm.classList.toggle("show");
+    if(lunchAddForm.classList.contains("show")){lunchAddInput.focus();updateLunchAddStatus("");}
+  });
+  document.querySelectorAll(".lunchAddCat").forEach(btn=>btn.addEventListener("click",()=>{
+    const category=btn.dataset.addCategory;
+    const name=lunchAddInput.value.trim().replace(/\s+/g," ");
+    if(!name){updateLunchAddStatus("Vui lòng nhập tên món");lunchAddInput.focus();return;}
+    const all=Object.values(LUNCH_DATA).flat().map(x=>x.toLowerCase());
+    if(all.includes(name.toLowerCase())){updateLunchAddStatus("Món này đã có trong danh sách");return;}
+    LUNCH_DATA[category].push(name);saveLunchData();updateLunchCounts();lunchAddInput.value="";
+    updateLunchAddStatus("Đã thêm “"+name+"” vào "+(category==="savory"?"Món mặn":category==="soup"?"Món canh":"Ăn ngoài")+" ✓");
   }));
-  lunchAddInput2?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.querySelector('.lunch-add-cat.home')?.click();}});
-  lunchManageBtn2?.addEventListener('click',openLunchManage);
+  lunchAddInput.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();document.querySelector('.lunchAddCat.savory')?.click();}});
+  lunchManageBtn.addEventListener("click",openLunchManage);
   lunchManageClose.addEventListener("click",closeLunchManage);
   lunchManageOverlay.addEventListener("click",e=>{if(e.target===lunchManageOverlay)closeLunchManage()});
   document.querySelectorAll('.lunchManageTab').forEach(tab=>tab.addEventListener('click',()=>{lunchManageCategory=tab.dataset.manageCategory;renderLunchManage();}));
