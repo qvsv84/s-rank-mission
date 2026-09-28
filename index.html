@@ -3461,7 +3461,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   let requestSeq = 0;
   let syncInFlight = false;
   let autoSyncTimer = null;
-  const AUTO_SYNC_MS = 120000;      // 30s → 120s
+  const AUTO_SYNC_MS = 45000;       // 45s — vẫn tiết kiệm quota nhưng đủ nhanh để thấy toast
   const AUTO_SYNC_MIN_GAP = 15000;  // throttle cứng: không gọi lại trong 15s
   let lastAutoSyncAt = 0;
   const Q1_CACHE_KEY = "srank_q1_answer_v1";
@@ -5706,7 +5706,21 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     renderWheel();
   }
 
-  homeBtn.addEventListener("click", ()=>{resetHome();if(typeof syncQuickTools==="function")syncQuickTools()});
+  homeBtn.addEventListener("click", () => {
+    resetHome();
+    if(typeof syncQuickTools === "function") syncQuickTools();
+
+    // ===== Sync ngay khi quay lại Home (#7+#8) =====
+    // Tránh trường hợp user vừa ở tab khác (Checklist/Chấm công) quay về Home
+    // mà phải chờ tới kỳ auto-sync tiếp theo mới thấy toast.
+    if(syncInFlight) return;
+    if(!initialSheetLoaded) return;
+    if(Date.now() - _lastUserActionAt < USER_ACTION_PAUSE_MS) return;
+    if(Date.now() - lastAutoSyncAt < 3000) return;
+
+    lastAutoSyncAt = Date.now();
+    loadData(false, true);
+  });
 
   checklistBtn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -5914,6 +5928,33 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     if(document.hidden) return;
     // Tab vừa hiện lại → reset timer để check ngay ở tick kế tiếp
     _lastLockCheck = 0;
+
+    // ===== Trigger sync ngay khi quay lại tab (#7+#8) =====
+    // Browser throttle setInterval khi tab ẩn → auto-sync có thể trễ.
+    // Quay lại tab → đồng bộ luôn để toast "ai vừa check" hiện kịp.
+    if(syncInFlight) return;
+    if(!initialSheetLoaded) return;
+    if(wheelArea.classList.contains("show")) return;
+    if(message.classList.contains("show")) return;
+    if(Date.now() - _lastUserActionAt < USER_ACTION_PAUSE_MS) return;
+    if(Date.now() - lastAutoSyncAt < 3000) return;
+
+    lastAutoSyncAt = Date.now();
+    loadData(false, true);
+  });
+
+  // Khi app được focus lại (từ task switcher, notification, v.v.)
+  window.addEventListener("focus", () => {
+    if(document.hidden) return;
+    if(syncInFlight) return;
+    if(!initialSheetLoaded) return;
+    if(wheelArea.classList.contains("show")) return;
+    if(message.classList.contains("show")) return;
+    if(Date.now() - _lastUserActionAt < USER_ACTION_PAUSE_MS) return;
+    if(Date.now() - lastAutoSyncAt < 3000) return;
+
+    lastAutoSyncAt = Date.now();
+    loadData(false, true);
   });
 
   const QUIZ_DATA_KEY="srank_quiz_questions_v1";
