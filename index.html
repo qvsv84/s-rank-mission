@@ -2750,6 +2750,37 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 #question .landing-lock-note{display:block !important;margin-top:-4px !important;width:100% !important;color:#799083 !important;font-size:clamp(10px,2.7vw,12px) !important;font-weight:700 !important;line-height:1.4 !important;letter-spacing:.1px !important;text-align:center !important}
 @media(max-width:600px){#questionWrap{top:42% !important;width:calc(100vw - 24px) !important}#question{padding:28px 22px 24px !important;border-radius:28px !important;gap:18px !important}#question .landing-title{font-size:clamp(28px,8vw,46px) !important}#question .landing-title::before{font-size:9px !important;letter-spacing:.28em !important;margin-bottom:12px !important}#question .landing-cta{min-width:160px !important;min-height:48px !important;padding:11px 26px !important}}
 @media(max-width:390px){#questionWrap{width:calc(100vw - 20px) !important}#question{padding:24px 18px 20px !important;border-radius:24px !important}#question .landing-title{font-size:clamp(24px,7.6vw,38px) !important}}
+  /* ===== Loading Skeleton ===== */
+  .skeleton{
+    background:linear-gradient(90deg,#e8f0e6 0%,#f4f8f2 50%,#e8f0e6 100%);
+    background-size:200% 100%;
+    animation:skeletonShimmer 1.4s ease-in-out infinite;
+    border-radius:8px;
+    color:transparent !important;
+    user-select:none;
+    pointer-events:none;
+  }
+  @keyframes skeletonShimmer{
+    0%{background-position:200% 0}
+    100%{background-position:-200% 0}
+  }
+  .skeleton-row{
+    height:18px;
+    margin:10px 0;
+  }
+  .skeleton-row.short{width:60%}
+  .skeleton-row.medium{width:80%}
+  .skeleton-card{
+    padding:14px;
+    margin:10px 0;
+    border-radius:14px;
+    background:#f4f9f3;
+  }
+  .checklist-skeleton{padding:12px}
+  .checklist-skeleton .skeleton-row{height:14px}
+  @media(prefers-reduced-motion:reduce){
+    .skeleton{animation:none;background:#eef4ec}
+  }
 </style>
 
 </head>
@@ -2793,18 +2824,18 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 </section>
 
 <nav id="bottomNav" aria-label="Điều hướng chính">
-  <button id="homeBtn" type="button">⌂ Home</button>
-  <button id="adminBtn" type="button">⚙ Admin</button>
-  <button id="monitorBtn" type="button">👁 Giám sát</button>
-  <button id="topBtn" type="button">🏆 BXH TOP</button>
-  <button id="checklistBtn" type="button">☑ Checklist</button>
+  <button id="homeBtn" type="button" aria-label="Về trang chủ">⌂ Home</button>
+  <button id="adminBtn" type="button" aria-label="Mở cài đặt admin" aria-haspopup="dialog">⚙ Admin</button>
+  <button id="monitorBtn" type="button" aria-label="Mở bảng giám sát" aria-haspopup="dialog">👁 Giám sát</button>
+  <button id="topBtn" type="button" aria-label="Mở bảng xếp hạng" aria-haspopup="dialog">🏆 BXH TOP</button>
+  <button id="checklistBtn" type="button" aria-label="Mở checklist" aria-haspopup="dialog" aria-expanded="false">☑ Checklist</button>
 </nav>
 <nav id="secondaryNav" aria-label="Công cụ">
-  <button id="kdvRulesBtn" type="button" aria-label="Mở Luật KDV">📜 Luật KDV</button>
-  <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?">🍜 Bữa trưa ăn gì?</button>
-  <button id="attendanceBtn" type="button" aria-label="Mở Chấm công">🗓 Chấm công</button>
-  <button id="quizBtn" type="button" aria-label="Mở Bài kiểm tra">📝 Bài kiểm tra</button>
-  <button id="quizAdminBtn" type="button" aria-label="Tạo bài kiểm tra" hidden>⚙ Tạo Ktra</button>
+  <button id="kdvRulesBtn" type="button" aria-label="Mở Luật KDV" aria-haspopup="dialog">📜 Luật KDV</button>
+  <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?" aria-haspopup="dialog">🍜 Bữa trưa ăn gì?</button>
+  <button id="attendanceBtn" type="button" aria-label="Mở Chấm công" aria-haspopup="dialog">🗓 Chấm công</button>
+  <button id="quizBtn" type="button" aria-label="Mở Bài kiểm tra" aria-haspopup="dialog">📝 Bài kiểm tra</button>
+  <button id="quizAdminBtn" type="button" aria-label="Tạo bài kiểm tra" aria-haspopup="dialog" hidden>⚙ Tạo Ktra</button>
 </nav>
 
 <div id="lunchChoiceOverlay" aria-hidden="true">
@@ -3172,7 +3203,48 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   "use strict";
 
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJ1ebyNNe7fxlNR6TObBYebp7zRORGZTO0kTzlFl-S39I2vIJjDx9h0quV84od9JAfeg/exec";
-  const CACHE_KEY = "srank_check_v4";
+
+  // ===== Cache versioning (tự động migrate) =====
+  const CACHE_SCHEMA_VERSION = 5;
+  const CACHE_KEY = `srank_check_v${CACHE_SCHEMA_VERSION}`;
+  const CACHE_MIGRATION_KEY = "srank_cache_migrated_to";
+
+  // ===== Timing constants (không dùng magic numbers) =====
+  const TIMING = Object.freeze({
+    WHEEL_OPEN_DELAY: 180,
+    MESSAGE_NEXT_DELAY: 220,
+    ROW_FLASH_MS: 1200,
+    LUNCH_ROLL_START_MS: 55,
+    LUNCH_ROLL_MAX_MS: 210,
+    LUNCH_ROLL_TOTAL_MS: 2850,
+    STATUS_TOAST_MS: 1400,
+    LOCK_AFTER_SAVE_MS: 3000,
+    LOCK_CHECK_INTERVAL_MS: 30000,
+    LANDING_TICK_MS: 1000,
+    CLOSE_ATTENDANCE_DELAY_MS: 500,
+    CLOSE_ATTENDANCE_ERR_MS: 1400,
+    LUNCH_STATUS_HINT_MS: 2200,
+    FOCUS_DELAY_MS: 50,
+    BUILDER_CLOSE_DELAY_MS: 500,
+    NAME_WHEEL_STEP_PX: 58,
+    QUIZ_TEACHER: 2
+  });
+
+  // ===== Admin session (thay password hardcode) =====
+  // Password chỉ dùng 1 lần để lấy token, sau đó dùng token.
+  const ADMIN_TOKEN_KEY = "srank_admin_token_v1";
+  const ADMIN_SESSION_TTL = 30 * 60 * 1000;   // 30 phút
+  const ADMIN_RATE_LIMIT_KEY = "srank_admin_rl_v1";
+  const ADMIN_MAX_ATTEMPTS = 5;
+  const ADMIN_LOCKOUT_MS = 5 * 60 * 1000;     // 5 phút
+
+  // ===== API timeout (giữ nguyên giá trị nhưng freeze) =====
+  const TIMEOUT = Object.freeze({
+    FAST:      8000,
+    NORMAL:   12000,
+    SLOW:     20000,
+    DEFAULT:  12000
+  });
   const root = document.getElementById("space");
   const question = document.getElementById("question");
   const counter = document.getElementById("counter");
@@ -3298,15 +3370,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   const _dataLoadPromise = new Promise(r => { _dataLoadResolve = r; });
   let _dataLoadResolved = false;
 
-  // ---------- Timeout constants (dùng chung toàn module) ----------
-  // Nguyên tắc: đủ dài để không fail giả, đủ ngắn để không treo UI.
-  const TIMEOUT = {
-    FAST:      8000,
-    NORMAL:   12000,
-    SLOW:     20000,
-    DEFAULT:  12000
-  };
-
   // ---------- Settings cache (tránh gọi getSettings nhiều lần) ----------
   const SETTINGS_TTL = 5 * 60 * 1000;   // 5 phút
   let settingsCache = null;
@@ -3325,6 +3388,87 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   try{ localStorage.removeItem(Q1_CACHE_KEY); }catch(_){}
   const connectionState = document.getElementById("connectionState");
   const connectionText = document.getElementById("connectionText");
+
+  // ===== Admin Session Manager — thay thế password hardcode =====
+  const AdminSession = (() => {
+    let _token = null;
+    let _expiresAt = 0;
+
+    function load(){
+      try{
+        const raw = localStorage.getItem(ADMIN_TOKEN_KEY);
+        if(!raw) return null;
+        const data = JSON.parse(raw);
+        if(!data || typeof data.token !== "string") return null;
+        if(Date.now() > (data.expiresAt || 0)){
+          localStorage.removeItem(ADMIN_TOKEN_KEY);
+          return null;
+        }
+        _token = data.token;
+        _expiresAt = data.expiresAt;
+        return _token;
+      }catch(_){ return null; }
+    }
+
+    function save(token, expiresAt){
+      _token = token;
+      _expiresAt = expiresAt;
+      try{
+        localStorage.setItem(ADMIN_TOKEN_KEY, JSON.stringify({token, expiresAt}));
+      }catch(_){}
+    }
+
+    function clear(){
+      _token = null;
+      _expiresAt = 0;
+      try{ localStorage.removeItem(ADMIN_TOKEN_KEY); }catch(_){}
+    }
+
+    function isValid(){
+      return !!_token && Date.now() < _expiresAt;
+    }
+
+    function get(){
+      return isValid() ? _token : null;
+    }
+
+    // Rate limiting client-side (bổ sung cho server-side)
+    function checkRateLimit(){
+      try{
+        const raw = localStorage.getItem(ADMIN_RATE_LIMIT_KEY);
+        const data = raw ? JSON.parse(raw) : {attempts: 0, lockedUntil: 0};
+        if(Date.now() < (data.lockedUntil || 0)){
+          const remainSec = Math.ceil((data.lockedUntil - Date.now()) / 1000);
+          return {allowed: false, remainSec};
+        }
+        return {allowed: true, data};
+      }catch(_){
+        return {allowed: true, data: {attempts: 0, lockedUntil: 0}};
+      }
+    }
+
+    function recordFailure(){
+      try{
+        const raw = localStorage.getItem(ADMIN_RATE_LIMIT_KEY);
+        const data = raw ? JSON.parse(raw) : {attempts: 0, lockedUntil: 0};
+        data.attempts = (data.attempts || 0) + 1;
+        if(data.attempts >= ADMIN_MAX_ATTEMPTS){
+          data.lockedUntil = Date.now() + ADMIN_LOCKOUT_MS;
+          data.attempts = 0;
+        }
+        localStorage.setItem(ADMIN_RATE_LIMIT_KEY, JSON.stringify(data));
+      }catch(_){}
+    }
+
+    function recordSuccess(){
+      try{ localStorage.removeItem(ADMIN_RATE_LIMIT_KEY); }catch(_){}
+    }
+
+    return {load, save, clear, isValid, get, checkRateLimit, recordFailure, recordSuccess};
+  })();
+
+  // Khôi phục session khi mở app
+  AdminSession.load();
 
   function setConnection(state, text){
     connectionState.className = state;
@@ -3375,26 +3519,95 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     return `${get("year")}-${get("month")}-${get("day")}`;
   }
 
-  function cacheSave(){
-    try{
-      const day = todayKey();
-      localStorage.setItem(CACHE_KEY, JSON.stringify({names,checked,times,points,ranks,day,ts:Date.now()}));
-    }catch(_){}
+  // Debounced cacheSave — tránh ghi localStorage liên tục khi rapid updates
+  let _cacheSaveTimer = null;
+  function cacheSave(immediate = false){
+    const doWrite = () => {
+      try{
+        const day = todayKey();
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          v: CACHE_SCHEMA_VERSION,
+          names, checked, times, points, ranks, day,
+          ts: Date.now()
+        }));
+      }catch(_){
+        try{
+          localStorage.removeItem(CACHE_KEY);
+          const day = todayKey();
+          localStorage.setItem(CACHE_KEY, JSON.stringify({
+            v: CACHE_SCHEMA_VERSION,
+            names, checked, times, points, ranks, day,
+            ts: Date.now()
+          }));
+        }catch(_){}
+      }
+    };
+
+    if(immediate){
+      clearTimeout(_cacheSaveTimer);
+      _cacheSaveTimer = null;
+      doWrite();
+      return;
+    }
+
+    clearTimeout(_cacheSaveTimer);
+    _cacheSaveTimer = setTimeout(doWrite, 250);
   }
+
+  // Flush cache khi tab đóng (tránh mất data)
+  window.addEventListener("beforeunload", () => {
+    if(_cacheSaveTimer){
+      clearTimeout(_cacheSaveTimer);
+      try{
+        const day = todayKey();
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          v: CACHE_SCHEMA_VERSION,
+          names, checked, times, points, ranks, day,
+          ts: Date.now()
+        }));
+      }catch(_){}
+    }
+  });
+
   function cacheLoad(){
     try{
-      const x = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
-      if(x && x.day === todayKey() && Array.isArray(x.names) && Array.isArray(x.checked)){
-        names = x.names;
-        checked = x.checked;
-        times = Array.isArray(x.times) ? x.times : [];
-        points = Array.isArray(x.points) ? x.points : names.map(()=>100);
-        ranks = points.map(rankClient);
-        return true;
+      const raw = localStorage.getItem(CACHE_KEY);
+      if(!raw) return false;
+
+      const x = JSON.parse(raw);
+      if(!x || typeof x !== "object") {
+        localStorage.removeItem(CACHE_KEY);
+        return false;
       }
-      // Cache của ngày cũ không được dùng lại.
-      localStorage.removeItem(CACHE_KEY);
-    }catch(_){}
+
+      // Cache version mismatch → xóa cũ
+      if(x.v !== CACHE_SCHEMA_VERSION){
+        localStorage.removeItem(CACHE_KEY);
+        return false;
+      }
+
+      // Cache ngày cũ → xóa
+      if(x.day !== todayKey()){
+        localStorage.removeItem(CACHE_KEY);
+        return false;
+      }
+
+      // Validate arrays
+      if(!Array.isArray(x.names) || !Array.isArray(x.checked)) return false;
+
+      names = x.names.filter(n => typeof n === "string" && n.trim());
+      checked = x.checked.slice(0, names.length).map(c => c === true);
+      times = Array.isArray(x.times)
+        ? x.times.slice(0, names.length).map(t => typeof t === "string" ? t : "")
+        : names.map(() => "");
+      points = Array.isArray(x.points)
+        ? x.points.slice(0, names.length).map(p => Number.isFinite(Number(p)) ? Number(p) : 100)
+        : names.map(() => 100);
+      ranks = points.map(rankClient);
+      return names.length > 0;
+    }catch(_){
+      try{ localStorage.removeItem(CACHE_KEY); }catch(_){}
+    }
     return false;
   }
 
@@ -3468,7 +3681,12 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     if(next.getTime() <= now.getTime()) next.setDate(next.getDate()+1);
     resetTimer = setTimeout(async()=>{
       try{
-        const r = await window.__srankApi("resetNow",{password:"8516"},TIMEOUT.FAST);
+        const token = AdminSession.get();
+        if(!token) {
+          // Không có session → bỏ qua, thử lại sau
+          return;
+        }
+        const r = await window.__srankApi("resetNow", {token}, TIMEOUT.FAST);
         if(!r.ok) throw new Error(r.error || "Reset thất bại");
         checked = names.map(()=>false);
         times = names.map(()=>"");
@@ -3700,6 +3918,18 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     syncQuickTools();
   }
 
+  function adminLogout(){
+    AdminSession.clear();
+    adminUnlocked = false;
+    renderQuizAdminButton();
+    closeAdmin();
+    syncQuickTools();
+    setStatus("Đã đăng xuất admin");
+  }
+  
+  // Gán vào nút (thêm vào HTML nếu muốn)
+  window.__adminLogout = adminLogout;
+
   const adminPasswordOverlay = document.getElementById("adminPasswordOverlay");
   const adminPasswordInput = document.getElementById("adminPasswordInput");
   const adminPasswordMsg = document.getElementById("adminPasswordMsg");
@@ -3741,10 +3971,13 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         const next = !checked[i];
         btn.disabled = true;
         try{
+          const token = AdminSession.get();
+          if(!token) throw new Error("Phiên admin đã hết hạn — vui lòng đăng nhập lại");
+          
           const r = await window.__srankApi("adminSetCheck", {
-            password:"8516",
-            name:names[i],
-            checked:next ? "true" : "false"
+            token,
+            name: names[i],
+            checked: next ? "true" : "false"
           }, TIMEOUT.FAST);
           if(!r.ok) throw new Error(r.error || "Không cập nhật được checklist");
 
@@ -3781,6 +4014,14 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
 
   async function openAdminSettings(){
+    // Verify session còn hiệu lực
+    if(!AdminSession.isValid()){
+      closeAdminPassword();
+      adminUnlocked = false;
+      openAdminPassword();
+      return;
+    }
+    
     closeAdminPassword();
     adminUnlocked = true;
     renderMonitor();
@@ -3820,14 +4061,55 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
 
   async function verifyAdmin(){
-    const password=adminPasswordInput.value.trim();
-    if(password !== "8516"){
-      adminPasswordMsg.textContent="Mật khẩu không đúng.";
-      adminPasswordInput.value="";
+    // 1. Check rate limit client-side trước
+    const rl = AdminSession.checkRateLimit();
+    if(!rl.allowed){
+      adminPasswordMsg.textContent = `Quá nhiều lần thử. Vui lòng chờ ${rl.remainSec}s.`;
+      return;
+    }
+
+    const password = adminPasswordInput.value.trim();
+    if(!password){
+      adminPasswordMsg.textContent = "Vui lòng nhập mật khẩu.";
       adminPasswordInput.focus();
       return;
     }
-    await openAdminSettings();
+
+    // 2. Gửi password lên server để LẤY TOKEN (không check ở client)
+    adminPasswordOk.disabled = true;
+    adminPasswordMsg.textContent = "Đang xác thực…";
+
+    try{
+      const r = await window.__srankApi("adminLogin", {password}, TIMEOUT.FAST);
+      
+      if(!r.ok){
+        AdminSession.recordFailure();
+        adminPasswordMsg.textContent = r.error || "Mật khẩu không đúng.";
+        adminPasswordInput.value = "";
+        adminPasswordInput.focus();
+        return;
+      }
+
+      // 3. Server trả token + expiry
+      const token = String(r.data?.token || "");
+      const expiresAt = Number(r.data?.expiresAt) || (Date.now() + ADMIN_SESSION_TTL);
+      
+      if(!token){
+        adminPasswordMsg.textContent = "Server không trả token hợp lệ.";
+        return;
+      }
+
+      AdminSession.save(token, expiresAt);
+      AdminSession.recordSuccess();
+      adminPasswordInput.value = "";
+      await openAdminSettings();
+
+    }catch(e){
+      AdminSession.recordFailure();
+      adminPasswordMsg.textContent = "Không kết nối được server. Thử lại sau.";
+    }finally{
+      adminPasswordOk.disabled = false;
+    }
   }
   loadMonitorLinks();
   function openKdvRules(){
@@ -3880,8 +4162,14 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     adminSaveBtn.disabled = true;
     adminStatus.textContent = "Đang lưu…";
     try{
-      // Giờ reset vẫn lưu chung qua Apps Script.
-      const r = await window.__srankApi("setSettings",{password:"8516",resetTime:time,checklistLockTime:lockTime},TIMEOUT.FAST);
+      const token = AdminSession.get();
+      if(!token) throw new Error("Phiên admin đã hết hạn");
+      
+      const r = await window.__srankApi("setSettings", {
+        token,
+        resetTime: time,
+        checklistLockTime: lockTime
+      }, TIMEOUT.FAST);
       if(!r.ok) throw new Error(r.error || "Không lưu được");
 
       resetTime = r.data.resetTime || time;
@@ -4043,6 +4331,21 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   function closeTop(){
     topPanel.classList.remove("show");
     topPanel.setAttribute("aria-hidden","true");
+  }
+
+  function renderChecklistSkeleton(){
+    checklistBody.innerHTML = "";
+    const frag = document.createDocumentFragment();
+    for(let i = 0; i < 5; i++){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><div class="skeleton skeleton-row medium"></div></td>
+        <td><div class="skeleton skeleton-row short"></div></td>
+        <td><div class="skeleton" style="width:25px;height:25px;border-radius:8px;margin:auto"></div></td>
+      `;
+      frag.appendChild(tr);
+    }
+    checklistBody.appendChild(frag);
   }
 
   function renderChecklist(){
@@ -4293,15 +4596,36 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       if(!names.length && cacheLoad()){
         renderChecklist();
         buildWheel();
+      }else if(!names.length && checklistPanel.classList.contains("show")){
+        // Hiển thị skeleton khi đang tải lần đầu
+        renderChecklistSkeleton();
       }
 
       const r = await window.__srankApi("getData", {}, TIMEOUT.NORMAL);
       if(!r.ok) throw new Error(r.error || "getData lỗi");
 
-      const serverNames = Array.isArray(r.data.names) ? r.data.names : [];
-      const serverPoints = Array.isArray(r.data.points) ? r.data.points : serverNames.map(()=>100);
-      const serverChecks = Array.isArray(r.data.checks) ? r.data.checks : [];
-      const serverTimes = Array.isArray(r.data.times) ? r.data.times : [];
+      // ===== Sanitize input từ server (defensive programming) =====
+      const rawNames = Array.isArray(r.data?.names) ? r.data.names : [];
+      const serverNames = rawNames
+        .map(n => String(n ?? "").trim())
+        .filter(n => n.length > 0 && n.length <= 100);
+
+      // Đảm bảo arrays cùng length với serverNames
+      const rawPoints = Array.isArray(r.data?.points) ? r.data.points : [];
+      const serverPoints = serverNames.map((_, i) => {
+        const p = Number(rawPoints[i]);
+        return Number.isFinite(p) && p >= 0 && p <= 100000 ? p : 100;
+      });
+
+      const rawChecks = Array.isArray(r.data?.checks) ? r.data.checks : [];
+      const serverChecks = serverNames.map((_, i) => rawChecks[i] === true);
+
+      const rawTimes = Array.isArray(r.data?.times) ? r.data.times : [];
+      const serverTimes = serverNames.map((_, i) => {
+        const t = String(rawTimes[i] ?? "").trim();
+        // Chỉ chấp nhận format HH:mm
+        return /^([01]\d|2[0-3]):[0-5]\d$/.test(t) ? t : "";
+      });
 
       // ===== Smooth update khi checklist mở + không phải lần đầu + không force =====
       const canSmoothUpdate = initialSheetLoaded
@@ -5158,12 +5482,14 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       checklistPanel.style.pointerEvents = "auto";
       renderChecklist();
       if(!initialSheetLoaded) loadData(false);
+      checklistBtn.setAttribute("aria-expanded", "true");   // ← THÊM
     } else {
       // ẨN bảng — xoá cả class lẫn inline style để chắc chắn ẩn
       checklistPanel.classList.remove("show");
       checklistPanel.style.visibility = "hidden";
       checklistPanel.style.opacity = "0";
       checklistPanel.style.pointerEvents = "none";
+      checklistBtn.setAttribute("aria-expanded", "false");  // ← THÊM
     }
 
     // ===== Restart auto-sync: 30s khi mở, 120s khi đóng =====
@@ -5451,13 +5777,22 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     syncQuickTools();
   }
   function renderQuizNameList(){
-    quizNameList.innerHTML="";
+    quizNameList.innerHTML = "";
     if(!names.length){
-      const e=document.createElement("div");e.className="quizNoNames";e.textContent="Chưa có danh sách người chơi.";quizNameList.appendChild(e);return;
+      const e = document.createElement("div");
+      e.className = "quizNoNames";
+      e.textContent = "Chưa có danh sách người chơi.";
+      quizNameList.appendChild(e);
+      return;
     }
-    names.forEach(name=>{
-      const b=document.createElement("button");b.type="button";b.className="quizNameItem";b.textContent=`👤 ${name}`;
-      b.addEventListener("click",()=>startQuizForName(name));quizNameList.appendChild(b);
+    names.forEach(name => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "quizNameItem";
+      // XSS-safe
+      b.textContent = `👤 ${String(name).slice(0, 60)}`;
+      b.addEventListener("click", () => startQuizForName(name));
+      quizNameList.appendChild(b);
     });
   }
   function openQuizNamePicker(){
@@ -5483,20 +5818,38 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     renderQuizQuestion();syncQuickTools();
   }
   function renderQuizQuestion(){
-    const q=quizQuestions[quizCurrentIndex];
-    if(!q){finishQuiz();return;}
-    quizProgress.textContent=`Câu ${quizCurrentIndex+1}/${quizQuestions.length}`;
-    quizQuestion.textContent=q.question;
-    quizAnswers.innerHTML="";quizSelectedAnswer=-1;quizNextBtn.disabled=true;
-    quizNextBtn.textContent=quizCurrentIndex===quizQuestions.length-1?"Hoàn thành":"Tiếp tục";
-    q.answers.forEach((a,i)=>{
-      const b=document.createElement("button");b.type="button";b.className="quizAnswer";
-      const l=document.createElement("span");l.className="quizAnswerLetter";l.textContent=String.fromCharCode(65+i);
-      const t=document.createElement("span");t.textContent=a.text;b.append(l,t);
-      b.addEventListener("click",()=>{
-        quizSelectedAnswer=i;
-        [...quizAnswers.children].forEach(x=>x.classList.remove("selected"));
-        b.classList.add("selected");quizNextBtn.disabled=false;
+    const q = quizQuestions[quizCurrentIndex];
+    if(!q){ finishQuiz(); return; }
+    
+    quizProgress.textContent = `Câu ${quizCurrentIndex+1}/${quizQuestions.length}`;
+    
+    // ===== XSS-safe: dùng textContent thay innerHTML =====
+    quizQuestion.textContent = String(q.question || "").slice(0, 500);
+    
+    quizAnswers.innerHTML = "";
+    quizSelectedAnswer = -1;
+    quizNextBtn.disabled = true;
+    quizNextBtn.textContent = quizCurrentIndex === quizQuestions.length - 1 ? "Hoàn thành" : "Tiếp tục";
+    
+    q.answers.forEach((a, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "quizAnswer";
+      
+      const l = document.createElement("span");
+      l.className = "quizAnswerLetter";
+      l.textContent = String.fromCharCode(65 + i);
+      
+      const t = document.createElement("span");
+      // textContent tự escape HTML → an toàn
+      t.textContent = String(a.text || "").slice(0, 300);
+      
+      b.append(l, t);
+      b.addEventListener("click", () => {
+        quizSelectedAnswer = i;
+        [...quizAnswers.children].forEach(x => x.classList.remove("selected"));
+        b.classList.add("selected");
+        quizNextBtn.disabled = false;
       });
       quizAnswers.appendChild(b);
     });
