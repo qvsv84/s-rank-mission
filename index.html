@@ -2882,6 +2882,127 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 #liveFeedHead{padding:16px 18px 12px;border-bottom:1px solid rgba(62,112,79,.10);display:flex;align-items:center;justify-content:space-between;gap:10px}#liveFeedTitle{font-size:17px;font-weight:950;color:#245943;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}#liveFeedTitle .live-pulse{width:8px;height:8px;border-radius:50%;background:#4e9d6b;box-shadow:0 0 8px #4e9d6b;animation:liveDot 1.6s ease-in-out infinite}#liveFeedClose{width:34px;height:34px;border:1px solid rgba(62,112,79,.13);border-radius:50%;background:#f4f9f3;color:#47725b;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 #liveFeedList{flex:1;overflow-y:auto;padding:6px 8px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}.live-day-label{font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#8ca598;padding:10px 12px 6px}.live-event{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;transition:background .2s ease}.live-event:hover{background:rgba(79,155,112,.05)}.live-event .ev-icon{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;background:#eaf6ec;color:#2f6b4f}.live-event.type-check .ev-icon{background:#ffe6f2;color:#b84b8a}.live-event.type-quiz .ev-icon{background:#e0eef8;color:#4a7898}.live-event.type-lunch .ev-icon{background:#fff2d6;color:#a5762e}.live-event.type-first .ev-icon{background:#fff2cf;color:#a5762e}.live-event .ev-body{min-width:0;display:flex;flex-direction:column;gap:2px}.live-event .ev-name{font-size:13px;font-weight:850;color:#315744;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.live-event .ev-meta{font-size:10.5px;color:#7d9184;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.live-event .ev-time{font-size:11px;font-weight:800;color:#8aa299;font-variant-numeric:tabular-nums;white-space:nowrap}.live-empty{padding:40px 20px;text-align:center;color:#8aa299;font-size:12px;font-weight:700}.live-empty .live-empty-icon{font-size:36px;margin-bottom:10px;opacity:.55}#liveFeedFoot{padding:8px 18px 12px;border-top:1px solid rgba(62,112,79,.08);text-align:center;font-size:10px;color:#96a89c;font-weight:700}#liveFeedClear{background:none;border:none;color:#b84b8a;font-size:10px;font-weight:800;cursor:pointer;padding:4px 8px;text-decoration:underline}@media(max-width:600px){#liveFeedBtn{right:12px;bottom:max(92px,calc(82px + env(safe-area-inset-bottom)))}#liveFeedPanel{width:100%;max-height:82vh;border-radius:24px 24px 0 0}}
 </style>
+<style id="avatarAdminSystem">
+/* Avatar trong Top 3 podium */
+#question div.landing-top3 .podium-avatar{
+  display:block !important;
+  width:44px !important;
+  height:44px !important;
+  border-radius:50% !important;
+  object-fit:cover !important;
+  border:2px solid #fff !important;
+  box-shadow:0 4px 10px rgba(42,78,57,.15),0 1px 3px rgba(42,78,57,.08) !important;
+  background:#e4f2e6 !important;
+  box-sizing:border-box !important;
+}
+#question div.landing-top3 .podium-slot.rank-1 .podium-avatar{
+  width:56px !important;
+  height:56px !important;
+  border-color:#efd48a !important;
+  border-width:2.5px !important;
+  box-shadow:0 6px 16px rgba(239,212,138,.45),0 2px 5px rgba(42,78,57,.10) !important;
+}
+#question div.landing-top3 .podium-avatar-fallback{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  color:#2f6b4f !important;
+  font-weight:950 !important;
+  font-size:14px !important;
+  letter-spacing:-.02em !important;
+  -webkit-text-fill-color:#2f6b4f !important;
+}
+#question div.landing-top3 .podium-slot.rank-1 .podium-avatar-fallback{
+  background:linear-gradient(135deg,#fff5d6,#fcecb8) !important;
+  color:#8a6500 !important;
+  -webkit-text-fill-color:#8a6500 !important;
+  font-size:17px !important;
+}
+@media(max-width:600px){
+  #question div.landing-top3 .podium-avatar{width:38px !important;height:38px !important}
+  #question div.landing-top3 .podium-slot.rank-1 .podium-avatar{width:48px !important;height:48px !important}
+  #question div.landing-top3 .podium-avatar-fallback{font-size:12px !important}
+  #question div.landing-top3 .podium-slot.rank-1 .podium-avatar-fallback{font-size:14px !important}
+}
+@media(max-width:390px){
+  #question div.landing-top3 .podium-avatar{width:34px !important;height:34px !important}
+  #question div.landing-top3 .podium-slot.rank-1 .podium-avatar{width:42px !important;height:42px !important}
+}
+
+/* Editor ảnh trong Admin panel */
+#adminAvatarRows{
+  max-height:260px;
+  overflow:auto;
+  border:1px solid rgba(104,157,124,.24);
+  border-radius:14px;
+  background:rgba(247,252,248,.72);
+  scrollbar-width:thin;
+}
+.admin-avatar-row{
+  display:grid;
+  grid-template-columns:40px minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+  padding:8px 10px;
+  border-bottom:1px solid rgba(104,157,124,.14);
+}
+.admin-avatar-row:last-child{border-bottom:0}
+.admin-avatar-preview{
+  width:36px;height:36px;
+  border-radius:50%;
+  background:#e4f2e6;
+  color:#2f6b4f;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:900;
+  overflow:hidden;
+  border:1.5px solid #fff;
+  box-shadow:0 2px 6px rgba(42,78,57,.12);
+  flex:0 0 auto;
+}
+.admin-avatar-preview img{
+  width:100%;height:100%;
+  object-fit:cover;display:block;
+}
+.admin-avatar-info{min-width:0}
+.admin-avatar-name{
+  font-size:11px;font-weight:800;color:#365f4a;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.admin-avatar-input{
+  width:100%;height:28px;
+  margin-top:3px;padding:0 8px;
+  border-radius:8px;
+  border:1px solid rgba(104,157,124,.28);
+  background:#fff;color:#315744;
+  font-size:11px;outline:none;
+  box-sizing:border-box;
+}
+.admin-avatar-input:focus{
+  border-color:rgba(116,198,157,.6);
+  box-shadow:0 0 0 3px rgba(90,168,120,.10);
+}
+.admin-avatar-save{
+  height:30px;
+  padding:0 11px;
+  border-radius:999px;
+  border:1px solid rgba(104,157,124,.28);
+  background:linear-gradient(135deg,#4e9d6b,#74c69d);
+  color:#fff;
+  font-size:10px;font-weight:800;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.admin-avatar-save:active{transform:scale(.96)}
+.admin-avatar-save.clear{
+  background:#fff;color:#a8685f;
+  border-color:rgba(166,94,94,.24);
+}
+@media(max-width:420px){
+  .admin-avatar-row{grid-template-columns:34px minmax(0,1fr) auto;gap:6px;padding:7px 8px}
+  .admin-avatar-preview{width:32px;height:32px;font-size:10px}
+  .admin-avatar-save{padding:0 9px;font-size:9px}
+}
+</style>
 </head>
 <body>
 <main id="space">
@@ -3162,6 +3283,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       <div style="font-size:13px;color:rgba(255,255,255,.72);margin-bottom:9px;">☑ Chỉnh checklist</div>
       <div id="adminChecklistRows" style="max-height:230px;overflow:auto;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.03);"></div>
     </div>
+    <div id="adminAvatarEditor" style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);">
+      <div style="font-size:13px;color:rgba(255,255,255,.72);margin-bottom:9px;">🖼 Ảnh đại diện Top 3</div>
+      <div id="adminAvatarRows"></div>
+    </div>
   </section>
 </div>
 <div id="hint" aria-hidden="true" hidden></div>
@@ -3428,6 +3553,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   const adminCloseBtn = document.getElementById("adminCloseBtn");
   const adminSaveBtn = document.getElementById("adminSaveBtn");
   const adminChecklistRows = document.getElementById("adminChecklistRows");
+  const adminAvatarRows = document.getElementById("adminAvatarRows");
 
   // Giờ reset luôn dùng định dạng 24 giờ HH:mm
   resetTimeInput.addEventListener("input", () => {
@@ -3859,6 +3985,65 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   let editingMonitorName = "";
   let adminUnlocked = false;
 
+  // ===== ẢNH ĐẠI DIỆN TOP 3 =====
+  // Map mặc định — có thể để trống, sau đó gán qua Admin panel.
+  // Link ảnh được lưu vào localStorage, ưu tiên hơn map này.
+  const AVATAR_LINKS = {
+    "Huong Lye":    "",
+    "Quỳnh Trang":  "",
+    "Phương Thảo":  "",
+    "Thảo Uyên":    "",
+    "Minh Thư":     "",
+    "Như Dương":    "",
+    "Rosalie":      "",
+    "Tuan Nguyen":  "",
+    "Minh Quân":    "",
+    "Kim Chi":      "",
+    "Mỹ Dung":      "",
+    "Phạm Kim Chi": ""
+  };
+  const AVATAR_LINKS_KEY = "srank_avatar_links_v1";
+  let avatarLinks = {};
+
+  function loadAvatarLinks(){
+    try{
+      const saved = JSON.parse(localStorage.getItem(AVATAR_LINKS_KEY) || "{}");
+      const existing = saved && typeof saved === "object" ? saved : {};
+      avatarLinks = Object.assign({}, AVATAR_LINKS, existing);
+    }catch(_){
+      avatarLinks = Object.assign({}, AVATAR_LINKS);
+    }
+  }
+
+  function saveAvatarLinks(){
+    try{
+      localStorage.setItem(AVATAR_LINKS_KEY, JSON.stringify(avatarLinks));
+    }catch(_){}
+  }
+
+  function getAvatarUrl(name){
+    const key = String(name || "").trim();
+    return String(avatarLinks[key] || AVATAR_LINKS[key] || "").trim();
+  }
+
+  function getInitials(name){
+    const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    if(!parts.length) return "?";
+    if(parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  function isValidImageUrl(value){
+    const v = String(value || "").trim();
+    if(!v) return true; // cho phép xoá
+    try{
+      const u = new URL(v);
+      return u.protocol === "http:" || u.protocol === "https:";
+    }catch(_){ return false; }
+  }
+
+  loadAvatarLinks();
+
   function loadMonitorLinks(){
     try{
       const saved = JSON.parse(localStorage.getItem(MONITOR_LINKS_KEY) || "{}");
@@ -4144,6 +4329,107 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     adminChecklistRows.appendChild(frag);
   }
 
+  function renderAdminAvatarEditor(){
+      if(!adminAvatarRows) return;
+    adminAvatarRows.innerHTML = "";
+    const frag = document.createDocumentFragment();
+
+    names.forEach((name) => {
+      const row = document.createElement("div");
+      row.className = "admin-avatar-row";
+
+      // Preview ảnh
+      const preview = document.createElement("div");
+      preview.className = "admin-avatar-preview";
+      const url = getAvatarUrl(name);
+      if(url){
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = "";
+        img.loading = "lazy";
+        img.onerror = () => {
+          preview.innerHTML = "";
+          preview.textContent = getInitials(name);
+        };
+        preview.appendChild(img);
+      }else{
+        preview.textContent = getInitials(name);
+      }
+
+      // Info: tên + input URL
+      const info = document.createElement("div");
+      info.className = "admin-avatar-info";
+
+      const nameEl = document.createElement("div");
+      nameEl.className = "admin-avatar-name";
+      nameEl.textContent = name || "Người chơi";
+
+      const input = document.createElement("input");
+      input.type = "url";
+      input.inputMode = "url";
+      input.autocomplete = "off";
+      input.className = "admin-avatar-input";
+      input.placeholder = "Dán link ảnh https://...";
+      input.value = String(avatarLinks[name] || "").trim();
+
+      info.appendChild(nameEl);
+      info.appendChild(input);
+
+      // Nút Lưu
+      const save = document.createElement("button");
+      save.type = "button";
+      save.className = "admin-avatar-save";
+      save.textContent = "Lưu";
+
+      save.addEventListener("click", () => {
+        const value = input.value.trim();
+
+        if(!isValidImageUrl(value)){
+          adminStatus.textContent = "Link ảnh không hợp lệ — phải bắt đầu bằng http:// hoặc https://";
+          return;
+        }
+
+        if(!value){
+          delete avatarLinks[name];
+        }else{
+          avatarLinks[name] = value;
+        }
+        saveAvatarLinks();
+
+        // Cập nhật preview
+        preview.innerHTML = "";
+        if(avatarLinks[name]){
+          const img = document.createElement("img");
+          img.src = avatarLinks[name];
+          img.alt = "";
+          img.onerror = () => {
+            preview.innerHTML = "";
+            preview.textContent = getInitials(name);
+          };
+          preview.appendChild(img);
+        }else{
+          preview.textContent = getInitials(name);
+        }
+
+        adminStatus.textContent = value
+          ? `Đã lưu ảnh cho ${name} ✓`
+          : `Đã xoá ảnh của ${name}`;
+
+        // Cập nhật Top 3 nếu đang ở Home
+        if(!q1Opened && !checklistPanel.classList.contains("show") && !topPanel.classList.contains("show")){
+          renderLandingState();
+        }
+      });
+
+      row.appendChild(preview);
+      row.appendChild(info);
+      row.appendChild(save);
+      frag.appendChild(row);
+    });
+
+    adminAvatarRows.appendChild(frag);
+  }
+
   async function openAdminSettings(){
     // Verify session còn hiệu lực
     if(!AdminSession.isValid()){
@@ -4182,11 +4468,13 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       checklistLockTimeInput.value = checklistLockTime;
       renderLandingState();
       renderAdminChecklistEditor();
+      renderAdminAvatarEditor();
       adminStatus.textContent = `Giờ reset: ${resetTime} • Giờ khoá Checklist: ${checklistLockTime}`;
     }catch(e){
       resetTimeInput.value = resetTime;
       checklistLockTimeInput.value = checklistLockTime;
       renderAdminChecklistEditor();
+      renderAdminAvatarEditor();
       adminStatus.textContent = "Không tải được giờ reset hiện tại. Giờ khoá Checklist vẫn dùng cài đặt trên trình duyệt này.";
     }
   }
@@ -5342,13 +5630,27 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       top3HTML = `
         <span class="landing-top3-label">Top check sớm nhất</span>
         <div class="landing-top3">
-          ${podiumOrder.map(p => `
-            <div class="podium-slot rank-${p.rank}">
-              <span class="podium-medal">${p.medal}</span>
-              <span class="podium-name" title="${p.name.replace(/"/g, '&quot;')}">${p.name}</span>
-              <span class="podium-time">${p.time}</span>
-            </div>
-          `).join("")}
+          ${podiumOrder.map(p => {
+            const avatarUrl = getAvatarUrl(p.name);
+            const initials = getInitials(p.name);
+            const safeName = String(p.name).replace(/"/g, '&quot;');
+            const safeUrl = avatarUrl.replace(/"/g, '&quot;');
+
+            const avatarHTML = avatarUrl
+              ? `<img class="podium-avatar" src="${safeUrl}" alt="" loading="lazy" decoding="async"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                 <div class="podium-avatar podium-avatar-fallback" style="display:none;">${initials}</div>`
+              : `<div class="podium-avatar podium-avatar-fallback">${initials}</div>`;
+
+            return `
+              <div class="podium-slot rank-${p.rank}">
+                ${avatarHTML}
+                <span class="podium-medal">${p.medal}</span>
+                <span class="podium-name" title="${safeName}">${safeName}</span>
+                <span class="podium-time">${p.time}</span>
+              </div>
+            `;
+          }).join("")}
         </div>
       `;
     }
