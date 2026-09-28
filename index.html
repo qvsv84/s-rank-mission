@@ -4841,7 +4841,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     LUNCH_DATA[category].push(name);saveLunchData();updateLunchCounts();if(lunchAddInput2)lunchAddInput2.value='';updateLunchAddStatus('Đã thêm “'+name+'” vào '+(category==='savory'?'Món mặn':category==='soup'?'Món canh':'Ăn ngoài')+' ✓');
   }));
   lunchAddInput2?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.querySelector('.lunch-add-cat.home')?.click();}});
-  lunchManageBtn2?.addEventListener('click',()=>{closeLunchChoice();openLunchManage();});
+  lunchManageBtn2?.addEventListener('click',openLunchManage);
   lunchManageClose.addEventListener("click",closeLunchManage);
   lunchManageOverlay.addEventListener("click",e=>{if(e.target===lunchManageOverlay)closeLunchManage()});
   document.querySelectorAll('.lunchManageTab').forEach(tab=>tab.addEventListener('click',()=>{lunchManageCategory=tab.dataset.manageCategory;renderLunchManage();}));
