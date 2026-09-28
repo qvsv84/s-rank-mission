@@ -6588,8 +6588,16 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   // Cầu nối an toàn để Page 2 đọc đúng danh sách names của checklist.
   window.__getChecklistNames = () => Array.isArray(names) ? names.slice() : [];
 
-  // Khởi động Live Feed
-  LiveFeed.init();
+  // ===== Khởi động Live Feed =====
+  // Dùng requestAnimationFrame để chắc chắn DOM ready,
+  // tránh trường hợp init() chạy trước khi button được render.
+  requestAnimationFrame(() => {
+    try{
+      LiveFeed.init();
+    }catch(e){
+      console.error("[LiveFeed] init failed:", e);
+    }
+  });
 
 })();
 
