@@ -2484,6 +2484,51 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   #bottomNav button,#secondaryNav button{min-height:40px!important;font-size:8px!important}
   #question .landing-title{font-size:clamp(26px,7.8vw,42px)!important}
 }
+/* =========================================================
+   TRANG BỮA TRƯA — full-screen overlay
+   ========================================================= */
+#lunchPage{
+  position:fixed;
+  inset:0;
+  z-index:20500;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 20% 10%,rgba(255,220,180,.18),transparent 32%),
+    radial-gradient(circle at 90% 80%,rgba(255,180,140,.14),transparent 34%),
+    linear-gradient(145deg,#fff9f0 0%,#fff5e6 48%,#fef9f0 100%);
+  color:#3d2817;
+  display:none;
+}
+#lunchPage.show{display:block}
+#lunchPage *{box-sizing:border-box}
+
+.lunch-page-inner{
+  width:100%;
+  height:100%;
+  overflow:auto;
+  padding:calc(18px + env(safe-area-inset-top)) 16px calc(120px + env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling:touch;
+}
+.lunch-shell{width:min(100%,640px);margin:0 auto}
+.lunch-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+.lunch-back{width:42px;height:42px;border:1px solid rgba(120,80,40,.12);border-radius:15px;background:rgba(255,255,255,.8);box-shadow:0 8px 24px rgba(120,80,40,.08);color:#6b3d1e;font-size:22px;font-weight:700;cursor:pointer}
+.lunch-head-copy{flex:1;min-width:0}
+.lunch-kicker{font-size:10px;letter-spacing:2px;font-weight:850;color:#a97848;text-transform:uppercase}
+.lunch-title{margin-top:2px;font-size:clamp(24px,7vw,32px);line-height:1.05;font-weight:900;letter-spacing:-.6px;color:#4a2410}
+.lunch-result-card{position:relative;padding:26px 22px 24px;margin-bottom:18px;border-radius:28px;background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(255,255,255,.98) 0%,rgba(255,250,240,.72) 45%,transparent 75%),linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(255,250,240,.94) 55%,rgba(255,245,225,.92) 100%);border:1px solid rgba(200,140,80,.18);box-shadow:0 24px 60px -20px rgba(120,80,40,.18),0 12px 32px -12px rgba(120,80,40,.12),inset 0 1px 0 rgba(255,255,255,.95);overflow:hidden;text-align:center;min-height:200px;display:flex;flex-direction:column;justify-content:center}
+.lunch-result-card.rolling{animation:lunchRollCard .16s ease-in-out infinite alternate}
+@keyframes lunchRollCard{from{transform:rotate(-.3deg) scale(.998)}to{transform:rotate(.3deg) scale(1.002)}}
+.lunch-result-icon{font-size:36px;margin-bottom:8px;filter:drop-shadow(0 4px 6px rgba(120,80,40,.12))}
+.lunch-result-label{display:block;margin-bottom:14px;color:#a97848;font-size:10px;font-weight:900;letter-spacing:.28em;text-transform:uppercase}
+.lunch-result-dish{display:block;color:#4a2410;font-size:clamp(22px,5.5vw,28px);font-weight:900;line-height:1.15;letter-spacing:-.02em;text-shadow:0 2px 0 rgba(255,255,255,.95)}
+.lunch-result-line{display:block;margin:8px 0}.lunch-result-line .line-label{display:inline-block;margin-right:8px;padding:3px 10px;border-radius:999px;background:rgba(200,140,80,.12);color:#8a5a28;font-size:10px;font-weight:900;letter-spacing:.06em;vertical-align:middle}.lunch-result-line.soup .line-label{background:rgba(150,180,220,.14);color:#4a6a90}.lunch-result-line.out .line-label{background:rgba(180,120,200,.12);color:#7a3a8a}.lunch-result-value{color:#4a2410;font-size:clamp(20px,5vw,26px);font-weight:900;line-height:1.2;letter-spacing:-.02em;vertical-align:middle}.lunch-result-placeholder{color:#b89878;font-size:clamp(14px,3.5vw,16px);font-weight:800;line-height:1.4;padding:20px 0}
+.lunch-reroll-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:180px;min-height:50px;padding:12px 28px;margin-top:16px;border:1px solid rgba(200,140,80,.4);border-radius:999px;background:linear-gradient(180deg,#f0a860 0%,#e08840 100%);color:#fff;font-family:inherit;font-size:clamp(13px,3.4vw,15px);font-weight:950;letter-spacing:.14em;text-shadow:0 1px 2px rgba(120,80,40,.28);box-shadow:0 12px 28px -8px rgba(224,136,64,.52),0 4px 10px -2px rgba(120,80,40,.16),inset 0 1px 0 rgba(255,255,255,.32);cursor:pointer;transition:transform .22s ease,box-shadow .22s ease}.lunch-reroll-btn:active{transform:scale(.97);box-shadow:0 6px 14px -4px rgba(224,136,64,.42)}
+.lunch-section-title{display:block;margin:0 0 10px 4px;color:#8a5a28;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.lunch-mode-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}.lunch-mode-card{padding:14px 10px;border:1px solid rgba(200,140,80,.16);border-radius:18px;background:rgba(255,255,255,.86);box-shadow:0 6px 18px rgba(120,80,40,.06);color:#4a2410;font-family:inherit;font-size:11px;font-weight:850;text-align:center;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;display:flex;flex-direction:column;align-items:center;gap:6px}.lunch-mode-card:active{transform:scale(.97)}.lunch-mode-card .mode-icon{font-size:24px;line-height:1}.lunch-mode-card .mode-label{display:block;font-size:12px;font-weight:950}.lunch-mode-card .mode-desc{display:block;color:#a98868;font-size:9px;font-weight:750;line-height:1.3}.lunch-mode-card.home{background:linear-gradient(135deg,#fffaf0,#fef4e0);border-color:#e0c090}.lunch-mode-card.out{background:linear-gradient(135deg,#fff5ea,#ffe8d6);border-color:#f0b880}.lunch-mode-card.all{background:linear-gradient(135deg,#fffaf0,#fff0e0);border-color:#e8c898}
+.lunch-actions-grid{display:grid;gap:8px;margin-top:8px}.lunch-action-btn{min-height:48px;padding:12px 18px;border:1px dashed rgba(200,140,80,.32);border-radius:16px;background:rgba(255,255,255,.6);color:#8a5a28;font-family:inherit;font-size:12px;font-weight:900;cursor:pointer;transition:background .18s ease,transform .18s ease}.lunch-action-btn:active{transform:scale(.98)}.lunch-action-btn.solid{border-style:solid;background:linear-gradient(135deg,#f0a860 0%,#e08840 100%);color:#fff;border-color:rgba(200,140,80,.5);box-shadow:0 8px 18px -6px rgba(224,136,64,.42)}
+.lunch-add-form{display:none;margin-top:10px;padding:14px;border:1px solid rgba(200,140,80,.18);border-radius:18px;background:rgba(255,250,240,.96);box-shadow:0 8px 20px rgba(120,80,40,.06)}.lunch-add-form.show{display:block}.lunch-add-input{width:100%;height:44px;padding:0 14px;border:1px solid rgba(200,140,80,.24);border-radius:13px;background:#fff;color:#4a2410;font-family:inherit;font-size:16px;font-weight:700;outline:none}.lunch-add-input::placeholder{color:#b89878}.lunch-add-input:focus{border-color:rgba(224,136,64,.6);box-shadow:0 0 0 3px rgba(224,136,64,.12)}.lunch-add-cats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:10px}.lunch-add-cat{min-height:42px;padding:8px 10px;border:1px solid rgba(200,140,80,.2);border-radius:13px;background:#fff;color:#5a3a18;font-family:inherit;font-size:11px;font-weight:900;cursor:pointer;transition:background .18s ease,transform .18s ease}.lunch-add-cat:active{transform:scale(.97)}.lunch-add-cat.home{background:#eef9ef;border-color:#b7d5bd;color:#3a7856}.lunch-add-cat.soup{background:#f0f6fc;border-color:#c0d8ec;color:#3a5a78}.lunch-add-cat.out{background:#fdf4e8;border-color:#e8c8a0;color:#7a5a28}.lunch-add-status{min-height:14px;margin-top:9px;text-align:center;color:#4a8a58;font-size:10px;font-weight:800}
+@media(max-width:600px){.lunch-page-inner{padding:16px 12px calc(120px + env(safe-area-inset-bottom))}.lunch-result-card{padding:22px 18px 20px;border-radius:24px}.lunch-mode-grid{gap:6px}.lunch-mode-card{padding:12px 8px;border-radius:16px}.lunch-mode-card .mode-icon{font-size:22px}.lunch-mode-card .mode-label{font-size:11px}}
+@media(max-width:390px){.lunch-title{font-size:22px}.lunch-mode-card{padding:10px 6px}.lunch-mode-card .mode-desc{font-size:8px}}
+
 </style>
 
 
@@ -2932,6 +2977,41 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   </section>
 </div>
 <div id="hint" aria-hidden="true" hidden></div>
+<!-- ===== TRANG BỮA TRƯA — full-screen ===== -->
+<section id="lunchPage" aria-label="Bữa trưa ăn gì">
+  <div class="lunch-page-inner">
+    <div class="lunch-shell">
+      <header class="lunch-head">
+        <button id="lunchBack" class="lunch-back" type="button" aria-label="Quay lại">‹</button>
+        <div class="lunch-head-copy">
+          <div class="lunch-kicker">HỆ THỐNG 03</div>
+          <div class="lunch-title">Bữa trưa ăn gì?</div>
+        </div>
+      </header>
+      <div id="lunchResultCard" class="lunch-result-card">
+        <div class="lunch-result-icon">🍽️</div>
+        <span class="lunch-result-label">Thực đơn hôm nay</span>
+        <div id="lunchResultBody"><div class="lunch-result-placeholder">Chọn kiểu ăn bên dưới để quay món nha 🎲</div></div>
+        <button id="lunchRerollBtn" class="lunch-reroll-btn" type="button" style="display:none;">🎲 QUAY LẠI</button>
+      </div>
+      <span class="lunch-section-title">Chọn kiểu ăn</span>
+      <div class="lunch-mode-grid">
+        <button type="button" class="lunch-mode-card home" data-mode="home"><span class="mode-icon">🏠</span><span class="mode-label">Ăn tại nhà</span><span class="mode-desc">50 món mặn + 50 món canh</span></button>
+        <button type="button" class="lunch-mode-card out" data-mode="out"><span class="mode-icon">🍜</span><span class="mode-label">Ăn ngoài</span><span class="mode-desc">50 món</span></button>
+        <button type="button" class="lunch-mode-card all" data-mode="all"><span class="mode-icon">🎲</span><span class="mode-label">Ngẫu nhiên</span><span class="mode-desc">Nhà hoặc ngoài</span></button>
+      </div>
+      <div class="lunch-actions-grid">
+        <button id="lunchAddBtn2" class="lunch-action-btn" type="button">＋ Thêm món ăn</button>
+        <div id="lunchAddForm2" class="lunch-add-form">
+          <input id="lunchAddInput2" class="lunch-add-input" type="text" maxlength="60" autocomplete="off" placeholder="Nhập tên món muốn thêm...">
+          <div class="lunch-add-cats"><button type="button" class="lunch-add-cat home" data-add-category="savory">🍖 Món mặn</button><button type="button" class="lunch-add-cat soup" data-add-category="soup">🍲 Món canh</button><button type="button" class="lunch-add-cat out" data-add-category="out">🍜 Ăn ngoài</button></div>
+          <div id="lunchAddStatus2" class="lunch-add-status" aria-live="polite"></div>
+        </div>
+        <button id="lunchManageBtn2" class="lunch-action-btn solid" type="button">⚙ Quản lý danh sách món</button>
+      </div>
+    </div>
+  </div>
+</section>
 </main>
 
 <!-- ===== TRANG 2: LỊCH CHẤM CÔNG ===== -->
@@ -4997,6 +5077,8 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     }
     if(quizNameOverlay.classList.contains("show")){ closeQuizNamePicker(); e.preventDefault(); return; }
     if(quizOverlay.classList.contains("show")){ closeQuiz(); e.preventDefault(); return; }
+    const lunchPageEl = document.getElementById("lunchPage");
+    if(lunchPageEl && lunchPageEl.classList.contains("show")){ closeLunchChoice(); e.preventDefault(); return; }
     if(lunchManageOverlay.classList.contains("show")){ closeLunchManage(); e.preventDefault(); return; }
     if(lunchChoiceOverlay.classList.contains("show")){ closeLunchChoice(); e.preventDefault(); return; }
     if(linkEditorOverlay.classList.contains("show")){ closeLinkEditor(); e.preventDefault(); return; }
@@ -5102,7 +5184,8 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       message.classList.contains("show") ||
       confirm.classList.contains("show") ||
       document.getElementById('attendanceNameWheel')?.classList.contains('show') ||
-      document.getElementById('attendancePage')?.classList.contains('show');
+      document.getElementById('attendancePage')?.classList.contains('show') ||
+      document.getElementById('lunchPage')?.classList.contains('show');
 
     secondaryNav.classList.toggle("nav-hidden", otherViewOpen);
     document.getElementById('pageNav')?.classList.toggle('nav-hidden', otherViewOpen);
@@ -5305,35 +5388,72 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   let lunchRolling=false;
   let lunchTimer=null;
   function renderLunchChoice(choice){
-    const s=lunchDish.querySelector('.lunchLine.savory'),c=lunchDish.querySelector('.lunchLine.soup'),o=lunchDish.querySelector('.lunchLine.out');
-    const isHome=choice.type==="home";
-    s.style.display=isHome?"block":"none";
-    c.style.display=isHome?"block":"none";
-    o.style.display=isHome?"none":"block";
+    const body = document.getElementById("lunchResultBody");
+    if(!body) return;
+    const isHome = choice.type === "home";
     if(isHome){
-      // Ăn tại nhà luôn hiển thị đủ 2 món: 1 món mặn + 1 món canh.
-      s.querySelector('.lineValue').textContent=choice.savory || randomFrom(LUNCH_DATA.savory);
-      c.querySelector('.lineValue').textContent=choice.soup || randomFrom(LUNCH_DATA.soup);
-      o.querySelector('.lineValue').textContent="";
+      const savory = choice.savory || randomFrom(LUNCH_DATA.savory);
+      const soup = choice.soup || randomFrom(LUNCH_DATA.soup);
+      body.innerHTML = `
+        <div class="lunch-result-line savory"><span class="line-label">Món mặn</span><span class="lunch-result-value"></span></div>
+        <div class="lunch-result-line soup"><span class="line-label">Món canh</span><span class="lunch-result-value"></span></div>
+      `;
+      const values = body.querySelectorAll(".lunch-result-value");
+      if(values[0]) values[0].textContent = savory;
+      if(values[1]) values[1].textContent = soup;
     }else{
-      s.querySelector('.lineValue').textContent="";
-      c.querySelector('.lineValue').textContent="";
-      o.querySelector('.lineValue').textContent=choice.out || randomFrom(LUNCH_DATA.out);
+      const out = choice.out || randomFrom(LUNCH_DATA.out);
+      body.innerHTML = `<div class="lunch-result-line out"><span class="line-label">Ăn ngoài</span><span class="lunch-result-value"></span></div>`;
+      const v = body.querySelector(".lunch-result-value");
+      if(v) v.textContent = out;
     }
   }
   function updateLunchAddStatus(msg){lunchAddStatus.textContent=msg;clearTimeout(updateLunchAddStatus.t);if(msg) updateLunchAddStatus.t=setTimeout(()=>lunchAddStatus.textContent="",2200);}
-  function openLunchChoice(){updateLunchCounts();lunchChoiceOverlay.classList.add("show");lunchChoiceOverlay.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";}
-  function closeLunchChoice(){lunchChoiceOverlay.classList.remove("show");lunchChoiceOverlay.setAttribute("aria-hidden","true");document.body.style.overflow="";}
-  function chooseLunchMode(mode){lunchMode=mode;closeLunchChoice();pickLunch();}
+  // ===== Mở/đóng trang Bữa trưa full-screen =====
+  function openLunchChoice(){
+    updateLunchCounts();
+    const page = document.getElementById("lunchPage");
+    if(page){
+      page.classList.add("show");
+      document.body.style.overflow = "hidden";
+    }
+    syncQuickTools();
+  }
+  function closeLunchChoice(){
+    const page = document.getElementById("lunchPage");
+    if(page){
+      page.classList.remove("show");
+      document.body.style.overflow = "";
+    }
+    syncQuickTools();
+  }
+  function chooseLunchMode(mode){
+    lunchMode = mode;
+    pickLunch();
+  }
   function pickLunch(){
     if(lunchRolling) return;
-    lunchRolling=true;lunchBtn.classList.add("running");lunchResult.classList.add("show","rolling");lunchResult.dataset.hasResult="1";lunchResult.setAttribute("aria-hidden","false");
-    let elapsed=0,delay=55;
-    const roll=()=>{
-      if(elapsed>=2850){renderLunchChoice(randomLunchChoice(lunchMode));lunchResult.classList.remove("rolling");lunchResult.classList.add("show");lunchRolling=false;lunchBtn.classList.remove("running");return;}
-      renderLunchChoice(randomLunchChoice(lunchMode));elapsed+=delay;delay=Math.min(210,delay+7);lunchTimer=setTimeout(roll,delay);
+    lunchRolling = true;
+    const card = document.getElementById("lunchResultCard");
+    const rerollBtn = document.getElementById("lunchRerollBtn");
+    if(card) card.classList.add("rolling");
+    if(rerollBtn) rerollBtn.style.display = "none";
+    let elapsed = 0, delay = 55;
+    const roll = () => {
+      if(elapsed >= 2850){
+        renderLunchChoice(randomLunchChoice(lunchMode));
+        if(card) card.classList.remove("rolling");
+        if(rerollBtn) rerollBtn.style.display = "inline-flex";
+        lunchRolling = false;
+        return;
+      }
+      renderLunchChoice(randomLunchChoice(lunchMode));
+      elapsed += delay;
+      delay = Math.min(210, delay + 7);
+      lunchTimer = setTimeout(roll, delay);
     };
-    clearTimeout(lunchTimer);roll();
+    clearTimeout(lunchTimer);
+    roll();
   }
 
   let lunchManageCategory="savory";
@@ -5374,6 +5494,65 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   lunchChoiceClose.addEventListener("click",closeLunchChoice);
   lunchChoiceOverlay.addEventListener("click",e=>{if(e.target===lunchChoiceOverlay)closeLunchChoice()});
   lunchModeButtons.forEach(btn=>btn.addEventListener("click",()=>chooseLunchMode(btn.dataset.mode)));
+
+  // ===== Trang Bữa trưa mới — sự kiện =====
+  document.getElementById("lunchBack")?.addEventListener("click", closeLunchChoice);
+  document.querySelectorAll(".lunch-mode-card").forEach(btn => {
+    btn.addEventListener("click", () => chooseLunchMode(btn.dataset.mode));
+  });
+  document.getElementById("lunchRerollBtn")?.addEventListener("click", () => {
+    pickLunch();
+  });
+  document.getElementById("lunchAddBtn2")?.addEventListener("click", () => {
+    const form = document.getElementById("lunchAddForm2");
+    const input = document.getElementById("lunchAddInput2");
+    if(form){
+      form.classList.toggle("show");
+      if(form.classList.contains("show")){
+        setTimeout(() => input?.focus(), 100);
+        const status = document.getElementById("lunchAddStatus2");
+        if(status) status.textContent = "";
+      }
+    }
+  });
+  document.querySelectorAll(".lunch-add-cat").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const category = btn.dataset.addCategory;
+      const input = document.getElementById("lunchAddInput2");
+      const status = document.getElementById("lunchAddStatus2");
+      if(!input) return;
+      const name = input.value.trim().replace(/\s+/g, " ");
+      if(!name){
+        if(status){ status.textContent = "Vui lòng nhập tên món"; status.style.color = "#c05a3a"; }
+        input.focus();
+        return;
+      }
+      const all = Object.values(LUNCH_DATA).flat().map(x => x.toLowerCase());
+      if(all.includes(name.toLowerCase())){
+        if(status){ status.textContent = "Món này đã có trong danh sách"; status.style.color = "#c05a3a"; }
+        return;
+      }
+      LUNCH_DATA[category].push(name);
+      saveLunchData();
+      updateLunchCounts();
+      input.value = "";
+      if(status){
+        status.textContent = `Đã thêm "${name}" ✓`;
+        status.style.color = "#4a8a58";
+        setTimeout(() => { status.textContent = ""; }, 2200);
+      }
+    });
+  });
+  document.getElementById("lunchAddInput2")?.addEventListener("keydown", e => {
+    if(e.key === "Enter"){
+      e.preventDefault();
+      document.querySelector('.lunch-add-cat.home')?.click();
+    }
+  });
+  document.getElementById("lunchManageBtn2")?.addEventListener("click", () => {
+    closeLunchChoice();
+    openLunchManage();
+  });
   lunchAddBtn.addEventListener("click",()=>{
     lunchAddForm.classList.toggle("show");
     if(lunchAddForm.classList.contains("show")){lunchAddInput.focus();updateLunchAddStatus("");}
