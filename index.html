@@ -2529,6 +2529,30 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 @media(max-width:600px){.lunch-page-inner{padding:16px 12px calc(120px + env(safe-area-inset-bottom))}.lunch-result-card{padding:22px 18px 20px;border-radius:24px}.lunch-mode-grid{gap:6px}.lunch-mode-card{padding:12px 8px;border-radius:16px}.lunch-mode-card .mode-icon{font-size:22px}.lunch-mode-card .mode-label{font-size:11px}}
 @media(max-width:390px){.lunch-title{font-size:22px}.lunch-mode-card{padding:10px 6px}.lunch-mode-card .mode-desc{font-size:8px}}
 
+
+
+/* ===== Smooth update: flash row khi có người mới check ===== */
+#checklist tbody tr{
+  transition:background .3s ease;
+}
+
+#checklist tbody tr.row-updated{
+  animation:rowFlash 1.2s ease-out;
+}
+
+@keyframes rowFlash{
+  0%   { background:rgba(79,155,112,.22); }
+  100% { background:transparent; }
+}
+
+#checklist tbody tr.row-updated .checkBox{
+  animation:boxPulse 1.2s ease-out;
+}
+
+@keyframes boxPulse{
+  0%,100% { transform:scale(1); }
+  30%     { transform:scale(1.15); }
+}
 </style>
 
 
@@ -3222,6 +3246,13 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   let q1Opened = false;
   let dragging = false, startY = 0, dragOffset = 0;
   const ITEM_H = 58;
+
+  // ===== Smooth auto-refresh: track khi user vừa tương tác =====
+  let _lastUserActionAt = 0;
+  const USER_ACTION_PAUSE_MS = 5000;
+
+  // ===== Auto-sync interval động =====
+  const CHECKLIST_SYNC_MS = 30000;  // 30s khi checklist mở
   // Cache trạng thái khoá — tránh tính lại mỗi giây
   let _lastLockCheck = 0;
   let _cachedLocked = false;   // sẽ được set đúng ở lần gọi đầu
@@ -4023,6 +4054,107 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
 
   /**
+   * Smooth update checklist — chỉ update rows thay đổi.
+   * Không xóa DOM → không giật UI.
+   */
+  function smoothUpdateChecklist(newData){
+    if(!names.length) return false;
+
+    const oldNames = names.slice();
+    const oldChecked = checked.slice();
+    const oldTimes = times.slice();
+
+    // Số người đổi → không smooth được
+    if(oldNames.length !== newData.names.length) return false;
+
+    // Tên đổi (thêm/xóa) → không smooth được
+    const namesChanged = oldNames.some((n, i) => n !== newData.names[i]);
+    if(namesChanged) return false;
+
+    // Tìm các row thay đổi
+    const changedIndexes = [];
+    for(let i = 0; i < names.length; i++){
+      const checkedChanged = oldChecked[i] !== newData.checked[i];
+      const timeChanged = String(oldTimes[i] || "") !== String(newData.times[i] || "");
+      if(checkedChanged || timeChanged){
+        changedIndexes.push(i);
+      }
+    }
+
+    // Không có gì đổi
+    if(changedIndexes.length === 0){
+      return true;
+    }
+
+    // Update state
+    checked = newData.checked;
+    times = newData.times;
+    points = newData.points;
+    ranks = newData.ranks;
+
+    // Update từng row đổi (flash tối đa 3 rows để tránh rối)
+    changedIndexes.forEach((idx, i) => {
+      const tr = checklistBody.querySelector(`tr[data-index="${idx}"]`);
+      if(!tr) return;
+
+      const timeCell = tr.querySelector(".checkTime");
+      const box = tr.querySelector(".checkBox");
+
+      if(timeCell) timeCell.textContent = times[idx] || "—";
+      if(box) box.classList.toggle("checked", !!checked[idx]);
+
+      // Flash highlight nhẹ cho tối đa 3 rows
+      if(i < 3){
+        tr.classList.add("row-updated");
+        setTimeout(() => tr.classList.remove("row-updated"), 1200);
+      }
+    });
+
+    // Reorder DOM nếu cần (không tạo DOM mới, chỉ di chuyển)
+    reorderChecklistRows();
+
+    return true;
+  }
+
+  /**
+   * Re-order rows trong DOM theo đúng thứ tự sort.
+   * Move row có sẵn → smooth, không giật.
+   */
+  function reorderChecklistRows(){
+    const scrollEl = document.getElementById("checklistScroll");
+    const scrollTop = scrollEl ? scrollEl.scrollTop : 0;
+
+    const rows = names.map((name, i) => ({
+      name,
+      index: i,
+      checked: !!checked[i],
+      time: times[i] || ""
+    }));
+
+    rows.sort((a, b) => {
+      if(a.checked !== b.checked) return a.checked ? -1 : 1;
+      if(a.checked && b.checked){
+        const ta = a.time || "99:99";
+        const tb = b.time || "99:99";
+        const cmp = ta.localeCompare(tb);
+        if(cmp !== 0) return cmp;
+      }
+      return a.index - b.index;
+    });
+
+    // Move rows trong DOM (không tạo mới)
+    const frag = document.createDocumentFragment();
+    rows.forEach(row => {
+      const tr = checklistBody.querySelector(`tr[data-index="${row.index}"]`);
+      if(tr) frag.appendChild(tr);
+    });
+    checklistBody.appendChild(frag);
+
+    // Restore scroll position
+    if(scrollEl) scrollEl.scrollTop = scrollTop;
+  }
+
+  /**
    * Cập nhật CHỈ 1 dòng trong checklist theo index gốc (trong mảng names).
    * Nhanh hơn nhiều so với renderChecklist() khi chỉ có 1 người đổi trạng thái.
    *
@@ -4132,12 +4264,38 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       const serverChecks = Array.isArray(r.data.checks) ? r.data.checks : [];
       const serverTimes = Array.isArray(r.data.times) ? r.data.times : [];
 
+      // ===== Smooth update khi checklist mở + không phải lần đầu + không force =====
+      const canSmoothUpdate = initialSheetLoaded
+        && !force
+        && checklistPanel.classList.contains("show")
+        && names.length > 0;
+
+      if(canSmoothUpdate){
+        const updated = smoothUpdateChecklist({
+          names: serverNames,
+          points: serverPoints,
+          checked: serverChecks,
+          times: serverTimes,
+          ranks: serverPoints.map(rankClient)
+        });
+
+        if(updated){
+          points = serverPoints;
+          ranks = points.map(rankClient);
+          lastAutoSyncAt = Date.now();
+          window.syncAttendanceEmployees?.();
+          cacheSave();
+          setStatus("Đã cập nhật ✓");
+          return true;
+        }
+        // Nếu smooth thất bại (thêm/xóa người) → fallback full render bên dưới
+      }
+
+      // ===== Full render =====
       names = serverNames;
       points = serverPoints;
       ranks = points.map(rankClient);
 
-      // Lần đầu: lấy toàn bộ trạng thái từ Sheet.
-      // Đồng bộ thủ công/auto: cũng lấy lại check + giờ để các máy thấy thay đổi của nhau.
       if(!initialSheetLoaded || force){
         checked = serverChecks;
         times = serverTimes;
@@ -4150,9 +4308,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       renderChecklist();
       buildWheel();
 
-      // ===== Tối ưu: chỉ render Admin editor khi panel đang mở =====
-      // Nếu Admin đóng → tiết kiệm ~10ms mỗi lần auto-sync
-      // Khi user mở Admin, openAdminSettings() sẽ tự gọi renderAdminChecklistEditor()
       if(adminOverlay.classList.contains("show")){
         renderAdminChecklistEditor();
       }
@@ -4176,28 +4331,43 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
 
   function startAutoSync(){
+    restartAutoSync();
+  }
+
+  /**
+   * Restart auto-sync với interval phù hợp:
+   * - 30s khi checklist panel đang mở (user cần data mới)
+   * - 120s khi checklist đóng (tiết kiệm quota)
+   */
+  function restartAutoSync(){
     clearInterval(autoSyncTimer);
+
+    const interval = checklistPanel.classList.contains("show")
+      ? CHECKLIST_SYNC_MS
+      : AUTO_SYNC_MS;
+
     autoSyncTimer = setInterval(() => {
       // 1) Tab đang ẩn → bỏ qua
       if(document.hidden) return;
 
-      // 2) Đang ở màn chọn tên / hiệu ứng / overlay → bỏ qua
+      // 2) Các overlay khác đang mở → bỏ qua
       if(wheelArea.classList.contains("show")) return;
       if(message.classList.contains("show")) return;
-      if(checklistPanel.classList.contains("show")) return;
       if(topPanel.classList.contains("show")) return;
       if(document.getElementById("attendancePage")?.classList.contains("show")) return;
 
-      // 3) Throttle cứng: vừa sync xong < 15s → bỏ qua
-      //    (bảo vệ khi user bấm "Đồng bộ lại" thủ công rồi interval vẫn kích)
+      // 3) Throttle cứng 15s
       if(Date.now() - lastAutoSyncAt < AUTO_SYNC_MIN_GAP) return;
 
-      // 4) Đang có request khác chạy → bỏ qua
+      // 4) Pause 5s sau khi user vừa CHECK
+      if(Date.now() - _lastUserActionAt < USER_ACTION_PAUSE_MS) return;
+
+      // 5) Đang có request khác chạy → bỏ qua
       if(syncInFlight) return;
 
       lastAutoSyncAt = Date.now();
       loadData(false, true);
-    }, AUTO_SYNC_MS);
+    }, interval);
   }
 
   async function checkin(name, index){
@@ -4206,6 +4376,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       setStatus(`Đã ghi ${times[index]} ✓`);
       return;
     }
+
+    // ===== Track user action → pause auto-sync 5s =====
+    _lastUserActionAt = Date.now();
 
     // Chốt thời điểm CHECK ngay trên thiết bị của người thao tác.
     const clientTime = new Intl.DateTimeFormat("vi-VN",{
@@ -4896,6 +5069,10 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     checklistPanel.style.visibility = "hidden";
     checklistPanel.style.opacity = "0";
     checklistPanel.style.pointerEvents = "none";
+
+    // ===== Restart auto-sync với interval 120s khi đóng checklist =====
+    if(typeof restartAutoSync === "function") restartAutoSync();
+
     message.classList.remove("show");
     wheelArea.classList.remove("show");
     wheelArea.style.opacity = "0";
@@ -4939,7 +5116,12 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       checklistPanel.style.visibility = "hidden";
       checklistPanel.style.opacity = "0";
       checklistPanel.style.pointerEvents = "none";
-    }    syncQuickTools();
+    }
+
+    // ===== Restart auto-sync: 30s khi mở, 120s khi đóng =====
+    restartAutoSync();
+
+    syncQuickTools();
   });
 
   topBtn.addEventListener("click", (e) => {
