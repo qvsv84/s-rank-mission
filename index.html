@@ -4816,7 +4816,14 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     lunchManageOverlay.setAttribute("aria-hidden","false");
     document.body.style.overflow = "hidden";
   }
-  function closeLunchManage(){lunchManageOverlay.classList.remove("show");lunchManageOverlay.setAttribute("aria-hidden","true");}
+  function closeLunchManage(){
+  lunchManageOverlay.classList.remove("show");
+  lunchManageOverlay.setAttribute("aria-hidden","true");
+  // Mở lại trang Bữa trưa sau khi đóng quản lý
+  lunchPage?.classList.add("show");
+  lunchPage?.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "";
+}
   function updateLunchManageStatus(msg){lunchManageStatus.textContent=msg;clearTimeout(updateLunchManageStatus.t);if(msg) updateLunchManageStatus.t=setTimeout(()=>lunchManageStatus.textContent="",1800);}
   function renderLunchManage(){
     document.querySelectorAll('.lunchManageTab').forEach(t=>t.classList.toggle('active',t.dataset.manageCategory===lunchManageCategory));
