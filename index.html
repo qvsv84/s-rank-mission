@@ -1587,7 +1587,13 @@ button,input,textarea,select{font-family:inherit!important}
   background:rgba(235,243,232,.72)!important;
   backdrop-filter:blur(8px)!important;
   -webkit-backdrop-filter:blur(8px)!important;
-}#lunchManagePanel{
+}#lunchManageOverlay{
+  z-index:22000!important;
+  background:rgba(232,241,229,.82)!important;
+  backdrop-filter:blur(14px)!important;
+  -webkit-backdrop-filter:blur(14px)!important;
+}
+#lunchManagePanel{
   background:#fff!important;
   border-color:#d3e1d0!important;
   border-radius:24px!important;
@@ -2270,7 +2276,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 /* =========================================================
    HỆ THỐNG 03 — BỮA TRƯA ĂN GÌ (FULL-SCREEN / MINT)
    ========================================================= */
-#lunchPage{position:fixed;inset:0;z-index:20500;overflow:hidden;background:radial-gradient(circle at 20% 10%,rgba(190,225,198,.28),transparent 32%),radial-gradient(circle at 90% 80%,rgba(218,237,221,.32),transparent 34%),linear-gradient(145deg,#f8fbf7 0%,#f2f8f1 48%,#eaf3e9 100%);color:#284b3a;display:none}
+#lunchPage{position:fixed;inset:0;z-index:20500;overflow:hidden;isolation:auto;background:radial-gradient(circle at 20% 10%,rgba(190,225,198,.28),transparent 32%),radial-gradient(circle at 90% 80%,rgba(218,237,221,.32),transparent 34%),linear-gradient(145deg,#f8fbf7 0%,#f2f8f1 48%,#eaf3e9 100%);color:#284b3a;display:none}
 #lunchPage.show{display:block}
 #lunchPage *{box-sizing:border-box}
 .lunch-page-inner{width:100%;height:100%;overflow:auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(120px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}.lunch-shell{width:min(100%,640px);margin:0 auto}.lunch-head{display:flex;align-items:center;gap:12px;margin-bottom:20px}.lunch-back{width:42px;height:42px;border:1px solid rgba(62,112,79,.16);border-radius:15px;background:rgba(255,255,255,.85);box-shadow:0 8px 24px rgba(42,78,57,.08);color:#245943;font-size:22px;font-weight:700;cursor:pointer;flex:0 0 auto}.lunch-head-copy{flex:1;min-width:0}.lunch-kicker{font-size:10px;letter-spacing:2px;font-weight:850;color:#5c9488;text-transform:uppercase}.lunch-title{margin-top:2px;font-size:clamp(24px,7vw,32px);line-height:1.05;font-weight:900;letter-spacing:-.6px;color:#245943}
@@ -4795,7 +4801,13 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   }
 
   let lunchManageCategory="savory";
-  function openLunchManage(){renderLunchManage();lunchManageOverlay.classList.add("show");lunchManageOverlay.setAttribute("aria-hidden","false");}
+  function openLunchManage(){
+  renderLunchManage();
+  // Đảm bảo overlay luôn nổi lên trên mọi thứ
+  lunchManageOverlay.style.zIndex = "22000";
+  lunchManageOverlay.classList.add("show");
+  lunchManageOverlay.setAttribute("aria-hidden","false");
+}
   function closeLunchManage(){lunchManageOverlay.classList.remove("show");lunchManageOverlay.setAttribute("aria-hidden","true");}
   function updateLunchManageStatus(msg){lunchManageStatus.textContent=msg;clearTimeout(updateLunchManageStatus.t);if(msg) updateLunchManageStatus.t=setTimeout(()=>lunchManageStatus.textContent="",1800);}
   function renderLunchManage(){
