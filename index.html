@@ -1374,6 +1374,119 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
 #question div.landing-top3-empty{display:block !important;width:100% !important;max-width:340px !important;margin:6px auto !important;padding:14px 18px !important;box-sizing:border-box !important;text-align:center !important;color:#8aa299 !important;-webkit-text-fill-color:#8aa299 !important;font-family:var(--font,sans-serif) !important;font-size:clamp(10px,2.6vw,12px) !important;font-weight:800 !important;text-shadow:none !important;border-radius:16px !important;background:rgba(79,155,112,.05) !important;border:1px dashed rgba(120,175,135,.30) !important;line-height:1.4 !important}
 @media(max-width:600px){#question div.landing-top3{gap:8px !important}#question div.landing-top3 .podium-slot{min-width:76px !important;max-width:90px !important;padding:8px 6px !important;border-radius:14px !important}#question div.landing-top3 .podium-slot.rank-1{min-width:84px !important;max-width:98px !important;padding:10px 8px !important;transform:translateY(-10px) !important}}
 @media(max-width:390px){#question div.landing-top3{gap:6px !important}#question div.landing-top3 .podium-slot{min-width:68px !important;max-width:82px !important;padding:7px 5px !important;border-radius:12px !important}#question div.landing-top3 .podium-slot.rank-1{min-width:76px !important;max-width:90px !important;padding:9px 6px !important;transform:translateY(-8px) !important}#question div.landing-top3 .podium-name{font-size:9px !important}#question div.landing-top3 .podium-slot.rank-1 .podium-name{font-size:10px !important}#question div.landing-top3 .podium-time{font-size:8px !important;padding:1px 5px !important}}
+/* =========================================================
+   Patch D: Focus visible toàn cục
+   Áp dụng cho mọi element interactive — chỉ hiện khi dùng keyboard
+   (không hiện khi click chuột nhờ :focus-visible)
+   ========================================================= */
+
+/* Reset mặc định focus — không hiện outline khi click chuột */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus,
+a:focus,
+[role="button"]:focus{
+  outline:none !important;
+}
+
+/* Hiện outline đẹp khi dùng keyboard */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible{
+  outline:3px solid rgba(79,155,112,.48) !important;
+  outline-offset:3px !important;
+  border-radius:inherit;
+  transition:outline-offset .12s ease, outline-color .12s ease;
+}
+
+/* Nút dạng pill (bo tròn) — outline theo hình pill */
+#bottomNav button:focus-visible,
+#secondaryNav button:focus-visible,
+#homeBtn:focus-visible,
+#adminBtn:focus-visible,
+#monitorBtn:focus-visible,
+#topBtn:focus-visible,
+#checklistBtn:focus-visible,
+#kdvRulesBtn:focus-visible,
+#lunchBtn:focus-visible,
+#attendanceBtn:focus-visible,
+#quizBtn:focus-visible,
+#quizAdminBtn:focus-visible,
+#checklistActions button:focus-visible,
+#confirm:focus-visible,
+#startQuizBtn:focus-visible,
+#quizNextBtn:focus-visible,
+#quizResultClose:focus-visible,
+#topCloseBtn:focus-visible,
+#topCaptureBtn:focus-visible,
+#captureBtn:focus-visible,
+#syncBtn:focus-visible,
+#lunchAddBtn:focus-visible,
+#lunchManageBtn:focus-visible,
+#adminSaveBtn:focus-visible,
+#adminCloseBtn:focus-visible,
+#linkEditorSave:focus-visible,
+#linkEditorClear:focus-visible,
+#linkEditorCancel:focus-visible{
+  outline:3px solid rgba(79,155,112,.55) !important;
+  outline-offset:3px !important;
+  border-radius:999px !important;
+}
+
+/* Nút trong overlay tối — outline sáng hơn */
+#monitorOverlay button:focus-visible,
+#adminOverlay button:focus-visible,
+#linkEditorOverlay button:focus-visible,
+#kdvRulesOverlay button:focus-visible,
+#quizOverlay button:focus-visible,
+#quizNameOverlay button:focus-visible,
+#quizTakeOverlay button:focus-visible,
+#quizResultOverlay button:focus-visible,
+#quizBuilderOverlay button:focus-visible,
+#lunchChoiceOverlay button:focus-visible,
+#lunchManageOverlay button:focus-visible,
+#attendanceNameWheel button:focus-visible,
+#attendanceStatusOverlay button:focus-visible{
+  outline:3px solid rgba(69,212,200,.72) !important;
+  outline-offset:3px !important;
+}
+
+/* Input — outline hình chữ nhật bo góc */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible{
+  outline:3px solid rgba(79,155,112,.42) !important;
+  outline-offset:2px !important;
+  border-radius:12px !important;
+}
+
+/* Người trong wheel — không cần outline (dùng màu chọn) */
+.att-name-wheel-item:focus-visible,
+.item:focus-visible{
+  outline:none !important;
+}
+
+/* Top 3 podium slot (không tương tác) — bỏ qua */
+.podium-slot:focus-visible{
+  outline:none !important;
+}
+
+/* Chỉ hiện outline khi user dùng keyboard — không hiện khi click/touch */
+@media (hover: hover) and (pointer: fine){
+  button:focus:not(:focus-visible),
+  input:focus:not(:focus-visible),
+  select:focus:not(:focus-visible),
+  textarea:focus:not(:focus-visible),
+  [role="button"]:focus:not(:focus-visible){
+    outline:none !important;
+  }
+}
+
 </style>
 <style>
 /* ===== THEME XANH MÁT + KHÔI PHỤC KHUNG CHECKLIST ===== */
@@ -2507,6 +2620,22 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 #question .landing-title{position:relative !important;display:block !important;width:auto !important;max-width:100% !important;padding:0 !important;color:var(--p-forest,#245943) !important;-webkit-text-fill-color:var(--p-forest,#245943) !important;background:none !important;font-family:var(--font,inherit) !important;font-size:clamp(30px,8.4vw,54px) !important;font-weight:950 !important;letter-spacing:-.055em !important;line-height:.98 !important;text-align:center !important;text-shadow:0 2px 0 rgba(255,255,255,.95),0 10px 28px rgba(42,91,65,.10) !important;white-space:nowrap !important}
 #question .landing-title::after{content:"" !important;display:block !important;width:min(140px,28vw) !important;height:5px !important;margin:12px auto 0 !important;border-radius:99px !important;background:linear-gradient(90deg,transparent,#efd48a 15%,#efd48a 85%,transparent) !important;opacity:.9 !important}
 #question .landing-cta{position:relative !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;gap:8px !important;width:auto !important;min-width:180px !important;min-height:52px !important;padding:13px 32px !important;margin-top:2px !important;border:1px solid rgba(67,137,93,.42) !important;border-radius:999px !important;background:linear-gradient(180deg,#5aad7f 0%,#4a9a6c 100%) !important;color:#fff !important;-webkit-text-fill-color:#fff !important;font-family:var(--font,inherit) !important;font-size:clamp(13px,3.4vw,15px) !important;font-weight:950 !important;letter-spacing:.16em !important;text-shadow:0 1px 2px rgba(42,78,57,.20) !important;box-shadow:0 12px 28px -8px rgba(74,154,108,.42),0 4px 10px -2px rgba(42,78,57,.14),inset 0 1px 0 rgba(255,255,255,.30) !important;transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease,background .22s ease !important;cursor:pointer !important;overflow:hidden !important}
+
+/* ===== Patch C+D: Focus visible cho CTA Hero ===== */
+#question .landing-cta:focus-visible{
+  outline:3px solid rgba(79,155,112,.42) !important;
+  outline-offset:4px !important;
+  box-shadow:
+    0 12px 28px -8px rgba(74,154,108,.52),
+    0 4px 10px -2px rgba(42,78,57,.14),
+    inset 0 1px 0 rgba(255,255,255,.30) !important;
+}
+
+#question .landing-cta.locked:focus-visible{
+  outline:3px solid rgba(120,150,130,.32) !important;
+  outline-offset:4px !important;
+}
+
 #question .landing-cta::before{content:"→" !important;display:inline-block !important;font-size:16px !important;font-weight:900 !important;transition:transform .22s cubic-bezier(.2,.8,.2,1) !important}
 #question .landing-cta::after{content:"" !important;position:absolute !important;top:0 !important;left:-100% !important;width:60% !important;height:100% !important;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent) !important;pointer-events:none !important;transition:left .6s ease !important}
 #question .landing-cta:hover{transform:translateY(-2px) scale(1.02) !important;box-shadow:0 18px 36px -8px rgba(74,154,108,.52),0 6px 14px -2px rgba(42,78,57,.18),inset 0 1px 0 rgba(255,255,255,.35) !important}
@@ -4212,8 +4341,8 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     }
 
     question.innerHTML = locked
-      ? `<span class="landing-title">CHECKLIST ĐẢO MÈO</span>${top3HTML}<span class="landing-cta locked">Tạm khoá Checklist</span><span class="landing-lock-note">Sau ${checklistLockTime} sẽ khoá Checklist nha mn 🥰</span>`
-      : `<span class="landing-title">CHECKLIST ĐẢO MÈO</span>${top3HTML}<span class="landing-cta">CLICK HERE</span>`;
+      ? `<span class="landing-title">CHECKLIST ĐẢO MÈO</span>${top3HTML}<span class="landing-cta locked" role="button" aria-disabled="true" tabindex="-1">Tạm khoá Checklist</span><span class="landing-lock-note">Sau ${checklistLockTime} sẽ khoá Checklist nha mn 🥰</span>`
+      : `<span class="landing-title">CHECKLIST ĐẢO MÈO</span>${top3HTML}<span class="landing-cta" role="button" tabindex="0">CLICK HERE</span>`;
 
     question.style.opacity = "1";
     question.style.transform = "scale(1)";
@@ -4243,6 +4372,18 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
   question.addEventListener("pointerup",openQuestion1,{passive:false});
   question.addEventListener("click",openQuestion1);
+
+  // ===== Patch C: Enter/Space kích hoạt CTA Hero =====
+  // Chỉ khi focus đang nằm ở .landing-cta (không phải các element khác)
+  question.addEventListener("keydown", (e) => {
+    const cta = e.target.closest(".landing-cta");
+    if(!cta) return;
+    if(cta.classList.contains("locked")) return;
+    if(e.key === "Enter" || e.key === " "){
+      e.preventDefault();
+      openQuestion1(e);
+    }
+  });
 
   // Sau khi chọn tên và xác nhận: vào thẳng CÂU 2, không hiện màn Ký chủ/Rank/Điểm.
   confirm.addEventListener("click",()=>{
@@ -4832,6 +4973,61 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   }, 1000);
 
   startAutoSync();
+  // ===== Patch B: ESC đóng panel =====
+  // Chỉ chạy khi user bấm phím Escape.
+  // Thứ tự ưu tiên: đóng panel trên cùng trước.
+  // KHÔNG gọi API, KHÔNG ảnh hưởng Google Sheet.
+  document.addEventListener("keydown", (e) => {
+    if(e.key !== "Escape") return;
+
+    const capturePreview = document.getElementById("capturePreview");
+    if(capturePreview){ capturePreview.remove(); e.preventDefault(); return; }
+
+    if(quizBuilderOverlay.classList.contains("show")){ closeQuizBuilder(); e.preventDefault(); return; }
+    if(quizResultOverlay.classList.contains("show")){ closeQuizResult(); e.preventDefault(); return; }
+    if(quizTakeOverlay.classList.contains("show")){
+      // Cho phép thoát nhưng confirm để tránh mất bài
+      if(confirm("Bạn đang làm bài kiểm tra. Thoát sẽ mất toàn bộ câu trả lời. Tiếp tục thoát?")){
+        quizTakeOverlay.classList.remove("show");
+        quizTakeOverlay.setAttribute("aria-hidden", "true");
+        syncQuickTools();
+      }
+      e.preventDefault();
+      return;
+    }
+    if(quizNameOverlay.classList.contains("show")){ closeQuizNamePicker(); e.preventDefault(); return; }
+    if(quizOverlay.classList.contains("show")){ closeQuiz(); e.preventDefault(); return; }
+    if(lunchManageOverlay.classList.contains("show")){ closeLunchManage(); e.preventDefault(); return; }
+    if(lunchChoiceOverlay.classList.contains("show")){ closeLunchChoice(); e.preventDefault(); return; }
+    if(linkEditorOverlay.classList.contains("show")){ closeLinkEditor(); e.preventDefault(); return; }
+    if(monitorOverlay.classList.contains("show")){ closeMonitor(); e.preventDefault(); return; }
+    if(topPanel.classList.contains("show")){ closeTop(); if(typeof syncQuickTools === "function") syncQuickTools(); e.preventDefault(); return; }
+    if(checklistPanel.classList.contains("show")){
+      checklistPanel.classList.remove("show"); checklistPanel.style.visibility="hidden"; checklistPanel.style.opacity="0"; checklistPanel.style.pointerEvents="none";
+      if(typeof syncQuickTools === "function") syncQuickTools(); e.preventDefault(); return;
+    }
+    if(kdvRulesOverlay.classList.contains("show")){ closeKdvRules(); e.preventDefault(); return; }
+    if(adminOverlay.classList.contains("show")){ closeAdmin(); e.preventDefault(); return; }
+    if(adminPasswordOverlay.style.display === "flex"){ closeAdminPassword(); e.preventDefault(); return; }
+
+    const attendanceNameWheel = document.getElementById("attendanceNameWheel");
+    if(attendanceNameWheel && attendanceNameWheel.classList.contains("show")){
+      attendanceNameWheel.classList.remove("show"); attendanceNameWheel.setAttribute("aria-hidden", "true");
+      if(typeof syncQuickTools === "function") syncQuickTools(); e.preventDefault(); return;
+    }
+    const attendanceStatusOverlay = document.getElementById("attendanceStatusOverlay");
+    if(attendanceStatusOverlay && attendanceStatusOverlay.classList.contains("show")){
+      attendanceStatusOverlay.classList.remove("show"); attendanceStatusOverlay.setAttribute("aria-hidden", "true"); e.preventDefault(); return;
+    }
+    const attendancePage = document.getElementById("attendancePage");
+    if(attendancePage && attendancePage.classList.contains("show")){
+      if(typeof window.__closeAttendancePage === "function") window.__closeAttendancePage(); else attendancePage.classList.remove("show");
+      if(typeof syncQuickTools === "function") syncQuickTools(); e.preventDefault(); return;
+    }
+    if(wheelArea.classList.contains("show")){
+      if(typeof resetHome === "function") resetHome(); e.preventDefault(); return;
+    }
+  });
   document.addEventListener("visibilitychange", () => {
     if(document.hidden) return;
     // Tab vừa hiện lại → reset timer để check ngay ở tick kế tiếp
@@ -6067,6 +6263,36 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     updateWheelButton();
     closeNameWheel();
     render();
+  });
+  // ===== Patch A: Phím mũi tên cho wheel Chấm công =====
+  // Đồng bộ trải nghiệm với wheel Home (Page 1).
+  // Chỉ chạy khi overlay wheel đang mở. Không gọi API.
+  document.addEventListener('keydown', (e) => {
+    // Chỉ hoạt động khi wheel chọn NV đang mở
+    if(!wheelOverlay.classList.contains('show')) return;
+    if(!ATTENDANCE_EMPLOYEES.length) return;
+
+    // ESC đã được Patch B xử lý ở IIFE 1 → không xử lý ở đây nữa
+
+    if(e.key === 'ArrowDown'){
+      e.preventDefault();
+      wheelIndex = Math.min(ATTENDANCE_EMPLOYEES.length - 1, wheelIndex + 1);
+      wheelOffset = 0;
+      renderNameWheel();
+    }else if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      wheelIndex = Math.max(0, wheelIndex - 1);
+      wheelOffset = 0;
+      renderNameWheel();
+    }else if(e.key === 'Enter'){
+      e.preventDefault();
+      // Confirm chọn nhân viên — giống bấm nút "Xác nhận"
+      selectedName = ATTENDANCE_EMPLOYEES[wheelIndex] || '';
+      employee.value = selectedName;
+      updateWheelButton();
+      closeNameWheel();
+      render();
+    }
   });
   wheelViewport.addEventListener('pointerdown',e=>{
     wheelDragging=true;
