@@ -2783,6 +2783,83 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
 </style>
 
+<style id="toastSystem">
+#toastContainer{
+  position:fixed;
+  left:50%;
+  bottom:max(20px, env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  z-index:99999;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  width:min(92vw, 380px);
+  pointer-events:none;
+}
+.toast{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 16px 14px;
+  border-radius:16px;
+  background:rgba(255,255,255,.97);
+  border:1px solid rgba(62,112,79,.14);
+  box-shadow:0 14px 38px rgba(42,78,57,.16), 0 3px 10px rgba(42,78,57,.08);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  color:#315744;
+  font-size:13px;
+  font-weight:750;
+  line-height:1.35;
+  overflow:hidden;
+  pointer-events:auto;
+  cursor:pointer;
+  animation:toastIn .35s cubic-bezier(.16,.9,.25,1) forwards;
+}
+.toast.hide{animation:toastOut .28s ease-in forwards}
+@keyframes toastIn{
+  0%{opacity:0;transform:translateY(20px) scale(.94)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes toastOut{
+  0%{opacity:1;transform:translateY(0) scale(1)}
+  100%{opacity:0;transform:translateY(10px) scale(.96)}
+}
+.toast-icon{
+  flex:0 0 auto;
+  width:26px;height:26px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:9px;
+  font-size:14px;font-weight:900;
+  background:#e4f2e6;color:#2f6b4f;
+}
+.toast-text{flex:1;min-width:0;overflow-wrap:anywhere}
+.toast-progress{
+  position:absolute;left:0;bottom:0;
+  height:2.5px;width:100%;
+  background:linear-gradient(90deg,#4f9b70,#74c69d);
+  transform-origin:left;
+  animation:toastProgress var(--duration,2400ms) linear forwards;
+}
+@keyframes toastProgress{
+  from{transform:scaleX(1)}
+  to{transform:scaleX(0)}
+}
+.toast.success .toast-icon{background:#dff5e5;color:#2f8a4f}
+.toast.error   .toast-icon{background:#ffe4e4;color:#b84b4b}
+.toast.error   .toast-progress{background:linear-gradient(90deg,#d86868,#e88a8a)}
+.toast.warning .toast-icon{background:#fff2d6;color:#a5762e}
+.toast.warning .toast-progress{background:linear-gradient(90deg,#d8a868,#e8c288)}
+.toast.info    .toast-icon{background:#e0eef8;color:#4a7898}
+.toast.info    .toast-progress{background:linear-gradient(90deg,#5b8fbf,#7aabd2)}
+.toast.person  .toast-icon{background:#ffe6f2;color:#b84b8a}
+.toast.person  .toast-progress{background:linear-gradient(90deg,#d85b9e,#e88ab8)}
+@media (prefers-reduced-motion:reduce){
+  .toast,.toast.hide{animation-duration:.001ms!important}
+  .toast-progress{animation-duration:1ms!important;opacity:.3}
+}
+</style>
 </head>
 <body>
 <main id="space">
@@ -3356,6 +3433,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   // ===== Smooth auto-refresh: track khi user vừa tương tác =====
   let _lastUserActionAt = 0;
   const USER_ACTION_PAUSE_MS = 5000;
+
+  // ===== Self-check tracking (#8) =====
+  const _recentSelfChecks = new Map();
+  const SELF_CHECK_IGNORE_MS = 20000;
 
   // ===== Auto-sync interval động =====
   const CHECKLIST_SYNC_MS = 30000;  // 30s khi checklist mở
@@ -4204,11 +4285,133 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   });
 
 
+  // ===== Toast System (#7) =====
+  const Toast = (() => {
+    let container = null;
+    const recentMessages = new Map();
+    const DEDUP_MS = 2000;
+    const MAX_TOASTS = 3;
+
+    function ensureContainer(){
+      if(container && container.isConnected) return container;
+      container = document.createElement("div");
+      container.id = "toastContainer";
+      container.setAttribute("aria-live", "polite");
+      container.setAttribute("aria-atomic", "false");
+      document.body.appendChild(container);
+      return container;
+    }
+
+    function iconFor(type){
+      switch(type){
+        case "success": return "✓";
+        case "error":   return "⚠";
+        case "warning": return "!";
+        case "person":  return "🌸";
+        default:        return "i";
+      }
+    }
+
+    function show(text, options = {}){
+      const type = options.type || "info";
+      const duration = Math.max(1200, options.duration || 2400);
+      const icon = options.icon || iconFor(type);
+      const dedup = options.dedup !== false;
+      const msg = String(text || "").trim();
+      if(!msg) return null;
+
+      if(dedup){
+        const now = Date.now();
+        const last = recentMessages.get(msg);
+        if(last && (now - last) < DEDUP_MS) return null;
+        recentMessages.set(msg, now);
+        for(const [k, t] of recentMessages){
+          if(now - t > 10000) recentMessages.delete(k);
+        }
+      }
+
+      const c = ensureContainer();
+      while(c.children.length >= MAX_TOASTS){
+        c.firstElementChild?.remove();
+      }
+
+      const el = document.createElement("div");
+      el.className = "toast " + type;
+      el.style.setProperty("--duration", duration + "ms");
+      el.setAttribute("role", type === "error" ? "alert" : "status");
+
+      const iconEl = document.createElement("div");
+      iconEl.className = "toast-icon";
+      iconEl.textContent = icon;
+
+      const textEl = document.createElement("div");
+      textEl.className = "toast-text";
+      textEl.textContent = msg;
+
+      const progressEl = document.createElement("div");
+      progressEl.className = "toast-progress";
+
+      el.append(iconEl, textEl, progressEl);
+      el.addEventListener("click", () => dismiss(el), {once:true});
+      c.appendChild(el);
+
+      el._toastTimer = setTimeout(() => dismiss(el), duration);
+      return el;
+    }
+
+    function dismiss(el){
+      if(!el || !el.parentNode) return;
+      clearTimeout(el._toastTimer);
+      el.classList.add("hide");
+      setTimeout(() => el.remove(), 300);
+    }
+
+    return {show, dismiss};
+  })();
+
+  function inferToastType(text){
+    const t = String(text || "");
+    if(t.includes("✓") || /thành công/i.test(t)) return "success";
+    if(t.includes("⚠") || /lỗi|thất bại/i.test(t)) return "error";
+    if(/^chưa|^không|mất kết nối|thử lại|đang chờ/i.test(t)) return "warning";
+    return "info";
+  }
+
+  // ===== Notify người mới check (#8) =====
+  function notifyNewlyChecked(list){
+    if(!Array.isArray(list) || !list.length) return;
+    const now = Date.now();
+    const filtered = list.filter(item => {
+      const last = _recentSelfChecks.get(item.name);
+      return !last || (now - last) >= SELF_CHECK_IGNORE_MS;
+    });
+    if(!filtered.length) return;
+
+    filtered.sort((a,b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
+
+    if(filtered.length === 1){
+      const p = filtered[0];
+      Toast.show(`${p.name} vừa check lúc ${p.time || "—"}`, {
+        type:"person", icon:"🌸", duration:3200
+      });
+    }else{
+      const p = filtered[0];
+      Toast.show(`${p.name} và ${filtered.length - 1} người khác vừa check`, {
+        type:"person", icon:"🌸", duration:3200
+      });
+    }
+  }
+
   function setStatus(t){
     status.textContent = t;
     status.classList.add("show");
     clearTimeout(setStatus.t);
     setStatus.t = setTimeout(() => status.classList.remove("show"), 1400);
+
+    const text = String(t || "").trim();
+    if(text){
+      Toast.show(text, {type: inferToastType(text)});
+    }
   }
 
   function rankClient(value){
@@ -4401,6 +4604,17 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     const oldChecked = checked.slice();
     const oldTimes = times.slice();
 
+    // Detect người mới check (#8)
+    const newlyChecked = [];
+    for(let i = 0; i < names.length; i++){
+      if(!oldChecked[i] && newData.checked[i]){
+        newlyChecked.push({
+          name: oldNames[i],
+          time: newData.times[i] || ""
+        });
+      }
+    }
+
     // Số người đổi → không smooth được
     if(oldNames.length !== newData.names.length) return false;
 
@@ -4449,6 +4663,11 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
     // Reorder DOM nếu cần (không tạo DOM mới, chỉ di chuyển)
     reorderChecklistRows();
+
+    // Notify người mới check
+    if(newlyChecked.length > 0){
+      notifyNewlyChecked(newlyChecked);
+    }
 
     return true;
   }
@@ -4654,6 +4873,21 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         // Nếu smooth thất bại (thêm/xóa người) → fallback full render bên dưới
       }
 
+      // ===== Detect người mới check (#8) trước khi ghi đè =====
+      let newlyChecked = [];
+      if(initialSheetLoaded && names.length > 0){
+        const prevNames = names.slice();
+        const prevChecked = checked.slice();
+        for(let i = 0; i < Math.min(prevNames.length, serverNames.length); i++){
+          if(prevNames[i] === serverNames[i] && !prevChecked[i] && serverChecks[i]){
+            newlyChecked.push({
+              name: prevNames[i],
+              time: serverTimes[i] || ""
+            });
+          }
+        }
+      }
+
       // ===== Full render =====
       names = serverNames;
       points = serverPoints;
@@ -4677,6 +4911,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
       hint.textContent = "Chạm vào câu hỏi";
       setStatus(force ? "Đã cập nhật ✓" : "Đã đồng bộ ✓");
+
+      if(newlyChecked.length > 0){
+        notifyNewlyChecked(newlyChecked);
+      }
       return true;
     }catch(e){
       if(showError && !names.length) hint.textContent = "Không tải được dữ liệu";
@@ -4751,6 +4989,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
     // ===== Track user action → pause auto-sync 5s =====
     _lastUserActionAt = Date.now();
+
+    // Track self-check để không tự thông báo chính mình (#8)
+    _recentSelfChecks.set(name, Date.now());
 
     // Chốt thời điểm CHECK ngay trên thiết bị của người thao tác.
     const clientTime = new Intl.DateTimeFormat("vi-VN",{
