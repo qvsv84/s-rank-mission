@@ -3036,7 +3036,18 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   .admin-avatar-save{padding:0 9px;font-size:9px}
 }
 </style>
-</head>
+<style id="adminPageStyle">
+#adminPage{position:fixed;inset:0;z-index:20000;display:none;flex-direction:column;background:linear-gradient(180deg,#f8fbf6 0%,#eef6ec 100%);color:#284b3a;font-family:var(--font,ui-rounded,"SF Pro Rounded",system-ui,-apple-system,sans-serif)}#adminPage.show{display:flex}
+#adminPageHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;background:rgba(255,255,255,.94);border-bottom:1px solid rgba(62,112,79,.14);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);flex:0 0 auto}#adminPageBack,#adminPageLogout{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(62,112,79,.14);border-radius:14px;background:rgba(255,255,255,.9);color:#2f6b4f;font-size:20px;font-weight:700;cursor:pointer;transition:transform .15s ease,background .15s ease}#adminPageBack:active,#adminPageLogout:active{transform:scale(.95)}#adminPageLogout{color:#b84b4b;font-size:18px}#adminPageTitle{flex:1;min-width:0;text-align:center;line-height:1.15}.admin-page-kicker{display:block;font-size:10px;letter-spacing:.24em;color:#8ca598;font-weight:900;text-transform:uppercase}.admin-page-name{display:block;margin-top:3px;font-size:20px;font-weight:900;color:#245943;letter-spacing:-.02em}
+#adminPageBody{flex:1 1 auto;display:flex;flex-direction:column;overflow:hidden}#adminPageNav{display:flex;gap:6px;padding:10px 14px;overflow-x:auto;background:rgba(255,255,255,.6);border-bottom:1px solid rgba(62,112,79,.08);scrollbar-width:none;flex:0 0 auto}#adminPageNav::-webkit-scrollbar{display:none}.admin-tab{flex:0 0 auto;min-height:48px;padding:8px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1px solid transparent;border-radius:14px;background:transparent;color:#7b8e82;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;transition:background .18s ease,border-color .18s ease,color .18s ease}.admin-tab-icon{font-size:16px;line-height:1}.admin-tab.active{background:linear-gradient(180deg,#f2faf2,#e5f3e7);border-color:rgba(79,155,112,.28);color:#245943}.admin-tab:active{transform:scale(.96)}
+#adminPageContent{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 18px 40px;box-sizing:border-box}.admin-panel-view{display:none}.admin-panel-view.active{display:block;animation:adminViewIn .25s ease-out}@keyframes adminViewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}.admin-section-title{margin:0 0 14px;font-size:20px;font-weight:900;color:#245943;letter-spacing:-.02em}.admin-section-subtitle{margin:22px 0 10px;font-size:14px;font-weight:900;color:#35684d}.admin-section-hint{margin:-6px 0 14px;font-size:12px;color:#82958a;font-weight:700}
+.admin-card{background:#fff;border:1px solid rgba(62,112,79,.14);border-radius:20px;overflow:hidden;box-shadow:0 8px 24px rgba(47,78,59,.06)}.admin-card-row{display:grid;grid-template-columns:44px minmax(0,1fr) 110px;align-items:center;gap:12px;padding:16px;border-bottom:1px solid rgba(62,112,79,.08)}.admin-card-row:last-child{border-bottom:0}.admin-card-icon{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:linear-gradient(135deg,#eef8ef,#e4f3e6);color:#2f6b4f;font-size:20px}.admin-card-info{min-width:0}.admin-card-info label{display:block;font-size:14px;font-weight:900;color:#245943}.admin-card-info p{margin:3px 0 0;font-size:11px;color:#82958a;font-weight:700;line-height:1.35}#resetTimeInput,#checklistLockTimeInput{width:110px;height:46px;padding:0 12px;border:1px solid rgba(62,112,79,.18);border-radius:12px;background:#f7fbf6;color:#245943;font-size:18px;font-weight:900;font-family:inherit;text-align:center;outline:none;letter-spacing:.05em}#resetTimeInput:focus,#checklistLockTimeInput:focus{border-color:rgba(79,155,112,.55);background:#fff;box-shadow:0 0 0 3px rgba(79,155,112,.12)}
+.admin-note{display:flex;align-items:flex-start;gap:10px;margin-top:14px;padding:12px 14px;background:linear-gradient(135deg,rgba(255,244,214,.6),rgba(255,250,235,.6));border:1px solid rgba(216,168,104,.28);border-radius:14px;color:#7a5a28;font-size:12px;font-weight:700;line-height:1.45}.admin-note-icon{font-size:16px;flex:0 0 auto}.admin-note b{color:#5a3a18;font-weight:900}.admin-status{min-height:20px;margin:14px 0 0;text-align:center;font-size:12px;font-weight:800;color:#4e8c62}.admin-status.error{color:#b84b4b}.admin-status.warn{color:#9a762e}.admin-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.admin-actions button{min-height:48px;padding:0 24px;border:0;border-radius:14px;background:linear-gradient(180deg,#5aad7f 0%,#4a9a6c 100%);color:#fff;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 10px 24px -8px rgba(74,154,108,.5)}.admin-actions button:disabled{opacity:.5;cursor:default;box-shadow:none}
+.admin-toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}#adminChecklistSearch{flex:1 1 200px;min-width:0;height:44px;padding:0 14px;border:1px solid rgba(62,112,79,.16);border-radius:13px;background:#fff;color:#245943;font-size:14px;font-weight:700;font-family:inherit;outline:none}.admin-filters{display:flex;gap:4px;padding:4px;background:rgba(255,255,255,.7);border:1px solid rgba(62,112,79,.12);border-radius:13px}.admin-filter-btn{min-height:36px;padding:0 14px;border:0;border-radius:9px;background:transparent;color:#7b8e82;font-family:inherit;font-size:12px;font-weight:800}.admin-filter-btn.active{background:#e5f3e7;color:#245943}.admin-stats-bar{display:flex;gap:12px;padding:12px 16px;margin-bottom:12px;background:linear-gradient(135deg,rgba(79,155,112,.08),rgba(200,230,205,.08));border:1px solid rgba(79,155,112,.14);border-radius:14px;font-size:12px;font-weight:800;color:#3d7653;flex-wrap:wrap}.admin-list{display:flex;flex-direction:column;gap:6px}.admin-list-empty{padding:30px 20px;text-align:center;color:#8aa299;font-size:13px;font-weight:700;background:rgba(255,255,255,.5);border:1px dashed rgba(62,112,79,.16);border-radius:16px}.admin-row-item{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:12px 14px;background:#fff;border:1px solid rgba(62,112,79,.12);border-radius:14px}.admin-row-item.checked{background:linear-gradient(135deg,#f4fbf5,#eef7f0);border-color:rgba(79,155,112,.28)}.admin-row-name{min-width:0;font-size:14px;font-weight:850;color:#315744;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.admin-row-time{font-size:12px;font-weight:900;color:#4e8c62;font-variant-numeric:tabular-nums;white-space:nowrap}.admin-row-time.empty{color:#b8c4bb}.admin-row-btn{min-height:34px;padding:0 14px;border:1px solid rgba(62,112,79,.16);border-radius:999px;background:#f7fbf6;color:#3d7653;font-family:inherit;font-size:12px;font-weight:900}.admin-row-btn.checked{background:linear-gradient(135deg,#4f9b70,#6db487);border-color:transparent;color:#fff}
+.admin-avatar-row{display:grid;grid-template-columns:56px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 14px;background:#fff;border:1px solid rgba(62,112,79,.12);border-radius:14px}.admin-avatar-preview{width:56px;height:56px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#f5f9f4;color:#8a9a91;font-size:18px;font-weight:900;overflow:hidden;border:2px solid #fff;box-shadow:0 3px 10px rgba(42,78,57,.10)}.admin-avatar-preview img{width:100%;height:100%;object-fit:cover;display:block}.admin-avatar-info{min-width:0}.admin-avatar-name{font-size:13px;font-weight:900;color:#315744;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.admin-avatar-input{width:100%;height:36px;padding:0 10px;border:1px solid rgba(62,112,79,.16);border-radius:10px;background:#f7fbf6;color:#315744;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box}.admin-avatar-input:focus{border-color:rgba(79,155,112,.5);background:#fff;box-shadow:0 0 0 3px rgba(79,155,112,.10)}.admin-avatar-actions{display:flex;gap:6px;flex-direction:column}.admin-avatar-save,.admin-avatar-clear{min-height:36px;padding:0 12px;border-radius:10px;border:1px solid rgba(62,112,79,.16);background:#f7fbf6;color:#3d7653;font-family:inherit;font-size:11px;font-weight:900}.admin-avatar-save{background:linear-gradient(135deg,#4f9b70,#6db487);border-color:transparent;color:#fff}
+.admin-stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:22px}.admin-stat-card{padding:18px 12px;text-align:center;background:#fff;border:1px solid rgba(62,112,79,.12);border-radius:18px;box-shadow:0 6px 18px rgba(47,78,59,.05)}.admin-stat-card.success{background:linear-gradient(160deg,#f4fbf5,#e9f5eb);border-color:rgba(79,155,112,.28)}.admin-stat-card.warn{background:linear-gradient(160deg,#fffbf0,#fef6e3);border-color:rgba(216,168,104,.28)}.admin-stat-icon{font-size:22px;line-height:1;margin-bottom:6px}.admin-stat-value{font-size:28px;font-weight:900;color:#245943;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.03em}.admin-stat-card.success .admin-stat-value{color:#2f7d4f}.admin-stat-card.warn .admin-stat-value{color:#a5762e}.admin-stat-label{margin-top:6px;font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#82958a}
+@media(min-width:900px){#adminPageBody{flex-direction:row;overflow:hidden}#adminPageNav{flex-direction:column;width:220px;padding:20px 14px;border-right:1px solid rgba(62,112,79,.10);border-bottom:0;background:rgba(255,255,255,.7);overflow-y:auto}.admin-tab{flex-direction:row;justify-content:flex-start;gap:10px;padding:12px 14px;font-size:13px;min-height:52px;width:100%}.admin-tab-icon{font-size:18px}#adminPageContent{padding:28px 32px 60px}.admin-panel-view.active{max-width:720px;margin:0 auto}}@media(max-width:600px){#adminPageHeader{padding:12px 14px}.admin-page-name{font-size:18px}#adminPageNav{padding:8px 10px}.admin-tab{padding:8px 12px;min-height:44px}#adminPageContent{padding:16px 14px 40px}.admin-section-title{font-size:18px}.admin-card-row{grid-template-columns:40px minmax(0,1fr) 92px;padding:14px 12px;gap:10px}#resetTimeInput,#checklistLockTimeInput{width:92px;height:44px;font-size:17px}.admin-avatar-row{grid-template-columns:48px minmax(0,1fr);gap:10px}.admin-avatar-actions{grid-column:1/-1;flex-direction:row}.admin-avatar-save,.admin-avatar-clear{flex:1}.admin-avatar-preview{width:48px;height:48px}.admin-stats-grid{gap:6px}.admin-stat-card{padding:14px 8px}.admin-stat-value{font-size:22px}.admin-stat-label{font-size:9px}}
+</style></head>
 <body>
 <main id="space">
 <div id="status"></div>
@@ -3294,34 +3305,24 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     <div id="adminPasswordActions"><button id="adminPasswordCancel" type="button">Huỷ</button><button id="adminPasswordOk" type="button">Xác nhận</button></div>
   </section>
 </div>
-<div id="adminOverlay" aria-hidden="true">
-  <section id="adminPanel" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
-    <div id="adminTitle">⚙ Cài đặt Admin</div>
-    <div id="adminSub">Thiết lập giờ làm mới checklist hằng ngày</div>
-    <div class="adminField">
-      <label for="resetTimeInput">Giờ reset mỗi ngày</label>
-      <input id="resetTimeInput" type="text" value="00:00" inputmode="numeric" maxlength="5" pattern="(?:[01]\d|2[0-3]):[0-5]\d" placeholder="00:00" autocomplete="off" aria-label="Giờ reset 24 giờ">
-    </div>
-    <div class="adminField">
-      <label for="checklistLockTimeInput">Giờ khoá Checklist</label>
-      <input id="checklistLockTimeInput" type="text" value="21:00" inputmode="numeric" maxlength="5" pattern="(?:[01]\d|2[0-3]):[0-5]\d" placeholder="21:00" autocomplete="off" aria-label="Giờ khoá Checklist 24 giờ">
-    </div>
-    <div style="margin:-5px 0 12px;font-size:10px;line-height:1.4;color:rgba(255,255,255,.42);text-align:right;">Sau giờ này nút Checklist sẽ chuyển thành “Tạm khoá Checklist”.</div>
-    <div id="adminStatus"></div>
-    <div id="adminActions">
-      <button id="adminCloseBtn" type="button">Đóng</button>
-      <button id="adminSaveBtn" type="button">Lưu cài đặt</button>
-    </div>
-    <div id="adminChecklistEditor" style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);">
-      <div style="font-size:13px;color:rgba(255,255,255,.72);margin-bottom:9px;">☑ Chỉnh checklist</div>
-      <div id="adminChecklistRows" style="max-height:230px;overflow:auto;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.03);"></div>
-    </div>
-    <div id="adminAvatarEditor" style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);">
-      <div style="font-size:13px;color:rgba(255,255,255,.72);margin-bottom:9px;">🖼 Ảnh đại diện Top 3</div>
-      <div id="adminAvatarRows"></div>
-    </div>
-  </section>
-</div>
+<!-- ===== TRANG ADMIN ===== -->
+<section id="adminPage" aria-label="Cài đặt Admin">
+  <header id="adminPageHeader"><button id="adminPageBack" type="button" aria-label="Quay lại">←</button><div id="adminPageTitle"><span class="admin-page-kicker">HỆ THỐNG</span><span class="admin-page-name">Cài đặt Admin</span></div><button id="adminPageLogout" type="button" aria-label="Đăng xuất admin">🚪</button></header>
+  <div id="adminPageBody"><nav id="adminPageNav" aria-label="Mục cài đặt">
+    <button class="admin-tab active" data-admin-tab="schedule" type="button"><span class="admin-tab-icon">⚙</span><span class="admin-tab-label">Giờ</span></button>
+    <button class="admin-tab" data-admin-tab="checklist" type="button"><span class="admin-tab-icon">☑</span><span class="admin-tab-label">Checklist</span></button>
+    <button class="admin-tab" data-admin-tab="avatar" type="button"><span class="admin-tab-icon">🖼</span><span class="admin-tab-label">Avatar</span></button>
+    <button class="admin-tab" data-admin-tab="stats" type="button"><span class="admin-tab-icon">📊</span><span class="admin-tab-label">Thống kê</span></button>
+  </nav><div id="adminPageContent">
+    <div class="admin-panel-view active" data-admin-view="schedule"><h2 class="admin-section-title">Khung giờ hoạt động</h2><div class="admin-card">
+      <div class="admin-card-row"><div class="admin-card-icon">🔄</div><div class="admin-card-info"><label for="resetTimeInput">Giờ reset mỗi ngày</label><p>Checklist tự động làm mới vào lúc này</p></div><input id="resetTimeInput" type="text" value="00:00" inputmode="numeric" maxlength="5" pattern="(?:[01]\d|2[0-3]):[0-5]\d" placeholder="00:00" autocomplete="off" aria-label="Giờ reset 24 giờ"></div>
+      <div class="admin-card-row"><div class="admin-card-icon">🔒</div><div class="admin-card-info"><label for="checklistLockTimeInput">Giờ khoá Checklist</label><p>Sau giờ này, nút Checklist sẽ tạm khoá</p></div><input id="checklistLockTimeInput" type="text" value="21:00" inputmode="numeric" maxlength="5" pattern="(?:[01]\d|2[0-3]):[0-5]\d" placeholder="21:00" autocomplete="off" aria-label="Giờ khoá Checklist 24 giờ"></div>
+    </div><div class="admin-note"><span class="admin-note-icon">💡</span><span>Ví dụ: reset <b>00:00</b>, khoá <b>21:00</b> → Checklist mở từ 0h đến 21h mỗi ngày.</span></div><div id="adminStatus" class="admin-status"></div><div class="admin-actions"><button id="adminSaveBtn" type="button">💾 Lưu cài đặt</button></div></div>
+    <div class="admin-panel-view" data-admin-view="checklist"><h2 class="admin-section-title">Quản lý Checklist hôm nay</h2><div class="admin-toolbar"><input id="adminChecklistSearch" type="text" placeholder="🔍 Tìm tên..." autocomplete="off"><div class="admin-filters"><button class="admin-filter-btn active" data-filter="all" type="button">Tất cả</button><button class="admin-filter-btn" data-filter="checked" type="button">✓ Đã</button><button class="admin-filter-btn" data-filter="unchecked" type="button">○ Chưa</button></div></div><div id="adminChecklistStats" class="admin-stats-bar"></div><div id="adminChecklistRows" class="admin-list"></div></div>
+    <div class="admin-panel-view" data-admin-view="avatar"><h2 class="admin-section-title">Ảnh đại diện Top 3</h2><p class="admin-section-hint">Dán link ảnh (Google Drive, Facebook...) hoặc URL trực tiếp</p><div id="adminAvatarRows" class="admin-list"></div></div>
+    <div class="admin-panel-view" data-admin-view="stats"><h2 class="admin-section-title">Thống kê hôm nay</h2><div class="admin-stats-grid"><div class="admin-stat-card"><div class="admin-stat-icon">👥</div><div id="adminStatTotal" class="admin-stat-value">0</div><div class="admin-stat-label">Tổng số</div></div><div class="admin-stat-card success"><div class="admin-stat-icon">✅</div><div id="adminStatChecked" class="admin-stat-value">0</div><div class="admin-stat-label">Đã check</div></div><div class="admin-stat-card warn"><div class="admin-stat-icon">⭕</div><div id="adminStatUnchecked" class="admin-stat-value">0</div><div class="admin-stat-label">Chưa check</div></div></div><h3 class="admin-section-subtitle">⏰ Top 3 check sớm nhất</h3><div id="adminStatTop3" class="admin-list"></div><h3 class="admin-section-subtitle">📈 Bảng xếp hạng tháng</h3><div class="admin-note"><span class="admin-note-icon">ℹ</span><span>Xem chi tiết ở trang <b>BXH TOP</b> ngoài Home.</span></div></div>
+  </div></div>
+</section>
 <div id="hint" aria-hidden="true" hidden></div>
 <!-- ===== TRANG BỮA TRƯA — full-screen ===== -->
 <section id="lunchPage" aria-label="Bữa trưa ăn gì">
@@ -3578,15 +3579,28 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   const linkEditorCancel = document.getElementById("linkEditorCancel");
   const linkEditorClear = document.getElementById("linkEditorClear");
   const linkEditorSave = document.getElementById("linkEditorSave");
-  const adminOverlay = document.getElementById("adminOverlay");
-  const adminPanel = document.getElementById("adminPanel");
+  // ===== Trang Admin mới =====
+  const adminPage = document.getElementById("adminPage");
+  const adminPageBack = document.getElementById("adminPageBack");
+  const adminPageLogout = document.getElementById("adminPageLogout");
+  const adminChecklistSearch = document.getElementById("adminChecklistSearch");
+  const adminChecklistStats = document.getElementById("adminChecklistStats");
+  const adminStatTotal = document.getElementById("adminStatTotal");
+  const adminStatChecked = document.getElementById("adminStatChecked");
+  const adminStatUnchecked = document.getElementById("adminStatUnchecked");
+  const adminStatTop3 = document.getElementById("adminStatTop3");
+  const adminTabs = [...document.querySelectorAll(".admin-tab")];
+  const adminViews = [...document.querySelectorAll(".admin-panel-view")];
+  const adminFilterBtns = [...document.querySelectorAll(".admin-filter-btn")];
   const resetTimeInput = document.getElementById("resetTimeInput");
   const checklistLockTimeInput = document.getElementById("checklistLockTimeInput");
   const adminStatus = document.getElementById("adminStatus");
-  const adminCloseBtn = document.getElementById("adminCloseBtn");
   const adminSaveBtn = document.getElementById("adminSaveBtn");
   const adminChecklistRows = document.getElementById("adminChecklistRows");
   const adminAvatarRows = document.getElementById("adminAvatarRows");
+  const adminOverlay = null;
+  const adminPanel = null;
+  const adminCloseBtn = null;
 
   // Giờ reset luôn dùng định dạng 24 giờ HH:mm
   resetTimeInput.addEventListener("input", () => {
@@ -4057,7 +4071,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         renderChecklist();
 
         // Chỉ render Admin khi panel đang mở
-        if(adminOverlay.classList.contains("show")){
+        if(adminPage.classList.contains("show")){
           renderAdminChecklistEditor();
         }
 
@@ -4348,8 +4362,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
 
   function closeAdmin(){
-    adminOverlay.classList.remove("show");
-    adminOverlay.setAttribute("aria-hidden","true");
+    adminPage.classList.remove("show");
+    adminPage.setAttribute("aria-hidden","true");
+    document.body.style.overflow = "";
     if(typeof renderQuizAdminButton==="function") renderQuizAdminButton();
     syncQuickTools();
   }
@@ -4385,223 +4400,59 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
   function renderAdminChecklistEditor(){
     if(!adminChecklistRows) return;
-    adminChecklistRows.innerHTML = "";
-    const frag = document.createDocumentFragment();
-
-    names.forEach((name, i) => {
-      const row = document.createElement("div");
-      row.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);";
-
-      const label = document.createElement("div");
-      label.style.cssText = "min-width:0;flex:1;color:rgba(255,255,255,.82);font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
-      label.textContent = name || ("Người chơi " + (i+1));
-
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.textContent = checked[i] ? "✓ Đã check" : "○ Chưa check";
-      btn.style.cssText = "min-width:96px;min-height:34px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:" +
-        (checked[i] ? "linear-gradient(135deg,#4f9f76,#69b98d)" : "rgba(238,247,240,.95)") +
-        ";color:" + (checked[i] ? "#fff" : "#47725b") + ";font-size:11px;font-weight:800;box-shadow:none;";
-
-      btn.addEventListener("click", async () => {
-        const next = !checked[i];
-        btn.disabled = true;
-        try{
-          const token = AdminSession.get();
-          if(!token) throw new Error("Phiên admin đã hết hạn — vui lòng đăng nhập lại");
-          
-          const r = await window.__srankApi("adminSetCheck", {
-            token,
-            name: names[i],
-            checked: next ? "true" : "false"
-          }, TIMEOUT.FAST);
-          if(!r.ok) throw new Error(r.error || "Không cập nhật được checklist");
-
-          checked[i] = next;
-          times[i] = next
-            ? ((r.data && r.data.time) || new Intl.DateTimeFormat("vi-VN", {
-                timeZone:"Asia/Ho_Chi_Minh",
-                hour:"2-digit",
-                minute:"2-digit",
-                hour12:false
-              }).format(new Date()))
-            : "";
-
-          cacheSave();
-          renderChecklist();
-          renderAdminChecklistEditor();
-          setStatus(next ? "Đã check ✓" : "Đã bỏ check ✓");
-          adminStatus.textContent = next
-            ? `Đã check ${names[i]}`
-            : `Đã bỏ check ${names[i]}`;
-        }catch(e){
-          adminStatus.textContent = e.message || "Không cập nhật được checklist.";
-        }finally{
-          btn.disabled = false;
-        }
-      });
-
-      row.appendChild(label);
-      row.appendChild(btn);
-      frag.appendChild(row);
+    adminChecklistRows.innerHTML="";
+    if(!names.length){adminChecklistRows.innerHTML='<div class="admin-list-empty">Chưa có danh sách người chơi</div>';if(adminChecklistStats)adminChecklistStats.innerHTML="";return;}
+    const frag=document.createDocumentFragment();
+    names.forEach((name,i)=>{
+      const isChecked=!!checked[i],time=times[i]||"";
+      const row=document.createElement("div");row.className="admin-row-item"+(isChecked?" checked":"");row.dataset.name=String(name||"").toLowerCase();row.dataset.checked=isChecked?"1":"0";
+      const nameEl=document.createElement("span");nameEl.className="admin-row-name";nameEl.textContent=name||("Người chơi "+(i+1));
+      const timeEl=document.createElement("span");timeEl.className="admin-row-time"+(time?"":" empty");timeEl.textContent=time||"—";
+      const btn=document.createElement("button");btn.type="button";btn.className="admin-row-btn"+(isChecked?" checked":"");btn.textContent=isChecked?"Bỏ check":"Check";
+      btn.addEventListener("click",async()=>{const next=!checked[i];btn.disabled=true;btn.textContent="...";try{const token=AdminSession.get();if(!token)throw new Error("Phiên admin đã hết hạn");const r=await window.__srankApi("adminSetCheck",{token,name:names[i],checked:next?"true":"false"},TIMEOUT.FAST);if(!r.ok)throw new Error(r.error||"Không cập nhật được");checked[i]=next;times[i]=next?((r.data&&r.data.time)||new Intl.DateTimeFormat("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date())):"";cacheSave();renderChecklist();renderAdminChecklistEditor();renderAdminStats();setStatus(next?"Đã check ✓":"Đã bỏ check ✓")}catch(e){adminStatus.textContent=e.message||"Không cập nhật được";adminStatus.classList.remove("warn");adminStatus.classList.add("error");btn.disabled=false;btn.textContent=isChecked?"Bỏ check":"Check"}});
+      row.append(nameEl,timeEl,btn);frag.appendChild(row);
     });
-
-    adminChecklistRows.appendChild(frag);
+    adminChecklistRows.appendChild(frag);const checkedCount=checked.filter(Boolean).length;if(adminChecklistStats)adminChecklistStats.innerHTML=`<span>👥 ${names.length} người</span><span>✓ ${checkedCount} đã check</span><span>○ ${names.length-checkedCount} chưa check</span>`;applyChecklistFilter();
   }
 
   function renderAdminAvatarEditor(){
-      if(!adminAvatarRows) return;
-    adminAvatarRows.innerHTML = "";
-    const frag = document.createDocumentFragment();
-
-    names.forEach((name) => {
-      const row = document.createElement("div");
-      row.className = "admin-avatar-row";
-
-      // Preview ảnh
-      const preview = document.createElement("div");
-      preview.className = "admin-avatar-preview";
-      const url = getAvatarUrl(name);
-      if(url){
-        const img = document.createElement("img");
-        img.src = url;
-        img.alt = "";
-        img.loading = "lazy";
-        img.onerror = () => {
-          preview.innerHTML = "";
-          preview.textContent = "?"
-        };
-        preview.appendChild(img);
-      }else{
-        preview.textContent = "?"
-      }
-
-      // Info: tên + input URL
-      const info = document.createElement("div");
-      info.className = "admin-avatar-info";
-
-      const nameEl = document.createElement("div");
-      nameEl.className = "admin-avatar-name";
-      nameEl.textContent = name || "Người chơi";
-
-      const input = document.createElement("input");
-      input.type = "url";
-      input.inputMode = "url";
-      input.autocomplete = "off";
-      input.className = "admin-avatar-input";
-      input.placeholder = "Dán link ảnh https://...";
-      input.value = String(avatarLinks[name] || "").trim();
-
-      info.appendChild(nameEl);
-      info.appendChild(input);
-
-      // Nút Lưu
-      const save = document.createElement("button");
-      save.type = "button";
-      save.className = "admin-avatar-save";
-      save.textContent = "Lưu";
-
-      save.addEventListener("click", () => {
-        const value = input.value.trim();
-
-        if(!isValidImageUrl(value)){
-          adminStatus.textContent = "Link ảnh không hợp lệ — phải bắt đầu bằng http:// hoặc https://";
-          return;
-        }
-
-        if(!value){
-          delete avatarLinks[name];
-        }else{
-          avatarLinks[name] = value;
-        }
-        saveAvatarLinks();
-
-        // Avatar vừa thay đổi → ép Top 3 render lại
-        _lastTop3Signature = "";
-
-        // Cập nhật preview
-        preview.innerHTML = "";
-        if(avatarLinks[name]){
-          const img = document.createElement("img");
-          img.src = avatarLinks[name];
-          img.alt = "";
-          img.onerror = () => {
-            preview.innerHTML = "";
-            preview.textContent = "?"
-          };
-          preview.appendChild(img);
-        }else{
-          preview.textContent = "?"
-        }
-
-        adminStatus.textContent = value
-          ? `Đã lưu ảnh cho ${name} ✓`
-          : `Đã xoá ảnh của ${name}`;
-
-        // Cập nhật Top 3 nếu đang ở Home
-        if(!q1Opened && !checklistPanel.classList.contains("show") && !topPanel.classList.contains("show")){
-          renderLandingState();
-        }
-      });
-
-      row.appendChild(preview);
-      row.appendChild(info);
-      row.appendChild(save);
-      frag.appendChild(row);
-    });
-
-    adminAvatarRows.appendChild(frag);
+    if(!adminAvatarRows)return;adminAvatarRows.innerHTML="";if(!names.length){adminAvatarRows.innerHTML='<div class="admin-list-empty">Chưa có danh sách người chơi</div>';return;}
+    const frag=document.createDocumentFragment();
+    names.forEach(name=>{
+      const row=document.createElement("div");row.className="admin-avatar-row";const preview=document.createElement("div");preview.className="admin-avatar-preview";
+      const renderPreview=()=>{preview.innerHTML="";const url=getAvatarUrl(name);if(url){const img=document.createElement("img");img.src=url;img.alt="";img.loading="lazy";img.onerror=()=>{preview.innerHTML="";preview.textContent="?"};preview.appendChild(img)}else preview.textContent="?"};renderPreview();
+      const info=document.createElement("div");info.className="admin-avatar-info";const nameEl=document.createElement("div");nameEl.className="admin-avatar-name";nameEl.textContent=name||"Người chơi";const input=document.createElement("input");input.type="url";input.inputMode="url";input.autocomplete="off";input.className="admin-avatar-input";input.placeholder="https://drive.google.com/...";input.value=String(avatarLinks[name]||"").trim();info.append(nameEl,input);
+      const actions=document.createElement("div");actions.className="admin-avatar-actions";const save=document.createElement("button");save.type="button";save.className="admin-avatar-save";save.textContent="Lưu";const clear=document.createElement("button");clear.type="button";clear.className="admin-avatar-clear";clear.textContent="Xoá";
+      save.addEventListener("click",()=>{const value=input.value.trim();if(value&&!isValidImageUrl(value)){adminStatus.textContent="Link ảnh không hợp lệ";adminStatus.classList.remove("warn");adminStatus.classList.add("error");return}if(!value)delete avatarLinks[name];else avatarLinks[name]=value;saveAvatarLinks();_lastTop3Signature="";renderPreview();adminStatus.textContent=value?`Đã lưu ảnh cho ${name} ✓`:`Đã xoá ảnh của ${name}`;adminStatus.classList.remove("error","warn");if(!q1Opened&&!checklistPanel.classList.contains("show")&&!topPanel.classList.contains("show"))renderLandingState()});
+      clear.addEventListener("click",()=>{input.value="";delete avatarLinks[name];saveAvatarLinks();_lastTop3Signature="";renderPreview();adminStatus.textContent=`Đã xoá ảnh của ${name}`;adminStatus.classList.remove("error","warn");if(!q1Opened&&!checklistPanel.classList.contains("show")&&!topPanel.classList.contains("show"))renderLandingState()});
+      actions.append(save,clear);row.append(preview,info,actions);frag.appendChild(row);
+    });adminAvatarRows.appendChild(frag);
   }
 
   async function openAdminSettings(){
-    if(!AdminSession.isValid()){
-      closeAdminPassword();
-      adminUnlocked = false;
-      openAdminPassword();
-      return;
-    }
-
-    closeAdminPassword();
-    adminUnlocked = true;
-    renderMonitor();
-    renderQuizAdminButton();
-    syncQuickTools();
-
-    adminOverlay.classList.add("show");
-    adminOverlay.setAttribute("aria-hidden", "false");
-
-    // ===== Hiển thị TỨC THÌ từ cache =====
-    if(settingsCache){
-      resetTimeInput.value = settingsCache.resetTime || resetTime;
-      checklistLockTimeInput.value = settingsCache.checklistLockTime || checklistLockTime;
-      adminStatus.textContent = `Giờ reset: ${resetTime} • Giờ khoá Checklist: ${checklistLockTime}`;
-    }else{
-      resetTimeInput.value = resetTime;
-      checklistLockTimeInput.value = checklistLockTime;
-      adminStatus.textContent = "Đang tải cài đặt…";
-    }
-
-    renderLandingState();
-    renderAdminChecklistEditor();
-    renderAdminAvatarEditor();
-
-    // ===== Fetch settings ở NỀN, cập nhật khi có =====
-    getSettingsCached(false).then(s => {
-      if(!s) return;
-      resetTime = s.resetTime || resetTime;
-      resetTimeInput.value = resetTime;
-      if(isValid24hTime(s.checklistLockTime)){
-        checklistLockTime = s.checklistLockTime;
-        saveChecklistLockTime(checklistLockTime);
-      }
-      checklistLockTimeInput.value = checklistLockTime;
-      adminStatus.textContent = `Giờ reset: ${resetTime} • Giờ khoá Checklist: ${checklistLockTime}`;
-    }).catch(() => {
-      adminStatus.textContent = "Không tải được cài đặt mới. Đang dùng giá trị trên máy.";
-    });
+    if(!AdminSession.isValid()){closeAdminPassword();adminUnlocked=false;openAdminPassword();return;}
+    closeAdminPassword();adminUnlocked=true;renderMonitor();renderQuizAdminButton();syncQuickTools();
+    adminPage.classList.add("show");adminPage.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";switchAdminTab("schedule");
+    if(settingsCache){resetTimeInput.value=settingsCache.resetTime||resetTime;checklistLockTimeInput.value=settingsCache.checklistLockTime||checklistLockTime;adminStatus.textContent=`Giờ reset: ${resetTime} • Khoá: ${checklistLockTime}`}else{resetTimeInput.value=resetTime;checklistLockTimeInput.value=checklistLockTime;adminStatus.textContent="Đang tải cài đặt…"}adminStatus.classList.remove("error","warn");
+    renderAdminChecklistEditor();renderAdminAvatarEditor();renderAdminStats();
+    getSettingsCached(false).then(s=>{if(!s)return;resetTime=s.resetTime||resetTime;resetTimeInput.value=resetTime;if(isValid24hTime(s.checklistLockTime)){checklistLockTime=s.checklistLockTime;saveChecklistLockTime(checklistLockTime)}checklistLockTimeInput.value=checklistLockTime;adminStatus.textContent=`Giờ reset: ${resetTime} • Khoá: ${checklistLockTime}`;adminStatus.classList.remove("error","warn")}).catch(()=>{adminStatus.textContent="Không tải được cài đặt mới. Đang dùng giá trị trên máy.";adminStatus.classList.remove("error");adminStatus.classList.add("warn")});
   }
 
   let _adminVerifying = false;
+
+  function switchAdminTab(tabName){
+    adminTabs.forEach(t=>t.classList.toggle("active",t.dataset.adminTab===tabName));
+    adminViews.forEach(v=>v.classList.toggle("active",v.dataset.adminView===tabName));
+    if(tabName==="checklist")renderAdminChecklistEditor();else if(tabName==="avatar")renderAdminAvatarEditor();else if(tabName==="stats")renderAdminStats();
+  }
+  adminTabs.forEach(tab=>tab.addEventListener("click",()=>switchAdminTab(tab.dataset.adminTab)));
+  adminPageBack?.addEventListener("click",closeAdmin);
+  adminPageLogout?.addEventListener("click",()=>{if(confirm("Đăng xuất khỏi Admin?")){AdminSession.clear();AdminSession.forgetPassword();adminUnlocked=false;renderQuizAdminButton();closeAdmin();setStatus("Đã đăng xuất admin")}});
+  let _adminFilter="all",_adminSearchTerm="";
+  adminFilterBtns.forEach(btn=>btn.addEventListener("click",()=>{adminFilterBtns.forEach(b=>b.classList.remove("active"));btn.classList.add("active");_adminFilter=btn.dataset.filter;applyChecklistFilter()}));
+  adminChecklistSearch?.addEventListener("input",e=>{_adminSearchTerm=String(e.target.value||"").trim().toLowerCase();applyChecklistFilter()});
+  function applyChecklistFilter(){if(!adminChecklistRows)return;adminChecklistRows.querySelectorAll(".admin-row-item").forEach(row=>{const name=row.dataset.name||"",isChecked=row.dataset.checked==="1";const matchSearch=!_adminSearchTerm||name.includes(_adminSearchTerm);const matchFilter=_adminFilter==="all"||(_adminFilter==="checked"&&isChecked)||(_adminFilter==="unchecked"&&!isChecked);row.style.display=matchSearch&&matchFilter?"":"none"})}
+  function renderAdminStats(){const total=names.length,checkedCount=checked.filter(Boolean).length;if(adminStatTotal)adminStatTotal.textContent=String(total);if(adminStatChecked)adminStatChecked.textContent=String(checkedCount);if(adminStatUnchecked)adminStatUnchecked.textContent=String(total-checkedCount);if(adminStatTop3){const top3=names.map((name,i)=>({name:String(name||"").trim(),time:String(times[i]||"").trim(),checked:!!checked[i]})).filter(p=>p.checked&&p.time&&p.name).sort((a,b)=>a.time.localeCompare(b.time)).slice(0,3);adminStatTop3.innerHTML=top3.length?top3.map((p,i)=>`<div class="admin-row-item checked"><span class="admin-row-name">${["🥇","🥈","🥉"][i]} ${escapeHtml(p.name)}</span><span class="admin-row-time">${escapeHtml(p.time)}</span></div>`).join(""): '<div class="admin-list-empty">Chưa có ai check hôm nay</div>'}}
 
   async function verifyAdmin(){
     if(_adminVerifying) return;
@@ -4639,8 +4490,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         renderQuizAdminButton();
         syncQuickTools();
 
-        adminOverlay.classList.add("show");
-        adminOverlay.setAttribute("aria-hidden", "false");
+        adminPage.classList.add("show");
+        adminPage.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
         adminStatus.textContent = "Đang xác thực với server…";
 
         // Render từ cache ngay
@@ -4710,14 +4562,14 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       await AdminSession.rememberPassword(password);
 
       // Nếu UI chưa mở (máy mới) → mở luôn
-      if(!adminOverlay.classList.contains("show")){
+      if(!adminPage.classList.contains("show")){
         await openAdminSettings();
       }else{
         adminStatus.textContent = `Giờ reset: ${resetTime} • Giờ khoá Checklist: ${checklistLockTime}`;
       }
 
     }catch(e){
-      if(adminOverlay.classList.contains("show") && !AdminSession.isValid()){
+      if(adminPage.classList.contains("show") && !AdminSession.isValid()){
         closeAdmin();
         adminUnlocked = false;
         openAdminPassword();
@@ -4764,9 +4616,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   adminPasswordOverlay.addEventListener("click",e=>{if(e.target===adminPasswordOverlay) closeAdminPassword()});
   adminPasswordInput.addEventListener("keydown",e=>{if(e.key==="Enter") verifyAdmin();});
 
-  adminCloseBtn.addEventListener("click",closeAdmin);
-  adminOverlay.addEventListener("click",e=>{if(e.target===adminOverlay) closeAdmin()});
-
   adminSaveBtn.addEventListener("click",async()=>{
     const time = resetTimeInput.value.trim();
     const lockTime = checklistLockTimeInput.value.trim();
@@ -4806,6 +4655,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       _cachedLocked = isChecklistLocked();
 
       renderLandingState();
+      adminStatus.classList.remove("error","warn");
       adminStatus.textContent = `Đã lưu • Reset ${resetTime} • Khoá Checklist ${checklistLockTime}`;
     }catch(e){
       // Không coi lưu local là lưu chung. Khi server lỗi, chỉ giữ giá trị hiện tại trên máy này.
@@ -5507,7 +5357,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       renderChecklist();
       buildWheel();
 
-      if(adminOverlay.classList.contains("show")){
+      if(adminPage.classList.contains("show")){
         renderAdminChecklistEditor();
       }
 
@@ -6598,7 +6448,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       if(typeof syncQuickTools === "function") syncQuickTools(); e.preventDefault(); return;
     }
     if(kdvRulesOverlay.classList.contains("show")){ closeKdvRules(); e.preventDefault(); return; }
-    if(adminOverlay.classList.contains("show")){ closeAdmin(); e.preventDefault(); return; }
+    if(adminPage.classList.contains("show")){ closeAdmin(); e.preventDefault(); return; }
     if(adminPasswordOverlay.style.display === "flex"){ closeAdminPassword(); e.preventDefault(); return; }
 
     const attendanceNameWheel = document.getElementById("attendanceNameWheel");
@@ -6708,7 +6558,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       monitorOverlay.classList.contains("show") ||
       topPanel.classList.contains("show") ||
       checklistPanel.classList.contains("show") ||
-      adminOverlay.classList.contains("show") ||
+      adminPage.classList.contains("show") ||
       adminPasswordOverlay.style.display === "flex" ||
       linkEditorOverlay.classList.contains("show") ||
       quizOverlay.classList.contains("show") ||
