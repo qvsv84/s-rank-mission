@@ -7382,13 +7382,23 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       });
     });
 
-    Object.keys(ATTENDANCE_DATA).forEach(k => delete ATTENDANCE_DATA[k]);
-    Object.keys(map).forEach(name => ATTENDANCE_DATA[name] = map[name]);
+    // ===== MERGE: chỉ ghi đè user có trong response, không xoá user khác =====
+    Object.keys(map).forEach(name => {
+      ATTENDANCE_DATA[name] = map[name];
+    });
 
-    ATTENDANCE_EMPLOYEES = (payload?.employees || [])
-      .map(x => String(x?.name || '').trim())
-      .filter(Boolean);
-    ATTENDANCE_EMPLOYEES = [...new Set(ATTENDANCE_EMPLOYEES)];
+    // Merge danh sách nhân viên: giữ thứ tự cũ, thêm người mới vào cuối
+    const seen = new Set();
+    const merged = [];
+    (payload?.employees || []).forEach(x => {
+      const name = String(x?.name || '').trim();
+      if(name && !seen.has(name)){ seen.add(name); merged.push(name); }
+    });
+    // Giữ người cũ không có trong response (tránh mất tạm thời)
+    ATTENDANCE_EMPLOYEES.forEach(n => {
+      if(!seen.has(n)){ seen.add(n); merged.push(n); }
+    });
+    ATTENDANCE_EMPLOYEES = merged;
 
     const rawEmployees = Array.isArray(payload?.employees) ? payload.employees : [];
     rememberAttendanceRaw(year, month, rawEmployees);
@@ -7407,14 +7417,18 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     if(!cache || !Array.isArray(cache.employees)) return false;
     rememberAttendanceRaw(year, month, cache.employees);
 
-    Object.keys(ATTENDANCE_DATA).forEach(k => delete ATTENDANCE_DATA[k]);
-    ATTENDANCE_EMPLOYEES = [];
+    const prefix = year + '-' + String(month+1).padStart(2,'0') + '-';
 
     cache.employees.forEach(person => {
       const name = String(person?.name || '').trim();
       if(!name) return;
-      ATTENDANCE_EMPLOYEES.push(name);
-      ATTENDANCE_DATA[name] = {};
+      if(!ATTENDANCE_DATA[name]) ATTENDANCE_DATA[name] = {};
+
+      // Xoá data THÁNG NÀY của user (để ghi lại đúng) nhưng không xoá user khác / tháng khác
+      Object.keys(ATTENDANCE_DATA[name]).forEach(k => {
+        if(k.startsWith(prefix)) delete ATTENDANCE_DATA[name][k];
+      });
+
       const days = person?.days || {};
       Object.keys(days).forEach(day => {
         const status = String(days[day] ?? '').trim().toUpperCase();
@@ -7424,7 +7438,12 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       });
     });
 
-    ATTENDANCE_EMPLOYEES = [...new Set(ATTENDANCE_EMPLOYEES)];
+    // Merge danh sách nhân viên — không xoá người cũ
+    const seen = new Set(ATTENDANCE_EMPLOYEES);
+    cache.employees.forEach(p => {
+      const name = String(p?.name || '').trim();
+      if(name && !seen.has(name)){ seen.add(name); ATTENDANCE_EMPLOYEES.push(name); }
+    });
     syncAttendanceEmployeeControls();
     return true;
   }
