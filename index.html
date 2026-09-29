@@ -3186,7 +3186,24 @@ body #homeStack #questionWrap{
   .weekly-top-meta{ margin-bottom:6px }
   .weekly-top-extra{ padding-top:6px }
   .weekly-top-line{ font-size:10px }
-}</style>
+}
+/* =========================================================
+   HIỆU ỨNG TRƯỢT TỪ PHẢI SANG TRÁI — 4s total
+   ========================================================= */
+#homeStack .weekly-top-avatar:empty::before{content:"";display:block;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.85),rgba(255,255,255,.35) 60%,rgba(255,255,255,.15));box-shadow:inset 0 -2px 4px rgba(42,78,57,.08),0 0 6px rgba(255,255,255,.35)}
+@keyframes weeklySlideIn{0%{opacity:0;transform:translateX(100vw)}100%{opacity:1;transform:translateX(0)}}
+#homeStack #weeklyTopWrap.show .weekly-top-icon,#homeStack #weeklyTopWrap.show .weekly-top-title,#homeStack #weeklyTopWrap.show .weekly-top-name,#homeStack #weeklyTopWrap.show .weekly-top-meta .weekly-top-pill,#homeStack #weeklyTopWrap.show .weekly-top-extra .weekly-top-line{animation:weeklySlideIn 1.2s cubic-bezier(.16,.9,.25,1) both;will-change:transform,opacity}
+#homeStack #weeklyTopWrap.show .weekly-top-icon{animation-delay:0s}
+#homeStack #weeklyTopWrap.show .weekly-top-title{animation-delay:.4s}
+#homeStack #weeklyTopWrap.show .weekly-top-name{animation-delay:.8s}
+#homeStack #weeklyTopWrap.show .weekly-top-meta .weekly-top-pill:nth-child(1){animation-delay:1.2s}
+#homeStack #weeklyTopWrap.show .weekly-top-meta .weekly-top-pill:nth-child(2){animation-delay:1.6s}
+#homeStack #weeklyTopWrap.show .weekly-top-extra .weekly-top-line:nth-child(1){animation-delay:2s}
+#homeStack #weeklyTopWrap.show .weekly-top-extra .weekly-top-line:nth-child(2){animation-delay:2.4s}
+#homeStack #weeklyTopWrap.show .weekly-top-extra .weekly-top-line:nth-child(3){animation-delay:2.8s}
+#homeStack #weeklyTopWrap:not(.show) .weekly-top-icon,#homeStack #weeklyTopWrap:not(.show) .weekly-top-title,#homeStack #weeklyTopWrap:not(.show) .weekly-top-name,#homeStack #weeklyTopWrap:not(.show) .weekly-top-meta .weekly-top-pill,#homeStack #weeklyTopWrap:not(.show) .weekly-top-extra .weekly-top-line{opacity:0}
+#homeStack #weeklyTopCard{overflow:hidden}
+</style>
 </head>
 <body>
 <main id="space">
@@ -3209,7 +3226,7 @@ body #homeStack #questionWrap{
       </header>
 
       <div class="weekly-top-body">
-        <div class="weekly-top-avatar" aria-hidden="true">QT</div>
+        <div class="weekly-top-avatar" aria-hidden="true"></div>
 
         <div class="weekly-top-info">
           <div class="weekly-top-name">Quỳnh Trang</div>
