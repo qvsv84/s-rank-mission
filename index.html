@@ -3206,29 +3206,34 @@ body #homeStack #questionWrap{
 </style>
 <style id="homeStaggerAnimation">
 /* =========================================================
-   HERO CARD STAGGER ANIMATION
-   Trượt từ phải sang trái, stagger ~3.8s
+   HERO + TOP3 ANIMATION V2 — tách 2 phase độc lập
    ========================================================= */
 #question .landing-title::before{content:none !important;display:none !important}
 #question .landing-kicker{display:block;width:100%;margin:0 0 6px;color:#8ca598;font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:clamp(9px,2.3vw,11px);font-weight:900;letter-spacing:.32em;text-align:center;text-transform:uppercase;line-height:1;opacity:.85}
+#question .landing-kicker,#question .landing-title,#question .landing-cta{opacity:0}
 @keyframes heroSlideIn{0%{opacity:0;transform:translateX(100vw)}100%{opacity:1;transform:translateX(0)}}
-#question .landing-kicker,#question .landing-title,#question .landing-cta,#question .landing-top3-label .w,#question .landing-top3 .podium-slot{opacity:0}
-#question.play .landing-kicker,#question.play .landing-title,#question.play .landing-cta,#question.play .landing-top3-label .w,#question.play .landing-top3 .podium-slot{animation:heroSlideIn 1s cubic-bezier(.16,.9,.25,1) both;will-change:transform,opacity}
-#question.play .landing-kicker{animation-delay:0s}
-#question.play .landing-title{animation-delay:.5s}
-#question.play .landing-cta{animation-delay:.5s}
-#question.play .landing-top3-label .w:nth-child(1){animation-delay:.95s}
-#question.play .landing-top3-label .w:nth-child(2){animation-delay:1.25s}
-#question.play .landing-top3-label .w:nth-child(3){animation-delay:1.55s}
-#question.play .landing-top3-label .w:nth-child(4){animation-delay:1.85s}
-#question.play .landing-top3 .podium-slot[data-rank="1"]{animation-delay:2.15s}
-#question.play .landing-top3 .podium-slot[data-rank="2"]{animation-delay:2.45s}
-#question.play .landing-top3 .podium-slot[data-rank="3"]{animation-delay:2.75s}
-#question.play .landing-top3-empty{animation:heroSlideIn 1s cubic-bezier(.16,.9,.25,1) both;animation-delay:.95s}
-#question .landing-top3-label .w{display:inline-block}
-#question .landing-top3-label{overflow:hidden}
-#question .landing-top3 .podium-slot{will-change:transform,opacity}
-@media(prefers-reduced-motion:reduce){#question.play .landing-kicker,#question.play .landing-title,#question.play .landing-cta,#question.play .landing-top3-label .w,#question.play .landing-top3 .podium-slot,#question.play .landing-top3-empty{animation:none !important;opacity:1 !important;transform:none !important}}
+#question.play:not(.done-hero) .landing-kicker,#question.play:not(.done-hero) .landing-title,#question.play:not(.done-hero) .landing-cta{animation:heroSlideIn 1s cubic-bezier(.16,.9,.25,1) both;will-change:transform,opacity}
+#question.play:not(.done-hero) .landing-kicker{animation-delay:0s}
+#question.play:not(.done-hero) .landing-title{animation-delay:.5s}
+#question.play:not(.done-hero) .landing-cta{animation-delay:.5s}
+#question.done-hero .landing-kicker,#question.done-hero .landing-title,#question.done-hero .landing-cta{opacity:1;transform:translateX(0)}
+#question .landing-top3-label .w,#question .landing-top3 .podium-slot,#question .landing-top3-empty{opacity:0;transform:translateY(10px);transition:opacity .55s cubic-bezier(.16,.9,.25,1),transform .55s cubic-bezier(.16,.9,.25,1);will-change:opacity,transform}
+#question.top3-in .landing-top3-label .w,#question.top3-in .landing-top3 .podium-slot,#question.top3-in .landing-top3-empty{opacity:1;transform:translateY(0)}
+#question.top3-in .landing-top3-label .w:nth-child(1){transition-delay:0s}
+#question.top3-in .landing-top3-label .w:nth-child(2){transition-delay:.1s}
+#question.top3-in .landing-top3-label .w:nth-child(3){transition-delay:.2s}
+#question.top3-in .landing-top3-label .w:nth-child(4){transition-delay:.3s}
+#question.top3-in .landing-top3 .podium-slot[data-rank="1"]{transition-delay:.45s}
+#question.top3-in .landing-top3 .podium-slot[data-rank="2"]{transition-delay:.58s}
+#question.top3-in .landing-top3 .podium-slot[data-rank="3"]{transition-delay:.71s}
+.landing-top3.skeleton .podium-slot{opacity:1 !important;transform:translateY(0) !important;pointer-events:none}
+.landing-top3.skeleton .podium-avatar,.landing-top3.skeleton .podium-medal,.landing-top3.skeleton .podium-name,.landing-top3.skeleton .podium-time{background:linear-gradient(90deg,#e8f0e6 0%,#f4f8f2 50%,#e8f0e6 100%);background-size:200% 100%;animation:skeletonShimmer 1.4s ease-in-out infinite;color:transparent !important;-webkit-text-fill-color:transparent !important;border-color:transparent !important;box-shadow:none !important}
+.landing-top3.skeleton .podium-avatar img{visibility:hidden}
+.landing-top3.skeleton .podium-medal{width:26px;height:26px;border-radius:50%}
+.landing-top3.skeleton .podium-name{height:12px;border-radius:4px;max-width:70%;margin:0 auto}
+.landing-top3.skeleton .podium-time{height:14px;width:42px;border-radius:999px}
+.landing-top3.skeleton .podium-slot.rank-1 .podium-medal{width:30px;height:30px}
+@media(prefers-reduced-motion:reduce){#question.play:not(.done-hero) .landing-kicker,#question.play:not(.done-hero) .landing-title,#question.play:not(.done-hero) .landing-cta{animation:none !important;opacity:1 !important;transform:none !important}#question .landing-top3-label .w,#question .landing-top3 .podium-slot,#question .landing-top3-empty{opacity:1 !important;transform:none !important;transition:none !important}}
 </style>
 </head>
 <body>
@@ -5938,7 +5943,19 @@ body #homeStack #questionWrap{
     // ===== Xây HTML Top 3 =====
     let top3HTML = "";
 
-    if(top3.length === 0){
+    // Nếu chưa load data lần đầu → hiện skeleton
+    const isFirstLoad = !initialSheetLoaded && !names.length;
+
+    if(isFirstLoad){
+      top3HTML = `
+        <span class="landing-top3-label"><span class="w">TOP</span> <span class="w">CHECK</span> <span class="w">SỚM</span> <span class="w">NHẤT</span></span>
+        <div class="landing-top3 skeleton">
+          <div class="podium-slot rank-2" data-rank="2"><span class="podium-avatar"><span class="podium-avatar-fallback show">?</span></span><span class="podium-medal">🥈</span><span class="podium-name">—</span><span class="podium-time">--:--</span></div>
+          <div class="podium-slot rank-1" data-rank="1"><span class="podium-avatar"><span class="podium-avatar-fallback show">?</span></span><span class="podium-medal">🥇</span><span class="podium-name">—</span><span class="podium-time">--:--</span></div>
+          <div class="podium-slot rank-3" data-rank="3"><span class="podium-avatar"><span class="podium-avatar-fallback show">?</span></span><span class="podium-medal">🥉</span><span class="podium-name">—</span><span class="podium-time">--:--</span></div>
+        </div>
+      `;
+    }else if(top3.length === 0){
       top3HTML = `<div class="landing-top3-empty">Chưa có ai check hôm nay — hãy là người đầu tiên! 🐱</div>`;
     }else{
       const podiumOrder = [];
@@ -6025,6 +6042,11 @@ body #homeStack #questionWrap{
 
     // ===== Hiện card TOP LEO RANK TUẦN =====
     document.getElementById("weeklyTopWrap")?.classList.add("show");
+
+    // ===== Trigger reveal Top 3 nếu đã có data thật (không phải skeleton) =====
+    if(!isFirstLoad && !_top3Revealed){
+      revealTop3();
+    }
   }
 
   function openQuestion1(e){
@@ -6519,24 +6541,44 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
     hint.textContent = isChecklistLocked() ? "" : (names.length ? "Chạm vào câu hỏi" : "Đang tải dữ liệu…");
     renderWheel();
-
-    // Trigger animation stagger
-    playHomeAnimation();
+    // (không trigger animation ở đây — animation đã chạy 1 lần lúc init)
   }
 
-  // ===== Animation trigger cho hero card =====
-  function playHomeAnimation(){
+  // ===== Animation trigger =====
+  let _heroAnimationPlayed = false;
+  let _top3Revealed = false;
+
+  function playHeroAnimation(){
+    if(_heroAnimationPlayed) return;
+    _heroAnimationPlayed = true;
+
     const q = document.getElementById("question");
     if(!q) return;
 
-    // Xoá class cũ để reset animation
-    q.classList.remove("play");
-
-    // Force reflow — bắt buộc để animation chạy lại
+    q.classList.remove("play", "done-hero");
     void q.offsetWidth;
-
-    // Add lại class để kích hoạt animation
     q.classList.add("play");
+
+    // Sau khi animation hero chạy xong (~1.5s + buffer) → đánh dấu done
+    setTimeout(() => {
+      q.classList.add("done-hero");
+      q.classList.remove("play");
+    }, 2000);
+  }
+
+  function revealTop3(){
+    if(_top3Revealed) return;
+    _top3Revealed = true;
+
+    const q = document.getElementById("question");
+    if(!q) return;
+
+    // Đợi 2 frame để CSS kịp apply opacity 0 ban đầu
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        q.classList.add("top3-in");
+      });
+    });
   }
 
   homeBtn.addEventListener("click", () => {
@@ -6621,8 +6663,8 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   checklistLockTimeInput.value = checklistLockTime;
   renderLandingState();
 
-  // Trigger animation lần đầu
-  setTimeout(playHomeAnimation, 50);
+  // Trigger hero animation sau khi nav bar render xong
+  setTimeout(playHeroAnimation, 300);
 
   // ===== Gọi loadData TRƯỚC (không await) =====
   // getSettings sẽ chờ loadData xong mới gọi → tránh 2 request song song
