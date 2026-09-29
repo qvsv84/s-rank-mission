@@ -18,7 +18,7 @@ button{font:inherit}
 #space{position:relative;width:100%;height:100%;overflow:hidden;background:
 radial-gradient(circle at 50% 50%,rgba(90,168,120,.10),transparent 27%),
 radial-gradient(circle at 50% 50%,#080812 0,#020207 58%,#000 100%)}
-#questionWrap{position:absolute;left:50%;top:36%;z-index:10;width:min(92vw,650px);transform:translate(-50%,-50%);text-align:center}
+
 #counter{display:none !important;font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.45);margin-bottom:16px}
 #question{color:#fff;font-size:clamp(25px,7vw,54px);font-weight:750;line-height:1.18;
 text-shadow:0 0 6px #fff,0 0 18px #5aa878,0 0 42px #5aa878;cursor:pointer;user-select:none;
@@ -2323,7 +2323,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
   #secondaryNav{top:clamp(64px,14vw,76px)!important}
   #bottomNav button,#secondaryNav button{min-height:43px!important;font-size:clamp(8.6px,2.35vw,10px)!important;border-radius:14px!important}
   #connectionState{top:clamp(116px,23vw,130px)!important}
-  #questionWrap{top:44%!important;width:calc(100vw - 24px)!important}
+  
   #question .landing-title{font-size:clamp(29px,8.2vw,48px)!important;letter-spacing:-.045em!important}
   #question .landing-cta{min-height:46px!important;padding:9px 23px!important}
 }
@@ -2408,7 +2408,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 }
 
 /* Hero: stronger hierarchy, softer than neon */
-#questionWrap{top:43%!important;width:min(94vw,820px)!important}
+
 #question{
   gap:17px!important;animation:none!important;filter:none!important;
 }
@@ -2506,7 +2506,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 @media(max-width:600px){
   #bottomNav,#secondaryNav{width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important}
   #bottomNav button,#secondaryNav button{min-height:43px!important}
-  #questionWrap{top:43%!important;width:calc(100vw - 20px)!important}
+  
   #question .landing-title{font-size:clamp(28px,8vw,48px)!important}
   #question .landing-title::before{font-size:8px!important;letter-spacing:.22em!important}
   #question .landing-cta{min-height:47px!important}
@@ -3105,35 +3105,246 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .att-icon-btn.spinning{animation:attSpin 1s linear infinite;pointer-events:none}@keyframes attSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 #attendanceStatusPanel{will-change:transform;-webkit-overflow-scrolling:touch}
 </style>
-<style id="weeklyTopCard">
+<style id="homeStackLayout">
 /* =========================================================
-   TOP LEO RANK TUẦN — card nằm dưới hero card
+   HOME STACK — flex column, ổn định mọi màn hình
    ========================================================= */
 
-#weeklyTopWrap{position:absolute;left:50%;top:70%;transform:translateX(-50%) scale(.94);z-index:9;width:min(88vw,440px);opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s cubic-bezier(.16,.9,.25,1)}
-#weeklyTopWrap.show{opacity:1;pointer-events:auto;transform:translateX(-50%) scale(1)}
-#weeklyTopCard{position:relative;padding:14px 18px 15px;border-radius:22px;background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(255,255,255,.98) 0%,rgba(255,255,255,.72) 45%,transparent 78%),linear-gradient(180deg,rgba(255,255,255,.95) 0%,rgba(248,252,246,.92) 55%,rgba(241,249,239,.90) 100%);border:1px solid rgba(120,175,135,.18);box-shadow:0 18px 44px -18px rgba(42,78,57,.16),0 8px 24px -10px rgba(42,78,57,.10),0 1px 3px rgba(42,78,57,.04),inset 0 1px 0 rgba(255,255,255,.95);backdrop-filter:blur(20px) saturate(120%);-webkit-backdrop-filter:blur(20px) saturate(120%);overflow:hidden}
-#weeklyTopCard::before{content:"";position:absolute;top:-60%;right:-30%;width:180%;height:180%;background:radial-gradient(circle at 70% 15%,rgba(239,212,138,.16) 0%,transparent 40%);pointer-events:none;z-index:0}
-#weeklyTopCard > *{position:relative;z-index:1}
-.weekly-top-header{display:flex;align-items:center;justify-content:center;gap:7px;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid rgba(120,175,135,.14)}
-.weekly-top-icon{font-size:15px;line-height:1;filter:drop-shadow(0 2px 3px rgba(239,212,138,.45))}
-.weekly-top-title{font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:10.5px;font-weight:950;letter-spacing:.22em;color:#5c8a6d;text-transform:uppercase;line-height:1}
-.weekly-top-body{display:flex;align-items:center;gap:14px}
-.weekly-top-avatar{flex:0 0 auto;width:54px;height:54px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(135deg,#a8d5b5 0%,#7bb98f 100%);color:#fff;font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:18px;font-weight:950;letter-spacing:-.04em;text-shadow:0 1px 2px rgba(42,78,57,.18);border:2.5px solid #fff;box-shadow:0 6px 16px -4px rgba(79,155,112,.35),0 2px 6px -1px rgba(42,78,57,.12),inset 0 1px 0 rgba(255,255,255,.35);position:relative}
-.weekly-top-avatar::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:1.5px dashed rgba(79,155,112,.25);pointer-events:none}
-.weekly-top-info{flex:1;min-width:0}
-.weekly-top-name{font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:17px;font-weight:950;color:#245943;letter-spacing:-.025em;line-height:1.05;margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.weekly-top-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.weekly-top-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px 4px 8px;border-radius:999px;background:linear-gradient(135deg,rgba(79,155,112,.09),rgba(79,155,112,.05));border:1px solid rgba(79,155,112,.14);color:#3d7653;font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:11px;font-weight:850;letter-spacing:-.005em;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
-.weekly-top-pill.zodiac{background:linear-gradient(135deg,rgba(239,212,138,.22),rgba(239,212,138,.10));border-color:rgba(216,168,104,.28);color:#8a6500}
-.weekly-top-details{display:flex;flex-direction:column;gap:4px;margin-top:8px;color:#527461;font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:10.5px;font-weight:700;line-height:1.35}
-.weekly-top-detail{display:block;white-space:normal;overflow-wrap:anywhere}
-.weekly-top-detail b{font-weight:950;color:#35694c}
-.meta-icon{font-size:11px;line-height:1;filter:saturate(1.05)}
-.zodiac-symbol{font-size:14px;line-height:1;font-weight:900;color:#a5762e}
-@media(max-width:600px){#weeklyTopWrap{top:72%;width:calc(100vw - 32px)}#weeklyTopCard{padding:13px 16px 14px;border-radius:20px}.weekly-top-avatar{width:50px;height:50px;font-size:17px}.weekly-top-name{font-size:16px}.weekly-top-pill{font-size:10.5px;padding:3px 9px 3px 7px}}
-@media(max-width:390px){#weeklyTopCard{padding:12px 14px 13px}.weekly-top-avatar{width:46px;height:46px;font-size:15px;border-width:2px}.weekly-top-body{gap:12px}.weekly-top-name{font-size:15px}.weekly-top-meta{gap:5px}.weekly-top-pill{font-size:10px}}
-@keyframes weeklyTopIn{from{opacity:0;transform:translateX(-50%) translateY(8px) scale(.94)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+#homeStack{
+  position:absolute;
+  left:50%;
+  top:calc(env(safe-area-inset-top) + 170px);
+  bottom:calc(env(safe-area-inset-bottom) + 90px);
+  transform:translateX(-50%);
+  width:min(94vw, 560px);
+  max-width:560px;
+  z-index:9;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+
+  pointer-events:none;
+  padding:12px 0;
+  box-sizing:border-box;
+}
+#homeStack::-webkit-scrollbar{ display:none }
+
+#homeStack #questionWrap,
+body #homeStack #questionWrap{
+  position:static !important;
+  left:auto !important;
+  top:auto !important;
+  transform:none !important;
+  width:100% !important;
+  max-width:100% !important;
+  z-index:auto !important;
+  text-align:center;
+  pointer-events:none;
+  margin:0 !important;
+}
+#homeStack #question{
+  pointer-events:auto;
+}
+
+#homeStack #weeklyTopWrap{
+  position:static !important;
+  left:auto !important;
+  top:auto !important;
+  transform:none !important;
+  width:100% !important;
+  max-width:100% !important;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .35s ease;
+}
+#homeStack #weeklyTopWrap.show{
+  opacity:1;
+  pointer-events:auto;
+}
+#homeStack #weeklyTopCard{
+  pointer-events:auto;
+}
+
+#weeklyTopCard{
+  position:relative;
+  padding:14px 16px 15px;
+  border-radius:22px;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255,255,255,.98) 0%, rgba(255,255,255,.72) 45%, transparent 78%),
+    linear-gradient(180deg, rgba(255,255,255,.95) 0%, rgba(248,252,246,.92) 55%, rgba(241,249,239,.90) 100%);
+  border:1px solid rgba(120,175,135,.18);
+  box-shadow:
+    0 18px 44px -18px rgba(42,78,57,.16),
+    0 8px 24px -10px rgba(42,78,57,.10),
+    0 1px 3px rgba(42,78,57,.04),
+    inset 0 1px 0 rgba(255,255,255,.95);
+  backdrop-filter:blur(20px) saturate(120%);
+  -webkit-backdrop-filter:blur(20px) saturate(120%);
+  overflow:hidden;
+}
+#weeklyTopCard::before{
+  content:"";
+  position:absolute;
+  top:-60%; right:-30%;
+  width:180%; height:180%;
+  background:radial-gradient(circle at 70% 15%, rgba(239,212,138,.16) 0%, transparent 40%);
+  pointer-events:none;
+  z-index:0;
+}
+#weeklyTopCard > *{ position:relative; z-index:1 }
+
+.weekly-top-header{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding-bottom:10px;
+  margin-bottom:12px;
+  border-bottom:1px solid rgba(120,175,135,.14);
+}
+.weekly-top-icon{
+  font-size:15px;
+  line-height:1;
+  filter:drop-shadow(0 2px 3px rgba(239,212,138,.45));
+}
+.weekly-top-title{
+  font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;
+  font-size:10.5px;
+  font-weight:950;
+  letter-spacing:.22em;
+  color:#5c8a6d;
+  text-transform:uppercase;
+  line-height:1;
+}
+
+.weekly-top-body{
+  display:grid;
+  grid-template-columns:54px minmax(0,1fr);
+  gap:14px;
+  align-items:start;
+}
+
+.weekly-top-avatar{
+  width:54px;height:54px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+  background:linear-gradient(135deg, #a8d5b5 0%, #7bb98f 100%);
+  color:#fff;
+  font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;
+  font-size:18px;font-weight:950;
+  letter-spacing:-.04em;
+  text-shadow:0 1px 2px rgba(42,78,57,.18);
+  border:2.5px solid #fff;
+  box-shadow:
+    0 6px 16px -4px rgba(79,155,112,.35),
+    0 2px 6px -1px rgba(42,78,57,.12),
+    inset 0 1px 0 rgba(255,255,255,.35);
+  position:relative;
+  flex:0 0 auto;
+  margin-top:2px;
+}
+
+.weekly-top-info{ min-width:0 }
+
+.weekly-top-name{
+  font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;
+  font-size:17px;font-weight:950;
+  color:#245943;
+  letter-spacing:-.025em;
+  line-height:1.05;
+  margin-bottom:8px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+.weekly-top-meta{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.weekly-top-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:4px 10px 4px 8px;
+  border-radius:999px;
+  background:linear-gradient(135deg, rgba(79,155,112,.09), rgba(79,155,112,.05));
+  border:1px solid rgba(79,155,112,.14);
+  color:#3d7653;
+  font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;
+  font-size:11px;font-weight:850;
+  line-height:1;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.weekly-top-pill.zodiac{
+  background:linear-gradient(135deg, rgba(239,212,138,.22), rgba(239,212,138,.10));
+  border-color:rgba(216,168,104,.28);
+  color:#8a6500;
+}
+.meta-icon{ font-size:11px;line-height:1 }
+.zodiac-symbol{
+  font-size:14px;line-height:1;font-weight:900;
+  color:#a5762e;
+}
+
+.weekly-top-extra{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  padding-top:9px;
+  border-top:1px dashed rgba(120,175,135,.22);
+}
+.weekly-top-line{
+  font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;
+  font-size:11.5px;
+  line-height:1.35;
+  color:#4a6553;
+  font-weight:650;
+}
+.weekly-top-line b{
+  color:#2f6b4f;
+  font-weight:900;
+  margin-right:3px;
+}
+
+@media(max-width:600px){
+  #homeStack{
+    top:calc(env(safe-area-inset-top) + 160px);
+    bottom:calc(env(safe-area-inset-bottom) + 84px);
+    width:calc(100vw - 32px);
+    gap:14px;
+  }
+  #weeklyTopCard{ padding:13px 15px 14px; border-radius:20px }
+  .weekly-top-body{ grid-template-columns:50px minmax(0,1fr); gap:12px }
+  .weekly-top-avatar{ width:50px;height:50px;font-size:17px }
+  .weekly-top-name{ font-size:16px }
+  .weekly-top-pill{ font-size:10.5px;padding:3px 9px 3px 7px }
+  .weekly-top-line{ font-size:11px }
+}
+
+@media(max-width:390px){
+  #homeStack{
+    top:calc(env(safe-area-inset-top) + 155px);
+    bottom:calc(env(safe-area-inset-bottom) + 78px);
+    width:calc(100vw - 24px);
+  }
+  #weeklyTopCard{ padding:12px 13px 13px }
+  .weekly-top-body{ grid-template-columns:46px minmax(0,1fr); gap:10px }
+  .weekly-top-avatar{ width:46px;height:46px;font-size:15px;border-width:2px }
+  .weekly-top-name{ font-size:15px }
+  .weekly-top-pill{ font-size:10px }
+  .weekly-top-line{ font-size:10.5px }
+}
 </style>
 </head>
 <body>
@@ -3142,45 +3353,48 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 <div id="connectionState" class="off"><span class="dot"></span><span id="connectionText">Đang kết nối…</span></div>
 <div id="appVersion" aria-label="Phiên bản">v1.04</div>
 
-<div id="questionWrap">
-  <div id="counter">CÂU 1</div>
-  <div id="question"><span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta">CLICK HERE</span></div>
-</div>
+<div id="homeStack">
 
-<!-- ===== TOP LEO RANK TUẦN ===== -->
-<div id="weeklyTopWrap" aria-label="Top leo rank tuần">
-  <article id="weeklyTopCard">
-    <header class="weekly-top-header">
-      <span class="weekly-top-icon" aria-hidden="true">🏆</span>
-      <span class="weekly-top-title">TOP LEO RANK TUẦN</span>
-    </header>
+  <div id="questionWrap">
+    <div id="counter">CÂU 1</div>
+    <div id="question"><span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta">CLICK HERE</span></div>
+  </div>
 
-    <div class="weekly-top-body">
-      <div class="weekly-top-avatar" aria-hidden="true">QT</div>
+  <div id="weeklyTopWrap" aria-label="Top leo rank tuần">
+    <article id="weeklyTopCard">
+      <header class="weekly-top-header">
+        <span class="weekly-top-icon" aria-hidden="true">🏆</span>
+        <span class="weekly-top-title">TOP LEO RANK TUẦN</span>
+      </header>
 
-      <div class="weekly-top-info">
-        <div class="weekly-top-name">Quỳnh Trang</div>
+      <div class="weekly-top-body">
+        <div class="weekly-top-avatar" aria-hidden="true">QT</div>
 
-        <div class="weekly-top-meta">
-          <span class="weekly-top-pill">
-            <span class="meta-icon" aria-hidden="true">🎂</span>
-            <span>07/05/2005</span>
-          </span>
+        <div class="weekly-top-info">
+          <div class="weekly-top-name">Quỳnh Trang</div>
 
-          <span class="weekly-top-pill zodiac">
-            <span class="zodiac-symbol" aria-hidden="true">♉</span>
-            <span>Kim Ngưu</span>
-          </span>
-        </div>
+          <div class="weekly-top-meta">
+            <span class="weekly-top-pill">
+              <span class="meta-icon" aria-hidden="true">🎂</span>
+              <span>07/05/2005</span>
+            </span>
 
-        <div class="weekly-top-details">
-          <span class="weekly-top-detail"><b>Chiều cao:</b> 1m5</span>
-          <span class="weekly-top-detail"><b>Sở thích:</b> săn hồng hài nhi</span>
-          <span class="weekly-top-detail"><b>Tính cách:</b> Hướng nội, ít nội, im im</span>
+            <span class="weekly-top-pill zodiac">
+              <span class="zodiac-symbol" aria-hidden="true">♉</span>
+              <span>Kim Ngưu</span>
+            </span>
+          </div>
+
+          <div class="weekly-top-extra">
+            <div class="weekly-top-line"><b>Chiều cao:</b> 1m5</div>
+            <div class="weekly-top-line"><b>Sở thích:</b> sẵn hồng hài nhi</div>
+            <div class="weekly-top-line"><b>Tính cách:</b> Hướng nội, ít nói, im im</div>
+          </div>
         </div>
       </div>
-    </div>
-  </article>
+    </article>
+  </div>
+
 </div>
 
 <div id="wheelArea">
