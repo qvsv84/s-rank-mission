@@ -7231,10 +7231,16 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     let nm = m + 1, ny = y;
     if(nm > 11){ nm = 0; ny = y + 1; }
 
-    const tasks = [
-      { year: py, month: pm + 1 },
-      { year: ny, month: nm + 1 }
-    ];
+    // Preload ±2 tháng để khi user bấm liên tiếp không phải chờ
+    const tasks = [];
+    for(let offset = -2; offset <= 2; offset++){
+      if(offset === 0) continue;
+      let ny2 = y;
+      let nm2 = m + offset;
+      while(nm2 < 0){ nm2 += 12; ny2 -= 1; }
+      while(nm2 > 11){ nm2 -= 12; ny2 += 1; }
+      tasks.push({ year: ny2, month: nm2 + 1 });
+    }
 
     for(const t of tasks){
       const cacheKey = t.year + '-' + t.month;
@@ -7496,17 +7502,18 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     }
 
     if(force){
-      setAttendanceSyncStatus('warn','Đang đồng bộ từ Google Sheet…');
+      // Chỉ sync button mới hiện "đang đồng bộ" rõ ràng
       attendanceSyncBtn?.classList.add('busy');
-      if(attendanceSyncBtn) attendanceSyncBtn.textContent = '↻ Đang đồng bộ…';
+      setAttendanceFooterState?.('syncing', 'Đang đồng bộ…') ||
+        setAttendanceSyncStatus('warn', 'Đang đồng bộ…');
     }else{
-      const hasCache = applyAttendanceCache(y, m);
-      if(hasCache){
-        setAttendanceSyncStatus('warn','Đang dùng dữ liệu đã lưu • đang kiểm tra máy chủ…');
-      }else{
-        setAttendanceSyncStatus('warn','Đang tải danh sách nhân viên…');
+      // Non-force: goToMonth đã render rồi → chỉ fetch nền,
+      // không báo "đang tải" gây cảm giác chờ đợi.
+      // Nếu chưa có cache nào, mới cần apply cache (lần đầu vào page).
+      if(!ATTENDANCE_EMPLOYEES.length){
+        applyAttendanceCache(y, m);
+        render();
       }
-      render();
     }
 
     const promise = (async()=>{
@@ -8184,7 +8191,21 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     viewDate.setMonth(viewDate.getMonth() + delta);
     attendanceLoadPromise = null;
     attendanceLoadPromiseKey = '';
-    loadAttendanceMonth(false);
+
+    const y = viewDate.getFullYear();
+    const m = viewDate.getMonth();
+
+    // ===== Bước 1: áp cache + render NGAY (0ms) =====
+    const hasCache = applyAttendanceCache(y, m);
+    if(!hasCache){
+      // Không có cache → xoá data cũ để grid hiện trống
+      // (nếu giữ data cũ sẽ hiện sai trạng thái của tháng khác)
+      Object.keys(ATTENDANCE_DATA).forEach(k => delete ATTENDANCE_DATA[k]);
+    }
+    render();
+
+    // ===== Bước 2: fetch nền, không chặn UI =====
+    loadAttendanceMonth(false).catch(() => {});
   }
 
   prev.addEventListener('click',()=>{
