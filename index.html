@@ -3188,52 +3188,46 @@ body #homeStack #questionWrap{
   .weekly-top-line{ font-size:10px }
 }
 /* =========================================================
-   HIỆU ỨNG TRƯỢT TỪ PHẢI SANG TRÁI — 4s total
+   HIỆU ỨNG TRƯỢT TỪ PHẢI SANG TRÁI — v2 (~2.2s)
    ========================================================= */
 #homeStack .weekly-top-avatar:empty::before{content:"";display:block;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.85),rgba(255,255,255,.35) 60%,rgba(255,255,255,.15));box-shadow:inset 0 -2px 4px rgba(42,78,57,.08),0 0 6px rgba(255,255,255,.35)}
 @keyframes weeklySlideIn{0%{opacity:0;transform:translateX(100vw)}100%{opacity:1;transform:translateX(0)}}
-#homeStack #weeklyTopWrap.show .weekly-top-icon,#homeStack #weeklyTopWrap.show .weekly-top-title,#homeStack #weeklyTopWrap.show .weekly-top-name,#homeStack #weeklyTopWrap.show .weekly-top-meta .weekly-top-pill,#homeStack #weeklyTopWrap.show .weekly-top-extra .weekly-top-line{animation:weeklySlideIn 1.2s cubic-bezier(.16,.9,.25,1) both;will-change:transform,opacity}
+#homeStack #weeklyTopWrap.show .weekly-top-icon,#homeStack #weeklyTopWrap.show .weekly-top-title,#homeStack #weeklyTopWrap.show .weekly-top-name,#homeStack #weeklyTopWrap.show .weekly-top-meta .weekly-top-pill,#homeStack #weeklyTopWrap.show .weekly-top-extra .weekly-top-line{animation:weeklySlideIn .7s cubic-bezier(.16,.9,.25,1) both;will-change:transform,opacity}
 #homeStack #weeklyTopWrap.show .weekly-top-icon{animation-delay:0s}
-#homeStack #weeklyTopWrap.show .weekly-top-title{animation-delay:.4s}
-#homeStack #weeklyTopWrap.show .weekly-top-name{animation-delay:.8s}
-#homeStack #weeklyTopWrap.show .weekly-top-meta .weekly-top-pill:nth-child(1){animation-delay:1.2s}
-#homeStack #weeklyTopWrap.show .weekly-top-meta .weekly-top-pill:nth-child(2){animation-delay:1.6s}
-#homeStack #weeklyTopWrap.show .weekly-top-extra .weekly-top-line:nth-child(1){animation-delay:2s}
-#homeStack #weeklyTopWrap.show .weekly-top-extra .weekly-top-line:nth-child(2){animation-delay:2.4s}
-#homeStack #weeklyTopWrap.show .weekly-top-extra .weekly-top-line:nth-child(3){animation-delay:2.8s}
+#homeStack #weeklyTopWrap.show .weekly-top-title{animation-delay:.15s}
+#homeStack #weeklyTopWrap.show .weekly-top-name{animation-delay:.35s}
+#homeStack #weeklyTopWrap.show .weekly-top-meta .weekly-top-pill:nth-child(1){animation-delay:.60s}
+#homeStack #weeklyTopWrap.show .weekly-top-meta .weekly-top-pill:nth-child(2){animation-delay:.82s}
+#homeStack #weeklyTopWrap.show .weekly-top-extra .weekly-top-line:nth-child(1){animation-delay:1.04s}
+#homeStack #weeklyTopWrap.show .weekly-top-extra .weekly-top-line:nth-child(2){animation-delay:1.26s}
+#homeStack #weeklyTopWrap.show .weekly-top-extra .weekly-top-line:nth-child(3){animation-delay:1.48s}
 #homeStack #weeklyTopWrap:not(.show) .weekly-top-icon,#homeStack #weeklyTopWrap:not(.show) .weekly-top-title,#homeStack #weeklyTopWrap:not(.show) .weekly-top-name,#homeStack #weeklyTopWrap:not(.show) .weekly-top-meta .weekly-top-pill,#homeStack #weeklyTopWrap:not(.show) .weekly-top-extra .weekly-top-line{opacity:0}
 #homeStack #weeklyTopCard{overflow:hidden}
 </style>
 <style id="homeStaggerAnimation">
 /* =========================================================
-   HERO + TOP3 ANIMATION V2 — tách 2 phase độc lập
+   HERO CARD STAGGER ANIMATION — v2 (nhanh hơn, ~2.7s)
    ========================================================= */
 #question .landing-title::before{content:none !important;display:none !important}
 #question .landing-kicker{display:block;width:100%;margin:0 0 6px;color:#8ca598;font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:clamp(9px,2.3vw,11px);font-weight:900;letter-spacing:.32em;text-align:center;text-transform:uppercase;line-height:1;opacity:.85}
-#question .landing-kicker,#question .landing-title,#question .landing-cta{opacity:0}
 @keyframes heroSlideIn{0%{opacity:0;transform:translateX(100vw)}100%{opacity:1;transform:translateX(0)}}
-#question.play:not(.done-hero) .landing-kicker,#question.play:not(.done-hero) .landing-title,#question.play:not(.done-hero) .landing-cta{animation:heroSlideIn 1s cubic-bezier(.16,.9,.25,1) both;will-change:transform,opacity}
-#question.play:not(.done-hero) .landing-kicker{animation-delay:0s}
-#question.play:not(.done-hero) .landing-title{animation-delay:.5s}
-#question.play:not(.done-hero) .landing-cta{animation-delay:.5s}
-#question.done-hero .landing-kicker,#question.done-hero .landing-title,#question.done-hero .landing-cta{opacity:1;transform:translateX(0)}
-#question .landing-top3-label .w,#question .landing-top3 .podium-slot,#question .landing-top3-empty{opacity:0;transform:translateY(10px);transition:opacity .55s cubic-bezier(.16,.9,.25,1),transform .55s cubic-bezier(.16,.9,.25,1);will-change:opacity,transform}
-#question.top3-in .landing-top3-label .w,#question.top3-in .landing-top3 .podium-slot,#question.top3-in .landing-top3-empty{opacity:1;transform:translateY(0)}
-#question.top3-in .landing-top3-label .w:nth-child(1){transition-delay:0s}
-#question.top3-in .landing-top3-label .w:nth-child(2){transition-delay:.1s}
-#question.top3-in .landing-top3-label .w:nth-child(3){transition-delay:.2s}
-#question.top3-in .landing-top3-label .w:nth-child(4){transition-delay:.3s}
-#question.top3-in .landing-top3 .podium-slot[data-rank="1"]{transition-delay:.45s}
-#question.top3-in .landing-top3 .podium-slot[data-rank="2"]{transition-delay:.58s}
-#question.top3-in .landing-top3 .podium-slot[data-rank="3"]{transition-delay:.71s}
-.landing-top3.skeleton .podium-slot{opacity:1 !important;transform:translateY(0) !important;pointer-events:none}
-.landing-top3.skeleton .podium-avatar,.landing-top3.skeleton .podium-medal,.landing-top3.skeleton .podium-name,.landing-top3.skeleton .podium-time{background:linear-gradient(90deg,#e8f0e6 0%,#f4f8f2 50%,#e8f0e6 100%);background-size:200% 100%;animation:skeletonShimmer 1.4s ease-in-out infinite;color:transparent !important;-webkit-text-fill-color:transparent !important;border-color:transparent !important;box-shadow:none !important}
-.landing-top3.skeleton .podium-avatar img{visibility:hidden}
-.landing-top3.skeleton .podium-medal{width:26px;height:26px;border-radius:50%}
-.landing-top3.skeleton .podium-name{height:12px;border-radius:4px;max-width:70%;margin:0 auto}
-.landing-top3.skeleton .podium-time{height:14px;width:42px;border-radius:999px}
-.landing-top3.skeleton .podium-slot.rank-1 .podium-medal{width:30px;height:30px}
-@media(prefers-reduced-motion:reduce){#question.play:not(.done-hero) .landing-kicker,#question.play:not(.done-hero) .landing-title,#question.play:not(.done-hero) .landing-cta{animation:none !important;opacity:1 !important;transform:none !important}#question .landing-top3-label .w,#question .landing-top3 .podium-slot,#question .landing-top3-empty{opacity:1 !important;transform:none !important;transition:none !important}}
+#question .landing-kicker,#question .landing-title,#question .landing-cta,#question .landing-top3-label .w,#question .landing-top3 .podium-slot{opacity:0}
+#question.play .landing-kicker,#question.play .landing-title,#question.play .landing-cta,#question.play .landing-top3-label .w,#question.play .landing-top3 .podium-slot{animation:heroSlideIn .7s cubic-bezier(.16,.9,.25,1) both;will-change:transform,opacity}
+#question.play .landing-kicker{animation-delay:0s}
+#question.play .landing-title{animation-delay:.35s}
+#question.play .landing-cta{animation-delay:.70s}
+#question.play .landing-top3-label .w:nth-child(1){animation-delay:.95s}
+#question.play .landing-top3-label .w:nth-child(2){animation-delay:1.07s}
+#question.play .landing-top3-label .w:nth-child(3){animation-delay:1.19s}
+#question.play .landing-top3-label .w:nth-child(4){animation-delay:1.31s}
+#question.play .landing-top3 .podium-slot[data-rank="1"]{animation-delay:1.55s}
+#question.play .landing-top3 .podium-slot[data-rank="2"]{animation-delay:1.77s}
+#question.play .landing-top3 .podium-slot[data-rank="3"]{animation-delay:1.99s}
+#question.play .landing-top3-empty{animation:heroSlideIn .7s cubic-bezier(.16,.9,.25,1) both;animation-delay:.95s}
+#question .landing-top3-label .w{display:inline-block}
+#question .landing-top3-label{overflow:hidden}
+#question .landing-top3 .podium-slot{will-change:transform,opacity}
+@media(prefers-reduced-motion:reduce){#question.play .landing-kicker,#question.play .landing-title,#question.play .landing-cta,#question.play .landing-top3-label .w,#question.play .landing-top3 .podium-slot,#question.play .landing-top3-empty{animation:none !important;opacity:1 !important;transform:none !important}}
 </style>
 </head>
 <body>
@@ -6667,8 +6661,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   checklistLockTimeInput.value = checklistLockTime;
   renderLandingState();
 
-  // Trigger hero animation sau khi nav bar render xong
-  setTimeout(playHeroAnimation, 300);
+  // (renderLandingState đã tự trigger animation → không cần trigger riêng ở đây)
 
   // ===== Gọi loadData TRƯỚC (không await) =====
   // getSettings sẽ chờ loadData xong mới gọi → tránh 2 request song song
