@@ -3067,7 +3067,38 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 @media(max-width:600px){.admin-avatar-row{grid-template-columns:40px minmax(0,1fr) auto;gap:8px;padding:8px 8px;min-height:52px}.admin-avatar-preview{width:40px;height:40px;font-size:13px}.admin-avatar-name{font-size:12.5px}.admin-avatar-input{height:26px;font-size:10.5px;padding:0 8px}.admin-avatar-save,.admin-avatar-clear{width:32px;height:32px;font-size:14px;border-radius:9px}}
  .admin-stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:22px}.admin-stat-card{padding:18px 12px;text-align:center;background:#fff;border:1px solid rgba(62,112,79,.12);border-radius:18px;box-shadow:0 6px 18px rgba(47,78,59,.05)}.admin-stat-card.success{background:linear-gradient(160deg,#f4fbf5,#e9f5eb);border-color:rgba(79,155,112,.28)}.admin-stat-card.warn{background:linear-gradient(160deg,#fffbf0,#fef6e3);border-color:rgba(216,168,104,.28)}.admin-stat-icon{font-size:22px;line-height:1;margin-bottom:6px}.admin-stat-value{font-size:28px;font-weight:900;color:#245943;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.03em}.admin-stat-card.success .admin-stat-value{color:#2f7d4f}.admin-stat-card.warn .admin-stat-value{color:#a5762e}.admin-stat-label{margin-top:6px;font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#82958a}
 @media(min-width:900px){#adminPageBody{flex-direction:row;overflow:hidden}#adminPageNav{flex-direction:column;width:220px;padding:20px 14px;border-right:1px solid rgba(62,112,79,.10);border-bottom:0;background:rgba(255,255,255,.7);overflow-y:auto}.admin-tab{flex-direction:row;justify-content:flex-start;gap:10px;padding:12px 14px;font-size:13px;min-height:52px;width:100%}.admin-tab-icon{font-size:18px}#adminPageContent{padding:28px 32px 60px}.admin-panel-view.active{max-width:720px;margin:0 auto}}@media(max-width:600px){#adminPageHeader{padding:12px 14px}.admin-page-name{font-size:18px}#adminPageNav{padding:8px 10px}.admin-tab{padding:8px 12px;min-height:44px}#adminPageContent{padding:16px 14px 40px}.admin-section-title{font-size:18px}.admin-card-row{grid-template-columns:40px minmax(0,1fr) 92px;padding:14px 12px;gap:10px}#resetTimeInput,#checklistLockTimeInput{width:92px;height:44px;font-size:17px}.admin-avatar-row{grid-template-columns:48px minmax(0,1fr);gap:10px}.admin-avatar-actions{grid-column:1/-1;flex-direction:row}.admin-avatar-save,.admin-avatar-clear{flex:1}.admin-avatar-preview{width:48px;height:48px}.admin-stats-grid{gap:6px}.admin-stat-card{padding:14px 8px}.admin-stat-value{font-size:22px}.admin-stat-label{font-size:9px}}
-</style></head>
+</style><style id="attendancePageV2">
+/* =========================================================
+   TRANG CHẤM CÔNG V2 — redesign + bottom sheet + optimistic
+   ========================================================= */
+
+#attendancePage{position:fixed;inset:0;z-index:18000;overflow:hidden;display:none;background:radial-gradient(circle at 15% 0%,rgba(79,155,112,.06),transparent 40%),radial-gradient(circle at 90% 100%,rgba(239,212,138,.06),transparent 40%),linear-gradient(180deg,#f8fbf6 0%,#eef6ec 100%);color:#1d3d31;font-family:var(--font,ui-rounded,"SF Pro Rounded",system-ui,-apple-system,sans-serif)}
+#attendancePage.show{display:block}
+.att-page-inner{width:100%;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(14px + env(safe-area-inset-top)) 14px calc(24px + env(safe-area-inset-bottom));box-sizing:border-box}
+.att-shell{width:min(100%,720px);margin:0 auto}
+.att-head{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px;margin-bottom:16px}
+.att-head-title{min-width:0;text-align:center}.att-kicker{display:block;font-size:9px;letter-spacing:.26em;font-weight:900;color:#8ca598;text-transform:uppercase;line-height:1}.att-title{display:block;margin-top:4px;font-size:20px;font-weight:900;color:#245943;letter-spacing:-.02em;line-height:1}
+.att-head-actions{display:flex;gap:6px}.att-icon-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(62,112,79,.14);border-radius:14px;background:rgba(255,255,255,.88);color:#2f6b4f;font-size:20px;font-weight:700;cursor:pointer;transition:transform .15s ease,background .15s ease,border-color .15s ease;-webkit-tap-highlight-color:transparent}.att-icon-btn:hover{background:#fff;border-color:rgba(79,155,112,.28)}.att-icon-btn:active{transform:scale(.94)}.att-icon-btn.spinning{animation:attSpin 1s linear infinite;pointer-events:none}@keyframes attSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.att-employee-card{width:100%;display:grid;grid-template-columns:52px minmax(0,1fr) 24px;align-items:center;gap:12px;padding:12px 14px;margin-bottom:14px;background:linear-gradient(135deg,#fff,#f7fbf6);border:1px solid rgba(62,112,79,.14);border-radius:18px;box-shadow:0 6px 18px rgba(47,78,59,.06),inset 0 1px 0 rgba(255,255,255,.9);cursor:pointer;text-align:left;font-family:inherit;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;-webkit-tap-highlight-color:transparent}.att-employee-card:active{transform:scale(.985)}.att-employee-card:hover{border-color:rgba(79,155,112,.28);box-shadow:0 10px 24px rgba(47,78,59,.09)}
+.att-employee-avatar{width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#eef6ec center/cover no-repeat;color:#8a9a91;font-size:18px;font-weight:900;overflow:hidden;border:2px solid #fff;box-shadow:0 3px 8px rgba(42,78,57,.1);flex:0 0 auto}.att-employee-info{min-width:0;display:flex;flex-direction:column;gap:3px}.att-employee-label{font-size:9.5px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#8ca598;line-height:1}.att-employee-info .wheel-value{font-size:16px;font-weight:900;color:#245943;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2}.att-employee-chevron{font-size:18px;color:#8ca598;text-align:right}#attendanceEmployee{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.att-month-nav{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;margin-bottom:12px}.att-month-nav>button{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(62,112,79,.14);border-radius:14px;background:rgba(255,255,255,.88);color:#2f6b4f;font-size:20px;font-weight:700;cursor:pointer;transition:transform .15s ease,background .15s ease}.att-month-nav>button:active{transform:scale(.94);background:#fff}.att-month-label{text-align:center;display:flex;flex-direction:column;gap:2px}#attendanceMonthLabel{font-size:18px;font-weight:900;color:#245943;letter-spacing:-.02em;line-height:1}#attendanceYearLabel{font-size:10px;font-weight:900;letter-spacing:.2em;color:#8ca598;text-transform:uppercase;line-height:1}
+.att-inline-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.att-inline-stat{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.88);border:1px solid rgba(62,112,79,.1);min-width:0}.att-inline-stat.work{background:linear-gradient(135deg,#f4fbf5,#e9f6ec);border-color:rgba(79,155,112,.22)}.att-inline-stat.off{background:linear-gradient(135deg,#fdf5f6,#faeef1);border-color:rgba(179,58,75,.14)}.att-inline-stat.leave{background:linear-gradient(135deg,#fffbe8,#fff6d4);border-color:rgba(216,168,104,.24)}.att-inline-stat-icon{font-size:16px;line-height:1;flex:0 0 auto}.att-inline-stat-value{font-size:20px;font-weight:900;color:#245943;line-height:1;font-variant-numeric:tabular-nums}.att-inline-stat.work .att-inline-stat-value{color:#2f7d4f}.att-inline-stat.off .att-inline-stat-value{color:#b33a4b}.att-inline-stat.leave .att-inline-stat-value{color:#8a6500}.att-inline-stat-label{font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8ca598;line-height:1;margin-top:1px}
+.att-calendar-card{padding:12px;background:rgba(255,255,255,.72);border:1px solid rgba(62,112,79,.12);border-radius:20px;box-shadow:0 8px 24px rgba(47,78,59,.05),inset 0 1px 0 rgba(255,255,255,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}.att-week{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:8px}.att-week div{text-align:center;padding:4px 0;font-size:9.5px;font-weight:900;letter-spacing:.14em;color:#8ca598;text-transform:uppercase}.att-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.att-day{position:relative;min-height:64px;padding:6px 4px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid rgba(62,112,79,.09);border-radius:12px;background:rgba(255,255,255,.7);color:#37695e;font-family:inherit;cursor:pointer;transition:transform .15s ease,background .15s ease,border-color .15s ease;-webkit-tap-highlight-color:transparent;overflow:hidden}.att-day:active{transform:scale(.94)}.att-day:focus-visible{outline:2px solid rgba(79,155,112,.5);outline-offset:2px}.att-day.muted{background:transparent;border-color:transparent;opacity:.28;cursor:default;pointer-events:none}.att-day-num{font-size:14px;font-weight:900;color:#315744;line-height:1;font-variant-numeric:tabular-nums}.att-day.today{border-color:rgba(44,156,126,.55);box-shadow:0 0 0 2px rgba(79,199,158,.16)}.att-day.today .att-day-num{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:linear-gradient(135deg,#58b99d,#6ec9ad);color:#fff;font-size:13px}.att-status{width:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;line-height:1;padding:2px 0}.att-status-label{font-size:8.5px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;line-height:1;margin-top:1px}
+.att-day.status-work{background:linear-gradient(180deg,#f4fbf7 0%,#e2f6ec 100%);border-color:rgba(38,131,107,.22)}.att-day.status-work .att-status{color:#26836b}.att-day.status-off{background:linear-gradient(180deg,#fdf5f6 0%,#fae3e8 100%);border-color:rgba(179,58,75,.2)}.att-day.status-off .att-status{color:#b33a4b}.att-day.status-leave{background:linear-gradient(180deg,#fffce9 0%,#fff2b8 100%);border-color:rgba(216,168,104,.3)}.att-day.status-leave .att-status{color:#8a6500}.att-day.status-ot{background:linear-gradient(180deg,#f2fcf5 0%,#d9f5e6 100%);border-color:rgba(36,114,77,.22)}.att-day.status-ot .att-status{color:#24724d}.att-day.status-q{background:linear-gradient(180deg,#fff7f1 0%,#ffe4d6 100%);border-color:rgba(194,86,12,.22)}.att-day.status-q .att-status{color:#c2560c}.att-day.status-x{background:linear-gradient(180deg,#fdf1f1 0%,#ffd6d6 100%);border-color:rgba(176,32,32,.22)}.att-day.status-x .att-status{color:#b02020}.att-day.status-empty{background:rgba(255,255,255,.6)}.att-day.status-empty .att-status{color:#b8c4bb}.att-day.multi-selected{border-color:#4f9b70!important;background:linear-gradient(180deg,#e6f7ee 0%,#d5f0e3 100%)!important;box-shadow:0 0 0 2px rgba(79,155,112,.24),0 4px 12px rgba(79,155,112,.14)!important}
+.att-footer-status{margin-top:14px;padding:12px 14px;background:rgba(255,255,255,.7);border:1px solid rgba(62,112,79,.1);border-radius:14px;display:flex;flex-direction:column;gap:6px}.att-footer-line{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;color:#4e8c62;line-height:1.3}.att-footer-line.muted{color:#8ca598}.att-footer-dot{width:8px;height:8px;border-radius:50%;background:#4e8c62;box-shadow:0 0 6px rgba(78,140,98,.5);flex:0 0 auto}.att-footer-line.syncing .att-footer-dot{background:#d5a75e;box-shadow:0 0 6px rgba(213,167,94,.5);animation:attPulse 1s ease-in-out infinite}.att-footer-line.error .att-footer-dot{background:#c47b71;box-shadow:0 0 6px rgba(196,123,113,.5)}.att-footer-line.error{color:#b84b4b}@keyframes attPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}.att-footer-line b{color:#245943;font-weight:900}
+#attendanceStatusOverlay{position:fixed;inset:0;z-index:19600;display:none;align-items:flex-end;justify-content:center;padding:0;background:rgba(17,52,45,.42);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}#attendanceStatusOverlay.show{display:flex;animation:attFade .22s ease}@keyframes attFade{from{opacity:0}to{opacity:1}}
+#attendanceStatusPanel{position:relative;width:100%;max-width:560px;max-height:80vh;overflow-y:auto;padding:20px 18px calc(24px + env(safe-area-inset-bottom));background:linear-gradient(180deg,#fff 0%,#f6fbf5 100%);border-radius:26px 26px 0 0;box-shadow:0 -20px 60px rgba(32,91,78,.22);transform:translateY(100%);animation:attSlideUp .32s cubic-bezier(.16,.9,.25,1) forwards;box-sizing:border-box}@keyframes attSlideUp{to{transform:translateY(0)}}.att-sheet-handle{width:44px;height:5px;border-radius:99px;background:rgba(62,112,79,.18);margin:0 auto 16px;flex:0 0 auto}
+#attendanceStatusHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}#attendanceStatusTitle{font-size:18px;font-weight:900;color:#245943;letter-spacing:-.02em;line-height:1.15}#attendanceStatusSub{margin-top:5px;font-size:12px;font-weight:800;color:#7b9b94;line-height:1.35}#attendanceStatusClose{width:36px;height:36px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;border:1px solid rgba(62,112,79,.14);border-radius:50%;background:#f0f7ef;color:#477a6d;font-size:20px;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent}#attendanceStatusClose:active{transform:scale(.92)}
+#attendanceStatusOptions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.att-status-option{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:72px;padding:8px 4px;border:1px solid rgba(62,112,79,.14);border-radius:14px;background:#fff;color:#3d7653;font-family:inherit;cursor:pointer;transition:transform .15s ease,background .15s ease,border-color .15s ease;-webkit-tap-highlight-color:transparent}.att-status-option:active{transform:scale(.95)}.att-status-icon{font-size:20px;line-height:1}.att-status-label{font-size:9.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;line-height:1;text-align:center}.att-status-option.work{background:linear-gradient(160deg,#f4fbf5,#e2f6ec);border-color:rgba(38,131,107,.22);color:#26836b}.att-status-option.leave{background:linear-gradient(160deg,#fffce9,#fff2b8);border-color:rgba(216,168,104,.3);color:#8a6500}.att-status-option.off{background:linear-gradient(160deg,#fdf5f6,#fae3e8);border-color:rgba(179,58,75,.2);color:#b33a4b}.att-status-option.ot{background:linear-gradient(160deg,#f2fcf5,#d9f5e6);border-color:rgba(36,114,77,.22);color:#24724d}.att-status-option.q{background:linear-gradient(160deg,#fff7f1,#ffe4d6);border-color:rgba(194,86,12,.22);color:#c2560c}.att-status-option.x{background:linear-gradient(160deg,#fdf1f1,#ffd6d6);border-color:rgba(176,32,32,.22);color:#b02020}.att-status-option.multi{grid-column:span 2;background:#f0f7ef;color:#2f6b4f;border-color:rgba(62,112,79,.18);flex-direction:row;gap:8px;min-height:56px}.att-status-option.multi .att-status-label{font-size:11px;letter-spacing:.02em;text-transform:none}.att-status-option.clear{grid-column:span 2;background:#fdf5f6;color:#a05e5e;border-color:rgba(166,94,94,.18);flex-direction:row;gap:8px;min-height:56px}.att-status-option.clear .att-status-label{font-size:11px;letter-spacing:.02em;text-transform:none}
+#attendanceStatusSaving{min-height:0;margin-top:10px;text-align:center;font-size:11px;font-weight:800;color:#4e8c62;line-height:1.3}#attendanceStatusSaving:empty{display:none}
+#attendanceMultiBar{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:19700;display:none;align-items:center;gap:6px;width:min(94vw,520px);padding:8px;border:1px solid rgba(62,112,79,.16);border-radius:18px;background:rgba(255,255,255,.97);box-shadow:0 18px 55px rgba(32,91,78,.22);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}#attendanceMultiBar.show{display:flex}#attendanceMultiCount{flex:1;min-width:55px;color:#245943;font-size:12px;font-weight:900;text-align:center}.att-multi-action{min-height:38px;padding:0 12px;border:0;border-radius:11px;font-family:inherit;font-size:11px;font-weight:900;white-space:nowrap;cursor:pointer;transition:transform .15s ease}.att-multi-action:active{transform:scale(.94)}.att-multi-action.p{background:#fff2b8;color:#8a6500}.att-multi-action.o{background:#fae3e8;color:#b33a4b}.att-multi-action.t{background:#d9f5e6;color:#24724d}.att-multi-action.q{background:#ffe4d6;color:#c2560c}.att-multi-action.x{background:#ffd6d6;color:#b02020}.att-multi-action.clear{background:#f4f4f4;color:#8b6666}.att-multi-action.cancel{background:#f0f7ef;color:#2f6b4f}
+#attendanceNameWheel{position:fixed;inset:0;z-index:19500;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(17,52,45,.42);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}#attendanceNameWheel.show{display:flex}.att-name-wheel-panel{width:min(92vw,390px);padding:18px 14px 16px;border:1px solid rgba(255,255,255,.7);border-radius:26px;background:rgba(250,255,253,.97);box-shadow:0 24px 70px rgba(32,91,78,.22);animation:attSheetPop .28s cubic-bezier(.16,.9,.25,1)}@keyframes attSheetPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}.att-name-wheel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.att-name-wheel-title{font-size:17px;font-weight:900;color:#245943}#attendanceNameWheelClose{width:36px;height:36px;border:0;border-radius:50%;background:#edf7f3;color:#477a6d;font-size:20px;line-height:1;cursor:pointer}
+@media(max-width:420px){.att-page-inner{padding-left:12px;padding-right:12px}.att-employee-card{grid-template-columns:48px minmax(0,1fr) 20px;padding:10px 12px;gap:10px}.att-employee-avatar{width:48px;height:48px}.att-employee-info .wheel-value{font-size:15px}.att-day{min-height:58px;padding:4px 3px 6px}.att-day-num{font-size:13px}.att-status{font-size:13px}#attendanceMonthLabel{font-size:17px}.att-inline-stat{padding:8px 10px;gap:6px}.att-inline-stat-value{font-size:18px}#attendanceStatusOptions{grid-template-columns:repeat(3,1fr)}.att-status-option{min-height:68px}.att-status-option.multi,.att-status-option.clear{grid-column:span 3}}
+@media(min-width:900px){.att-shell{max-width:860px}.att-page-inner{padding:28px 24px 40px}.att-day{min-height:72px}.att-day-num{font-size:15px}.att-status{font-size:16px}#attendanceStatusOptions{grid-template-columns:repeat(4,1fr)}}
+</style>
+
+</head>
 <body>
 <main id="space">
 <div id="status"></div>
@@ -3383,29 +3414,61 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 <section id="attendancePage" aria-label="Lịch chấm công">
   <div class="att-page-inner">
     <div class="att-shell">
+
+      <!-- Header -->
       <header class="att-head">
-        <button id="attendanceBack" class="att-back" type="button" aria-label="Quay lại">‹</button>
-        <div class="att-head-copy">
-          <div class="att-kicker">HỆ THỐNG 02</div>
-          <div class="att-title">Lịch chấm công</div>
+        <button id="attendanceBack" class="att-icon-btn" type="button" aria-label="Quay lại">←</button>
+        <div class="att-head-title">
+          <span class="att-kicker">HỆ THỐNG 02</span>
+          <span class="att-title">Chấm công</span>
         </div>
-        <div id="attendanceMonthBadge" class="att-month-badge">THÁNG HIỆN TẠI</div>
+        <div class="att-head-actions">
+          <button id="attendanceTodayBtn" class="att-icon-btn" type="button" aria-label="Về tháng hiện tại" title="Hôm nay">📅</button>
+          <button id="attendanceSyncBtn" class="att-icon-btn" type="button" aria-label="Đồng bộ" title="Đồng bộ">⟳</button>
+        </div>
       </header>
 
-      <section class="att-card att-picker">
-        <label class="att-label" for="attendanceEmployeeWheelBtn">Nhân viên</label>
-        <select id="attendanceEmployee" aria-hidden="true" tabindex="-1"></select>
-        <button id="attendanceEmployeeWheelBtn" type="button" aria-label="Chọn nhân viên">
-          <span class="wheel-value">Đang tải nhân viên…</span><span class="wheel-chevron">⌄</span>
-        </button>
-      </section>
+      <!-- Employee card -->
+      <button id="attendanceEmployeeWheelBtn" class="att-employee-card" type="button" aria-label="Chọn nhân viên">
+        <span class="att-employee-avatar" id="attendanceEmployeeAvatar">?</span>
+        <span class="att-employee-info">
+          <span class="att-employee-label">Nhân viên</span>
+          <span class="wheel-value">Đang tải…</span>
+        </span>
+        <span class="att-employee-chevron">⌄</span>
+      </button>
+      <select id="attendanceEmployee" aria-hidden="true" tabindex="-1"></select>
 
+      <!-- Month nav -->
       <div class="att-month-nav">
         <button id="attendancePrev" type="button" aria-label="Tháng trước">‹</button>
-        <div id="attendanceMonthLabel">Tháng 9<span id="attendanceYearLabel">2026</span></div>
+        <div class="att-month-label">
+          <span id="attendanceMonthLabel">Tháng 9</span>
+          <span id="attendanceYearLabel">2026</span>
+        </div>
         <button id="attendanceNext" type="button" aria-label="Tháng sau">›</button>
       </div>
 
+      <!-- Inline stats -->
+      <div class="att-inline-stats">
+        <div class="att-inline-stat work">
+          <span class="att-inline-stat-icon">✓</span>
+          <span class="att-inline-stat-value" id="attendanceWorkCount">0</span>
+          <span class="att-inline-stat-label">làm</span>
+        </div>
+        <div class="att-inline-stat off">
+          <span class="att-inline-stat-icon">—</span>
+          <span class="att-inline-stat-value" id="attendanceOffCount">0</span>
+          <span class="att-inline-stat-label">nghỉ</span>
+        </div>
+        <div class="att-inline-stat leave">
+          <span class="att-inline-stat-icon">🌴</span>
+          <span class="att-inline-stat-value" id="attendanceLeaveCount">0</span>
+          <span class="att-inline-stat-label">phép</span>
+        </div>
+      </div>
+
+      <!-- Calendar -->
       <section class="att-card att-calendar-card">
         <div class="att-week" aria-hidden="true">
           <div>T2</div><div>T3</div><div>T4</div><div>T5</div><div>T6</div><div>T7</div><div>CN</div>
@@ -3413,16 +3476,18 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
         <div id="attendanceGrid" class="att-grid"></div>
       </section>
 
-      <div class="att-summary">
-        <div class="att-stat"><strong id="attendanceWorkCount">0</strong><span>Ngày làm</span></div>
-        <div class="att-stat"><strong id="attendanceOffCount">0</strong><span>Ngày nghỉ</span></div>
-        <div class="att-stat"><strong id="attendanceLeaveCount">0</strong><span>Nghỉ phép</span></div>
+      <!-- Footer status -->
+      <div class="att-footer-status">
+        <div id="attendanceSyncStatus" class="att-footer-line" aria-live="polite">
+          <span class="att-footer-dot"></span>
+          <span class="att-footer-text">Chưa đồng bộ</span>
+        </div>
+        <div id="attendanceAutoStatus" class="att-footer-line muted">
+          <span>⟳</span>
+          <span class="att-footer-text">Tự động làm mới sau <b id="attendanceCountdown">60</b>s</span>
+        </div>
       </div>
-      <div id="attendanceSyncBar" aria-live="polite">
-        <button id="attendanceSyncBtn" type="button">↻ Đồng bộ</button>
-        <div id="attendanceSyncStatus" class="warn">Chưa đồng bộ dữ liệu.</div>
-      </div>
-      <div class="att-note">Nguồn danh sách: Check!C19:C32 • Dữ liệu chấm công: Check</div>
+
     </div>
   </div>
 </section>
@@ -3444,21 +3509,51 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
 <div id="attendanceStatusOverlay" aria-hidden="true">
   <section id="attendanceStatusPanel" role="dialog" aria-modal="true" aria-label="Cập nhật chấm công">
+    <div class="att-sheet-handle" aria-hidden="true"></div>
+
     <div id="attendanceStatusHead">
-      <div id="attendanceStatusTitle">Cập nhật chấm công</div>
+      <div>
+        <div id="attendanceStatusTitle">Cập nhật chấm công</div>
+        <div id="attendanceStatusSub"></div>
+      </div>
       <button id="attendanceStatusClose" type="button" aria-label="Đóng">×</button>
     </div>
-    <div id="attendanceStatusSub"></div>
+
     <div id="attendanceStatusOptions">
-      <button class="att-status-option work" type="button" data-status="">✓ Đi làm</button>
-      <button class="att-status-option leave" type="button" data-status="P">Phép</button>
-      <button class="att-status-option off" type="button" data-status="O">OFF</button>
-      <button class="att-status-option ot" type="button" data-status="T">OT</button>
-      <button class="att-status-option q" type="button" data-status="Q">❓ Quên checklist</button>
-      <button class="att-status-option x" type="button" data-status="X">⚠️ Nghỉ không phép</button>
-      <button id="attendanceMultiBtn" class="att-status-option" type="button">☷ Chọn nhiều ngày</button>
-      <button class="att-status-option clear" type="button" data-status="__clear">Xóa trạng thái</button>
+      <button class="att-status-option work" type="button" data-status="">
+        <span class="att-status-icon">✓</span>
+        <span class="att-status-label">Đi làm</span>
+      </button>
+      <button class="att-status-option leave" type="button" data-status="P">
+        <span class="att-status-icon">🌴</span>
+        <span class="att-status-label">Phép</span>
+      </button>
+      <button class="att-status-option off" type="button" data-status="O">
+        <span class="att-status-icon">—</span>
+        <span class="att-status-label">OFF</span>
+      </button>
+      <button class="att-status-option ot" type="button" data-status="T">
+        <span class="att-status-icon">⚡</span>
+        <span class="att-status-label">OT</span>
+      </button>
+      <button class="att-status-option q" type="button" data-status="Q">
+        <span class="att-status-icon">❓</span>
+        <span class="att-status-label">Quên</span>
+      </button>
+      <button class="att-status-option x" type="button" data-status="X">
+        <span class="att-status-icon">⚠️</span>
+        <span class="att-status-label">Không phép</span>
+      </button>
+      <button id="attendanceMultiBtn" class="att-status-option multi" type="button">
+        <span class="att-status-icon">☷</span>
+        <span class="att-status-label">Chọn nhiều</span>
+      </button>
+      <button class="att-status-option clear" type="button" data-status="__clear">
+        <span class="att-status-icon">🗑</span>
+        <span class="att-status-label">Xoá</span>
+      </button>
     </div>
+
     <div id="attendanceStatusSaving"></div>
   </section>
 </div>
@@ -7059,6 +7154,126 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
   let ATTENDANCE_EMPLOYEES = [];
 
+  // ===== Auto-refresh =====
+  let attendanceAutoRefreshTimer = null;
+  let attendanceAutoRefreshCountdown = 60;
+  let attendanceLastSaveAt = 0;
+  const ATTENDANCE_AUTO_REFRESH_SEC = 60;
+
+  function startAttendanceAutoRefresh(){
+    stopAttendanceAutoRefresh();
+    attendanceAutoRefreshCountdown = ATTENDANCE_AUTO_REFRESH_SEC;
+    updateAttendanceCountdown();
+
+    attendanceAutoRefreshTimer = setInterval(() => {
+      if(document.hidden) return;
+      if(!page.classList.contains('show')) return;
+
+      if(Date.now() - attendanceLastSaveAt < 10000){
+        attendanceAutoRefreshCountdown = ATTENDANCE_AUTO_REFRESH_SEC;
+        updateAttendanceCountdown();
+        return;
+      }
+
+      if(attendanceStatusOverlay.classList.contains('show')) return;
+      if(attendanceMultiMode) return;
+
+      attendanceAutoRefreshCountdown--;
+      if(attendanceAutoRefreshCountdown <= 0){
+        attendanceAutoRefreshCountdown = ATTENDANCE_AUTO_REFRESH_SEC;
+        loadAttendanceMonth(true).catch(()=>{});
+      }
+      updateAttendanceCountdown();
+    }, 1000);
+  }
+
+  function stopAttendanceAutoRefresh(){
+    if(attendanceAutoRefreshTimer){
+      clearInterval(attendanceAutoRefreshTimer);
+      attendanceAutoRefreshTimer = null;
+    }
+  }
+
+  function updateAttendanceCountdown(){
+    const el = document.getElementById('attendanceCountdown');
+    if(el) el.textContent = String(Math.max(0, attendanceAutoRefreshCountdown));
+  }
+
+  // ===== Footer state =====
+  function setAttendanceFooterState(state, message){
+    const bar = document.getElementById('attendanceSyncStatus');
+    if(!bar) return;
+    bar.className = 'att-footer-line';
+    if(state === 'ok') bar.classList.add('syncing');
+    if(state === 'syncing') bar.classList.add('syncing');
+    if(state === 'error') bar.classList.add('error');
+
+    const text = bar.querySelector('.att-footer-text');
+    if(text) text.textContent = message || '';
+
+    if(state === 'ok'){
+      setTimeout(() => {
+        if(bar.classList.contains('error')) return;
+        bar.className = 'att-footer-line';
+      }, 2000);
+    }
+  }
+
+  // ===== Preload tháng ±1 =====
+  let attendancePreloadedKeys = new Set();
+
+  async function preloadAdjacentMonths(){
+    const y = viewDate.getFullYear();
+    const m = viewDate.getMonth();
+
+    let pm = m - 1, py = y;
+    if(pm < 0){ pm = 11; py = y - 1; }
+    let nm = m + 1, ny = y;
+    if(nm > 11){ nm = 0; ny = y + 1; }
+
+    const tasks = [
+      { year: py, month: pm + 1 },
+      { year: ny, month: nm + 1 }
+    ];
+
+    for(const t of tasks){
+      const cacheKey = t.year + '-' + t.month;
+      if(attendancePreloadedKeys.has(cacheKey)) continue;
+      if(getAttendanceRawMemory(t.year, t.month - 1)){
+        attendancePreloadedKeys.add(cacheKey);
+        continue;
+      }
+      attendancePreloadedKeys.add(cacheKey);
+      try{
+        await window.__srankApi('getAttendance', { month: t.month, _ts: Date.now() }, 15000).then(r => {
+          if(r && r.ok && Array.isArray(r.data?.employees)){
+            rememberAttendanceRaw(t.year, t.month - 1, r.data.employees);
+            saveAttendanceCache(t.year, t.month - 1, r.data.employees);
+          }
+        });
+      }catch(_){}
+    }
+  }
+
+  // ===== Employee avatar =====
+  function updateEmployeeAvatar(){
+    const el = document.getElementById('attendanceEmployeeAvatar');
+    if(!el) return;
+    const name = selectedName || '';
+    let url = '';
+    try{
+      if(typeof getAvatarUrl === 'function') url = getAvatarUrl(name);
+    }catch(_){}
+
+    if(url){
+      el.style.backgroundImage = `url("${url.replace(/"/g, '\\"')}")`;
+      el.textContent = '';
+    }else{
+      el.style.backgroundImage = '';
+      el.textContent = name ? name.slice(0,1).toUpperCase() : '?';
+    }
+  }
+
   // Chấm công đọc trực tiếp từ Check!C19:C32 và dải ngày D:AH (31 cột).
   // D = ngày 1, E = ngày 2, ... AH = ngày 31.
   // Mã compact: [ngày][P/O/T][tháng]. Ví dụ 26P9 = ngày 26, phép, tháng 9.
@@ -7085,6 +7300,11 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   const attendanceStatusSaving = document.getElementById('attendanceStatusSaving');
 
   function setAttendanceSyncStatus(type, message){
+    if(typeof setAttendanceFooterState === 'function'){
+      const state = type === 'warn' ? 'syncing' : (type === 'ok' ? 'ok' : (type === 'error' ? 'error' : ''));
+      setAttendanceFooterState(state, message);
+      return;
+    }
     if(!attendanceSyncStatus) return;
     attendanceSyncStatus.className = type || '';
     attendanceSyncStatus.textContent = message || '';
@@ -7193,13 +7413,13 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
   function statusInfo(status){
     const s = String(status || '').trim().toUpperCase();
-    if(s === 'V') return {className:'work', label:'✓'};
-    if(s === 'P') return {className:'leave', label:'Phép'};
-    if(s === 'O') return {className:'off', label:'OFF'};
-    if(s === 'T') return {className:'ot', label:'OT'};
-    if(s === 'Q') return {className:'q', label:'Quên'};
-    if(s === 'X') return {className:'x', label:'X'};
-    return {className:'empty', label:'—'};
+    if(s === 'V') return {className:'work', label:'✓', icon:'✓', shortLabel:''};
+    if(s === 'P') return {className:'leave', label:'Phép', icon:'🌴', shortLabel:'phép'};
+    if(s === 'O') return {className:'off', label:'OFF', icon:'—', shortLabel:'off'};
+    if(s === 'T') return {className:'ot', label:'OT', icon:'⚡', shortLabel:'ot'};
+    if(s === 'Q') return {className:'q', label:'Quên', icon:'❓', shortLabel:'quên'};
+    if(s === 'X') return {className:'x', label:'X', icon:'⚠️', shortLabel:'kp'};
+    return {className:'empty', label:'', icon:'', shortLabel:''};
   }
 
   function rebuildAttendanceCacheFromCurrent(year, month){
@@ -7244,6 +7464,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
     employee.value = selectedName;
     updateWheelButton();
+    updateEmployeeAvatar();
   }
 
   async function loadAttendanceMonth(force = false){
@@ -7469,48 +7690,53 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     const cleanStatus = String(status || '').trim().toUpperCase();
     if(cleanStatus && !['P','O','T','Q','X'].includes(cleanStatus)) return;
 
-    attendanceMultiCount.textContent = 'Đang lưu…';
+    // Snapshot
+    const snapshots = days.map(day => ({
+      day,
+      key: key(y,m,day),
+      prev: ATTENDANCE_DATA[nameAtRequest]?.[key(y,m,day)] || ''
+    }));
 
+    // ===== Optimistic =====
+    if(!ATTENDANCE_DATA[nameAtRequest]) ATTENDANCE_DATA[nameAtRequest] = {};
+    days.forEach(day => {
+      const k = key(y,m,day);
+      if(cleanStatus) ATTENDANCE_DATA[nameAtRequest][k] = cleanStatus;
+      else delete ATTENDANCE_DATA[nameAtRequest][k];
+    });
+
+    if(viewDate.getFullYear() === y && viewDate.getMonth() === m && selectedName === nameAtRequest) render();
+
+    attendanceMultiMode = false;
+    attendanceMultiDays.clear();
+    updateAttendanceMultiUI();
+
+    setAttendanceFooterState('syncing', `Đang lưu ${days.length} ngày…`);
+    attendanceLastSaveAt = Date.now();
+
+    // ===== API nền =====
     try{
-      const r = await window.__srankApi('setAttendanceBatch',{
+      const r = await window.__srankApi('setAttendanceBatch', {
         month: monthAtRequest, days, name: nameAtRequest, status: cleanStatus
       }, 20000);
-      if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet không xác nhận đã lưu');
 
-      // Server đã xác nhận ghi thành công; cập nhật state tại chỗ.
-      if(!ATTENDANCE_DATA[nameAtRequest]) ATTENDANCE_DATA[nameAtRequest] = {};
-      days.forEach(day => {
-        const k = key(y,m,day);
-        if(cleanStatus) ATTENDANCE_DATA[nameAtRequest][k] = cleanStatus;
-        else delete ATTENDANCE_DATA[nameAtRequest][k];
-      });
-      rebuildAttendanceCacheFromCurrent(y,m);
-      // Khóa auto-sync 3s để tránh request cũ ghi đè dữ liệu vừa lưu
+      if(!r || r.ok !== true) throw new Error(r?.error || 'Không xác nhận');
+
+      rebuildAttendanceCacheFromCurrent(y, m);
       attendanceLockUntil = Date.now() + 3000;
-      // Render ngay lập tức
+
+      setAttendanceFooterState('ok', `Đã lưu ${days.length} ngày ✓`);
+
+    }catch(e){
+      // ===== Rollback =====
+      snapshots.forEach(s => {
+        if(s.prev) ATTENDANCE_DATA[nameAtRequest][s.key] = s.prev;
+        else delete ATTENDANCE_DATA[nameAtRequest][s.key];
+      });
+
       if(viewDate.getFullYear() === y && viewDate.getMonth() === m && selectedName === nameAtRequest) render();
 
-      attendanceMultiMode = false;
-      attendanceMultiDays.clear();
-      updateAttendanceMultiUI();
-      setAttendanceSyncStatus('ok', `Đã lưu ${days.length} ngày vào Google Sheet`);
-    }catch(e){
-      try{
-        await loadAttendanceMonth(true);
-        const allConfirmed = days.every(day=>{
-          const v = String(ATTENDANCE_DATA?.[nameAtRequest]?.[key(y,m,day)] || '').toUpperCase();
-          return cleanStatus ? v === cleanStatus : !v;
-        });
-        if(allConfirmed){
-          attendanceMultiMode = false;
-          attendanceMultiDays.clear();
-          updateAttendanceMultiUI();
-          setAttendanceSyncStatus('ok', `Đã lưu ${days.length} ngày vào Google Sheet`);
-          return;
-        }
-      }catch(_err){}
-      attendanceMultiCount.textContent = 'Lưu thất bại';
-      setAttendanceSyncStatus('error','Không ghi được Google Sheet: ' + attendanceErrorText(e));
+      setAttendanceFooterState('error', 'Không lưu được: ' + attendanceErrorText(e));
     }
   }
 
@@ -7550,103 +7776,61 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     const nameAtRequest = selectedName;
     const monthAtRequest = m + 1;
     const dayAtRequest = day;
+    const k = key(y, m, day);
 
-    attendanceStatusSaving.textContent = 'Đang lưu vào Google Sheet…';
+    // Snapshot để rollback nếu API fail
+    const prevValue = ATTENDANCE_DATA[nameAtRequest]?.[k] || '';
 
-    // SHEET LÀ SOURCE OF TRUTH:
-    // Không sửa ATTENDANCE_DATA, không sửa cache và không render trạng thái mới
-    // trước khi Apps Script xác nhận đã ghi thành công.
+    // ===== Optimistic update: cập nhật UI NGAY =====
+    if(!ATTENDANCE_DATA[nameAtRequest]) ATTENDANCE_DATA[nameAtRequest] = {};
+    if(cleanStatus){
+      ATTENDANCE_DATA[nameAtRequest][k] = cleanStatus;
+    }else{
+      delete ATTENDANCE_DATA[nameAtRequest][k];
+    }
+
+    if(viewDate.getFullYear() === y && viewDate.getMonth() === m && selectedName === nameAtRequest){
+      render();
+    }
+
+    // Đóng bottom sheet ngay
+    closeAttendanceStatus();
+
+    // Hiện trạng thái đang lưu
+    setAttendanceFooterState('syncing', 'Đang lưu…');
+    attendanceLastSaveAt = Date.now();
+
+    // ===== Gọi API nền =====
     try{
-      const payload = {
+      const r = await window.__srankApi('setAttendance', {
         month: monthAtRequest,
         day: dayAtRequest,
         name: nameAtRequest,
         status: cleanStatus
-      };
-
-      const r = await window.__srankApi(
-        'setAttendance',
-        payload,
-        20000
-      );
+      }, 20000);
 
       if(!r || r.ok !== true){
-        throw new Error(
-          r?.error || 'Google Sheet không xác nhận đã lưu'
-        );
+        throw new Error(r?.error || 'Google Sheet không xác nhận');
       }
 
-      // Apps Script trả về dữ liệu sau khi ghi + SpreadsheetApp.flush().
-      // Chỉ từ response của server mới cập nhật giao diện.
-      const saved = r.data || {};
+      rebuildAttendanceCacheFromCurrent(y, m);
+      attendanceLockUntil = Date.now() + 3000;
 
-      if(
-        saved &&
-        saved.name &&
-        String(saved.name).trim() === nameAtRequest &&
-        Number(saved.month) === monthAtRequest
-      ){
-        const k = key(y, m, day);
-
-        if(!ATTENDANCE_DATA[nameAtRequest]){
-          ATTENDANCE_DATA[nameAtRequest] = {};
-        }
-
-        if(cleanStatus){
-          ATTENDANCE_DATA[nameAtRequest][k] = cleanStatus;
-        }else{
-          delete ATTENDANCE_DATA[nameAtRequest][k];
-        }
-
-        // Cache chỉ được cập nhật SAU khi Sheet xác nhận thành công.
-        rebuildAttendanceCacheFromCurrent(y, m);
-        // Khóa auto-sync 3s để tránh request cũ ghi đè dữ liệu vừa lưu
-        attendanceLockUntil = Date.now() + 3000;
-        // Render ngay lập tức — không chờ setTimeout
-        if(viewDate.getFullYear() === y && viewDate.getMonth() === m && selectedName === nameAtRequest) render();
-      }
-
-      attendanceStatusSaving.textContent = saved.cell
-        ? ('Đã lưu ✓ • ' + saved.cell)
-        : 'Đã lưu ✓';
-
-      setTimeout(closeAttendanceStatus, 500);
+      setAttendanceFooterState('ok', 'Đã lưu ✓');
 
     }catch(e){
-      const msg = attendanceErrorText(e);
-
-      // Request có thể timeout ở trình duyệt dù Apps Script đã ghi xong.
-      // Vì Sheet là source of truth, đọc lại Sheet trước khi kết luận thất bại.
-      let confirmedBySheet = false;
-
-      try{
-        await loadAttendanceMonth(true);
-
-        const serverValue =
-          ATTENDANCE_DATA?.[nameAtRequest]?.[key(y,m,day)] || '';
-
-        confirmedBySheet =
-          String(serverValue).trim().toUpperCase() === cleanStatus;
-      }catch(_syncErr){}
-
-      if(confirmedBySheet){
-        render();
-        attendanceStatusSaving.textContent = 'Đã lưu ✓';
-        setAttendanceSyncStatus(
-          'ok',
-          'Đã lưu Google Sheet'
-        );
+      // ===== Rollback nếu lỗi =====
+      if(prevValue){
+        ATTENDANCE_DATA[nameAtRequest][k] = prevValue;
       }else{
-        attendanceStatusSaving.textContent =
-          'Chưa lưu: ' + msg;
-
-        setAttendanceSyncStatus(
-          'error',
-          'Không ghi được Google Sheet: ' + msg
-        );
+        delete ATTENDANCE_DATA[nameAtRequest][k];
       }
 
-      setTimeout(closeAttendanceStatus, confirmedBySheet ? 500 : 1400);
+      if(viewDate.getFullYear() === y && viewDate.getMonth() === m && selectedName === nameAtRequest){
+        render();
+      }
+
+      setAttendanceFooterState('error', 'Không lưu được: ' + attendanceErrorText(e));
     }
   }
 
@@ -7801,21 +7985,27 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
         cell.classList.add('today');
       }
 
-      let status='empty', label='—';
+      let statusClass = 'empty';
+      let statusIcon = '';
+      let statusLabel = '';
 
       if(item){
-        const info=statusInfo(item.status);
-        status=info.className;
-        label=info.label;
+        const info = statusInfo(item.status);
+        statusClass = info.className;
+        statusIcon = info.icon || info.label;
+        statusLabel = info.shortLabel || '';
 
         if(item.status === 'V' || item.status === 'T') work++;
         else if(item.status === 'O') off++;
         else if(item.status === 'P') leave++;
       }
 
-      cell.innerHTML=
-        `<div class="att-day-num">${d}</div>`+
-        `<div class="att-status ${status}">${label}</div>`;
+      cell.classList.add('status-' + statusClass);
+
+      cell.innerHTML =
+        `<div class="att-day-num">${d}</div>` +
+        `<div class="att-status ${statusClass}">${statusIcon}</div>` +
+        (statusLabel ? `<div class="att-status-label">${statusLabel}</div>` : '');
 
       grid.appendChild(cell);
     }
@@ -7857,20 +8047,53 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   async function openPage(){
     page.classList.add('show');
     if(typeof syncQuickTools==='function') syncQuickTools();
-    render();
-    await loadAttendanceMonth(false);
+
+    // ===== Cache-first: render ngay, không chờ API =====
+    const y = viewDate.getFullYear();
+    const m = viewDate.getMonth();
+    const hasCache = applyAttendanceCache(y, m);
+    if(hasCache) render();
+
+    updateEmployeeAvatar();
+
+    // Bắt đầu auto-refresh + đếm ngược
+    startAttendanceAutoRefresh();
+
+    // ===== Fetch nền, không chặn UI =====
+    loadAttendanceMonth(false).then(() => {
+      // Preload tháng ±1 sau khi load xong
+      preloadAdjacentMonths();
+    }).catch(() => {
+      // Không có cache, chờ fetch
+    });
   }
   function closePage(){
     page.classList.remove('show');
+    stopAttendanceAutoRefresh();
     if(typeof syncQuickTools==='function') syncQuickTools();
   }
   attendanceBtn?.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); openPage(); });
-  attendanceSyncBtn?.addEventListener('click',e=>{
+  attendanceSyncBtn?.addEventListener('click', e => {
     e.preventDefault();
     e.stopPropagation();
-    loadAttendanceMonth(true).catch(err=>{
-      setAttendanceSyncStatus('error', 'Lỗi đồng bộ: ' + attendanceErrorText(err));
-    });
+
+    // Visual: xoay nút
+    attendanceSyncBtn.classList.add('spinning');
+
+    setAttendanceFooterState('syncing', 'Đang đồng bộ…');
+    attendanceAutoRefreshCountdown = ATTENDANCE_AUTO_REFRESH_SEC;
+    updateAttendanceCountdown();
+
+    loadAttendanceMonth(true)
+      .then(() => {
+        setAttendanceFooterState('ok', 'Đã đồng bộ ✓');
+      })
+      .catch(err => {
+        setAttendanceFooterState('error', 'Lỗi đồng bộ: ' + attendanceErrorText(err));
+      })
+      .finally(() => {
+        setTimeout(() => attendanceSyncBtn.classList.remove('spinning'), 400);
+      });
   });
   window.__openAttendancePage = openPage;
   window.__closeAttendancePage = closePage;
@@ -7882,6 +8105,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     selectedName=ATTENDANCE_EMPLOYEES[wheelIndex] || '';
     employee.value=selectedName;
     updateWheelButton();
+    updateEmployeeAvatar();
     closeNameWheel();
     render();
   });
@@ -7968,6 +8192,27 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   });
   next.addEventListener('click',()=>{
     goToMonth(1);
+  });
+
+  const attendanceTodayBtn = document.getElementById('attendanceTodayBtn');
+  attendanceTodayBtn?.addEventListener('click', () => {
+    const now = new Date();
+    if(viewDate.getFullYear() === now.getFullYear() && viewDate.getMonth() === now.getMonth()){
+      // Đã ở tháng hiện tại → chỉ refresh
+      loadAttendanceMonth(true).catch(()=>{});
+      return;
+    }
+    viewDate.setMonth(now.getMonth());
+    viewDate.setFullYear(now.getFullYear());
+    attendanceLoadPromise = null;
+    attendanceLoadPromiseKey = '';
+
+    // Cache-first: render ngay nếu có cache
+    const hasCache = applyAttendanceCache(now.getFullYear(), now.getMonth());
+    if(hasCache) render();
+
+    loadAttendanceMonth(false).catch(()=>{});
+    setAttendanceFooterState('syncing', 'Đang tải tháng hiện tại…');
   });
 
   employee.value=selectedName;
