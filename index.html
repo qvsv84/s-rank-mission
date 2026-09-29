@@ -3989,6 +3989,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   // Map mặc định — có thể để trống, sau đó gán qua Admin panel.
   // Link ảnh được lưu vào localStorage, ưu tiên hơn map này.
   const AVATAR_LINKS = {
+    "Tiến Lợi":     "https://drive.google.com/file/d/1d1u2VbvH3DtCUwUszKsqpU_Z4RCW4zZ-/view?usp=drivesdk",
     "Huong Lye":    "",
     "Quỳnh Trang":  "",
     "Phương Thảo":  "",
@@ -4023,7 +4024,26 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
   function getAvatarUrl(name){
     const key = String(name || "").trim();
-    return String(avatarLinks[key] || AVATAR_LINKS[key] || "").trim();
+    const raw = String(avatarLinks[key] || AVATAR_LINKS[key] || "").trim();
+    if(!raw) return "";
+
+    // Google Drive link → convert sang thumbnail
+    // Hỗ trợ: /file/d/FILE_ID/view và /open?id=FILE_ID
+    const gdMatch = raw.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)
+                 || raw.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if(gdMatch && /drive\.google\.com/i.test(raw)){
+      return `https://drive.google.com/thumbnail?id=${gdMatch[1]}&sz=w800`;
+    }
+
+    // Facebook ID (chỉ số) → Graph API
+    if(/^\d+$/.test(raw)){
+      return `https://graph.facebook.com/${raw}/picture?width=800&height=800`;
+    }
+
+    // Full URL → dùng luôn
+    if(/^https?:\/\//i.test(raw)) return raw;
+
+    return raw;
   }
 
   function getInitials(name){
