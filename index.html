@@ -3206,27 +3206,21 @@ body #homeStack #questionWrap{
 </style>
 <style id="homeStaggerAnimation">
 /* =========================================================
-   HERO CARD STAGGER ANIMATION — v2 (nhanh hơn, ~2.7s)
+   HERO CARD STAGGER ANIMATION — v3
+   - Lần đầu: full animation (kicker → title → CTA → top3 → podium)
+   - Lần sau: chỉ top3 chạy lại, delay = 0 (dùng --top3-base)
    ========================================================= */
 #question .landing-title::before{content:none !important;display:none !important}
+#question{--top3-base:.95s}
 #question .landing-kicker{display:block;width:100%;margin:0 0 6px;color:#8ca598;font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:clamp(9px,2.3vw,11px);font-weight:900;letter-spacing:.32em;text-align:center;text-transform:uppercase;line-height:1;opacity:.85}
 @keyframes heroSlideIn{0%{opacity:0;transform:translateX(100vw)}100%{opacity:1;transform:translateX(0)}}
 #question .landing-kicker,#question .landing-title,#question .landing-cta,#question .landing-top3-label .w,#question .landing-top3 .podium-slot{opacity:0}
 #question.play .landing-kicker,#question.play .landing-title,#question.play .landing-cta,#question.play .landing-top3-label .w,#question.play .landing-top3 .podium-slot{animation:heroSlideIn .7s cubic-bezier(.16,.9,.25,1) both;will-change:transform,opacity}
-#question.play .landing-kicker{animation-delay:0s}
-#question.play .landing-title{animation-delay:.35s}
-#question.play .landing-cta{animation-delay:.70s}
-#question.play .landing-top3-label .w:nth-child(1){animation-delay:.95s}
-#question.play .landing-top3-label .w:nth-child(2){animation-delay:1.07s}
-#question.play .landing-top3-label .w:nth-child(3){animation-delay:1.19s}
-#question.play .landing-top3-label .w:nth-child(4){animation-delay:1.31s}
-#question.play .landing-top3 .podium-slot[data-rank="1"]{animation-delay:1.55s}
-#question.play .landing-top3 .podium-slot[data-rank="2"]{animation-delay:1.77s}
-#question.play .landing-top3 .podium-slot[data-rank="3"]{animation-delay:1.99s}
-#question.play .landing-top3-empty{animation:heroSlideIn .7s cubic-bezier(.16,.9,.25,1) both;animation-delay:.95s}
-#question .landing-top3-label .w{display:inline-block}
-#question .landing-top3-label{overflow:hidden}
-#question .landing-top3 .podium-slot{will-change:transform,opacity}
+#question.play .landing-kicker{animation-delay:0s}#question.play .landing-title{animation-delay:.35s}#question.play .landing-cta{animation-delay:.70s}
+#question.play .landing-top3-label .w:nth-child(1){animation-delay:var(--top3-base)}#question.play .landing-top3-label .w:nth-child(2){animation-delay:calc(var(--top3-base) + .12s)}#question.play .landing-top3-label .w:nth-child(3){animation-delay:calc(var(--top3-base) + .24s)}#question.play .landing-top3-label .w:nth-child(4){animation-delay:calc(var(--top3-base) + .36s)}
+#question.play .landing-top3 .podium-slot[data-rank="1"]{animation-delay:calc(var(--top3-base) + .60s)}#question.play .landing-top3 .podium-slot[data-rank="2"]{animation-delay:calc(var(--top3-base) + .82s)}#question.play .landing-top3 .podium-slot[data-rank="3"]{animation-delay:calc(var(--top3-base) + 1.04s)}
+#question.play .landing-top3-empty{animation:heroSlideIn .7s cubic-bezier(.16,.9,.25,1) both;animation-delay:var(--top3-base)}
+#question .landing-top3-label .w{display:inline-block}#question .landing-top3-label{overflow:hidden}#question .landing-top3 .podium-slot{will-change:transform,opacity}
 @media(prefers-reduced-motion:reduce){#question.play .landing-kicker,#question.play .landing-title,#question.play .landing-cta,#question.play .landing-top3-label .w,#question.play .landing-top3 .podium-slot,#question.play .landing-top3-empty{animation:none !important;opacity:1 !important;transform:none !important}}
 </style>
 </head>
@@ -5914,138 +5908,44 @@ body #homeStack #questionWrap{
     return list.map(p => `${p.name}|${p.time}|${getAvatarUrl(p.name)}`).join("::");
   }
 
-  function renderLandingState(){
-    const locked = isChecklistLocked();
-    question.classList.toggle("checklist-locked-home", locked);
-
-    // ===== Top 3 người check sớm nhất =====
-    const checkedList = names
-      .map((name, i) => ({
-        name: String(name || "").trim(),
-        time: String(times[i] || "").trim(),
-        checked: !!checked[i]
-      }))
-      .filter(p => p.checked && p.time && p.name);
-
-    checkedList.sort((a, b) => a.time.localeCompare(b.time));
-    const top3 = checkedList.slice(0, 3);
-
-    // ===== Tạo signature để so sánh =====
-    const newSignature = top3Signature(top3);
-    const top3Changed = newSignature !== _lastTop3Signature;
-
-    // ===== Xây HTML Top 3 =====
-    let top3HTML = "";
-
-    // Nếu chưa load data lần đầu → hiện skeleton
-    const isFirstLoad = !initialSheetLoaded && !names.length;
-
-    if(isFirstLoad){
-      top3HTML = `
-        <span class="landing-top3-label"><span class="w">TOP</span> <span class="w">CHECK</span> <span class="w">SỚM</span> <span class="w">NHẤT</span></span>
-        <div class="landing-top3 skeleton">
-          <div class="podium-slot rank-2" data-rank="2"><span class="podium-avatar"><span class="podium-avatar-fallback show">?</span></span><span class="podium-medal">🥈</span><span class="podium-name">—</span><span class="podium-time">--:--</span></div>
-          <div class="podium-slot rank-1" data-rank="1"><span class="podium-avatar"><span class="podium-avatar-fallback show">?</span></span><span class="podium-medal">🥇</span><span class="podium-name">—</span><span class="podium-time">--:--</span></div>
-          <div class="podium-slot rank-3" data-rank="3"><span class="podium-avatar"><span class="podium-avatar-fallback show">?</span></span><span class="podium-medal">🥉</span><span class="podium-name">—</span><span class="podium-time">--:--</span></div>
-        </div>
-      `;
-    }else if(top3.length === 0){
-      top3HTML = `<div class="landing-top3-empty">Chưa có ai check hôm nay — hãy là người đầu tiên! 🐱</div>`;
-    }else{
-      const podiumOrder = [];
-      if(top3[1]) podiumOrder.push({...top3[1], rank: 2, medal: "🥈"});
-      if(top3[0]) podiumOrder.push({...top3[0], rank: 1, medal: "🥇"});
-      if(top3[2]) podiumOrder.push({...top3[2], rank: 3, medal: "🥉"});
-
-      top3HTML = `
-        <span class="landing-top3-label"><span class="w">TOP</span> <span class="w">CHECK</span> <span class="w">SỚM</span> <span class="w">NHẤT</span></span>
-        <div class="landing-top3">
-          ${podiumOrder.map(p => {
-            const avatarUrl = getAvatarUrl(p.name);
-            const safeName = String(p.name).replace(/"/g, '&quot;');
-            const safeUrl = avatarUrl.replace(/"/g, '&quot;');
-
-            const avatarHTML = avatarUrl
-              ? `<span class="podium-avatar">
-                   <img src="${safeUrl}" alt="" loading="eager" decoding="async"
-                        onerror="this.style.display='none';this.nextElementSibling.classList.add('show');">
-                   <span class="podium-avatar-fallback">?</span>
-                 </span>`
-              : `<span class="podium-avatar">
-                   <span class="podium-avatar-fallback show">?</span>
-                 </span>`;
-
-            return `
-              <div class="podium-slot rank-${p.rank}" data-rank="${p.rank}">
-                ${avatarHTML}
-                <span class="podium-medal">${p.medal}</span>
-                <span class="podium-name" title="${safeName}">${safeName}</span>
-                <span class="podium-time">${p.time}</span>
-              </div>
-            `;
-          }).join("")}
-        </div>
-      `;
-    }
-
-    // ===== Chỉ update DOM khi cần =====
-    const titleEl = question.querySelector(".landing-title");
-    const hasStructure = !!titleEl;
-
-    if(!hasStructure || top3Changed){
-      // Reset animation trigger
-      question.classList.remove("play");
-      question.innerHTML = locked
-        ? `<span class="landing-kicker">🐱 DAILY TEAM HUB</span><span class="landing-title">CHECKLIST ĐẢO MÈO</span>${top3HTML}<span class="landing-cta locked" role="button" aria-disabled="true" tabindex="-1">Tạm khoá Checklist</span><span class="landing-lock-note">Sau ${checklistLockTime} sẽ khoá Checklist nha mn 🥰</span>`
-        : `<span class="landing-kicker">🐱 DAILY TEAM HUB</span><span class="landing-title">CHECKLIST ĐẢO MÈO</span>${top3HTML}<span class="landing-cta" role="button" tabindex="0">CLICK HERE</span>`;
-
-      _lastTop3Signature = newSignature;
-      _top3Nodes = null;
-
-      // Force reflow rồi add lại .play để animation stagger restart ngay khi data load xong
-      void question.offsetWidth;
-      question.classList.add("play");
-    }else{
-      // Chỉ cập nhật trạng thái locked của CTA, không đụng vào Top 3
-      const cta = question.querySelector(".landing-cta");
-      const lockNote = question.querySelector(".landing-lock-note");
-
-      if(locked){
-        if(cta && !cta.classList.contains("locked")){
-          cta.classList.add("locked");
-          cta.setAttribute("aria-disabled", "true");
-          cta.setAttribute("tabindex", "-1");
-          cta.textContent = "Tạm khoá Checklist";
-          if(!lockNote){
-            const note = document.createElement("span");
-            note.className = "landing-lock-note";
-            note.textContent = `Sau ${checklistLockTime} sẽ khoá Checklist nha mn 🥰`;
-            question.appendChild(note);
-          }
-        }
-      }else{
-        if(cta && cta.classList.contains("locked")){
-          cta.classList.remove("locked");
-          cta.removeAttribute("aria-disabled");
-          cta.setAttribute("tabindex", "0");
-          cta.textContent = "CLICK HERE";
-          lockNote?.remove();
-        }
-      }
-    }
-
-    question.style.opacity = "1";
-    question.style.transform = "scale(1)";
-    question.style.pointerEvents = locked ? "none" : "auto";
-
-    // ===== Hiện card TOP LEO RANK TUẦN =====
-    document.getElementById("weeklyTopWrap")?.classList.add("show");
-
-    // ===== Trigger reveal Top 3 nếu đã có data thật (không phải skeleton) =====
-    if(!isFirstLoad && !_top3Revealed){
-      revealTop3();
-    }
+  function renderLandingState(forceFullReplay = false){
+  const locked = isChecklistLocked();
+  question.classList.toggle("checklist-locked-home", locked);
+  const checkedList = names.map((name, i) => ({name:String(name || "").trim(),time:String(times[i] || "").trim(),checked:!!checked[i]})).filter(p => p.checked && p.time && p.name);
+  checkedList.sort((a,b) => a.time.localeCompare(b.time));
+  const top3 = checkedList.slice(0,3);
+  const newSignature = top3Signature(top3);
+  const top3Changed = newSignature !== _lastTop3Signature;
+  let top3HTML = "";
+  if(top3.length === 0){
+    top3HTML = `<div class="landing-top3-empty">Chưa có ai check hôm nay — hãy là người đầu tiên! 🐱</div>`;
+  }else{
+    const podiumOrder=[];
+    if(top3[1]) podiumOrder.push({...top3[1],rank:2,medal:"🥈"});
+    if(top3[0]) podiumOrder.push({...top3[0],rank:1,medal:"🥇"});
+    if(top3[2]) podiumOrder.push({...top3[2],rank:3,medal:"🥉"});
+    top3HTML=`<span class="landing-top3-label"><span class="w">TOP</span> <span class="w">CHECK</span> <span class="w">SỚM</span> <span class="w">NHẤT</span></span><div class="landing-top3">${podiumOrder.map(p=>{const avatarUrl=getAvatarUrl(p.name);const safeName=String(p.name).replace(/"/g,'&quot;');const safeUrl=avatarUrl.replace(/"/g,'&quot;');const avatarHTML=avatarUrl?`<span class="podium-avatar"><img src="${safeUrl}" alt="" loading="eager" decoding="async" onerror="this.style.display='none';this.nextElementSibling.classList.add('show');"><span class="podium-avatar-fallback">?</span></span>`:`<span class="podium-avatar"><span class="podium-avatar-fallback show">?</span></span>`;return `<div class="podium-slot rank-${p.rank}" data-rank="${p.rank}">${avatarHTML}<span class="podium-medal">${p.medal}</span><span class="podium-name" title="${safeName}">${safeName}</span><span class="podium-time">${p.time}</span></div>`}).join("")}</div>`;
   }
+  const titleEl=question.querySelector(".landing-title");
+  const hasStructure=!!titleEl && !forceFullReplay;
+  if(!hasStructure){
+    question.classList.remove("play");
+    question.innerHTML=locked?`<span class="landing-kicker">🐱 DAILY TEAM HUB</span><span class="landing-title">CHECKLIST ĐẢO MÈO</span>${top3HTML}<span class="landing-cta locked" role="button" aria-disabled="true" tabindex="-1">Tạm khoá Checklist</span><span class="landing-lock-note">Sau ${checklistLockTime} sẽ khoá Checklist nha mn 🥰</span>`:`<span class="landing-kicker">🐱 DAILY TEAM HUB</span><span class="landing-title">CHECKLIST ĐẢO MÈO</span>${top3HTML}<span class="landing-cta" role="button" tabindex="0">CLICK HERE</span>`;
+    _lastTop3Signature=newSignature; _top3Nodes=null; question.style.removeProperty("--top3-base");
+    void question.offsetWidth; question.classList.add("play");
+    question.style.opacity="1"; question.style.transform="scale(1)"; question.style.pointerEvents=locked?"none":"auto";
+    document.getElementById("weeklyTopWrap")?.classList.add("show"); return;
+  }
+  if(top3Changed){
+    question.querySelector(".landing-top3-label")?.remove();question.querySelector(".landing-top3")?.remove();question.querySelector(".landing-top3-empty")?.remove();
+    const ctaBefore=question.querySelector(".landing-cta"); if(ctaBefore&&top3HTML) ctaBefore.insertAdjacentHTML("beforebegin",top3HTML);
+    _lastTop3Signature=newSignature; _top3Nodes=null; question.style.setProperty("--top3-base","0s");
+    question.classList.remove("play"); void question.offsetWidth; question.classList.add("play");
+  }
+  const cta=question.querySelector(".landing-cta"); const lockNote=question.querySelector(".landing-lock-note");
+  if(locked){if(cta&&!cta.classList.contains("locked")){cta.classList.add("locked");cta.setAttribute("aria-disabled","true");cta.setAttribute("tabindex","-1");cta.textContent="Tạm khoá Checklist";if(!lockNote){const note=document.createElement("span");note.className="landing-lock-note";note.textContent=`Sau ${checklistLockTime} sẽ khoá Checklist nha mn 🥰`;question.appendChild(note)}}}else if(cta&&cta.classList.contains("locked")){cta.classList.remove("locked");cta.removeAttribute("aria-disabled");cta.setAttribute("tabindex","0");cta.textContent="CLICK HERE";lockNote?.remove()}
+  question.style.opacity="1";question.style.transform="scale(1)";question.style.pointerEvents=locked?"none":"auto";
+}
 
   function openQuestion1(e){
     e?.preventDefault();
@@ -6534,7 +6434,10 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     dragging = false;
 
     counter.textContent = "CÂU 1";
-    renderLandingState();
+    const weeklyWrap = document.getElementById("weeklyTopWrap");
+    if(weeklyWrap){ weeklyWrap.classList.remove("show"); void weeklyWrap.offsetWidth; }
+    _lastTop3Signature = "";
+    renderLandingState(true);
     document.getElementById("weeklyTopWrap")?.classList.add("show");
 
     hint.textContent = isChecklistLocked() ? "" : (names.length ? "Chạm vào câu hỏi" : "Đang tải dữ liệu…");
@@ -6557,7 +6460,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     void q.offsetWidth;
     q.classList.add("play");
 
-    // Sau khi animation hero chạy xong (~1.5s + buffer) → đánh dấu done
     setTimeout(() => {
       q.classList.add("done-hero");
       q.classList.remove("play");
