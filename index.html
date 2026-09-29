@@ -3281,7 +3281,7 @@ body #homeStack #questionWrap{
 
           <div class="weekly-top-extra">
             <div class="weekly-top-line"><b>Chiều cao:</b> 1m5</div>
-            <div class="weekly-top-line"><b>Sở thích:</b> sẵn hồng hài nhi</div>
+            <div class="weekly-top-line"><b>Sở thích:</b> săn hồng hài nhi</div>
             <div class="weekly-top-line"><b>Tính cách:</b> Hướng nội, ít nói, im im</div>
           </div>
         </div>
@@ -5968,62 +5968,29 @@ body #homeStack #questionWrap{
   question.style.opacity="1";question.style.transform="scale(1)";question.style.pointerEvents=locked?"none":"auto";
 }
 
-  /* ===== SPLIT & FLY: chữ tách đôi bay sang 2 phía ===== */
-  function playSplitExit(callback){
-    const q = question;
-    const rect = q.getBoundingClientRect();
-    if(!q.innerHTML.trim() || rect.width === 0){
-      q.style.opacity = "0";
-      callback && callback();
-      return;
-    }
-
-    const wrapper = document.createElement("div");
-    wrapper.className = "split-exit-wrapper";
-    wrapper.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px;z-index:60;pointer-events:none;perspective:1200px;will-change:transform;`;
-
-    const leftHalf = q.cloneNode(true);
-    leftHalf.removeAttribute("id");
-    leftHalf.className = "split-half split-half-left";
-    const rightHalf = q.cloneNode(true);
-    rightHalf.removeAttribute("id");
-    rightHalf.className = "split-half split-half-right";
-    wrapper.appendChild(leftHalf);
-    wrapper.appendChild(rightHalf);
-    document.body.appendChild(wrapper);
-
-    q.style.opacity = "0";
-    q.style.pointerEvents = "none";
-
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      leftHalf.classList.add("fly-left");
-      rightHalf.classList.add("fly-right");
-    }));
-
-    setTimeout(() => {
-      wrapper.remove();
-      callback && callback();
-    }, 700);
-  }
-
   function openQuestion1(e){
     e?.preventDefault();
-    if(isChecklistLocked()){ renderLandingState(); return; }
+    if(isChecklistLocked()){
+      renderLandingState();
+      return;
+    }
     if(q1Opened || !names.length) return;
-    q1Opened = true;
-    question.style.pointerEvents = "none";
+    q1Opened=true;
+    question.style.pointerEvents="none";
+    question.style.opacity="0";
+    question.style.transform="scale(.8)";
+    // Ẩn card TOP LEO RANK TUẦN khi vào wheel chọn tên
     document.getElementById("weeklyTopWrap")?.classList.remove("show");
     burst();
-    playSplitExit(() => {
-      wheelArea.classList.add("show");
+    setTimeout(()=>{
       wheelArea.style.opacity = "1";
       wheelArea.style.pointerEvents = "auto";
+      wheelArea.classList.add("show");
       renderWheel();
-      hint.textContent = "Vuốt lên / xuống • ↑ ↓ để chọn • Enter để xác nhận";
+      hint.textContent="Vuốt lên / xuống • ↑ ↓ để chọn • Enter để xác nhận";
       syncQuickTools();
-    });
+    },180);
   }
-
   question.addEventListener("pointerup",openQuestion1,{passive:false});
   question.addEventListener("click",openQuestion1);
 
@@ -6475,11 +6442,9 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     if(typeof restartAutoSync === "function") restartAutoSync();
 
     message.classList.remove("show");
-    wheelArea.style.transition = "none";
     wheelArea.classList.remove("show");
     wheelArea.style.opacity = "0";
     wheelArea.style.pointerEvents = "none";
-    requestAnimationFrame(() => { wheelArea.style.transition = ""; });
     confirm.classList.remove("show");
 
     syncQuickTools();
@@ -8533,62 +8498,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 .admin-avatar-clear{background:#fff5f2;color:#b84b4b;border-color:rgba(200,140,140,.28)}
 .admin-avatar-save:active,.admin-avatar-clear:active{transform:scale(.92)}
 @media(max-width:600px){.admin-avatar-row{grid-template-columns:40px minmax(0,1fr) auto;gap:8px;padding:8px 8px;min-height:52px}.admin-avatar-preview{width:40px;height:40px;font-size:13px}.admin-avatar-name{font-size:12.5px}.admin-avatar-input{height:26px;font-size:10.5px;padding:0 8px}.admin-avatar-save,.admin-avatar-clear{width:32px;height:32px;font-size:14px;border-radius:9px}}
-</style>
-<style id="splitFlyAndWheelDrop">
-/* =========================================================
-   SPLIT & FLY — chữ tách đôi bay sang 2 phía
-   ========================================================= */
-.split-exit-wrapper{
-  filter:drop-shadow(0 12px 32px rgba(42,78,57,.10));
-  pointer-events:none;
-  contain:layout style paint;
-}
-.split-half{
-  position:absolute;
-  inset:0;
-  transform-origin:center center;
-  will-change:transform,opacity,filter;
-  backface-visibility:hidden;
-  transition:transform .75s cubic-bezier(.55,0,.75,0),opacity .70s ease-out,filter .70s ease-out;
-}
-.split-half .landing-kicker,
-.split-half .landing-title,
-.split-half .landing-cta,
-.split-half .landing-top3-label .w,
-.split-half .landing-top3 .podium-slot,
-.split-half .landing-top3-empty{
-  animation-duration:.001ms !important;
-  animation-delay:0s !important;
-}
-.split-half-left{clip-path:inset(0 50% 0 0)}
-.split-half-right{clip-path:inset(0 0 0 50%)}
-.split-half-left.fly-left{transform:translate3d(-105vw,-3vh,0) rotate(-12deg) scale(.96);opacity:0;filter:blur(6px)}
-.split-half-right.fly-right{transform:translate3d(105vw,3vh,0) rotate(12deg) scale(.96);opacity:0;filter:blur(6px)}
-
-/* =========================================================
-   WHEEL DROP — vòng chọn tên rơi từ trên xuống
-   ========================================================= */
-#wheelArea{
-  transform:translate(-50%,-50%) translateY(-120vh) scale(.86) rotateX(-40deg);
-  transform-origin:center 60%;
-  transform-style:preserve-3d;
-  opacity:0;
-  pointer-events:none;
-  transition:opacity .35s ease-out,transform .90s cubic-bezier(.34,1.42,.55,1);
-  will-change:transform,opacity;
-}
-#wheelArea.show{transform:translate(-50%,-50%) translateY(0) scale(1) rotateX(0deg);opacity:1;pointer-events:auto}
-#wheelArea.show #wheelViewport{animation:wheelInnerSettle .55s cubic-bezier(.34,1.42,.55,1) .35s both}
-@keyframes wheelInnerSettle{0%{transform:translateY(-14px) scale(.96);opacity:.4}100%{transform:translateY(0) scale(1);opacity:1}}
-#wheelArea.show #wheelHint,#wheelArea.show #confirm{animation:wheelMetaFade .5s ease-out .5s both}
-@keyframes wheelMetaFade{0%{opacity:0;transform:translateX(-50%) translateY(8px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
-#wheelArea.show #confirm.show{animation:wheelConfirmPop .6s cubic-bezier(.34,1.42,.55,1) both}
-@keyframes wheelConfirmPop{0%{transform:translateX(-50%) scale(.72);opacity:0}60%{transform:translateX(-50%) scale(1.08);opacity:1}100%{transform:translateX(-50%) scale(1);opacity:1}}
-@media(prefers-reduced-motion:reduce){
-  .split-half{transition-duration:.001ms !important}
-  #wheelArea{transition-duration:.001ms !important}
-  #wheelArea.show #wheelViewport,#wheelArea.show #wheelHint,#wheelArea.show #confirm,#wheelArea.show #confirm.show{animation:none !important}
-}
 </style>
 </body>
 </html>
