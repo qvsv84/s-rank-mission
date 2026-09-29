@@ -3652,10 +3652,52 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   const connectionState = document.getElementById("connectionState");
   const connectionText = document.getElementById("connectionText");
 
-  // ===== Admin Session Manager — thay thế password hardcode =====
+  // ===== Admin Auth + Session Manager =====
+  // Không cần bảo mật cao — ưu tiên UX tức thì.
   const AdminSession = (() => {
     let _token = null;
     let _expiresAt = 0;
+
+    const HASH_KEY = "srank_admin_pwd_hash_v1";
+
+    async function sha256Hex(str){
+      try{
+        const enc = new TextEncoder();
+        const buf = await crypto.subtle.digest("SHA-256", enc.encode(String(str)));
+        return Array.from(new Uint8Array(buf))
+          .map(b => b.toString(16).padStart(2, "0"))
+          .join("");
+      }catch(_){
+        return "";
+      }
+    }
+
+    function getStoredHash(){
+      try{ return localStorage.getItem(HASH_KEY) || ""; }catch(_){ return ""; }
+    }
+
+    function setStoredHash(hex){
+      try{
+        if(hex) localStorage.setItem(HASH_KEY, hex);
+        else localStorage.removeItem(HASH_KEY);
+      }catch(_){ }
+    }
+
+    async function checkPasswordLocal(password){
+      const stored = getStoredHash();
+      if(!stored) return null;
+      const hex = await sha256Hex(password);
+      return hex && hex === stored;
+    }
+
+    async function rememberPassword(password){
+      const hex = await sha256Hex(password);
+      if(hex) setStoredHash(hex);
+    }
+
+    function forgetPassword(){
+      try{ localStorage.removeItem(HASH_KEY); }catch(_){ }
+    }
 
     function load(){
       try{
@@ -3678,13 +3720,13 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       _expiresAt = expiresAt;
       try{
         localStorage.setItem(ADMIN_TOKEN_KEY, JSON.stringify({token, expiresAt}));
-      }catch(_){}
+      }catch(_){ }
     }
 
     function clear(){
       _token = null;
       _expiresAt = 0;
-      try{ localStorage.removeItem(ADMIN_TOKEN_KEY); }catch(_){}
+      try{ localStorage.removeItem(ADMIN_TOKEN_KEY); }catch(_){ }
     }
 
     function isValid(){
@@ -3695,7 +3737,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       return isValid() ? _token : null;
     }
 
-    // Rate limiting client-side (bổ sung cho server-side)
     function checkRateLimit(){
       try{
         const raw = localStorage.getItem(ADMIN_RATE_LIMIT_KEY);
@@ -3720,18 +3761,50 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
           data.attempts = 0;
         }
         localStorage.setItem(ADMIN_RATE_LIMIT_KEY, JSON.stringify(data));
-      }catch(_){}
+      }catch(_){ }
     }
 
     function recordSuccess(){
-      try{ localStorage.removeItem(ADMIN_RATE_LIMIT_KEY); }catch(_){}
+      try{ localStorage.removeItem(ADMIN_RATE_LIMIT_KEY); }catch(_){ }
     }
 
-    return {load, save, clear, isValid, get, checkRateLimit, recordFailure, recordSuccess};
+    return {
+      load, save, clear, isValid, get,
+      checkRateLimit, recordFailure, recordSuccess,
+      sha256Hex, checkPasswordLocal, rememberPassword, forgetPassword
+    };
   })();
 
   // Khôi phục session khi mở app
   AdminSession.load();
+
+  // Xoá lockout oan khi mở app (do timeout lần trước)
+  try{
+    const rlRaw = localStorage.getItem(ADMIN_RATE_LIMIT_KEY);
+    if(rlRaw){
+      const rl = JSON.parse(rlRaw);
+      if(rl && rl.lockedUntil) localStorage.removeItem(ADMIN_RATE_LIMIT_KEY);
+    }
+  }catch(_){ }
+
+  // ===== Pre-warm Apps Script =====
+  // Gọi nền để server không bị cold start khi user cần.
+  let _warmupStarted = false;
+  function warmupAdmin(){
+    if(_warmupStarted) return;
+    _warmupStarted = true;
+
+    const ping = () => {
+      try{
+        window.__srankApi("getSettings", { _ts: Date.now() }, TIMEOUT.SLOW)
+          .catch(() => {});
+      }catch(_){ }
+    };
+
+    setTimeout(ping, 1500);
+    setInterval(ping, 4 * 60 * 1000);
+  }
+  warmupAdmin();
 
   function setConnection(state, text){
     connectionState.className = state;
@@ -4481,56 +4554,59 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   }
 
   async function openAdminSettings(){
-    // Verify session còn hiệu lực
     if(!AdminSession.isValid()){
       closeAdminPassword();
       adminUnlocked = false;
       openAdminPassword();
       return;
     }
-    
+
     closeAdminPassword();
     adminUnlocked = true;
     renderMonitor();
     renderQuizAdminButton();
     syncQuickTools();
-    adminStatus.textContent="Đang tải cài đặt…";
-    adminOverlay.classList.add("show");
-    adminOverlay.setAttribute("aria-hidden","false");
-    checklistLockTimeInput.value = checklistLockTime;
 
-    // Hiển thị ngay từ cache (nếu có) để UI không trống
+    adminOverlay.classList.add("show");
+    adminOverlay.setAttribute("aria-hidden", "false");
+
+    // ===== Hiển thị TỨC THÌ từ cache =====
     if(settingsCache){
-      resetTimeInput.value = settingsCache.resetTime;
-      checklistLockTimeInput.value = settingsCache.checklistLockTime;
+      resetTimeInput.value = settingsCache.resetTime || resetTime;
+      checklistLockTimeInput.value = settingsCache.checklistLockTime || checklistLockTime;
+      adminStatus.textContent = `Giờ reset: ${resetTime} • Giờ khoá Checklist: ${checklistLockTime}`;
+    }else{
+      resetTimeInput.value = resetTime;
+      checklistLockTimeInput.value = checklistLockTime;
+      adminStatus.textContent = "Đang tải cài đặt…";
     }
 
-    try{
-      // TTL 5 phút: lần mở Admin đầu tiên gọi server,
-      // các lần mở sau trong vòng 5 phút dùng cache.
-      const s = await getSettingsCached(false);
-      resetTime = s.resetTime;
+    renderLandingState();
+    renderAdminChecklistEditor();
+    renderAdminAvatarEditor();
+
+    // ===== Fetch settings ở NỀN, cập nhật khi có =====
+    getSettingsCached(false).then(s => {
+      if(!s) return;
+      resetTime = s.resetTime || resetTime;
       resetTimeInput.value = resetTime;
       if(isValid24hTime(s.checklistLockTime)){
         checklistLockTime = s.checklistLockTime;
         saveChecklistLockTime(checklistLockTime);
       }
       checklistLockTimeInput.value = checklistLockTime;
-      renderLandingState();
-      renderAdminChecklistEditor();
-      renderAdminAvatarEditor();
       adminStatus.textContent = `Giờ reset: ${resetTime} • Giờ khoá Checklist: ${checklistLockTime}`;
-    }catch(e){
-      resetTimeInput.value = resetTime;
-      checklistLockTimeInput.value = checklistLockTime;
-      renderAdminChecklistEditor();
-      renderAdminAvatarEditor();
-      adminStatus.textContent = "Không tải được giờ reset hiện tại. Giờ khoá Checklist vẫn dùng cài đặt trên trình duyệt này.";
-    }
+    }).catch(() => {
+      adminStatus.textContent = "Không tải được cài đặt mới. Đang dùng giá trị trên máy.";
+    });
   }
 
+  let _adminVerifying = false;
+
   async function verifyAdmin(){
-    // 1. Check rate limit client-side trước
+    if(_adminVerifying) return;
+
+    // 1. Rate limit
     const rl = AdminSession.checkRateLimit();
     if(!rl.allowed){
       adminPasswordMsg.textContent = `Quá nhiều lần thử. Vui lòng chờ ${rl.remainSec}s.`;
@@ -4544,40 +4620,110 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
       return;
     }
 
-    // 2. Gửi password lên server để LẤY TOKEN (không check ở client)
+    _adminVerifying = true;
     adminPasswordOk.disabled = true;
-    adminPasswordMsg.textContent = "Đang xác thực…";
+    adminPasswordOk.textContent = "⏳ Đang mở…";
 
     try{
-      const r = await window.__srankApi("adminLogin", {password}, TIMEOUT.FAST);
-      
-      if(!r.ok){
+      // ===== CHECK HASH LOCAL TRƯỚC — mở UI tức thì =====
+      const localOk = await AdminSession.checkPasswordLocal(password);
+
+      if(localOk === true){
+        // Mở Admin ngay, verify server chạy nền
+        adminPasswordInput.value = "";
+        adminPasswordMsg.textContent = "";
+        closeAdminPassword();
+
+        adminUnlocked = true;
+        renderMonitor();
+        renderQuizAdminButton();
+        syncQuickTools();
+
+        adminOverlay.classList.add("show");
+        adminOverlay.setAttribute("aria-hidden", "false");
+        adminStatus.textContent = "Đang xác thực với server…";
+
+        // Render từ cache ngay
+        if(settingsCache){
+          resetTimeInput.value = settingsCache.resetTime || resetTime;
+          checklistLockTimeInput.value = settingsCache.checklistLockTime || checklistLockTime;
+          adminStatus.textContent = `Giờ reset: ${resetTime} • Giờ khoá Checklist: ${checklistLockTime}`;
+        }else{
+          resetTimeInput.value = resetTime;
+          checklistLockTimeInput.value = checklistLockTime;
+        }
+        checklistLockTimeInput.value = checklistLockTime;
+        renderLandingState();
+        renderAdminChecklistEditor();
+        renderAdminAvatarEditor();
+
+        // Verify server nền
+        verifyAdminServer(password).catch(() => {});
+        return;
+      }
+
+      if(localOk === false){
+        // Hash có mà không khớp → chắc chắn sai
         AdminSession.recordFailure();
-        adminPasswordMsg.textContent = r.error || "Mật khẩu không đúng.";
+        adminPasswordMsg.textContent = "Mật khẩu không đúng.";
         adminPasswordInput.value = "";
         adminPasswordInput.focus();
         return;
       }
 
-      // 3. Server trả token + expiry
+      // localOk === null → máy mới, chưa có hash → phải chờ server
+      adminPasswordMsg.textContent = "Đang kết nối server (lần đầu có thể mất 10-15s)…";
+      await verifyAdminServer(password);
+
+    }catch(e){
+      adminPasswordMsg.textContent = "Không kết nối được server. Kiểm tra mạng rồi thử lại.";
+    }finally{
+      _adminVerifying = false;
+      adminPasswordOk.disabled = false;
+      adminPasswordOk.textContent = "Xác nhận";
+    }
+  }
+
+  async function verifyAdminServer(password){
+    try{
+      const r = await window.__srankApi("adminLogin", {password}, TIMEOUT.SLOW);
+
+      if(!r || !r.ok){
+        AdminSession.recordFailure();
+        AdminSession.forgetPassword();
+        adminPasswordMsg.textContent = (r && r.error) || "Mật khẩu không đúng.";
+        adminPasswordInput.value = "";
+        adminPasswordInput.focus();
+        throw new Error("Sai mật khẩu");
+      }
+
       const token = String(r.data?.token || "");
       const expiresAt = Number(r.data?.expiresAt) || (Date.now() + ADMIN_SESSION_TTL);
-      
+
       if(!token){
         adminPasswordMsg.textContent = "Server không trả token hợp lệ.";
-        return;
+        throw new Error("Token invalid");
       }
 
       AdminSession.save(token, expiresAt);
       AdminSession.recordSuccess();
-      adminPasswordInput.value = "";
-      await openAdminSettings();
+      await AdminSession.rememberPassword(password);
+
+      // Nếu UI chưa mở (máy mới) → mở luôn
+      if(!adminOverlay.classList.contains("show")){
+        await openAdminSettings();
+      }else{
+        adminStatus.textContent = `Giờ reset: ${resetTime} • Giờ khoá Checklist: ${checklistLockTime}`;
+      }
 
     }catch(e){
-      AdminSession.recordFailure();
-      adminPasswordMsg.textContent = "Không kết nối được server. Thử lại sau.";
-    }finally{
-      adminPasswordOk.disabled = false;
+      if(adminOverlay.classList.contains("show") && !AdminSession.isValid()){
+        closeAdmin();
+        adminUnlocked = false;
+        openAdminPassword();
+        adminPasswordMsg.textContent = "Xác thực server thất bại. Vui lòng thử lại.";
+      }
+      throw e;
     }
   }
   loadMonitorLinks();
