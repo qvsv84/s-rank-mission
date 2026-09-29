@@ -3098,6 +3098,13 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 @media(min-width:900px){.att-shell{max-width:860px}.att-page-inner{padding:28px 24px 40px}.att-day{min-height:72px}.att-day-num{font-size:15px}.att-status{font-size:16px}#attendanceStatusOptions{grid-template-columns:repeat(4,1fr)}}
 </style>
 
+<style id="attendanceV3Polish">
+.att-day.skeleton{background:linear-gradient(90deg,#eef4ec 0%,#f6faf5 50%,#eef4ec 100%);background-size:200% 100%;animation:attSkeleton 1.4s ease-in-out infinite;border-color:transparent;pointer-events:none}.att-day.skeleton .att-day-num,.att-day.skeleton .att-status{color:transparent}@keyframes attSkeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.att-day.just-updated{animation:attCellFlash 1.2s ease-out}@keyframes attCellFlash{0%{box-shadow:0 0 0 0 rgba(79,155,112,.5),inset 0 0 0 2px rgba(79,155,112,.4)}100%{box-shadow:0 0 0 0 rgba(79,155,112,0),inset 0 0 0 0 rgba(79,155,112,0)}}
+.att-refresh-toast{position:absolute;top:14px;left:50%;transform:translateX(-50%) translateY(-100%);padding:6px 14px;background:rgba(36,89,67,.94);color:#fff;font-size:11px;font-weight:900;letter-spacing:.05em;border-radius:999px;opacity:0;transition:opacity .3s ease,transform .3s ease;pointer-events:none;z-index:100;white-space:nowrap}.att-refresh-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.att-icon-btn.spinning{animation:attSpin 1s linear infinite;pointer-events:none}@keyframes attSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+#attendanceStatusPanel{will-change:transform;-webkit-overflow-scrolling:touch}
+</style>
 </head>
 <body>
 <main id="space">
@@ -7135,6 +7142,11 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
 /* ===== ĐIỀU HƯỚNG TRANG 2 + LỊCH CHẤM CÔNG ===== */
 (function(){
+  "use strict";
+  const CACHE_PREFIX_V3 = 'srank_att_v3_';
+  const AUTO_REFRESH_SEC_V3 = 60;
+  const REFRESH_PAUSE_AFTER_SAVE_MS_V3 = 8000;
+  const PRELOAD_OFFSETS_V3 = [-2,-1,1,2];
   const page = document.getElementById('attendancePage');
   const back = document.getElementById('attendanceBack');
   const employee = document.getElementById('attendanceEmployee');
@@ -7950,8 +7962,17 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     return null;
   }
 
+  function renderSkeletonV3(){
+    const y=viewDate.getFullYear(),m=viewDate.getMonth(),days=new Date(y,m+1,0).getDate(),leading=(new Date(y,m,1).getDay()+6)%7;
+    let h=''; for(let i=0;i<leading;i++) h+='<div class="att-day muted"></div>';
+    for(let d=1;d<=days;d++) h+=`<div class="att-day skeleton"><div class="att-day-num">${d}</div><div class="att-status"></div></div>`;
+    const total=leading+days,tr=(7-total%7)%7; for(let i=0;i<tr;i++) h+='<div class="att-day muted"></div>';
+    grid.innerHTML=h; if(workCount)workCount.textContent='0'; if(offCount)offCount.textContent='0'; if(leaveCount)leaveCount.textContent='0';
+  }
+
   function render(){
     const y = viewDate.getFullYear();
+    if(!selectedName || !Array.isArray(ATTENDANCE_EMPLOYEES) || !ATTENDANCE_EMPLOYEES.length){ renderSkeletonV3(); return; }
     const m = viewDate.getMonth();
     monthLabel.textContent = `Tháng ${m+1}`;
     yearLabel.textContent = String(y);
