@@ -2903,7 +2903,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   box-shadow:0 6px 16px rgba(239,212,138,.45),0 2px 5px rgba(42,78,57,.10) !important;
 }
 #question div.landing-top3 .podium-avatar-fallback{
-  display:flex !important;
+  display:none;
   align-items:center !important;
   justify-content:center !important;
   color:#2f6b4f !important;
@@ -2912,6 +2912,10 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   letter-spacing:-.02em !important;
   -webkit-text-fill-color:#2f6b4f !important;
 }
+#question div.landing-top3 .podium-avatar-fallback.show{
+  display:flex;
+}
+
 #question div.landing-top3 .podium-slot.rank-1 .podium-avatar-fallback{
   background:linear-gradient(135deg,#fff5d6,#fcecb8) !important;
   color:#8a6500 !important;
@@ -5658,9 +5662,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 
             const avatarHTML = avatarUrl
               ? `<img class="podium-avatar" src="${safeUrl}" alt="" loading="lazy" decoding="async"
-                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                 <div class="podium-avatar podium-avatar-fallback" style="display:none;">${initials}</div>`
-              : `<div class="podium-avatar podium-avatar-fallback">${initials}</div>`;
+                     onerror="this.style.display='none';this.nextElementSibling.classList.add('show');">
+                 <div class="podium-avatar podium-avatar-fallback">${initials}</div>`
+              : `<div class="podium-avatar podium-avatar-fallback show">${initials}</div>`;
 
             return `
               <div class="podium-slot rank-${p.rank}">
