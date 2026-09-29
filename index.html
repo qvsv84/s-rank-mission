@@ -3246,7 +3246,7 @@ body #homeStack #questionWrap{
 
   <div id="questionWrap">
     <div id="counter">CÂU 1</div>
-    <div id="question"><span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta">CLICK HERE</span></div>
+    <div id="question"></div>
   </div>
 
   <div id="weeklyTopWrap" aria-label="Top leo rank tuần">
@@ -6007,6 +6007,10 @@ body #homeStack #questionWrap{
 
       _lastTop3Signature = newSignature;
       _top3Nodes = null;
+
+      // Force reflow rồi add lại .play để animation stagger restart ngay khi data load xong
+      void question.offsetWidth;
+      question.classList.add("play");
     }else{
       // Chỉ cập nhật trạng thái locked của CTA, không đụng vào Top 3
       const cta = question.querySelector(".landing-cta");
