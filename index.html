@@ -3220,8 +3220,25 @@ body #homeStack #questionWrap{
 #question.play .landing-top3-label .w:nth-child(1){animation-delay:var(--top3-base)}#question.play .landing-top3-label .w:nth-child(2){animation-delay:calc(var(--top3-base) + .12s)}#question.play .landing-top3-label .w:nth-child(3){animation-delay:calc(var(--top3-base) + .24s)}#question.play .landing-top3-label .w:nth-child(4){animation-delay:calc(var(--top3-base) + .36s)}
 #question.play .landing-top3 .podium-slot[data-rank="1"]{animation-delay:calc(var(--top3-base) + .60s)}#question.play .landing-top3 .podium-slot[data-rank="2"]{animation-delay:calc(var(--top3-base) + .82s)}#question.play .landing-top3 .podium-slot[data-rank="3"]{animation-delay:calc(var(--top3-base) + 1.04s)}
 #question.play .landing-top3-empty{animation:heroSlideIn .7s cubic-bezier(.16,.9,.25,1) both;animation-delay:var(--top3-base)}
+
+/* Top 3 replay riêng — không đụng Hero */
+#question.top3-replay .landing-top3-label .w,
+#question.top3-replay .landing-top3 .podium-slot{
+  animation:heroSlideIn .7s cubic-bezier(.16,.9,.25,1) both;
+  will-change:transform,opacity;
+}
+#question.top3-replay .landing-top3-label .w:nth-child(1){animation-delay:0s}
+#question.top3-replay .landing-top3-label .w:nth-child(2){animation-delay:.12s}
+#question.top3-replay .landing-top3-label .w:nth-child(3){animation-delay:.24s}
+#question.top3-replay .landing-top3-label .w:nth-child(4){animation-delay:.36s}
+#question.top3-replay .landing-top3 .podium-slot[data-rank="1"]{animation-delay:.60s}
+#question.top3-replay .landing-top3 .podium-slot[data-rank="2"]{animation-delay:.82s}
+#question.top3-replay .landing-top3 .podium-slot[data-rank="3"]{animation-delay:1.04s}
+#question.top3-replay .landing-top3-empty{animation:heroSlideIn .7s cubic-bezier(.16,.9,.25,1) both;animation-delay:0s}
+
 #question .landing-top3-label .w{display:inline-block}#question .landing-top3-label{overflow:hidden}#question .landing-top3 .podium-slot{will-change:transform,opacity}
-@media(prefers-reduced-motion:reduce){#question.play .landing-kicker,#question.play .landing-title,#question.play .landing-cta,#question.play .landing-top3-label .w,#question.play .landing-top3 .podium-slot,#question.play .landing-top3-empty{animation:none !important;opacity:1 !important;transform:none !important}}
+@media(prefers-reduced-motion:reduce){#question.play .landing-kicker,#question.play .landing-title,#question.play .landing-cta,#question.play .landing-top3-label .w,#question.play .landing-top3 .podium-slot,#question.play .landing-top3-empty,
+  #question.top3-replay .landing-top3-label .w,#question.top3-replay .landing-top3 .podium-slot,#question.top3-replay .landing-top3-empty{animation:none !important;opacity:1 !important;transform:none !important}}
 </style>
 </head>
 <body>
@@ -5939,8 +5956,12 @@ body #homeStack #questionWrap{
   if(top3Changed){
     question.querySelector(".landing-top3-label")?.remove();question.querySelector(".landing-top3")?.remove();question.querySelector(".landing-top3-empty")?.remove();
     const ctaBefore=question.querySelector(".landing-cta"); if(ctaBefore&&top3HTML) ctaBefore.insertAdjacentHTML("beforebegin",top3HTML);
-    _lastTop3Signature=newSignature; _top3Nodes=null; question.style.setProperty("--top3-base","0s");
-    question.classList.remove("play"); void question.offsetWidth; question.classList.add("play");
+    _lastTop3Signature=newSignature; _top3Nodes=null;
+
+    // Replay CHỈ Top 3 — tuyệt đối không reset .play của Hero
+    question.classList.remove("top3-replay");
+    void question.offsetWidth;
+    question.classList.add("top3-replay");
   }
   const cta=question.querySelector(".landing-cta"); const lockNote=question.querySelector(".landing-lock-note");
   if(locked){if(cta&&!cta.classList.contains("locked")){cta.classList.add("locked");cta.setAttribute("aria-disabled","true");cta.setAttribute("tabindex","-1");cta.textContent="Tạm khoá Checklist";if(!lockNote){const note=document.createElement("span");note.className="landing-lock-note";note.textContent=`Sau ${checklistLockTime} sẽ khoá Checklist nha mn 🥰`;question.appendChild(note)}}}else if(cta&&cta.classList.contains("locked")){cta.classList.remove("locked");cta.removeAttribute("aria-disabled");cta.setAttribute("tabindex","0");cta.textContent="CLICK HERE";lockNote?.remove()}
