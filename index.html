@@ -2714,7 +2714,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 /* =========================================================
    HERO CARD HOME — redesign màn hình chính
    ========================================================= */
-#questionWrap{top:42% !important;width:min(94vw,560px) !important}
+#questionWrap{top:34% !important;width:min(94vw,560px) !important}
 #question{position:relative !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;gap:20px !important;width:100% !important;padding:32px 28px 28px !important;box-sizing:border-box !important;border-radius:32px !important;background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(255,255,255,.98) 0%,rgba(255,255,255,.72) 45%,transparent 75%),linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(248,252,246,.94) 55%,rgba(240,248,238,.92) 100%) !important;border:1px solid rgba(120,175,135,.18) !important;box-shadow:0 24px 60px -20px rgba(42,78,57,.18),0 12px 32px -12px rgba(42,78,57,.12),0 2px 8px rgba(42,78,57,.05),inset 0 1px 0 rgba(255,255,255,.95) !important;backdrop-filter:blur(20px) saturate(120%) !important;-webkit-backdrop-filter:blur(20px) saturate(120%) !important;animation:none !important;overflow:hidden !important}
 #question::before{content:"" !important;position:absolute !important;top:-50% !important;right:-50% !important;width:200% !important;height:200% !important;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.65) 0%,transparent 45%) !important;pointer-events:none !important;z-index:0 !important}
 #question > *{position:relative !important;z-index:1 !important}
@@ -2748,7 +2748,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 #question .landing-cta.locked::before{content:"🔒" !important;font-size:14px !important}
 #question .landing-cta.locked:hover{transform:none !important;box-shadow:0 4px 12px rgba(53,91,61,.08),inset 0 1px 0 rgba(255,255,255,.95) !important}
 #question .landing-lock-note{display:block !important;margin-top:-4px !important;width:100% !important;color:#799083 !important;font-size:clamp(10px,2.7vw,12px) !important;font-weight:700 !important;line-height:1.4 !important;letter-spacing:.1px !important;text-align:center !important}
-@media(max-width:600px){#questionWrap{top:42% !important;width:calc(100vw - 24px) !important}#question{padding:28px 22px 24px !important;border-radius:28px !important;gap:18px !important}#question .landing-title{font-size:clamp(28px,8vw,46px) !important}#question .landing-title::before{font-size:9px !important;letter-spacing:.28em !important;margin-bottom:12px !important}#question .landing-cta{min-width:160px !important;min-height:48px !important;padding:11px 26px !important}}
+@media(max-width:600px){#questionWrap{top:32% !important;width:calc(100vw - 24px) !important}#question{padding:28px 22px 24px !important;border-radius:28px !important;gap:18px !important}#question .landing-title{font-size:clamp(28px,8vw,46px) !important}#question .landing-title::before{font-size:9px !important;letter-spacing:.28em !important;margin-bottom:12px !important}#question .landing-cta{min-width:160px !important;min-height:48px !important;padding:11px 26px !important}}
 @media(max-width:390px){#questionWrap{width:calc(100vw - 20px) !important}#question{padding:24px 18px 20px !important;border-radius:24px !important}#question .landing-title{font-size:clamp(24px,7.6vw,38px) !important}}
   /* ===== Loading Skeleton ===== */
   .skeleton{
@@ -3105,6 +3105,33 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .att-icon-btn.spinning{animation:attSpin 1s linear infinite;pointer-events:none}@keyframes attSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 #attendanceStatusPanel{will-change:transform;-webkit-overflow-scrolling:touch}
 </style>
+<style id="weeklyTopCard">
+/* =========================================================
+   TOP LEO RANK TUẦN — card nằm dưới hero card
+   ========================================================= */
+
+#weeklyTopWrap{position:absolute;left:50%;top:70%;transform:translateX(-50%) scale(.94);z-index:9;width:min(88vw,440px);opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s cubic-bezier(.16,.9,.25,1)}
+#weeklyTopWrap.show{opacity:1;pointer-events:auto;transform:translateX(-50%) scale(1)}
+#weeklyTopCard{position:relative;padding:14px 18px 15px;border-radius:22px;background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(255,255,255,.98) 0%,rgba(255,255,255,.72) 45%,transparent 78%),linear-gradient(180deg,rgba(255,255,255,.95) 0%,rgba(248,252,246,.92) 55%,rgba(241,249,239,.90) 100%);border:1px solid rgba(120,175,135,.18);box-shadow:0 18px 44px -18px rgba(42,78,57,.16),0 8px 24px -10px rgba(42,78,57,.10),0 1px 3px rgba(42,78,57,.04),inset 0 1px 0 rgba(255,255,255,.95);backdrop-filter:blur(20px) saturate(120%);-webkit-backdrop-filter:blur(20px) saturate(120%);overflow:hidden}
+#weeklyTopCard::before{content:"";position:absolute;top:-60%;right:-30%;width:180%;height:180%;background:radial-gradient(circle at 70% 15%,rgba(239,212,138,.16) 0%,transparent 40%);pointer-events:none;z-index:0}
+#weeklyTopCard > *{position:relative;z-index:1}
+.weekly-top-header{display:flex;align-items:center;justify-content:center;gap:7px;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid rgba(120,175,135,.14)}
+.weekly-top-icon{font-size:15px;line-height:1;filter:drop-shadow(0 2px 3px rgba(239,212,138,.45))}
+.weekly-top-title{font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:10.5px;font-weight:950;letter-spacing:.22em;color:#5c8a6d;text-transform:uppercase;line-height:1}
+.weekly-top-body{display:flex;align-items:center;gap:14px}
+.weekly-top-avatar{flex:0 0 auto;width:54px;height:54px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(135deg,#a8d5b5 0%,#7bb98f 100%);color:#fff;font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:18px;font-weight:950;letter-spacing:-.04em;text-shadow:0 1px 2px rgba(42,78,57,.18);border:2.5px solid #fff;box-shadow:0 6px 16px -4px rgba(79,155,112,.35),0 2px 6px -1px rgba(42,78,57,.12),inset 0 1px 0 rgba(255,255,255,.35);position:relative}
+.weekly-top-avatar::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:1.5px dashed rgba(79,155,112,.25);pointer-events:none}
+.weekly-top-info{flex:1;min-width:0}
+.weekly-top-name{font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:17px;font-weight:950;color:#245943;letter-spacing:-.025em;line-height:1.05;margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.weekly-top-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.weekly-top-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px 4px 8px;border-radius:999px;background:linear-gradient(135deg,rgba(79,155,112,.09),rgba(79,155,112,.05));border:1px solid rgba(79,155,112,.14);color:#3d7653;font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:11px;font-weight:850;letter-spacing:-.005em;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
+.weekly-top-pill.zodiac{background:linear-gradient(135deg,rgba(239,212,138,.22),rgba(239,212,138,.10));border-color:rgba(216,168,104,.28);color:#8a6500}
+.meta-icon{font-size:11px;line-height:1;filter:saturate(1.05)}
+.zodiac-symbol{font-size:14px;line-height:1;font-weight:900;color:#a5762e}
+@media(max-width:600px){#weeklyTopWrap{top:72%;width:calc(100vw - 32px)}#weeklyTopCard{padding:13px 16px 14px;border-radius:20px}.weekly-top-avatar{width:50px;height:50px;font-size:17px}.weekly-top-name{font-size:16px}.weekly-top-pill{font-size:10.5px;padding:3px 9px 3px 7px}}
+@media(max-width:390px){#weeklyTopCard{padding:12px 14px 13px}.weekly-top-avatar{width:46px;height:46px;font-size:15px;border-width:2px}.weekly-top-body{gap:12px}.weekly-top-name{font-size:15px}.weekly-top-meta{gap:5px}.weekly-top-pill{font-size:10px}}
+@keyframes weeklyTopIn{from{opacity:0;transform:translateX(-50%) translateY(8px) scale(.94)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+</style>
 </head>
 <body>
 <main id="space">
@@ -3117,6 +3144,35 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   <div id="question"><span class="landing-title">CHECKLIST ĐẢO MÈO</span><span class="landing-cta">CLICK HERE</span></div>
 </div>
 
+<!-- ===== TOP LEO RANK TUẦN ===== -->
+<div id="weeklyTopWrap" aria-label="Top leo rank tuần">
+  <article id="weeklyTopCard">
+    <header class="weekly-top-header">
+      <span class="weekly-top-icon" aria-hidden="true">🏆</span>
+      <span class="weekly-top-title">TOP LEO RANK TUẦN</span>
+    </header>
+
+    <div class="weekly-top-body">
+      <div class="weekly-top-avatar" aria-hidden="true">QT</div>
+
+      <div class="weekly-top-info">
+        <div class="weekly-top-name">Quỳnh Trang</div>
+
+        <div class="weekly-top-meta">
+          <span class="weekly-top-pill">
+            <span class="meta-icon" aria-hidden="true">🎂</span>
+            <span>07/05/2005</span>
+          </span>
+
+          <span class="weekly-top-pill zodiac">
+            <span class="zodiac-symbol" aria-hidden="true">♉</span>
+            <span>Kim Ngưu</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </article>
+</div>
 
 <div id="wheelArea">
   <div id="wheelViewport"><div id="selectionLine"></div><div id="items"></div></div>
@@ -5856,6 +5912,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     question.style.opacity = "1";
     question.style.transform = "scale(1)";
     question.style.pointerEvents = locked ? "none" : "auto";
+
+    // ===== Hiện card TOP LEO RANK TUẦN =====
+    document.getElementById("weeklyTopWrap")?.classList.add("show");
   }
 
   function openQuestion1(e){
@@ -5869,6 +5928,8 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
     question.style.pointerEvents="none";
     question.style.opacity="0";
     question.style.transform="scale(.8)";
+    // Ẩn card TOP LEO RANK TUẦN khi vào wheel chọn tên
+    document.getElementById("weeklyTopWrap")?.classList.remove("show");
     burst();
     setTimeout(()=>{
       wheelArea.style.opacity = "1";
@@ -6344,6 +6405,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
     counter.textContent = "CÂU 1";
     renderLandingState();
+    document.getElementById("weeklyTopWrap")?.classList.add("show");
 
     hint.textContent = isChecklistLocked() ? "" : (names.length ? "Chạm vào câu hỏi" : "Đang tải dữ liệu…");
     renderWheel();
