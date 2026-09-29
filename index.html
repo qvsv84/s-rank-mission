@@ -8019,6 +8019,59 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 #question div.landing-top3 .podium-avatar img[style*="display:none"] + .podium-avatar-fallback{
   display:flex !important;
 }
+
+/* PATCH: Admin Avatar background + borderless list + sticky header */
+#adminPageContent{
+  background:
+    radial-gradient(circle at 15% 15%, rgba(79,155,112,.05), transparent 35%),
+    radial-gradient(circle at 85% 85%, rgba(239,212,138,.05), transparent 35%),
+    radial-gradient(circle at 50% 50%, rgba(200,230,205,.04), transparent 60%),
+    linear-gradient(180deg,#f8fbf6 0%,#f1f7ef 100%);
+  background-attachment:local;
+}
+#adminAvatarRows{
+  background:rgba(255,255,255,.72);
+  border:0;
+  border-radius:0;
+  overflow:visible;
+  flex:1 1 auto;
+  min-height:0;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  box-shadow:0 1px 0 rgba(62,112,79,.08);
+}
+.admin-avatar-header{
+  grid-template-columns:44px minmax(0,1fr) auto;
+  gap:10px;
+  padding:10px 4px 8px;
+  background:rgba(244,249,243,.94);
+  border-bottom:1px solid rgba(62,112,79,.14);
+  position:sticky;
+  top:0;
+  z-index:3;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.admin-avatar-row{
+  grid-template-columns:44px minmax(0,1fr) auto;
+  gap:10px;
+  padding:8px 4px;
+  background:transparent;
+  border-bottom:1px solid rgba(62,112,79,.06);
+  min-height:52px;
+  transition:background .15s ease;
+}
+.admin-avatar-row:last-child{border-bottom:0}
+.admin-avatar-row:hover{background:rgba(255,255,255,.5)}
+.admin-avatar-row:focus-within{background:rgba(255,255,255,.7)}
+@media(max-width:600px){
+  .admin-avatar-header{grid-template-columns:36px minmax(0,1fr) minmax(0,1.2fr) 56px;gap:6px;padding:8px 10px}
+  .admin-avatar-row{grid-template-columns:36px minmax(0,1fr) minmax(0,1.2fr) 56px;gap:6px;padding:5px 10px;min-height:40px}
+}
+@media(max-width:380px){
+  .admin-avatar-header{grid-template-columns:32px minmax(0,1fr) minmax(0,1fr) 52px;gap:4px;padding:6px 8px}
+  .admin-avatar-row{grid-template-columns:32px minmax(0,1fr) minmax(0,1fr) 52px;gap:4px;padding:5px 8px}
+}
 </style>
 </body>
 </html>
