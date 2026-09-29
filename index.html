@@ -2915,7 +2915,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 #question div.landing-top3 .podium-avatar-fallback.show{
   display:flex;
 }
-
 #question div.landing-top3 .podium-slot.rank-1 .podium-avatar-fallback{
   background:linear-gradient(135deg,#fff5d6,#fcecb8) !important;
   color:#8a6500 !important;
@@ -2925,8 +2924,25 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 @media(max-width:600px){
   #question div.landing-top3 .podium-avatar{width:38px !important;height:38px !important}
   #question div.landing-top3 .podium-slot.rank-1 .podium-avatar{width:48px !important;height:48px !important}
-  #question div.landing-top3 .podium-avatar-fallback{font-size:12px !important}
-  #question div.landing-top3 .podium-slot.rank-1 .podium-avatar-fallback{font-size:14px !important}
+  #question div.landing-top3 .podium-avatar-fallback{
+  display:none;
+  align-items:center !important;
+  justify-content:center !important;
+  color:#2f6b4f !important;
+  font-weight:950 !important;
+  font-size:14px !important;
+  letter-spacing:-.02em !important;
+  -webkit-text-fill-color:#2f6b4f !important;
+}
+#question div.landing-top3 .podium-avatar-fallback.show{
+  display:flex;
+}
+#question div.landing-top3 .podium-slot.rank-1 .podium-avatar-fallback{
+  background:linear-gradient(135deg,#fff5d6,#fcecb8) !important;
+  color:#8a6500 !important;
+  -webkit-text-fill-color:#8a6500 !important;
+  font-size:17px !important;
+}
 }
 @media(max-width:390px){
   #question div.landing-top3 .podium-avatar{width:34px !important;height:34px !important}
