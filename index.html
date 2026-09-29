@@ -7938,5 +7938,44 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 </script>
 <button id="liveFeedBtn" type="button" aria-label="Mở Live Feed"><span aria-hidden="true">🔔</span><span id="liveFeedBadge" hidden></span></button>
 <div id="liveFeedOverlay" aria-hidden="true"><section id="liveFeedPanel" role="dialog" aria-modal="true" aria-labelledby="liveFeedTitle"><div id="liveFeedHead"><div id="liveFeedTitle"><span class="live-pulse"></span>Live Feed</div><button id="liveFeedClose" type="button" aria-label="Đóng">×</button></div><div id="liveFeedList"></div><div id="liveFeedFoot"><span id="liveFeedCount"></span> · <button id="liveFeedClear" type="button">Xoá lịch sử</button></div></section></div>
+<style id="avatarTop3Fix">
+/* =========================================================
+   FIX AVATAR TOP 3 — hiển thị đúng kiểu avatar Facebook
+   ========================================================= */
+
+/* Ảnh bên trong khung tròn: crop vuông ở giữa, không méo, không tràn */
+#question div.landing-top3 .podium-avatar img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+  object-position:center center !important;
+  display:block !important;
+  border-radius:50% !important;
+  background:#fff !important;
+}
+
+/* Đảm bảo khung avatar luôn bo tròn và cắt phần thừa */
+#question div.landing-top3 .podium-avatar{
+  position:relative !important;
+  overflow:hidden !important;
+  border-radius:50% !important;
+  background:#fff !important;
+}
+
+/* Fallback (chữ cái "?") phủ đúng khung khi ảnh lỗi */
+#question div.landing-top3 .podium-avatar-fallback{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  border-radius:50% !important;
+}
+
+/* Nếu ảnh không load được, ẩn img và hiện fallback */
+#question div.landing-top3 .podium-avatar img[style*="display: none"] + .podium-avatar-fallback,
+#question div.landing-top3 .podium-avatar img[style*="display:none"] + .podium-avatar-fallback{
+  display:flex !important;
+}
+</style>
 </body>
 </html>
