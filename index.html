@@ -3211,7 +3211,7 @@ body #homeStack #questionWrap{
    - Lần sau: chỉ top3 chạy lại, delay = 0 (dùng --top3-base)
    ========================================================= */
 #question .landing-title::before{content:none !important;display:none !important}
-#question{--top3-base:.95s}
+#question{--top3-base:.35s}
 #question .landing-kicker{display:block;width:100%;margin:0 0 6px;color:#8ca598;font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:clamp(9px,2.3vw,11px);font-weight:900;letter-spacing:.32em;text-align:center;text-transform:uppercase;line-height:1;opacity:.85}
 @keyframes heroSlideIn{0%{opacity:0;transform:translateX(100vw)}100%{opacity:1;transform:translateX(0)}}
 #question .landing-kicker,#question .landing-title,#question .landing-cta,#question .landing-top3-label .w,#question .landing-top3 .podium-slot{opacity:0}
@@ -6581,9 +6581,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   // Hiển thị trạng thái ngay lập tức
   loadChecklistLockTime();
   checklistLockTimeInput.value = checklistLockTime;
-  renderLandingState();
-
-  // (renderLandingState đã tự trigger animation → không cần trigger riêng ở đây)
 
   // ===== Gọi loadData TRƯỚC (không await) =====
   // getSettings sẽ chờ loadData xong mới gọi → tránh 2 request song song
@@ -6599,6 +6596,11 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   }else{
     _loadDataPromise = loadData(true);
   }
+
+  // ===== Render landing SAU khi cache đã load xong =====
+  // Đặt ở đây để Top3 từ cache hiện ra ngay lập tức,
+  // thay vì render rỗng trước rồi mới render lại.
+  renderLandingState();
 
   // ===== Chờ loadData xong rồi mới gọi getSettings =====
   (async()=>{
