@@ -10,7 +10,9 @@
 <link rel="apple-touch-icon" href="/icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Đảo Mèo">
+<meta name="application-name" content="Đảo Mèo">
 <!-- ===== Preconnect tới Google Apps Script ===== -->
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
@@ -4437,7 +4439,7 @@ body #homeStack #questionWrap{
       points = Array.isArray(x.points)
         ? x.points.slice(0, names.length).map(p => Number.isFinite(Number(p)) ? Number(p) : 100)
         : names.map(() => 100);
-      ranks = points.map(rankClient);
+      ranks = serverRanks;
       return names.length > 0;
     }catch(_){
       try{ localStorage.removeItem(CACHE_KEY); }catch(_){}
@@ -5300,21 +5302,23 @@ body #homeStack #questionWrap{
   }
 
   function rankClient(value){
-    return attendanceRankClient(value);
+    const score = Number(value) || 0;
+    if(score >= 340) return "SSS";
+    if(score >= 240) return "SS";
+    if(score >= 180) return "S";
+    if(score >= 100) return "A";
+    return "B";
   }
 
-  // BXH chấm công dùng đúng 6 rank:
-  // B < 400, A 400+, S 500+, SS 600+, SSS 750+, VIP 1000+.
+  // Rank VIP phải lấy từ server vì VIP phụ thuộc vị trí #1 toàn BXH.
+  function normalizeServerRank(value, score){
+    const r = String(value || "").trim().toUpperCase();
+    return ["B","A","S","SS","SSS","VIP"].includes(r) ? r : rankClient(score);
+  }
+
   function attendanceRankClient(value){
-    const score = Number(value) || 0;
-    if(score >= 700) return "VIP";
-    if(score >= 600) return "SSS";
-    if(score >= 500) return "SS";
-    if(score >= 400) return "S";
-    if(score >= 300) return "A";
-    if(score >= 200) return "B";
-    if(score >= 100) return "C";
-    return "D";
+    // Giữ tên hàm để không phá code cũ; Rank hiện tại dùng chung hệ mới.
+    return rankClient(value);
   }
 
 
@@ -5343,9 +5347,33 @@ body #homeStack #questionWrap{
 
   let topRenderToken = 0;
 
-  function renderTopRows(employees, year, month){
+  function renderTopRows(scoreRows, year, month){
+    // v2.02: BXH chính dùng ScoreAudit/server leaderboard.
+    // Giữ legacy attendance renderer bên dưới để không xoá flow cũ của hệ thống.
+    if(Array.isArray(scoreRows) && scoreRows.length && (scoreRows[0]?.points != null || scoreRows[0]?.rank)){
+      const frag = document.createDocumentFragment();
+      scoreRows.map((row,index)=>({
+        name:String(row?.name || "").trim(),
+        points:Number(row?.points) || 0,
+        rank:normalizeServerRank(row?.rank, row?.points),
+        position:Number(row?.position) || index + 1
+      })).filter(row=>row.name).forEach((row,i)=>{
+        const tr = document.createElement('tr');
+        if(i < 3) tr.classList.add('topRow' + (i + 1));
+        tr.innerHTML = `<td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td><td class="topName"></td><td class="topPoints"></td><td><span class="topRank"></span></td>`;
+        tr.querySelector('.topName').textContent = row.name;
+        tr.querySelector('.topPoints').textContent = Number(row.points || 0).toLocaleString('vi-VN');
+        tr.querySelector('.topRank').textContent = row.rank;
+        frag.appendChild(tr);
+      });
+      topBody.innerHTML = '';
+      topBody.appendChild(frag);
+      return;
+    }
+
+    // ===== LEGACY ATTENDANCE VIEW — preserved, not used for the new score/rank =====
     const daysInMonth = new Date(year, month, 0).getDate();
-    const rows = (Array.isArray(employees) ? employees : []).map((employee,index)=>{
+    const rows = (Array.isArray(scoreRows) ? scoreRows : []).map((employee,index)=>{
       const days = employee && employee.days ? employee.days : {};
       let tCount = 0;
       let pCount = 0;
@@ -5358,17 +5386,8 @@ body #homeStack #questionWrap{
         else if(status === 'Q') qCount++;
         else if(status === 'X') xCount++;
       }
-      // Công thức backend v2.00: 300 + T*40 - P*10 - Q*100 - X*200
       const points = 300 + tCount * 40 - pCount * 10 - qCount * 100 - xCount * 200;
-      return {
-        name: String(employee?.name || '').trim(),
-        points,
-        tCount,
-        pCount,
-        qCount,
-        xCount,
-        index
-      };
+      return {name:String(employee?.name || '').trim(),points,tCount,pCount,qCount,xCount,index};
     }).filter(row=>row.name);
 
     rows.sort((a,b)=>b.points-a.points || a.index-b.index);
@@ -5399,17 +5418,10 @@ body #homeStack #questionWrap{
     try{
       // Cache-first: render ngay từ RAM/localStorage nếu tháng này đã tải trước đó.
       // Nếu có cache, refresh 1 lần ở nền bằng chính getAttendance để dữ liệu vẫn mới.
-      const first = await window.__getAttendanceTopDataForMonth(month, false);
+      const first = await window.__srankApi("scoreLeaderboard", {month}, TIMEOUT.SLOW);
+      if(!first.ok) throw new Error(first.error || "Không tải được BXH điểm");
       if(token !== topRenderToken) return;
-      renderTopRows(first.employees, first.year, first.month);
-
-      if(first.cached){
-        window.__getAttendanceTopDataForMonth(month, true).then(fresh=>{
-          if(token !== topRenderToken) return;
-          if(topMonthSelect && Number(topMonthSelect.value) !== month) return;
-          renderTopRows(fresh.employees, fresh.year, fresh.month);
-        }).catch(()=>{});
-      }
+      renderTopRows(first.data?.rows || []);
     }catch(_){
       if(token !== topRenderToken) return;
       topBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:18px">Không tải được dữ liệu chấm công</td></tr>';
@@ -5720,8 +5732,11 @@ body #homeStack #questionWrap{
       const rawPoints = Array.isArray(r.data?.points) ? r.data.points : [];
       const serverPoints = serverNames.map((_, i) => {
         const p = Number(rawPoints[i]);
-        return Number.isFinite(p) && p >= 0 && p <= 100000 ? p : 100;
+        return Number.isFinite(p) && p >= 0 && p <= 100000 ? p : 0;
       });
+
+      const rawRanks = Array.isArray(r.data?.ranks) ? r.data.ranks : [];
+      const serverRanks = serverNames.map((_, i) => normalizeServerRank(rawRanks[i], serverPoints[i]));
 
       const rawChecks = Array.isArray(r.data?.checks) ? r.data.checks : [];
       const serverChecks = serverNames.map((_, i) => rawChecks[i] === true);
@@ -5745,12 +5760,12 @@ body #homeStack #questionWrap{
           points: serverPoints,
           checked: serverChecks,
           times: serverTimes,
-          ranks: serverPoints.map(rankClient)
+          ranks: serverRanks
         });
 
         if(updated){
           points = serverPoints;
-          ranks = points.map(rankClient);
+          ranks = serverRanks;
           lastAutoSyncAt = Date.now();
           window.syncAttendanceEmployees?.();
           cacheSave();
@@ -5931,7 +5946,10 @@ body #homeStack #questionWrap{
 
       if(r.data && Number.isFinite(Number(r.data.points))) {
         points[index] = Number(r.data.points);
-        ranks[index] = r.data.rank || rankClient(points[index]);
+        ranks[index] = normalizeServerRank(r.data.rank, points[index]);
+      }
+      if(r.data && /^([01]\d|2[0-3]):[0-5]\d$/.test(String(r.data.time || ""))){
+        times[index] = String(r.data.time);
       }
       cacheSave();
 
