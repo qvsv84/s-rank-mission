@@ -4111,6 +4111,7 @@ body #homeStack #questionWrap{
   let lastSyncSuccessAt = 0;        // timestamp sync thành công gần nhất
   const Q1_CACHE_KEY = "srank_q1_answer_v1";
   const CHECKLIST_LOCK_KEY = "srank_checklist_lock_time_v1";
+  const LAST_PICKED_NAME_KEY = "srank_last_picked_name_v1";
   try{ localStorage.removeItem(Q1_CACHE_KEY); }catch(_){}
   const connectionState = document.getElementById("connectionState");
   const connectionText = document.getElementById("connectionText");
@@ -6142,6 +6143,16 @@ body #homeStack #questionWrap{
       wheelArea.style.opacity = "1";
       wheelArea.style.pointerEvents = "auto";
       wheelArea.classList.add("show");
+
+      // Nhảy về tên đã chọn lần trước (nếu còn trong danh sách)
+      try{
+        const lastPicked = localStorage.getItem(LAST_PICKED_NAME_KEY);
+        if(lastPicked){
+          const idx = names.indexOf(lastPicked);
+          if(idx >= 0) current = idx;
+        }
+      }catch(_){}
+
       renderWheel();
       hint.textContent="Vuốt lên / xuống • ↑ ↓ để chọn • Enter để xác nhận";
       syncQuickTools();
@@ -6170,6 +6181,10 @@ body #homeStack #questionWrap{
     }
     const selected = names[current];
     if(!selected) return;
+
+    // Nhớ tên vừa chọn cho lần sau
+    try{ localStorage.setItem(LAST_PICKED_NAME_KEY, selected); }catch(_){}
+
     showQuestion2();
   });
 
