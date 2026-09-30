@@ -1,4 +1,4 @@
-const CACHE = 'daomeo-v1';
+const CACHE = 'daomeo-v2';
 const SHELL = ['/', '/index.html', '/manifest.json', '/icon.svg'];
 
 self.addEventListener('install', e => {
