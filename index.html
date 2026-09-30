@@ -3240,6 +3240,160 @@ body #homeStack #questionWrap{
 @media(prefers-reduced-motion:reduce){#question.play .landing-kicker,#question.play .landing-title,#question.play .landing-cta,#question.play .landing-top3-label .w,#question.play .landing-top3 .podium-slot,#question.play .landing-top3-empty,
   #question.top3-replay .landing-top3-label .w,#question.top3-replay .landing-top3 .podium-slot,#question.top3-replay .landing-top3-empty{animation:none !important;opacity:1 !important;transform:none !important}}
 </style>
+<style id="birthdayCardStyle">
+/* ===== BIRTHDAY CARD — Rosalie ===== */
+#weeklyTopWrap:not(.birthday-mode){ display:none !important; }
+
+.birthday-card{
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease;
+}
+.birthday-card::before{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255,220,235,.55) 0%, transparent 38%),
+    radial-gradient(circle at 82% 88%, rgba(255,240,200,.55) 0%, transparent 38%),
+    radial-gradient(circle at 50% 50%, rgba(255,200,230,.32) 0%, transparent 62%);
+  pointer-events:none; z-index:0;
+}
+.birthday-card::after{
+  content:"🎈";
+  position:absolute; top:8px; right:10px;
+  font-size:16px; opacity:.75;
+  pointer-events:none; z-index:1;
+  animation:birthdayBalloon 3.2s ease-in-out infinite;
+}
+@keyframes birthdayBalloon{
+  0%,100%{ transform:translateY(0) rotate(-4deg); }
+  50%{ transform:translateY(-4px) rotate(4deg); }
+}
+.birthday-card > *{ position:relative; z-index:1; }
+
+.birthday-card:hover{
+  transform:translateY(-2px);
+  box-shadow:
+    0 24px 55px -18px rgba(255,100,180,.30),
+    0 12px 30px -10px rgba(255,150,200,.22),
+    0 2px 6px rgba(42,78,57,.05),
+    inset 0 1px 0 rgba(255,255,255,.95);
+}
+.birthday-card:active{ transform:translateY(0) scale(.985); }
+.birthday-card:focus-visible{
+  outline:3px solid rgba(255,120,190,.45);
+  outline-offset:3px;
+}
+
+/* Avatar sinh nhật — dùng background-image, không có con nên cần tắt placeholder ":" */
+.weekly-top-avatar.birthday-avatar{
+  background-size:cover !important;
+  background-position:center !important;
+  background-color:#fff !important;
+}
+#weeklyTopWrap .weekly-top-avatar.birthday-avatar:empty::before{
+  content:none !important;
+  display:none !important;
+}
+
+.birthday-name{
+  font-size:17px !important;
+  background:linear-gradient(135deg,#c0306d,#ff70b0);
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent;
+  letter-spacing:-.02em;
+}
+.birthday-today{
+  background:linear-gradient(135deg, rgba(255,180,220,.38), rgba(255,220,240,.28)) !important;
+  border-color:rgba(255,140,200,.42) !important;
+  color:#b0306d !important;
+  animation:birthdayPulse 2s ease-in-out infinite;
+}
+@keyframes birthdayPulse{
+  0%,100%{ box-shadow:0 0 0 0 rgba(255,140,200,.28); }
+  50%    { box-shadow:0 0 0 6px rgba(255,140,200,0); }
+}
+.birthday-msg{
+  font-size:11px !important;
+  color:#8a5070 !important;
+  line-height:1.4 !important;
+  font-style:italic;
+  font-weight:700 !important;
+}
+
+.birthday-hint{
+  display:block;
+  margin-top:10px;
+  padding-top:9px;
+  border-top:1px dashed rgba(255,150,200,.35);
+  text-align:center;
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.1em;
+  color:#c07090;
+  text-transform:uppercase;
+}
+
+.birthday-card .weekly-top-icon{
+  animation:birthdayTwinkle 2.2s ease-in-out infinite;
+  display:inline-block;
+}
+.birthday-card .weekly-top-icon:nth-of-type(1){ animation-delay:0s; }
+.birthday-card .weekly-top-icon:nth-of-type(2){ animation-delay:1.1s; }
+@keyframes birthdayTwinkle{
+  0%,100%{ transform:scale(1) rotate(0deg); opacity:.85; }
+  50%    { transform:scale(1.22) rotate(9deg); opacity:1; }
+}
+
+/* ===== 13 LỜI CHÚC BAY LÊN ===== */
+.birthday-wish{
+  position:fixed;
+  z-index:99999;
+  padding:9px 15px;
+  border-radius:999px;
+  background:linear-gradient(135deg, #ffffff 0%, #fff5fa 100%);
+  border:1.5px solid rgba(255,150,200,.45);
+  box-shadow:
+    0 8px 22px rgba(255,100,180,.22),
+    0 0 22px rgba(255,150,210,.32),
+    inset 0 1px 0 rgba(255,255,255,.95);
+  color:#b0306d;
+  font-family:var(--font, ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif);
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:-.01em;
+  white-space:nowrap;
+  pointer-events:none;
+  will-change:transform, opacity;
+  transform:translate(-50%, -50%);
+  animation:birthdayFloat 3s ease-out forwards;
+}
+@keyframes birthdayFloat{
+  0%{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.3) rotate(0deg);
+  }
+  15%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.05) rotate(0deg);
+  }
+  100%{
+    opacity:0;
+    transform:
+      translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, -70vh)))
+      scale(.85)
+      rotate(var(--rot, 0deg));
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .birthday-wish{ animation-duration:.6s !important; }
+  .birthday-card::after,
+  .birthday-card .weekly-top-icon,
+  .birthday-today{ animation:none !important; }
+}
+</style>
 </head>
 <body>
 <main id="space">
@@ -3254,38 +3408,41 @@ body #homeStack #questionWrap{
     <div id="question"></div>
   </div>
 
-  <div id="weeklyTopWrap" aria-label="Top leo rank tuần">
-    <article id="weeklyTopCard">
+  <div id="weeklyTopWrap" aria-label="Chúc mừng sinh nhật Rosalie">
+    <article id="weeklyTopCard" class="birthday-card" role="button" tabindex="0" aria-label="Chạm để xem lời chúc mừng sinh nhật">
       <header class="weekly-top-header">
-        <span class="weekly-top-icon" aria-hidden="true">🏆</span>
-        <span class="weekly-top-title">TOP LEO RANK TUẦN</span>
+        <span class="weekly-top-icon" aria-hidden="true">🎂</span>
+        <span class="weekly-top-title">HAPPY BIRTHDAY</span>
+        <span class="weekly-top-icon" aria-hidden="true">🎂</span>
       </header>
 
       <div class="weekly-top-body">
-        <div class="weekly-top-avatar" aria-hidden="true"></div>
+        <div class="weekly-top-avatar birthday-avatar" id="birthdayAvatar" aria-hidden="true"
+             style="background-image:url('https://drive.google.com/thumbnail?id=1w1VozFwApcIHCwmV6R1-Y8LfBTWPbzya&sz=w400')"></div>
 
         <div class="weekly-top-info">
-          <div class="weekly-top-name">Thảo Uyên</div>
+          <div class="weekly-top-name birthday-name">Rosalie</div>
 
           <div class="weekly-top-meta">
             <span class="weekly-top-pill">
               <span class="meta-icon" aria-hidden="true">🎂</span>
-              <span>09/12</span>
+              <span>30/09</span>
             </span>
-
-            <span class="weekly-top-pill zodiac">
-              <span class="zodiac-symbol" aria-hidden="true">♐</span>
-              <span>Nhân Mã</span>
+            <span class="weekly-top-pill birthday-today">
+              <span aria-hidden="true">✨</span>
+              <span>Hôm nay</span>
             </span>
           </div>
 
           <div class="weekly-top-extra">
-            <div class="weekly-top-line"><b>Chiều cao:</b> 1m5</div>
-            <div class="weekly-top-line"><b>Sở thích:</b> săn hồng hài nhi</div>
-            <div class="weekly-top-line"><b>Tính cách:</b> Hướng nội, ít nói, im im</div>
+            <div class="weekly-top-line birthday-msg">
+              Chúc Rosalie tuổi mới rực rỡ, luôn vui vẻ và hạnh phúc 🥳
+            </div>
           </div>
         </div>
       </div>
+
+      <div class="birthday-hint">👆 Chạm để xem lời chúc từ mọi người</div>
     </article>
   </div>
 
@@ -8500,5 +8657,140 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 .admin-avatar-save:active,.admin-avatar-clear:active{transform:scale(.92)}
 @media(max-width:600px){.admin-avatar-row{grid-template-columns:40px minmax(0,1fr) auto;gap:8px;padding:8px 8px;min-height:52px}.admin-avatar-preview{width:40px;height:40px;font-size:13px}.admin-avatar-name{font-size:12.5px}.admin-avatar-input{height:26px;font-size:10.5px;padding:0 8px}.admin-avatar-save,.admin-avatar-clear{width:32px;height:32px;font-size:14px;border-radius:9px}}
 </style>
+
+<script>
+/* ===== BIRTHDAY CARD — Rosalie ===== */
+(function(){
+  "use strict";
+
+  const BIRTHDAY_MONTH = "09";
+  const BIRTHDAY_DAY   = "30";
+
+  const WISHES = [
+    "Chúc mừng sinh nhật Rosalie! 🎂",
+    "Tuổi mới rực rỡ nha 🌸",
+    "Mãi xinh đẹp và hạnh phúc 💖",
+    "Chúc mọi điều tốt lành ✨",
+    "Sinh nhật vui vẻ nhé 🎉",
+    "Tuổi mới thành công rực rỡ 🥳",
+    "Happy Birthday! 🎁",
+    "Luôn gặp may mắn nha 🍀",
+    "Mãi yêu đời và tươi trẻ 🌈",
+    "Yêu thương và bình an 💝",
+    "Tỏa sáng mỗi ngày nha 🌟",
+    "Thật nhiều niềm vui 🎈",
+    "Luôn vui vẻ nhé 💐"
+  ];
+
+  function isBirthdayToday(){
+    try{
+      const parts = new Intl.DateTimeFormat("en-CA",{
+        timeZone:"Asia/Ho_Chi_Minh",
+        month:"2-digit", day:"2-digit"
+      }).formatToParts(new Date());
+      const m = parts.find(p => p.type === "month")?.value || "";
+      const d = parts.find(p => p.type === "day")?.value || "";
+      return m === BIRTHDAY_MONTH && d === BIRTHDAY_DAY;
+    }catch(_){
+      const n = new Date();
+      return (n.getMonth() + 1) === Number(BIRTHDAY_MONTH) && n.getDate() === Number(BIRTHDAY_DAY);
+    }
+  }
+
+  function playWishes(){
+    const card = document.getElementById("weeklyTopCard");
+    if(!card) return;
+    if(card.dataset.playing === "1") return;
+    card.dataset.playing = "1";
+
+    const rect = card.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    // Lấy 13 người từ checklist (đã có sẵn trong biến names của IIFE chính)
+    let names = [];
+    try{
+      names = window.__getChecklistNames?.() || [];
+    }catch(_){}
+    names = names.map(n => String(n).trim()).filter(Boolean).slice(0, 13);
+
+    // Đảm bảo đúng 13 bubble
+    while(names.length < 13) names.push("");
+
+    const TOTAL = 13;
+
+    for(let i = 0; i < TOTAL; i++){
+      const delay = i * 110 + Math.random() * 90;
+      setTimeout(() => {
+        const el = document.createElement("div");
+        el.className = "birthday-wish";
+
+        const wish = WISHES[i % WISHES.length];
+        const sender = names[i];
+        el.textContent = sender ? `${sender}: ${wish}` : wish;
+
+        // Vị trí xuất phát: ngẫu nhiên quanh tâm card
+        const startX = cx + (Math.random() - 0.5) * rect.width * 0.75;
+        const startY = cy + (Math.random() - 0.5) * 30;
+
+        // Hướng bay lên: xiên nhẹ + lên trên khỏi viewport
+        const dx = (Math.random() - 0.5) * 180;
+        const dy = -(window.innerHeight * 0.8 + Math.random() * 120);
+        const rot = (Math.random() * 36 - 18).toFixed(1);
+
+        el.style.left = startX + "px";
+        el.style.top  = startY + "px";
+        el.style.setProperty("--dx", dx.toFixed(1) + "px");
+        el.style.setProperty("--dy", dy.toFixed(1) + "px");
+        el.style.setProperty("--rot", rot + "deg");
+
+        const duration = 2600 + Math.random() * 1400;
+        el.style.animationDuration = duration + "ms";
+
+        document.body.appendChild(el);
+        setTimeout(() => { try{ el.remove(); }catch(_){} }, duration + 200);
+      }, delay);
+    }
+
+    // Mở khoá sau khi bắn hết
+    setTimeout(() => { card.dataset.playing = "0"; }, TOTAL * 110 + 3500);
+  }
+
+  function init(){
+    const wrap = document.getElementById("weeklyTopWrap");
+    const card = document.getElementById("weeklyTopCard");
+    if(!wrap || !card) return;
+
+    // Chỉ hiện card khi đúng ngày sinh nhật (30/09)
+    // Nếu muốn luôn hiện bất kể ngày nào → bỏ đoạn if này.
+    if(!isBirthdayToday()){
+      wrap.classList.remove("birthday-mode");
+      return;
+    }
+
+    wrap.classList.add("birthday-mode");
+
+    card.addEventListener("click", (e) => {
+      e.preventDefault();
+      playWishes();
+    });
+    card.addEventListener("keydown", (e) => {
+      if(e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        playWishes();
+      }
+    });
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", init);
+  }else{
+    init();
+  }
+
+  // Expose để có thể trigger từ console / nơi khác nếu cần
+  window.__playBirthdayWishes = playWishes;
+})();
+</script>
 </body>
 </html>
