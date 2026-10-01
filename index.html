@@ -3775,10 +3775,10 @@ body #homeStack #questionWrap{
       </header>
 
       <!-- Employee card -->
-      <button id="attendanceEmployeeWheelBtn" class="att-employee-card" type="button" aria-label="Chọn nhân viên">
+      <button id="attendanceEmployeeWheelBtn" class="att-employee-card" type="button" aria-label="Chọn Kiểm Duyệt Viên">
         <span class="att-employee-avatar" id="attendanceEmployeeAvatar">?</span>
         <span class="att-employee-info">
-          <span class="att-employee-label">Nhân viên</span>
+          <span class="att-employee-label">Kiểm Duyệt Viên</span>
           <span class="wheel-value">Đang tải…</span>
         </span>
         <span class="att-employee-chevron">⌄</span>
@@ -3839,9 +3839,9 @@ body #homeStack #questionWrap{
 </section>
 
 <div id="attendanceNameWheel" aria-hidden="true">
-  <section class="att-name-wheel-panel" role="dialog" aria-modal="true" aria-label="Chọn nhân viên">
+  <section class="att-name-wheel-panel" role="dialog" aria-modal="true" aria-label="Chọn Kiểm Duyệt Viên">
     <div class="att-name-wheel-head">
-      <div class="att-name-wheel-title">Chọn nhân viên</div>
+      <div class="att-name-wheel-title">Chọn kiểm duyệt viên</div>
       <button id="attendanceNameWheelClose" type="button" aria-label="Đóng">×</button>
     </div>
     <div id="attendanceNameWheelViewport" class="att-name-wheel-viewport">
@@ -7740,7 +7740,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       ATTENDANCE_DATA[name] = map[name];
     });
 
-    // Merge danh sách nhân viên: giữ thứ tự cũ, thêm người mới vào cuối
+    // Merge danh sách kiểm duyệt viên: giữ thứ tự cũ, thêm người mới vào cuối
     const seen = new Set();
     const merged = [];
     (payload?.employees || []).forEach(x => {
@@ -7760,8 +7760,8 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     setAttendanceSyncStatus(
       ATTENDANCE_EMPLOYEES.length ? 'ok' : 'error',
       ATTENDANCE_EMPLOYEES.length
-        ? `Đã đồng bộ ${ATTENDANCE_EMPLOYEES.length} nhân viên • ${new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}`
-        : 'Google Sheet trả về 0 nhân viên — kiểm tra Check!C19:C32.'
+        ? `Đã đồng bộ ${ATTENDANCE_EMPLOYEES.length} kiểm duyệt viên • ${new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}`
+        : 'Google Sheet trả về 0 kiểm duyệt viên — kiểm tra Check!C19:C32.'
     );
   }
 
@@ -7791,7 +7791,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       });
     });
 
-    // Merge danh sách nhân viên — không xoá người cũ
+    // Merge danh sách kiểm duyệt viên — không xoá người cũ
     const seen = new Set(ATTENDANCE_EMPLOYEES);
     cache.employees.forEach(p => {
       const name = String(p?.name || '').trim();
@@ -8254,7 +8254,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
   function updateWheelButton(){
     const value = wheelBtn?.querySelector('.wheel-value');
-    if(value) value.textContent = selectedName || 'Chọn nhân viên';
+    if(value) value.textContent = selectedName || 'Chọn kiểm duyệt viên';
   }
   function buildNameWheel(){
     if(!wheelItems) return;
@@ -8351,7 +8351,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     grid.innerHTML = '';
 
     if(!selectedName){
-      grid.innerHTML = '<div style="grid-column:1/-1;padding:28px 16px;text-align:center;opacity:.7">Đang tải danh sách nhân viên…</div>';
+      grid.innerHTML = '<div style="grid-column:1/-1;padding:28px 16px;text-align:center;opacity:.7">Đang tải danh sách kiểm duyệt viên…</div>';
       workCount.textContent='0';
       offCount.textContent='0';
       leaveCount.textContent='0';
@@ -8531,7 +8531,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       renderNameWheel();
     }else if(e.key === 'Enter'){
       e.preventDefault();
-      // Confirm chọn nhân viên — giống bấm nút "Xác nhận"
+      // Confirm chọn kiểm duyệt viên — giống bấm nút "Xác nhận"
       selectedName = ATTENDANCE_EMPLOYEES[wheelIndex] || '';
       employee.value = selectedName;
       updateWheelButton();
