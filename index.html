@@ -7499,6 +7499,65 @@ window.__getChecklistState = () => ({
   times: Array.isArray(times) ? times.slice() : []
 });
 
+  // Cầu nối cho Page 2 yêu cầu xoá checkin của 1 người
+  // → set checked=false, times="" + đồng bộ lên server + render lại
+  window.__clearCheckinForName = async function(name){
+    const cleanName = String(name || "").trim();
+    if(!cleanName) return false;
+
+    const idx = names.indexOf(cleanName);
+    if(idx < 0) return false;
+
+    // Nếu chưa checkin → không cần xoá
+    if(!checked[idx] && !times[idx]) return true;
+
+    // Snapshot để rollback nếu server fail
+    const prevChecked = checked[idx];
+    const prevTime = times[idx];
+
+    // Optimistic: xoá ngay trên UI
+    checked[idx] = false;
+    times[idx] = "";
+    cacheSave();
+    renderChecklist();
+
+    // Cập nhật Top 3 nếu đang ở Home
+    if(!q1Opened && !checklistPanel.classList.contains("show")){
+      renderLandingState();
+    }
+
+    // Gọi server xoá
+    try{
+      const token = AdminSession.get();
+      if(!token){
+        checked[idx] = prevChecked;
+        times[idx] = prevTime;
+        cacheSave();
+        renderChecklist();
+        throw new Error("Phiên admin đã hết hạn — không xoá được checkin");
+      }
+
+      const r = await window.__srankApi("adminSetCheck", {
+        token,
+        name: cleanName,
+        checked: "false"
+      }, TIMEOUT.FAST);
+
+      if(!r.ok) throw new Error(r.error || "Không xoá được checkin");
+
+      return true;
+    }catch(e){
+      checked[idx] = prevChecked;
+      times[idx] = prevTime;
+      cacheSave();
+      renderChecklist();
+      if(!q1Opened && !checklistPanel.classList.contains("show")){
+        renderLandingState();
+      }
+      throw e;
+    }
+  };
+
   // ===== Khởi động Live Feed =====
   // Dùng requestAnimationFrame để chắc chắn DOM ready,
   // tránh trường hợp init() chạy trước khi button được render.
@@ -8108,6 +8167,18 @@ window.__getChecklistState = () => ({
       prev: ATTENDANCE_DATA[nameAtRequest]?.[key(y,m,day)] || ''
     }));
 
+    // ===== XOÁ: cần xoá cả checkin nếu có =====
+    if(!cleanStatus){
+      try{
+        if(typeof window.__clearCheckinForName === "function"){
+          await window.__clearCheckinForName(nameAtRequest);
+        }
+      }catch(e){
+        setAttendanceFooterState('error', 'Không xoá được checkin: ' + attendanceErrorText(e));
+        return;
+      }
+    }
+
     // ===== Optimistic =====
     if(!ATTENDANCE_DATA[nameAtRequest]) ATTENDANCE_DATA[nameAtRequest] = {};
     days.forEach(day => {
@@ -8192,7 +8263,21 @@ window.__getChecklistState = () => ({
     // Snapshot để rollback nếu API fail
     const prevValue = ATTENDANCE_DATA[nameAtRequest]?.[k] || '';
 
-    // ===== Optimistic update: cập nhật UI NGAY =====
+    // ===== XOÁ: cần xoá cả checkin nếu có =====
+    if(!cleanStatus){
+      // Xoá checkin trước (nếu có)
+      try{
+        if(typeof window.__clearCheckinForName === "function"){
+          await window.__clearCheckinForName(nameAtRequest);
+        }
+      }catch(e){
+        // Không xoá được checkin → báo lỗi, không tiếp tục
+        setAttendanceFooterState('error', 'Không xoá được checkin: ' + attendanceErrorText(e));
+        return;
+      }
+    }
+
+    // ===== Optimistic update =====
     if(!ATTENDANCE_DATA[nameAtRequest]) ATTENDANCE_DATA[nameAtRequest] = {};
     if(cleanStatus){
       ATTENDANCE_DATA[nameAtRequest][k] = cleanStatus;
@@ -8350,7 +8435,7 @@ window.__getChecklistState = () => ({
     return { status: raw };
   }
 
-  // 2) Đọc state từ IIFE 1 qua cầu nối
+  // 2) Hôm nay đã checkin → tự đánh ✓ (hoặc T nếu CN)
   const state = (typeof window.__getChecklistState === "function")
     ? window.__getChecklistState()
     : null;
@@ -8369,6 +8454,7 @@ window.__getChecklistState = () => ({
     }
   }
 
+  // 3) Không có gì → trống
   return null;
 }
 
