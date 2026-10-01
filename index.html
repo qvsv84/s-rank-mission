@@ -8875,7 +8875,7 @@ let wheelStartY = 0;
 // ===== Auto-refresh cho Hòm thư =====
 let mailAutoTimer = null;
 let lastRenderedRowsKey = "";
-const AUTO_REFRESH_MS = 12000;
+const AUTO_REFRESH_MS = 5000;
 
 // ===== State cho smart render =====
 let _mailCurrentRows = [];       // danh sách đang hiển thị
@@ -9191,7 +9191,7 @@ async function sendMessage(){
     const rows = await fetchMessages(true);
     if(rows) renderListIfChanged(rows);
   }catch(_){}
-}, 800);
+}, 150);
   }catch(e){
     setStatus(e.message || "Không gửi được, thử lại nha", "error");
   }finally{
@@ -9307,7 +9307,18 @@ async function openPage(){
   document.body.style.overflow = "hidden";
   if (typeof window.syncQuickTools === "function") window.syncQuickTools();
 
-  loadAndRender(false).then(() => {
+  // Nếu có cache → render NGAY, không hiện loading
+  const cached = loadMailCache();
+  if(cached && cached.length){
+    renderListIfChanged(cached);
+  } else {
+    renderLoading();
+  }
+
+  // Fetch nền — khi có kết quả thì update mượt
+  fetchMessages(true).then(rows => {
+    if(!open) return;
+    if(rows) renderListIfChanged(rows);
     startMailAutoRefresh();
   }).catch(() => {
     startMailAutoRefresh();
