@@ -8803,7 +8803,7 @@ window.addEventListener("checkinDone", () => {
 
 <script>
 /* =========================================================
-   HÒM THƯ BÍ MẬT — v3: intro → float → wall
+   HÒM THƯ BÍ MẬT — v4: ấn nút là ra danh sách ngay
 ========================================================= */
 (function(){
 "use strict";
@@ -8811,9 +8811,6 @@ window.addEventListener("checkinDone", () => {
 const K = "srank_secret_mail_sender_v1";
 const ANON = "Ẩn danh";
 const MAX = 200;
-const MIN = 9;      // duration ngắn → hết nhanh
-const MAXD = 14;
-const CON = 5;      // số note đồng thời tối đa
 const $ = id => document.getElementById(id);
 
 const page = $("secretMailPage");
@@ -8836,21 +8833,15 @@ if(!page || !stage || !input || !send) return;
 const CACHE_KEY = "srank_secret_mail_cache_v1";
 const CACHE_TTL = 5 * 60 * 1000;
 
-// Lane (làn) cho note bay — 3 làn, không chồng
-const LANES = [22, 50, 78];
-
 let sender = "";
 let open = false;
-let mode = "idle";   // idle | intro | float | wall
-let pendingRows = [];  // dữ liệu để render
-let stageTimers = [];
 let wheel = null;
 let wheelIndex = 0;
 let wheelOffset = 0;
 let wheelDrag = false;
 let wheelStartY = 0;
 
-// ===== Cache helpers =====
+// ===== Cache =====
 function loadMailCache(){
   try{
     const raw = localStorage.getItem(CACHE_KEY);
@@ -8868,7 +8859,7 @@ function clearMailCache(){
   try{ localStorage.removeItem(CACHE_KEY); }catch(_){}
 }
 
-// ===== Names list =====
+// ===== Names =====
 function getNames(){
   try{
     return typeof window.__getChecklistNames === "function"
@@ -9045,7 +9036,7 @@ async function sendMessage(){
     input.value = "";
     updateCounter();
     clearMailCache();
-    setTimeout(() => loadAndShow(true).catch(() => {}), 800);
+    setTimeout(() => loadAndRender(true).catch(() => {}), 800);
   }catch(e){
     setStatus(e.message || "Không gửi được, thử lại nha", "error");
   }finally{
@@ -9062,13 +9053,8 @@ function fetchMessages(force = false){
   if(!force){
     const cached = loadMailCache();
     if(cached){
-      // Fetch nền để refresh
       fetchMessages(true).then(rows => {
-        if(open && rows && (mode === "intro" || mode === "wall")){
-          pendingRows = rows;
-          if(mode === "intro") renderIntro();
-          else if(mode === "wall") renderWall();
-        }
+        if(open && rows) renderList(rows);
       }).catch(() => {});
       return Promise.resolve(cached);
     }
@@ -9085,118 +9071,7 @@ function fetchMessages(force = false){
   }).catch(() => []);
 }
 
-// ===== Update count ở header =====
-function updateWallCount(rows){
-  count.textContent = rows.length ? `${rows.length} lời nhắn` : "Chưa có lời nhắn";
-}
-
-// ===== MODE: INTRO (số lượng + nút Xem) =====
-function setMode(m){
-  mode = m;
-  stage.dataset.mode = m;
-  empty.classList.remove("show");
-}
-
-function clearStageTimers(){
-  stageTimers.forEach(clearTimeout);
-  stageTimers = [];
-}
-
-function renderIntro(){
-  setMode("intro");
-  clearStageTimers();
-  stage.innerHTML = "";
-
-  const n = pendingRows.length;
-
-  const wrap = document.createElement("div");
-  wrap.className = "sm-intro";
-  wrap.innerHTML = `
-    <div class="sm-intro-icon">${n ? "📬" : "📭"}</div>
-    <div class="sm-intro-count">${n}</div>
-    <div class="sm-intro-label">${n === 1 ? "lời nhắn" : "lời nhắn"}</div>
-    <div class="sm-intro-sub">${n ? "Bấm để xem các lời nhắn bay lên nhé" : "Hãy là người đầu tiên gửi nhé!"}</div>
-    <button class="sm-intro-btn" ${n ? "" : "disabled"}>${n ? "✨ Xem ngay" : "Chưa có tin nhắn"}</button>
-    ${n > 0 ? '<div class="sm-intro-hint">Tin nhắn sẽ bay lên rồi hiện thành danh sách</div>' : ''}
-  `;
-  stage.appendChild(wrap);
-
-  const btn = wrap.querySelector(".sm-intro-btn");
-  if(n > 0){
-    btn.addEventListener("click", startFloat);
-  }
-
-  updateWallCount(pendingRows);
-}
-
-// ===== MODE: FLOAT (note bay theo làn) =====
-function noteEl(m, i){
-  const el = document.createElement("div");
-  const cs = ["color-pink", "color-mint", "color-yellow", "color-lilac"];
-  el.className = "sm-note " + cs[i % 4];
-  const lane = LANES[i % LANES.length];
-  el.style.setProperty("--sm-x", lane + "%");
-  el.style.setProperty("--sm-rotate", (Math.random() * 8 - 4).toFixed(1) + "deg");
-  const dur = (MIN + Math.random() * (MAXD - MIN)).toFixed(1);
-  el.style.setProperty("--sm-duration", dur + "s");
-  el.style.zIndex = String(10 + i);
-  el.dataset.duration = dur;
-  el.innerHTML = `<div class="sm-note-from"><span class="sm-note-avatar">${esc(m.name === ANON ? "?" : m.name.charAt(0).toUpperCase())}</span><span class="sm-note-name">${esc(m.name)}</span><span class="sm-note-time">${esc(m.time)}</span></div><div class="sm-note-text">${esc(m.message)}</div>`;
-  return el;
-}
-
-function startFloat(){
-  if(!pendingRows.length) return;
-
-  setMode("float");
-  clearStageTimers();
-  stage.innerHTML = "";
-
-  const rows = pendingRows.slice(0, 20);
-  let finished = 0;
-
-  // Nút skip animation
-  const skip = document.createElement("button");
-  skip.className = "sm-stage-skip";
-  skip.textContent = "Hiện danh sách →";
-  skip.addEventListener("click", () => {
-    if(mode === "float") renderWall();
-  });
-  stage.appendChild(skip);
-
-  rows.forEach((m, i) => {
-    // spawn từ từ, không bắn hết một lúc
-    const delay = i === 0 ? 0 : i * (CON === 5 ? 320 : 400);
-    const t = setTimeout(() => {
-      if(mode !== "float") return;
-      const el = noteEl(m, i);
-      stage.appendChild(el);
-
-      // đợi bay xong hết thì xóa
-      const durMs = parseFloat(el.dataset.duration) * 1000;
-      const cleanup = setTimeout(() => {
-        if(mode !== "float") return;
-        el.remove();
-        finished++;
-        // khi tất cả note cuối đã bay xong → chuyển sang wall
-        if(finished >= rows.length){
-          setTimeout(() => {
-            if(mode === "float") renderWall();
-          }, 400);
-        }
-      }, durMs);
-      stageTimers.push(cleanup);
-    }, delay);
-    stageTimers.push(t);
-  });
-
-  // Safety: nếu có gì treo, sau 40s tự chuyển wall
-  stageTimers.push(setTimeout(() => {
-    if(mode === "float") renderWall();
-  }, 40000));
-}
-
-// ===== MODE: WALL (danh sách card dọc) =====
+// ===== Render list =====
 function wallCard(m, i){
   const el = document.createElement("article");
   const cs = ["color-pink", "color-mint", "color-yellow", "color-lilac"];
@@ -9214,13 +9089,12 @@ function wallCard(m, i){
   return el;
 }
 
-function renderWall(){
-  setMode("wall");
-  clearStageTimers();
+function renderList(rows){
+  stage.dataset.mode = "wall";
   stage.innerHTML = "";
+  empty.classList.remove("show");
 
-  const rows = pendingRows;
-  updateWallCount(rows);
+  count.textContent = rows.length ? `${rows.length} lời nhắn` : "Chưa có lời nhắn";
 
   if(!rows.length){
     empty.classList.add("show");
@@ -9233,30 +9107,21 @@ function renderWall(){
   stage.appendChild(list);
 }
 
+function renderLoading(){
+  stage.dataset.mode = "wall";
+  stage.innerHTML = '<div class="sm-wall-loading">Đang tải lời nhắn…</div>';
+  empty.classList.remove("show");
+}
+
 // ===== Orchestrate =====
-async function loadAndShow(force = false){
-  // 1. Nếu có cache → render intro NGAY (0ms)
+async function loadAndRender(force = false){
   if(!force){
     const cached = loadMailCache();
-    if(cached){
-      pendingRows = cached;
-      renderIntro();
-    } else {
-      // Chưa có cache → hiện placeholder intro tạm
-      pendingRows = [];
-      renderIntro();
-    }
+    if(cached) renderList(cached);
+    else renderLoading();
   }
-
-  // 2. Fetch từ server
   const rows = await fetchMessages(force);
-  pendingRows = rows;
-  updateWallCount(rows);
-
-  // Chỉ update UI nếu đang ở intro (không phá float/wall đang chạy)
-  if(mode === "intro" || mode === "idle"){
-    renderIntro();
-  }
+  if(open) renderList(rows);
 }
 
 // ===== Lifecycle =====
@@ -9266,32 +9131,19 @@ async function openPage(){
   page.classList.add("show");
   document.body.style.overflow = "hidden";
   syncQuickTools?.();
-  loadAndShow(false).catch(() => {});
+  loadAndRender(false).catch(() => {});
 }
 
 function closePage(){
   open = false;
   page.classList.remove("show");
   document.body.style.overflow = "";
-  clearStageTimers();
   syncQuickTools?.();
-  setTimeout(() => {
-    if(!open){
-      stage.innerHTML = "";
-      stage.dataset.mode = "intro";
-      mode = "idle";
-    }
-  }, 400);
 }
 
 navBtn?.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); openPage(); });
 back?.addEventListener("click", closePage);
-
-refresh?.addEventListener("click", () => {
-  // Về intro rồi load lại
-  mode = "idle";
-  loadAndShow(true).catch(() => {});
-});
+refresh?.addEventListener("click", () => { loadAndRender(true).catch(() => {}); });
 
 document.addEventListener("keydown", e => {
   if(e.key !== "Escape") return;
@@ -9302,6 +9154,9 @@ document.addEventListener("keydown", e => {
 window.__openSecretMailPage = openPage;
 window.__closeSecretMailPage = closePage;
 window.__refreshSecretMail = fetchMessages;
+
+})();
+</script>
 
 })();
 </script>
