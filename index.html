@@ -5959,6 +5959,20 @@ body #homeStack #questionWrap{
       }
 
       setStatus(`Đã ghi ${clientTime} ✓`);
+
+      // ===== Phát tín hiệu checkin xong → Chấm công tự render lại =====
+      try{
+        window.dispatchEvent(new CustomEvent("checkinDone", {
+          detail: { name, time: clientTime }
+        }));
+      }catch(_){}
+
+      // Đồng thời ghi vào localStorage để trang Chấm công đọc được
+      try{
+        localStorage.setItem("srank_last_checkin", JSON.stringify({
+          name, time: clientTime, date: todayKey()
+        }));
+      }catch(_){}
     }catch(e){
       setStatus("Máy chủ chưa xác nhận — trạng thái HTML vẫn giữ nguyên");
       cacheSave();
@@ -7478,6 +7492,12 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
   // Cầu nối an toàn để Page 2 đọc đúng danh sách names của checklist.
   window.__getChecklistNames = () => Array.isArray(names) ? names.slice() : [];
+// Cầu nối cho Page 2 đọc trạng thái checkin
+window.__getChecklistState = () => ({
+  names: Array.isArray(names) ? names.slice() : [],
+  checked: Array.isArray(checked) ? checked.slice() : [],
+  times: Array.isArray(times) ? times.slice() : []
+});
 
   // ===== Khởi động Live Feed =====
   // Dùng requestAnimationFrame để chắc chắn DOM ready,
@@ -8320,19 +8340,37 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   function key(y,m,d){return `${y}-${pad(m+1)}-${pad(d)}`}
   function mondayIndex(date){return (date.getDay()+6)%7}
   function dataFor(date){
-    const y=date.getFullYear(), m=date.getMonth(), d=date.getDate();
-    const raw = String(ATTENDANCE_DATA[selectedName]?.[key(y,m,d)] || '').trim().toUpperCase();
-    if(raw === 'P' || raw === 'O' || raw === 'T' || raw === 'Q' || raw === 'X') return {status:raw};
+  const y = date.getFullYear();
+  const m = date.getMonth();
+  const d = date.getDate();
 
-    // Ngày đã tới nhưng không có mã P/O/T trong Sheet => ✓ (đi làm bình thường).
-    const today = new Date();
-    const dateOnly = new Date(y,m,d);
-    const todayOnly = new Date(today.getFullYear(),today.getMonth(),today.getDate());
-    if(dateOnly < todayOnly) return {status:'V'};
-
-    // Ngày tương lai chưa tự chấm.
-    return null;
+  // 1) Sheet chấm công có P/O/T/Q/X → hiện đúng
+  const raw = String(ATTENDANCE_DATA[selectedName]?.[key(y,m,d)] || '').trim().toUpperCase();
+  if(raw === 'P' || raw === 'O' || raw === 'T' || raw === 'Q' || raw === 'X'){
+    return { status: raw };
   }
+
+  // 2) Đọc state từ IIFE 1 qua cầu nối
+  const state = (typeof window.__getChecklistState === "function")
+    ? window.__getChecklistState()
+    : null;
+
+  if(state && Array.isArray(state.names)){
+    const idx = state.names.indexOf(selectedName);
+    if(idx >= 0 && state.checked[idx] === true && state.times[idx]){
+      const today = new Date();
+      const isToday = y === today.getFullYear() && m === today.getMonth() && d === today.getDate();
+
+      if(isToday){
+        const dow = date.getDay();
+        if(dow === 0) return { status: 'T' };
+        return { status: 'V' };
+      }
+    }
+  }
+
+  return null;
+}
 
   function renderSkeletonV3(){
     const y=viewDate.getFullYear(),m=viewDate.getMonth(),days=new Date(y,m+1,0).getDate(),leading=(new Date(y,m,1).getDay()+6)%7;
@@ -8634,6 +8672,79 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   buildNameWheel();
   render();
   // Tên và dữ liệu chấm công chỉ lấy từ Check!C19:C32 + toàn bộ hàng tương ứng.
+
+/* =========================================================
+   LẮNG NGHE CHECKIN → TỰ ĐÁNH ✓ NGAY TRÊN LỊCH CHẤM CÔNG
+========================================================= */
+
+function renderAttendanceIfCheckinMatches(){
+  if(!page.classList.contains('show')) return;
+
+  // Kiểm tra event từ localStorage
+  let ev = null;
+  try{
+    const raw = localStorage.getItem("srank_last_checkin");
+    if(raw) ev = JSON.parse(raw);
+  }catch(_){}
+  if(!ev || !ev.name || !ev.date) return;
+
+  // Chỉ áp dụng cho hôm nay
+  if(ev.date !== todayKeyAttendance()) return;
+
+  // Chỉ áp dụng nếu người vừa check là người đang chọn
+  if(ev.name !== selectedName) return;
+
+  // Đang xem tháng hiện tại không?
+  const now = new Date();
+  if(viewDate.getFullYear() !== now.getFullYear() || viewDate.getMonth() !== now.getMonth()) return;
+
+  // Nếu sheet chưa có gì cho hôm nay → render lại để dataFor tự hiện ✓
+  const day = now.getDate();
+  const k = key(now.getFullYear(), now.getMonth(), day);
+  const existing = ATTENDANCE_DATA[selectedName]?.[k];
+
+  // Nếu đã có P/O/T/Q/X thì không cần (đã hiển thị)
+  if(existing === 'P' || existing === 'O' || existing === 'T' ||
+     existing === 'Q' || existing === 'X') return;
+
+  // Render lại → dataFor sẽ đọc từ checked[]/times[] (IIFE 1) → hiện ✓
+  render();
+}
+
+// Helper: todayKey giống IIFE 1
+function todayKeyAttendance(){
+  const d = new Date();
+  const parts = new Intl.DateTimeFormat("en-CA",{
+    timeZone:"Asia/Ho_Chi_Minh",
+    year:"numeric",month:"2-digit",day:"2-digit"
+  }).formatToParts(d);
+  const get = k => parts.find(x=>x.type===k)?.value || "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
+// Lắng nghe event từ IIFE 1
+window.addEventListener("checkinDone", (e) => {
+  // Đợi 1 frame để checked[]/times[] đã update
+  requestAnimationFrame(() => {
+    renderAttendanceIfCheckinMatches();
+  });
+});
+
+// Lắng nghe cả khi tab visible lại (trường hợp browser suspend)
+document.addEventListener("visibilitychange", () => {
+  if(document.hidden) return;
+  if(!page.classList.contains('show')) return;
+  renderAttendanceIfCheckinMatches();
+});
+
+// Xoá localStorage khi render xong (tránh apply lặp lại)
+function clearLastCheckin(){
+  try{ localStorage.removeItem("srank_last_checkin"); }catch(_){}
+}
+window.addEventListener("checkinDone", () => {
+  // Xoá sau 5s — đủ thời gian cho IIFE 2 đọc
+  setTimeout(clearLastCheckin, 5000);
+});
 })();
 
 </script>
