@@ -3100,6 +3100,7 @@ body #homeStack #questionWrap{
 #homeStack #question{
   pointer-events:auto;
 }
+</style>
 
 <style id="homeStaggerAnimation">
 /* =========================================================
@@ -4153,6 +4154,15 @@ body #homeStack #questionWrap{
     const get = k => parts.find(x=>x.type===k)?.value || "";
     return `${get("year")}-${get("month")}-${get("day")}`;
   }
+  
+  function escapeHtml(str){
+    return String(str ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
 
   // Debounced cacheSave — tránh ghi localStorage liên tục khi rapid updates
   let _cacheSaveTimer = null;
@@ -4238,7 +4248,7 @@ body #homeStack #questionWrap{
       points = Array.isArray(x.points)
         ? x.points.slice(0, names.length).map(p => Number.isFinite(Number(p)) ? Number(p) : 100)
         : names.map(() => 100);
-      ranks = serverRanks;
+      ranks = points.map(rankClient);
       return names.length > 0;
     }catch(_){
       try{ localStorage.removeItem(CACHE_KEY); }catch(_){}
@@ -6915,6 +6925,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     });
   }
   function syncQuickTools(){
+  window.syncQuickTools = syncQuickTools;
     renderQuizAdminButton();
 
     // Thanh 2 (Luật KDV / Bài kiểm tra / Tạo Ktra) chỉ xuất hiện ở HOME.
@@ -7481,7 +7492,6 @@ window.__getChecklistState = () => ({
 /* ===== ĐIỀU HƯỚNG TRANG 2 + LỊCH CHẤM CÔNG ===== */
 (function(){
   "use strict";
-  const CACHE_PREFIX_V3 = 'srank_att_v3_';
   const AUTO_REFRESH_SEC_V3 = 60;
   const REFRESH_PAUSE_AFTER_SAVE_MS_V3 = 8000;
   const PRELOAD_OFFSETS_V3 = [-2,-1,1,2];
@@ -9125,10 +9135,21 @@ function renderLoading(){
   empty.classList.remove("show");
 }
 
+async function loadAndRender(force = false){
+  if(!open) return;
+
+  renderLoading();
+
+  let timedOut = false;
+  const timeoutPromise = new Promise(resolve => {
+    setTimeout(() => { timedOut = true; resolve([]); }, 8000);
+  });
+
+  const rows = await Promise.race([ fetchMessages(force), timeoutPromise ]);
+
   if(!open) return;
 
   if(timedOut){
-    // Hiện fallback rõ ràng để user biết đường
     stage.dataset.mode = "wall";
     stage.innerHTML = "";
     count.textContent = "Không tải được";
@@ -9149,7 +9170,7 @@ async function openPage(){
   open = true;
   page.classList.add("show");
   document.body.style.overflow = "hidden";
-  syncQuickTools?.();
+  if (typeof window.syncQuickTools === "function") window.syncQuickTools();
   loadAndRender(false).catch(() => {});
 }
 
@@ -9157,7 +9178,7 @@ function closePage(){
   open = false;
   page.classList.remove("show");
   document.body.style.overflow = "";
-  syncQuickTools?.();
+  if (typeof window.syncQuickTools === "function") window.syncQuickTools();
 }
 
 navBtn?.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); openPage(); });
