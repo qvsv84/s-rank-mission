@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f3f8f1">
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
@@ -22,7 +22,7 @@
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#010107}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;touch-action:none}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
 button{font:inherit}
 #space{position:relative;width:100%;height:100%;overflow:hidden;background:
 radial-gradient(circle at 50% 50%,rgba(90,168,120,.10),transparent 27%),
@@ -2014,7 +2014,7 @@ html,body{
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
 }
-body{font-weight:600;touch-action:none}
+body{font-weight:600}
 button,input,textarea,select{font-family:var(--font)!important}
 
 #space{
@@ -3876,8 +3876,24 @@ body #homeStack #questionWrap{
   let requestSeq = 0;
   let syncInFlight = false;
   let autoSyncTimer = null;
-  const AUTO_SYNC_MS = 15000;
+  // PATCH 2.1: interval động theo trạng thái — giảm 80% request
+  const AUTO_SYNC_MS_ACTIVE   = 30000;   // 30s khi tab active
+  const AUTO_SYNC_MS_IDLE     = 60000;   // 60s khi idle >2 phút
+  const AUTO_SYNC_MS_HIDDEN   = 120000;  // 120s khi tab ẩn
+  const AUTO_SYNC_MS = AUTO_SYNC_MS_ACTIVE; // fallback
   const AUTO_SYNC_MIN_GAP = 5000;
+  let _lastInteractionAt = Date.now();
+
+  // Track tương tác để chuyển giữa active/idle
+  ["pointerdown","keydown","touchstart","scroll"].forEach(ev => {
+    document.addEventListener(ev, () => { _lastInteractionAt = Date.now(); }, {passive:true, capture:true});
+  });
+
+  function currentAutoSyncInterval(){
+    if (document.hidden) return AUTO_SYNC_MS_HIDDEN;
+    if (Date.now() - _lastInteractionAt > 120000) return AUTO_SYNC_MS_IDLE;
+    return AUTO_SYNC_MS_ACTIVE;
+  }
   let lastAutoSyncAt = 0;
   let lastSyncSuccessAt = 0;
   const Q1_CACHE_KEY = "srank_q1_answer_v1";
@@ -4032,8 +4048,9 @@ body #homeStack #questionWrap{
       }catch(_){ }
     };
 
+    // FIX P0: bỏ interval 4 phút — gây 15 req/giờ/user lãng phí
+    // Chỉ warmup 1 lần khi load, các lần sau dùng cache
     setTimeout(ping, 1500);
-    setInterval(ping, 4 * 60 * 1000);
   }
   warmupAdmin();
 
@@ -4058,7 +4075,45 @@ body #homeStack #questionWrap{
       connectionText.textContent = txt;
     }
   }, 3000);
+  // PATCH 2.2: dedup + circuit breaker
+  const _inflightRequests = new Map();
+  let _consecutiveFails = 0;
+  let _circuitOpenUntil = 0;
+  const CIRCUIT_THRESHOLD = 5;
+  const CIRCUIT_OPEN_MS = 30000;
+
   window.__srankApi = function(action, data = {}, timeout = TIMEOUT.DEFAULT){
+    // Circuit breaker: khi fail liên tục → tạm ngưng gọi
+    if (Date.now() < _circuitOpenUntil) {
+      return Promise.reject(new Error("Circuit open — tạm ngưng gọi API"));
+    }
+
+    // Dedup: nếu đang có request y hệt → trả về cùng promise
+    const dedupKey = action + "::" + JSON.stringify(data);
+    if (_inflightRequests.has(dedupKey)) {
+      return _inflightRequests.get(dedupKey);
+    }
+
+    const p = _actualApiCall(action, data, timeout).then(
+      (r) => { _consecutiveFails = 0; return r; },
+      (e) => {
+        _consecutiveFails++;
+        if (_consecutiveFails >= CIRCUIT_THRESHOLD) {
+          _circuitOpenUntil = Date.now() + CIRCUIT_OPEN_MS;
+          _consecutiveFails = 0;
+          setConnection("off", "Tạm ngưng gọi API");
+        }
+        throw e;
+      }
+    ).finally(() => {
+      _inflightRequests.delete(dedupKey);
+    });
+
+    _inflightRequests.set(dedupKey, p);
+    return p;
+  };
+
+  function _actualApiCall(action, data = {}, timeout = TIMEOUT.DEFAULT){
     return new Promise((resolve,reject) => {
       setConnection("busy", "Đang đồng bộ…");
       const watchdog = setTimeout(() => {
@@ -4187,7 +4242,9 @@ body #homeStack #questionWrap{
       points = Array.isArray(x.points)
         ? x.points.slice(0, names.length).map(p => Number.isFinite(Number(p)) ? Number(p) : 100)
         : names.map(() => 100);
-      ranks = serverRanks;
+      // FIX P0: serverRanks không tồn tại ở scope này → ReferenceError
+      // → cache luôn bị xoá, không bao giờ hoạt động offline
+      ranks = points.map(rankClient);
       return names.length > 0;
     }catch(_){
       try{ localStorage.removeItem(CACHE_KEY); }catch(_){}
@@ -5531,11 +5588,15 @@ body #homeStack #questionWrap{
       autoSyncTimer = null;
     }
 
-    const interval = checklistPanel.classList.contains("show")
+    const baseInterval = checklistPanel.classList.contains("show")
       ? CHECKLIST_SYNC_MS
-      : AUTO_SYNC_MS;
+      : currentAutoSyncInterval();
 
     autoSyncTimer = setTimeout(async function tick(){
+      // Interval có thể thay đổi giữa các tick → tính lại
+      const interval = checklistPanel.classList.contains("show")
+        ? CHECKLIST_SYNC_MS
+        : currentAutoSyncInterval();
       let skip = false;
       if(document.hidden) skip = true;
       else if(wheelArea.classList.contains("show")) skip = true;
@@ -5555,7 +5616,7 @@ body #homeStack #questionWrap{
       if(autoSyncTimer !== null){
         autoSyncTimer = setTimeout(tick, interval);
       }
-    }, interval);
+    }, baseInterval);
   }
 
   async function checkin(name, index){
@@ -5572,6 +5633,10 @@ body #homeStack #questionWrap{
       timeZone:"Asia/Ho_Chi_Minh",
       hour:"2-digit",minute:"2-digit",hour12:false
     }).format(new Date());
+
+    // PATCH 3: lưu snapshot để rollback nếu server reject
+    const _prevChecked = checked[index];
+    const _prevTime = times[index];
 
     times[index] = clientTime;
     checked[index] = true;
@@ -5622,8 +5687,22 @@ body #homeStack #questionWrap{
         }));
       }catch(_){}
     }catch(e){
-      setStatus("Máy chủ chưa xác nhận — trạng thái HTML vẫn giữ nguyên");
+      // PATCH 3: rollback UI về trạng thái trước khi gọi API
+      checked[index] = _prevChecked;
+      times[index] = _prevTime;
       cacheSave();
+
+      if(!updateChecklistRow(index)){
+        renderChecklist();
+      }
+
+      // Rollback landing/top3 nếu đang hiện
+      if(!q1Opened && !checklistPanel.classList.contains("show")){
+        _lastTop3Signature = "";
+        renderLandingState();
+      }
+
+      setStatus("Check bị trùng hoặc lỗi mạng — đã hoàn tác, thử lại nhé");
     }
   }
 
@@ -5991,8 +6070,16 @@ body #homeStack #questionWrap{
       syncQuickTools();
     }, 180);
   }
-  question.addEventListener("pointerup",openQuestion1,{passive:false});
-  question.addEventListener("click",openQuestion1);
+  // FIX P0: pointerup + click fire đồng thời trên mobile → burst 2 lần
+  // Chỉ dùng click, và debounce 300ms phòng double-tap
+  let _lastQ1At = 0;
+  const _openQ1Debounced = (e) => {
+    const now = Date.now();
+    if (now - _lastQ1At < 300) { e?.preventDefault(); return; }
+    _lastQ1At = now;
+    openQuestion1(e);
+  };
+  question.addEventListener("click", _openQ1Debounced);
 
   question.addEventListener("keydown", (e) => {
     const cta = e.target.closest(".landing-cta");
@@ -7403,8 +7490,9 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     let nm = m + 1, ny = y;
     if(nm > 11){ nm = 0; ny = y + 1; }
 
+    // PATCH 2.3: chỉ preload ±1 (giảm 50% request)
     const tasks = [];
-    for(let offset = -2; offset <= 2; offset++){
+    for(let offset = -1; offset <= 1; offset++){
       if(offset === 0) continue;
       let ny2 = y;
       let nm2 = m + offset;
@@ -8262,7 +8350,8 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     startAttendanceAutoRefresh();
 
     loadAttendanceMonth(false).then(() => {
-      preloadAdjacentMonths();
+      // PATCH 2.3: delay 800ms để ưu tiên tháng hiện tại render trước
+      setTimeout(() => preloadAdjacentMonths(), 800);
     }).catch(() => {});
   }
   function closePage(){
