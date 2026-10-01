@@ -9120,8 +9120,33 @@ async function loadAndRender(force = false){
     if(cached) renderList(cached);
     else renderLoading();
   }
-  const rows = await fetchMessages(force);
-  if(open) renderList(rows);
+
+  // Hard timeout 12s: chắc chắn không treo UI dù backend có chuyện gì
+  let rows = null;
+  let timedOut = false;
+  try{
+    rows = await Promise.race([
+      fetchMessages(force),
+      new Promise(resolve => setTimeout(() => { timedOut = true; resolve([]); }, 12000))
+    ]);
+  }catch(_){ rows = []; }
+
+  if(!open) return;
+
+  if(timedOut){
+    // Hiện fallback rõ ràng để user biết đường
+    stage.dataset.mode = "wall";
+    stage.innerHTML = "";
+    count.textContent = "Không tải được";
+    empty.classList.add("show");
+    const t = empty.querySelector(".sm-empty-text");
+    const s = empty.querySelector(".sm-empty-sub");
+    if(t) t.textContent = "Không tải được lời nhắn";
+    if(s) s.textContent = "Kiểm tra mạng rồi bấm ↻ để thử lại";
+    return;
+  }
+
+  renderList(rows || []);
 }
 
 // ===== Lifecycle =====
