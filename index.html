@@ -2423,10 +2423,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   text-shadow:0 2px 0 rgba(255,255,255,.95),0 10px 28px rgba(42,91,65,.08)!important;
   white-space:nowrap!important;
 }
-#question .landing-title::before{
-  content:"DAILY TEAM HUB";display:block;margin-bottom:8px;
-  color:#8ca598;font-size:clamp(8px,2.1vw,11px);font-weight:900;letter-spacing:.28em;
-}
 #question .landing-title::after{
   width:min(150px,30vw)!important;height:6px!important;margin:9px auto 0!important;
   background:linear-gradient(90deg,transparent,#efd48a 20%,#efd48a 80%,transparent)!important;
@@ -2511,7 +2507,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   #bottomNav button,#secondaryNav button{min-height:43px!important}
   
   #question .landing-title{font-size:clamp(28px,8vw,48px)!important}
-  #question .landing-title::before{font-size:8px!important;letter-spacing:.22em!important}
   #question .landing-cta{min-height:47px!important}
 }
 @media(max-width:390px){
@@ -2721,7 +2716,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 #question{position:relative !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;gap:12px !important;width:100% !important;padding:20px 22px 22px !important;box-sizing:border-box !important;border-radius:28px !important;background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(255,255,255,.98) 0%,rgba(255,255,255,.72) 45%,transparent 75%),linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(248,252,246,.94) 55%,rgba(240,248,238,.92) 100%) !important;border:1px solid rgba(120,175,135,.18) !important;box-shadow:0 24px 60px -20px rgba(42,78,57,.18),0 12px 32px -12px rgba(42,78,57,.12),0 2px 8px rgba(42,78,57,.05),inset 0 1px 0 rgba(255,255,255,.95) !important;backdrop-filter:blur(20px) saturate(120%) !important;-webkit-backdrop-filter:blur(20px) saturate(120%) !important;animation:none !important;overflow:hidden !important}
 #question::before{content:"" !important;position:absolute !important;top:-50% !important;right:-50% !important;width:200% !important;height:200% !important;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.65) 0%,transparent 45%) !important;pointer-events:none !important;z-index:0 !important}
 #question > *{position:relative !important;z-index:1 !important}
-#question .landing-title::before{content:"🐱  DAILY TEAM HUB" !important;display:block !important;margin-bottom:8px !important;color:#8ca598 !important;font-size:9px !important;font-weight:900 !important;letter-spacing:.32em !important;text-align:center !important;text-transform:uppercase !important;opacity:.85 !important}
 #question .landing-title{position:relative !important;display:block !important;width:auto !important;max-width:100% !important;padding:0 !important;color:var(--p-forest,#245943) !important;-webkit-text-fill-color:var(--p-forest,#245943) !important;background:none !important;font-family:var(--font,inherit) !important;font-size:clamp(30px,8.4vw,54px) !important;font-weight:950 !important;letter-spacing:-.055em !important;line-height:.98 !important;text-align:center !important;text-shadow:0 2px 0 rgba(255,255,255,.95),0 10px 28px rgba(42,91,65,.10) !important;white-space:nowrap !important}
 #question .landing-title::after{content:"" !important;display:block !important;width:min(120px,26vw) !important;height:4px !important;margin:8px auto 0 !important;border-radius:99px !important;background:linear-gradient(90deg,transparent,#efd48a 15%,#efd48a 85%,transparent) !important;opacity:.9 !important}
 #question .landing-cta{position:relative !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;gap:8px !important;width:auto !important;min-width:160px !important;min-height:46px !important;padding:10px 28px !important;margin-top:2px !important;border:1px solid rgba(67,137,93,.42) !important;border-radius:999px !important;background:linear-gradient(180deg,#5aad7f 0%,#4a9a6c 100%) !important;color:#fff !important;-webkit-text-fill-color:#fff !important;font-size:13px !important;font-weight:950 !important;letter-spacing:.16em !important;text-shadow:0 1px 2px rgba(42,78,57,.20) !important;box-shadow:0 12px 28px -8px rgba(74,154,108,.42),0 4px 10px -2px rgba(42,78,57,.14),inset 0 1px 0 rgba(255,255,255,.30) !important;transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease,background .22s ease !important;cursor:pointer !important;overflow:hidden !important}
@@ -3113,7 +3107,6 @@ body #homeStack #questionWrap{
    - Lần đầu: full animation (kicker → title → CTA → top3 → podium)
    - Lần sau: chỉ top3 chạy lại, delay = 0 (dùng --top3-base)
    ========================================================= */
-#question .landing-title::before{content:none !important;display:none !important}
 #question{--top3-base:.35s}
 #question .landing-kicker{display:block;width:100%;margin:0 0 6px;color:#8ca598;font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:clamp(9px,2.3vw,11px);font-weight:900;letter-spacing:.32em;text-align:center;text-transform:uppercase;line-height:1;opacity:.85}
 @keyframes heroSlideIn{0%{opacity:0;transform:translateX(100vw)}100%{opacity:1;transform:translateX(0)}}
@@ -5880,44 +5873,132 @@ body #homeStack #questionWrap{
   function renderLandingState(forceFullReplay = false){
   const locked = isChecklistLocked();
   question.classList.toggle("checklist-locked-home", locked);
-  const checkedList = names.map((name, i) => ({name:String(name || "").trim(),time:String(times[i] || "").trim(),checked:!!checked[i]})).filter(p => p.checked && p.time && p.name);
-  checkedList.sort((a,b) => a.time.localeCompare(b.time));
-  const top3 = checkedList.slice(0,3);
+
+  const checkedList = names.map((name, i) => ({
+    name: String(name || "").trim(),
+    time: String(times[i] || "").trim(),
+    checked: !!checked[i]
+  })).filter(p => p.checked && p.time && p.name);
+
+  checkedList.sort((a, b) => a.time.localeCompare(b.time));
+  const top3 = checkedList.slice(0, 3);
   const newSignature = top3Signature(top3);
   const top3Changed = newSignature !== _lastTop3Signature;
+
   let top3HTML = "";
   if(top3.length === 0){
     top3HTML = `<div class="landing-top3-empty">Chưa có ai check hôm nay — hãy là người đầu tiên! 🐱</div>`;
-  }else{
-    const podiumOrder=[];
-    if(top3[1]) podiumOrder.push({...top3[1],rank:2,medal:"🥈"});
-    if(top3[0]) podiumOrder.push({...top3[0],rank:1,medal:"🥇"});
-    if(top3[2]) podiumOrder.push({...top3[2],rank:3,medal:"🥉"});
-    top3HTML=`<span class="landing-top3-label"><span class="w">TOP</span> <span class="w">CHECK</span> <span class="w">SỚM</span> <span class="w">NHẤT</span></span><div class="landing-top3">${podiumOrder.map(p=>{const avatarUrl=getAvatarUrl(p.name);const safeName=String(p.name).replace(/"/g,'&quot;');const safeUrl=avatarUrl.replace(/"/g,'&quot;');const avatarHTML=avatarUrl?`<span class="podium-avatar"><img src="${safeUrl}" alt="" loading="eager" decoding="async" onerror="this.style.display='none';this.nextElementSibling.classList.add('show');"><span class="podium-avatar-fallback">?</span></span>`:`<span class="podium-avatar"><span class="podium-avatar-fallback show">?</span></span>`;return `<div class="podium-slot rank-${p.rank}" data-rank="${p.rank}">${avatarHTML}<span class="podium-medal">${p.medal}</span><span class="podium-name" title="${safeName}">${safeName}</span><span class="podium-time">${p.time}</span></div>`}).join("")}</div>`;
+  } else {
+    const podiumOrder = [];
+    if(top3[1]) podiumOrder.push({ ...top3[1], rank: 2, medal: "🥈" });
+    if(top3[0]) podiumOrder.push({ ...top3[0], rank: 1, medal: "🥇" });
+    if(top3[2]) podiumOrder.push({ ...top3[2], rank: 3, medal: "🥉" });
+
+    top3HTML = `
+      <span class="landing-top3-label">
+        <span class="w">TOP</span> <span class="w">CHECK</span> <span class="w">SỚM</span> <span class="w">NHẤT</span>
+      </span>
+      <div class="landing-top3">
+        ${podiumOrder.map(p => {
+          const avatarUrl = getAvatarUrl(p.name);
+          const safeName = String(p.name).replace(/"/g, '&quot;');
+          const safeUrl = avatarUrl.replace(/"/g, '&quot;');
+          const avatarHTML = avatarUrl
+            ? `<span class="podium-avatar"><img src="${safeUrl}" alt="" loading="eager" decoding="async" onerror="this.style.display='none';this.nextElementSibling.classList.add('show');"><span class="podium-avatar-fallback">?</span></span>`
+            : `<span class="podium-avatar"><span class="podium-avatar-fallback show">?</span></span>`;
+          return `
+            <div class="podium-slot rank-${p.rank}" data-rank="${p.rank}">
+              ${avatarHTML}
+              <span class="podium-medal">${p.medal}</span>
+              <span class="podium-name" title="${safeName}">${safeName}</span>
+              <span class="podium-time">${p.time}</span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
   }
-  const titleEl=question.querySelector(".landing-title");
-  const hasStructure=!!titleEl && !forceFullReplay;
+
+  const titleEl = question.querySelector(".landing-title");
+  const hasStructure = !!titleEl && !forceFullReplay;
+
   if(!hasStructure){
     question.classList.remove("play");
-    question.innerHTML=locked?`<span class="landing-kicker">🐱 DAILY TEAM HUB</span><span class="landing-title">CHECKLIST ĐẢO MÈO</span>${top3HTML}<span class="landing-cta locked" role="button" aria-disabled="true" tabindex="-1">Tạm khoá Checklist</span><span class="landing-lock-note">Sau ${checklistLockTime} sẽ khoá Checklist nha mn 🥰</span>`:`<span class="landing-kicker">🐱 DAILY TEAM HUB</span><span class="landing-title">CHECKLIST ĐẢO MÈO</span>${top3HTML}<span class="landing-cta" role="button" tabindex="0">CLICK HERE</span>`;
-    _lastTop3Signature=newSignature; _top3Nodes=null; question.style.removeProperty("--top3-base");
-    void question.offsetWidth; question.classList.add("play");
-    question.style.opacity="1"; question.style.transform="scale(1)"; question.style.pointerEvents=locked?"none":"auto";
+
+    if(locked){
+      question.innerHTML = `
+        <span class="landing-kicker">🐱 DAILY TEAM HUB</span>
+        <span class="landing-title">CHECKLIST ĐẢO MÈO</span>
+        ${top3HTML}
+        <span class="landing-cta locked" role="button" aria-disabled="true" tabindex="-1">Tạm khoá Checklist</span>
+        <span class="landing-lock-note">Sau ${checklistLockTime} sẽ khoá Checklist nha mn 🥰</span>
+      `;
+    } else {
+      question.innerHTML = `
+        <span class="landing-kicker">🐱 DAILY TEAM HUB</span>
+        <span class="landing-title">CHECKLIST ĐẢO MÈO</span>
+        ${top3HTML}
+        <span class="landing-cta" role="button" tabindex="0">CLICK HERE</span>
+      `;
+    }
+
+    _lastTop3Signature = newSignature;
+    _top3Nodes = null;
+    question.style.removeProperty("--top3-base");
+    void question.offsetWidth;
+    question.classList.add("play");
+    question.style.opacity = "1";
+    question.style.transform = "scale(1)";
+    question.style.pointerEvents = locked ? "none" : "auto";
     return;
   }
-  if(top3Changed){
-    question.querySelector(".landing-top3-label")?.remove();question.querySelector(".landing-top3")?.remove();question.querySelector(".landing-top3-empty")?.remove();
-    const ctaBefore=question.querySelector(".landing-cta"); if(ctaBefore&&top3HTML) ctaBefore.insertAdjacentHTML("beforebegin",top3HTML);
-    _lastTop3Signature=newSignature; _top3Nodes=null;
 
-    // Replay CHỈ Top 3 — tuyệt đối không reset .play của Hero
+  if(top3Changed){
+    question.querySelector(".landing-top3-label")?.remove();
+    question.querySelector(".landing-top3")?.remove();
+    question.querySelector(".landing-top3-empty")?.remove();
+
+    const ctaBefore = question.querySelector(".landing-cta");
+    if(ctaBefore && top3HTML){
+      ctaBefore.insertAdjacentHTML("beforebegin", top3HTML);
+    }
+
+    _lastTop3Signature = newSignature;
+    _top3Nodes = null;
     question.classList.remove("top3-replay");
     void question.offsetWidth;
     question.classList.add("top3-replay");
   }
-  const cta=question.querySelector(".landing-cta"); const lockNote=question.querySelector(".landing-lock-note");
-  if(locked){if(cta&&!cta.classList.contains("locked")){cta.classList.add("locked");cta.setAttribute("aria-disabled","true");cta.setAttribute("tabindex","-1");cta.textContent="Tạm khoá Checklist";if(!lockNote){const note=document.createElement("span");note.className="landing-lock-note";note.textContent=`Sau ${checklistLockTime} sẽ khoá Checklist nha mn 🥰`;question.appendChild(note)}}}else if(cta&&cta.classList.contains("locked")){cta.classList.remove("locked");cta.removeAttribute("aria-disabled");cta.setAttribute("tabindex","0");cta.textContent="CLICK HERE";lockNote?.remove()}
-  question.style.opacity="1";question.style.transform="scale(1)";question.style.pointerEvents=locked?"none":"auto";
+
+  const cta = question.querySelector(".landing-cta");
+  const lockNote = question.querySelector(".landing-lock-note");
+
+  if(locked){
+    if(cta && !cta.classList.contains("locked")){
+      cta.classList.add("locked");
+      cta.setAttribute("aria-disabled", "true");
+      cta.setAttribute("tabindex", "-1");
+      cta.textContent = "Tạm khoá Checklist";
+      if(!lockNote){
+        const note = document.createElement("span");
+        note.className = "landing-lock-note";
+        note.textContent = `Sau ${checklistLockTime} sẽ khoá Checklist nha mn 🥰`;
+        question.appendChild(note);
+      }
+    }
+  } else {
+    if(cta && cta.classList.contains("locked")){
+      cta.classList.remove("locked");
+      cta.removeAttribute("aria-disabled");
+      cta.setAttribute("tabindex", "0");
+      cta.textContent = "CLICK HERE";
+      lockNote?.remove();
+    }
+  }
+
+  question.style.opacity = "1";
+  question.style.transform = "scale(1)";
+  question.style.pointerEvents = locked ? "none" : "auto";
 }
 
   function openQuestion1(e){
