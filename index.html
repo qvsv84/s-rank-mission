@@ -3250,135 +3250,241 @@ body #homeStack #questionWrap{
   #question.top3-replay .landing-top3-label .w,#question.top3-replay .landing-top3 .podium-slot,#question.top3-replay .landing-top3-empty{animation:none !important;opacity:1 !important;transform:none !important}}
 </style>
 <style id="birthdayCardStyle">
-/* ===== BIRTHDAY CARD — Rosalie ===== */
-#weeklyTopWrap:not(.birthday-mode){ display:none !important; }
+/* ===== HÒM THƯ BÍ MẬT ===== */
+#weeklyTopWrap:not(.secret-mail-mode){ display:none !important; }
 
-.birthday-card{
-  cursor:pointer;
+.secret-mail-card{
+  cursor:default;
   position:relative;
   overflow:hidden;
-  transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease;
-}
-.birthday-card::before{
-  content:"";
-  position:absolute; inset:0;
-  background:
-    radial-gradient(circle at 20% 15%, rgba(255,220,235,.55) 0%, transparent 38%),
-    radial-gradient(circle at 82% 88%, rgba(255,240,200,.55) 0%, transparent 38%),
-    radial-gradient(circle at 50% 50%, rgba(255,200,230,.32) 0%, transparent 62%);
-  pointer-events:none; z-index:0;
-}
-.birthday-card::after{
-  content:"🎈";
-  position:absolute; top:8px; right:10px;
-  font-size:16px; opacity:.75;
-  pointer-events:none; z-index:1;
-  animation:birthdayBalloon 3.2s ease-in-out infinite;
-}
-@keyframes birthdayBalloon{
-  0%,100%{ transform:translateY(0) rotate(-4deg); }
-  50%{ transform:translateY(-4px) rotate(4deg); }
-}
-.birthday-card > *{ position:relative; z-index:1; }
-
-.birthday-card:hover{
-  transform:translateY(-2px);
-  box-shadow:
-    0 24px 55px -18px rgba(255,100,180,.30),
-    0 12px 30px -10px rgba(255,150,200,.22),
-    0 2px 6px rgba(42,78,57,.05),
-    inset 0 1px 0 rgba(255,255,255,.95);
-}
-.birthday-card:active{ transform:translateY(0) scale(.985); }
-.birthday-card:focus-visible{
-  outline:3px solid rgba(255,120,190,.45);
-  outline-offset:3px;
 }
 
-/* Avatar sinh nhật — dùng background-image, không có con nên cần tắt placeholder ":" */
-.weekly-top-avatar.birthday-avatar{
-  background-size:cover !important;
-  background-position:center !important;
-  background-color:#fff !important;
-}
-#weeklyTopWrap .weekly-top-avatar.birthday-avatar:empty::before{
-  content:none !important;
-  display:none !important;
-}
-
-.birthday-name{
-  font-size:17px !important;
-  background:linear-gradient(135deg,#c0306d,#ff70b0);
-  -webkit-background-clip:text; background-clip:text;
-  -webkit-text-fill-color:transparent;
-  letter-spacing:-.02em;
-}
-.birthday-today{
-  background:linear-gradient(135deg, rgba(255,180,220,.38), rgba(255,220,240,.28)) !important;
-  border-color:rgba(255,140,200,.42) !important;
-  color:#b0306d !important;
-  animation:birthdayPulse 2s ease-in-out infinite;
-}
-@keyframes birthdayPulse{
-  0%,100%{ box-shadow:0 0 0 0 rgba(255,140,200,.28); }
-  50%    { box-shadow:0 0 0 6px rgba(255,140,200,0); }
-}
-.birthday-msg{
-  font-size:11px !important;
-  color:#8a5070 !important;
-  line-height:1.4 !important;
-  font-style:italic;
-  font-weight:700 !important;
+.secret-mail-header{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding-bottom:8px;
+  margin-bottom:10px;
+  border-bottom:1px solid rgba(120,175,135,.14);
 }
 
-.birthday-hint{
-  display:block;
-  margin-top:10px;
-  padding-top:9px;
-  border-top:1px dashed rgba(255,150,200,.35);
-  text-align:center;
+.secret-mail-icon{
+  font-size:14px;
+  line-height:1;
+  animation:secretMailFloat 3s ease-in-out infinite;
+}
+
+.secret-mail-icon:nth-of-type(1){ animation-delay:0s; }
+.secret-mail-icon:nth-of-type(2){ animation-delay:1.5s; }
+
+@keyframes secretMailFloat{
+  0%,100%{ transform:translateY(0) rotate(-3deg); }
+  50%    { transform:translateY(-3px) rotate(3deg); }
+}
+
+.secret-mail-title{
   font-size:10px;
-  font-weight:850;
-  letter-spacing:.1em;
-  color:#c07090;
+  font-weight:950;
+  letter-spacing:.22em;
+  color:#5c8a6d;
   text-transform:uppercase;
+  line-height:1;
 }
 
-.birthday-card .weekly-top-icon{
-  animation:birthdayTwinkle 2.2s ease-in-out infinite;
-  display:inline-block;
-}
-.birthday-card .weekly-top-icon:nth-of-type(1){ animation-delay:0s; }
-.birthday-card .weekly-top-icon:nth-of-type(2){ animation-delay:1.1s; }
-@keyframes birthdayTwinkle{
-  0%,100%{ transform:scale(1) rotate(0deg); opacity:.85; }
-  50%    { transform:scale(1.22) rotate(9deg); opacity:1; }
+/* Người gửi */
+.secret-mail-sender{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:10px;
 }
 
-/* ===== 13 LỜI CHÚC BAY LÊN ===== */
-.birthday-wish{
+.sender-label{
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.1em;
+  color:#8ca598;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+
+.sender-name-btn{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 10px;
+  border:1px solid rgba(120,175,135,.22);
+  border-radius:999px;
+  background:rgba(255,255,255,.7);
+  color:#2f6b4f;
+  font-family:inherit;
+  font-size:11px;
+  font-weight:850;
+  cursor:pointer;
+  transition:background .15s ease,border-color .15s ease;
+  max-width:100%;
+  min-width:0;
+}
+
+.sender-name-btn:hover{
+  background:#fff;
+  border-color:rgba(79,155,112,.4);
+}
+
+.sender-name-btn:active{
+  transform:scale(.97);
+}
+
+.sender-name{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:140px;
+}
+
+.sender-name-btn.empty .sender-name{
+  color:#a3b8ab;
+  font-style:italic;
+}
+
+.sender-chevron{
+  font-size:14px;
+  color:#8ca598;
+  line-height:1;
+}
+
+/* Ô nhập */
+.secret-mail-body{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.secret-mail-input{
+  width:100%;
+  min-height:70px;
+  max-height:120px;
+  padding:10px 12px;
+  border:1px solid rgba(120,175,135,.22);
+  border-radius:12px;
+  background:rgba(255,255,255,.75);
+  color:#2f6b4f;
+  font-family:inherit;
+  font-size:16px;
+  font-weight:700;
+  line-height:1.4;
+  resize:vertical;
+  outline:none;
+  box-sizing:border-box;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+
+.secret-mail-input::placeholder{
+  color:#a3b8ab;
+  font-weight:600;
+}
+
+.secret-mail-input:focus{
+  border-color:rgba(79,155,112,.55);
+  background:#fff;
+  box-shadow:0 0 0 3px rgba(79,155,112,.1);
+}
+
+/* Actions */
+.secret-mail-actions{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+
+.secret-mail-counter{
+  font-size:10px;
+  font-weight:800;
+  color:#8ca598;
+  font-variant-numeric:tabular-nums;
+}
+
+.secret-mail-counter.warn{
+  color:#c05a3a;
+}
+
+.secret-mail-send{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:8px 16px;
+  border:1px solid rgba(67,137,93,.4);
+  border-radius:999px;
+  background:linear-gradient(135deg,#5aad7f,#4a9a6c);
+  color:#fff;
+  font-family:inherit;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.08em;
+  cursor:pointer;
+  box-shadow:0 4px 12px -3px rgba(74,154,108,.45);
+  transition:transform .15s ease,box-shadow .15s ease;
+}
+
+.secret-mail-send:hover{
+  transform:translateY(-1px);
+  box-shadow:0 6px 16px -3px rgba(74,154,108,.55);
+}
+
+.secret-mail-send:active{
+  transform:translateY(0) scale(.97);
+}
+
+.secret-mail-send:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+  transform:none;
+  box-shadow:none;
+}
+
+/* Status */
+.secret-mail-status{
+  min-height:16px;
+  margin-top:4px;
+  text-align:center;
+  font-size:10.5px;
+  font-weight:800;
+  color:#4d8b63;
+  line-height:1.35;
+}
+
+.secret-mail-status.error{ color:#b84b4b; }
+.secret-mail-status.success{ color:#4d8b63; }
+
+/* Hiệu ứng bay khi bấm gửi */
+.secret-mail-burst{
   position:fixed;
   z-index:99999;
-  padding:9px 15px;
+  padding:8px 14px;
   border-radius:999px;
-  background:linear-gradient(135deg, #ffffff 0%, #fff5fa 100%);
-  border:1.5px solid rgba(255,150,200,.45);
+  background:linear-gradient(135deg,#ffffff,#f0f9f1);
+  border:1.5px solid rgba(120,175,135,.45);
   box-shadow:
-    0 8px 22px rgba(255,100,180,.22),
-    0 0 22px rgba(255,150,210,.32),
+    0 8px 22px rgba(75,155,115,.22),
+    0 0 22px rgba(120,200,150,.32),
     inset 0 1px 0 rgba(255,255,255,.95);
-  color:#b0306d;
-  font-family:var(--font, ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif);
-  font-size:13px;
-  font-weight:800;
-  letter-spacing:-.01em;
+  color:#2f6b4f;
+  font-family:var(--font, system-ui, -apple-system, "Segoe UI", sans-serif);
+  font-size:12px;
+  font-weight:850;
   white-space:nowrap;
   pointer-events:none;
+  max-width:min(80vw, 320px);
+  overflow:hidden;
+  text-overflow:ellipsis;
   will-change:transform, opacity;
-  transform:translate(-50%, -50%);
-  animation:birthdayFloat 3s ease-out forwards;
+  transform:translate(-50%,-50%);
+  animation:secretMailFloatUp 2.6s ease-out forwards;
 }
-@keyframes birthdayFloat{
+
+@keyframes secretMailFloatUp{
   0%{
     opacity:0;
     transform:translate(-50%,-50%) scale(.3) rotate(0deg);
@@ -3397,10 +3503,8 @@ body #homeStack #questionWrap{
 }
 
 @media (prefers-reduced-motion:reduce){
-  .birthday-wish{ animation-duration:.6s !important; }
-  .birthday-card::after,
-  .birthday-card .weekly-top-icon,
-  .birthday-today{ animation:none !important; }
+  .secret-mail-burst{ animation-duration:.6s !important; }
+  .secret-mail-icon{ animation:none !important; }
 }
 </style>
 </head>
@@ -3417,43 +3521,46 @@ body #homeStack #questionWrap{
     <div id="question"></div>
   </div>
 
-  <div id="weeklyTopWrap" aria-label="Chúc mừng sinh nhật Rosalie">
-    <article id="weeklyTopCard" class="birthday-card" role="button" tabindex="0" aria-label="Chạm để xem lời chúc mừng sinh nhật">
-      <header class="weekly-top-header">
-        <span class="weekly-top-icon" aria-hidden="true">🎂</span>
-        <span class="weekly-top-title">HAPPY BIRTHDAY</span>
-        <span class="weekly-top-icon" aria-hidden="true">🎂</span>
-      </header>
+  <div id="weeklyTopWrap" aria-label="Hòm thư bí mật">
+  <article id="weeklyTopCard" class="secret-mail-card" role="region" aria-label="Hòm thư bí mật">
+    <header class="secret-mail-header">
+      <span class="secret-mail-icon" aria-hidden="true">✉️</span>
+      <span class="secret-mail-title">HÒM THƯ BÍ MẬT</span>
+      <span class="secret-mail-icon" aria-hidden="true">✉️</span>
+    </header>
 
-      <div class="weekly-top-body">
-        <div class="weekly-top-avatar birthday-avatar" id="birthdayAvatar" aria-hidden="true"
-             style="background-image:url('https://drive.google.com/thumbnail?id=1w1VozFwApcIHCwmV6R1-Y8LfBTWPbzya&sz=w400')"></div>
+    <!-- Người gửi -->
+    <div class="secret-mail-sender">
+      <span class="sender-label">Gửi từ:</span>
+      <button type="button" id="secretMailSenderBtn" class="sender-name-btn" aria-label="Chọn người gửi">
+        <span id="secretMailSenderName" class="sender-name">Chưa chọn</span>
+        <span class="sender-chevron">⌄</span>
+      </button>
+    </div>
 
-        <div class="weekly-top-info">
-          <div class="weekly-top-name birthday-name">Rosalie</div>
+    <!-- Ô nhập -->
+    <div class="secret-mail-body">
+      <textarea
+        id="secretMailInput"
+        class="secret-mail-input"
+        maxlength="200"
+        rows="3"
+        placeholder="Viết lời nhắn bí mật..."
+        autocomplete="off"
+      ></textarea>
 
-          <div class="weekly-top-meta">
-            <span class="weekly-top-pill">
-              <span class="meta-icon" aria-hidden="true">🎂</span>
-              <span>30/09</span>
-            </span>
-            <span class="weekly-top-pill birthday-today">
-              <span aria-hidden="true">✨</span>
-              <span>Hôm nay</span>
-            </span>
-          </div>
-
-          <div class="weekly-top-extra">
-            <div class="weekly-top-line birthday-msg">
-              Chúc Rosalie tuổi mới rực rỡ, luôn vui vẻ và hạnh phúc 🥳
-            </div>
-          </div>
-        </div>
+      <div class="secret-mail-actions">
+        <span id="secretMailCounter" class="secret-mail-counter">0/200</span>
+        <button type="button" id="secretMailSendBtn" class="secret-mail-send" aria-label="Gửi lời nhắn">
+          <span aria-hidden="true">📤</span>
+          <span>Gửi</span>
+        </button>
       </div>
+    </div>
 
-      <div class="birthday-hint">👆 Chạm để xem lời chúc từ mọi người</div>
-    </article>
-  </div>
+    <div id="secretMailStatus" class="secret-mail-status" aria-live="polite"></div>
+  </article>
+</div>
 
 </div>
 
@@ -8896,81 +9003,380 @@ window.addEventListener("checkinDone", () => {
 </style>
 
 <script>
-/* ===== BIRTHDAY CARD — Rosalie ===== */
+/* ===== HÒM THƯ BÍ MẬT ===== */
 (function(){
   "use strict";
 
-  const BIRTHDAY_MONTH = "09";
-  const BIRTHDAY_DAY   = "30";
+  const SENDER_CACHE_KEY = "srank_secret_mail_sender_v1";
 
-  const WISHES = [
-    "Chúc mừng sinh nhật Rosalie! 🎂",
-    "Tuổi mới rực rỡ nha 🌸",
-    "Mãi xinh đẹp và hạnh phúc 💖",
-    "Chúc mọi điều tốt lành ✨",
-    "Sinh nhật vui vẻ nhé 🎉",
-    "Tuổi mới thành công rực rỡ 🥳",
-    "Happy Birthday! 🎁",
-    "Luôn gặp may mắn nha 🍀",
-    "Mãi yêu đời và tươi trẻ 🌈",
-    "Yêu thương và bình an 💝",
-    "Tỏa sáng mỗi ngày nha 🌟",
-    "Thật nhiều niềm vui 🎈",
-    "Luôn vui vẻ nhé 💐"
-  ];
+  const senderBtn = document.getElementById("secretMailSenderBtn");
+  const senderNameEl = document.getElementById("secretMailSenderName");
+  const inputEl = document.getElementById("secretMailInput");
+  const counterEl = document.getElementById("secretMailCounter");
+  const sendBtn = document.getElementById("secretMailSendBtn");
+  const statusEl = document.getElementById("secretMailStatus");
+  const wrap = document.getElementById("weeklyTopWrap");
 
-  function isBirthdayToday(){
+  if(!senderBtn || !inputEl || !sendBtn || !statusEl || !wrap) return;
+
+  // ===== Người gửi từ cache =====
+  let currentSender = "";
+
+  function loadSenderFromCache(){
     try{
-      const parts = new Intl.DateTimeFormat("en-CA",{
-        timeZone:"Asia/Ho_Chi_Minh",
-        month:"2-digit", day:"2-digit"
-      }).formatToParts(new Date());
-      const m = parts.find(p => p.type === "month")?.value || "";
-      const d = parts.find(p => p.type === "day")?.value || "";
-      return m === BIRTHDAY_MONTH && d === BIRTHDAY_DAY;
-    }catch(_){
-      const n = new Date();
-      return (n.getMonth() + 1) === Number(BIRTHDAY_MONTH) && n.getDate() === Number(BIRTHDAY_DAY);
+      const v = String(localStorage.getItem(SENDER_CACHE_KEY) || "").trim();
+      if(v) return v;
+    }catch(_){}
+    return "";
+  }
+
+  function saveSenderToCache(name){
+    try{
+      if(name) localStorage.setItem(SENDER_CACHE_KEY, name);
+      else localStorage.removeItem(SENDER_CACHE_KEY);
+    }catch(_){}
+  }
+
+  function renderSender(){
+    if(currentSender){
+      senderNameEl.textContent = currentSender;
+      senderBtn.classList.remove("empty");
+    }else{
+      senderNameEl.textContent = "Chưa chọn";
+      senderBtn.classList.add("empty");
     }
   }
 
-  function playWishes(){
+  // ===== Load sender khi mở app =====
+  currentSender = loadSenderFromCache();
+  renderSender();
+
+  // Nếu cache trống → mở wheel chọn tên luôn
+  if(!currentSender){
+    setTimeout(() => {
+      openSenderWheel();
+    }, 800);
+  }
+
+  // ===== Wheel chọn tên người gửi =====
+  let senderWheelOverlay = null;
+  let senderWheelIndex = 0;
+  let senderWheelOffset = 0;
+  let senderWheelDragging = false;
+  let senderWheelStartY = 0;
+  const SENDER_WHEEL_STEP = 58;
+
+  function getNamesFromChecklist(){
+    try{
+      if(typeof window.__getChecklistNames === "function"){
+        return window.__getChecklistNames();
+      }
+    }catch(_){}
+    return [];
+  }
+
+  function buildSenderWheel(){
+    const names = getNamesFromChecklist();
+    if(!names.length) return null;
+
+    // Tạo overlay lần đầu
+    if(!senderWheelOverlay){
+      senderWheelOverlay = document.createElement("div");
+      senderWheelOverlay.id = "secretMailWheelOverlay";
+      senderWheelOverlay.innerHTML = `
+        <div class="secret-mail-wheel-panel" role="dialog" aria-modal="true">
+          <div class="secret-mail-wheel-head">
+            <div class="secret-mail-wheel-title">Chọn người gửi</div>
+            <button type="button" class="secret-mail-wheel-close" aria-label="Đóng">×</button>
+          </div>
+          <div class="secret-mail-wheel-viewport">
+            <div class="secret-mail-wheel-selection"></div>
+            <div class="secret-mail-wheel-items"></div>
+          </div>
+          <div class="secret-mail-wheel-hint">Vuốt lên / xuống để chọn</div>
+          <button type="button" class="secret-mail-wheel-confirm">Xác nhận</button>
+        </div>
+      `;
+      document.body.appendChild(senderWheelOverlay);
+
+      // CSS động (nhúng nhanh — hoặc bạn thêm vào phần CSS trên)
+      const style = document.createElement("style");
+      style.textContent = `
+        #secretMailWheelOverlay{position:fixed;inset:0;z-index:19500;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(17,52,45,.42);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}
+        #secretMailWheelOverlay.show{display:flex;}
+        .secret-mail-wheel-panel{width:min(92vw,390px);padding:18px 14px 16px;border:1px solid rgba(255,255,255,.7);border-radius:26px;background:rgba(250,255,253,.97);box-shadow:0 24px 70px rgba(32,91,78,.22);animation:secretMailWheelPop .28s cubic-bezier(.16,.9,.25,1);}
+        @keyframes secretMailWheelPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+        .secret-mail-wheel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+        .secret-mail-wheel-title{font-size:17px;font-weight:900;color:#245943;}
+        .secret-mail-wheel-close{width:36px;height:36px;border:0;border-radius:50%;background:#edf7f3;color:#477a6d;font-size:20px;line-height:1;cursor:pointer;}
+        .secret-mail-wheel-viewport{position:relative;height:292px;overflow:hidden;border-radius:22px;background:linear-gradient(180deg,#f0f8f5 0%,#fff 22%,#fff 78%,#edf7f3 100%);border:1px solid rgba(58,125,108,.10);touch-action:none;}
+        .secret-mail-wheel-viewport::before,.secret-mail-wheel-viewport::after{content:"";position:absolute;left:0;right:0;height:72px;z-index:4;pointer-events:none;}
+        .secret-mail-wheel-viewport::before{top:0;background:linear-gradient(#f0f8f5,rgba(240,248,245,0));}
+        .secret-mail-wheel-viewport::after{bottom:0;background:linear-gradient(rgba(237,247,243,0),#edf7f3);}
+        .secret-mail-wheel-selection{position:absolute;left:10px;right:10px;top:50%;height:58px;transform:translateY(-50%);border-top:1px solid rgba(65,151,128,.32);border-bottom:1px solid rgba(65,151,128,.32);border-radius:15px;background:rgba(83,180,151,.08);box-shadow:inset 0 0 20px rgba(83,180,151,.06);z-index:3;pointer-events:none;}
+        .secret-mail-wheel-items{position:absolute;inset:0;z-index:2;}
+        .secret-mail-wheel-item{position:absolute;left:0;right:0;height:58px;display:flex;align-items:center;justify-content:center;color:rgba(33,74,64,.28);font-size:17px;font-weight:750;user-select:none;will-change:transform,opacity;font-variant-numeric:tabular-nums;transition:filter .15s ease;}
+        .secret-mail-wheel-item.selected{color:#205e50;font-size:20px;font-weight:900;}
+        .secret-mail-wheel-hint{text-align:center;margin-top:10px;font-size:10px;color:#86a49d;font-weight:700;}
+        .secret-mail-wheel-confirm{width:100%;height:44px;margin-top:12px;border:0;border-radius:999px;background:linear-gradient(135deg,#55b99d,#77cbb5);color:#fff;font-size:12px;font-weight:900;box-shadow:0 9px 22px rgba(69,169,140,.22);cursor:pointer;}
+      `;
+      document.head.appendChild(style);
+
+      const closeBtn = senderWheelOverlay.querySelector(".secret-mail-wheel-close");
+      const confirmBtn = senderWheelOverlay.querySelector(".secret-mail-wheel-confirm");
+      const viewport = senderWheelOverlay.querySelector(".secret-mail-wheel-viewport");
+
+      closeBtn.addEventListener("click", closeSenderWheel);
+      senderWheelOverlay.addEventListener("click", e => {
+        if(e.target === senderWheelOverlay) closeSenderWheel();
+      });
+      confirmBtn.addEventListener("click", () => {
+        const names = getNamesFromChecklist();
+        if(!names.length) return;
+        currentSender = names[senderWheelIndex] || "";
+        saveSenderToCache(currentSender);
+        renderSender();
+        closeSenderWheel();
+      });
+
+      // Drag
+      viewport.addEventListener("pointerdown", e => {
+        senderWheelDragging = true;
+        senderWheelStartY = e.clientY;
+        senderWheelOffset = 0;
+        viewport.setPointerCapture?.(e.pointerId);
+      });
+      viewport.addEventListener("pointermove", e => {
+        if(!senderWheelDragging) return;
+        senderWheelOffset = e.clientY - senderWheelStartY;
+        const names = getNamesFromChecklist();
+        if((senderWheelIndex === 0 && senderWheelOffset > 0) ||
+           (senderWheelIndex === names.length - 1 && senderWheelOffset < 0)){
+          senderWheelOffset *= .25;
+        }
+        renderSenderWheel();
+      });
+      viewport.addEventListener("pointerup", e => {
+        if(!senderWheelDragging) return;
+        senderWheelDragging = false;
+        const steps = Math.round(-senderWheelOffset / SENDER_WHEEL_STEP);
+        const names = getNamesFromChecklist();
+        if(steps !== 0){
+          senderWheelIndex = Math.max(0, Math.min(names.length - 1, senderWheelIndex + steps));
+        }
+        senderWheelOffset = 0;
+        renderSenderWheel();
+        viewport.releasePointerCapture?.(e.pointerId);
+      });
+      viewport.addEventListener("pointercancel", e => {
+        if(!senderWheelDragging) return;
+        senderWheelDragging = false;
+        senderWheelOffset = 0;
+        renderSenderWheel();
+        if(e.pointerId != null) viewport.releasePointerCapture?.(e.pointerId);
+      });
+
+      // Wheel chuột
+      viewport.addEventListener("wheel", e => {
+        if(!senderWheelOverlay.classList.contains("show")) return;
+        e.preventDefault();
+        if(!e.deltaY) return;
+        const names = getNamesFromChecklist();
+        senderWheelIndex += e.deltaY > 0 ? 1 : -1;
+        senderWheelIndex = Math.max(0, Math.min(names.length - 1, senderWheelIndex));
+        senderWheelOffset = 0;
+        renderSenderWheel();
+      }, {passive:false});
+    }
+
+    return senderWheelOverlay;
+  }
+
+  function renderSenderWheel(){
+    if(!senderWheelOverlay) return;
+    const names = getNamesFromChecklist();
+    const itemsEl = senderWheelOverlay.querySelector(".secret-mail-wheel-items");
+    const viewport = senderWheelOverlay.querySelector(".secret-mail-wheel-viewport");
+    if(!itemsEl || !viewport) return;
+
+    // Rebuild items nếu cần
+    if(itemsEl.children.length !== names.length){
+      itemsEl.innerHTML = "";
+      names.forEach(name => {
+        const el = document.createElement("div");
+        el.className = "secret-mail-wheel-item";
+        el.textContent = name;
+        itemsEl.appendChild(el);
+      });
+    }
+
+    const mid = viewport.clientHeight / 2;
+    const children = itemsEl.children;
+    for(let i = 0; i < children.length; i++){
+      const el = children[i];
+      const y = (i - senderWheelIndex) * SENDER_WHEEL_STEP + mid + senderWheelOffset;
+      const d = Math.abs(y - mid);
+      const n = Math.min(1, d / (SENDER_WHEEL_STEP * 2.3));
+      el.style.top = (y - SENDER_WHEEL_STEP / 2) + "px";
+      el.style.transform = `scale(${1 - n * .28})`;
+      el.style.opacity = .20 + (1 - n) * .80;
+      el.style.filter = `blur(${n * 2.5}px)`;
+      el.classList.toggle("selected", i === senderWheelIndex && Math.abs(senderWheelOffset) < SENDER_WHEEL_STEP * .35);
+    }
+  }
+
+  function openSenderWheel(){
+    const names = getNamesFromChecklist();
+    if(!names.length){
+      setStatus("Đang tải danh sách người gửi…");
+      // Thử lại sau 1.5s
+      setTimeout(() => {
+        if(getNamesFromChecklist().length) openSenderWheel();
+      }, 1500);
+      return;
+    }
+
+    buildSenderWheel();
+
+    // Nhảy tới người đang chọn (nếu có)
+    if(currentSender){
+      const idx = names.indexOf(currentSender);
+      if(idx >= 0) senderWheelIndex = idx;
+    }else{
+      senderWheelIndex = 0;
+    }
+    senderWheelOffset = 0;
+
+    renderSenderWheel();
+    senderWheelOverlay.classList.add("show");
+  }
+
+  function closeSenderWheel(){
+    if(senderWheelOverlay){
+      senderWheelOverlay.classList.remove("show");
+    }
+  }
+
+  senderBtn.addEventListener("click", openSenderWheel);
+
+  // ===== Đếm ký tự =====
+  function updateCounter(){
+    const len = inputEl.value.length;
+    const max = 200;
+    counterEl.textContent = `${len}/${max}`;
+    counterEl.classList.toggle("warn", len > max * .9);
+  }
+  inputEl.addEventListener("input", updateCounter);
+  updateCounter();
+
+  // ===== Gửi =====
+  async function sendMessage(){
+    const text = String(inputEl.value || "").trim();
+
+    if(!currentSender){
+      statusEl.className = "secret-mail-status error";
+      statusEl.textContent = "Vui lòng chọn người gửi trước";
+      openSenderWheel();
+      return;
+    }
+
+    if(!text){
+      statusEl.className = "secret-mail-status error";
+      statusEl.textContent = "Vui lòng nhập lời nhắn";
+      inputEl.focus();
+      return;
+    }
+
+    if(text.length > 200){
+      statusEl.className = "secret-mail-status error";
+      statusEl.textContent = "Lời nhắn tối đa 200 ký tự";
+      return;
+    }
+
+    sendBtn.disabled = true;
+    statusEl.className = "secret-mail-status";
+    statusEl.textContent = "Đang gửi…";
+
+    try{
+      const r = await window.__srankApi("sendSecretMessage", {
+        name: currentSender,
+        message: text,
+        clientTime: new Intl.DateTimeFormat("vi-VN",{
+          timeZone:"Asia/Ho_Chi_Minh",
+          hour:"2-digit",minute:"2-digit",hour12:false
+        }).format(new Date())
+      }, 12000);
+
+      if(!r || !r.ok) throw new Error(r?.error || "Không gửi được");
+
+      // Thành công
+      statusEl.className = "secret-mail-status success";
+      statusEl.textContent = "Đã gửi lời nhắn ✓";
+      inputEl.value = "";
+      updateCounter();
+
+      // Hiệu ứng bay lên
+      playSecretMailBurst(text);
+
+      // Live Feed
+      try{
+        if(typeof LiveFeed !== "undefined" && LiveFeed.push){
+          LiveFeed.push({
+            type: "mail",
+            name: currentSender,
+            meta: { text: text.slice(0, 40) }
+          });
+        }
+      }catch(_){}
+
+      // Clear status sau 3s
+      setTimeout(() => {
+        if(statusEl.textContent === "Đã gửi lời nhắn ✓"){
+          statusEl.textContent = "";
+        }
+      }, 3000);
+
+    }catch(e){
+      statusEl.className = "secret-mail-status error";
+      statusEl.textContent = e.message || "Không gửi được. Thử lại sau";
+    }finally{
+      sendBtn.disabled = false;
+    }
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+
+  // Ctrl/Cmd + Enter để gửi nhanh
+  inputEl.addEventListener("keydown", e => {
+    if((e.ctrlKey || e.metaKey) && e.key === "Enter"){
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // ===== Hiệu ứng bay lên khi gửi =====
+  function playSecretMailBurst(text){
     const card = document.getElementById("weeklyTopCard");
     if(!card) return;
-    if(card.dataset.playing === "1") return;
-    card.dataset.playing = "1";
 
     const rect = card.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
 
-    // Lấy 13 người từ checklist (đã có sẵn trong biến names của IIFE chính)
-    let names = [];
-    try{
-      names = window.__getChecklistNames?.() || [];
-    }catch(_){}
-    names = names.map(n => String(n).trim()).filter(Boolean).slice(0, 13);
-
-    // Đảm bảo đúng 13 bubble
-    while(names.length < 13) names.push("");
-
-    const TOTAL = 13;
+    // Tạo 8 phiếu bay lên với nội dung rút gọn
+    const TOTAL = 8;
+    const shortText = text.length > 25 ? text.slice(0, 25) + "…" : text;
 
     for(let i = 0; i < TOTAL; i++){
-      const delay = i * 110 + Math.random() * 90;
+      const delay = i * 90 + Math.random() * 80;
       setTimeout(() => {
         const el = document.createElement("div");
-        el.className = "birthday-wish";
+        el.className = "secret-mail-burst";
+        el.textContent = `✉️ ${shortText}`;
 
-        const wish = WISHES[i % WISHES.length];
-        const sender = names[i];
-        el.textContent = sender ? `${sender}: ${wish}` : wish;
-
-        // Vị trí xuất phát: ngẫu nhiên quanh tâm card
-        const startX = cx + (Math.random() - 0.5) * rect.width * 0.75;
+        const startX = cx + (Math.random() - 0.5) * rect.width * 0.7;
         const startY = cy + (Math.random() - 0.5) * 30;
 
-        // Hướng bay lên: xiên nhẹ + lên trên khỏi viewport
         const dx = (Math.random() - 0.5) * 180;
         const dy = -(window.innerHeight * 0.8 + Math.random() * 120);
         const rot = (Math.random() * 36 - 18).toFixed(1);
@@ -8981,52 +9387,19 @@ window.addEventListener("checkinDone", () => {
         el.style.setProperty("--dy", dy.toFixed(1) + "px");
         el.style.setProperty("--rot", rot + "deg");
 
-        const duration = 2600 + Math.random() * 1400;
+        const duration = 2400 + Math.random() * 1200;
         el.style.animationDuration = duration + "ms";
 
         document.body.appendChild(el);
         setTimeout(() => { try{ el.remove(); }catch(_){} }, duration + 200);
       }, delay);
     }
-
-    // Mở khoá sau khi bắn hết
-    setTimeout(() => { card.dataset.playing = "0"; }, TOTAL * 110 + 3500);
   }
 
-  function init(){
-    const wrap = document.getElementById("weeklyTopWrap");
-    const card = document.getElementById("weeklyTopCard");
-    if(!wrap || !card) return;
+  // ===== Hiện card =====
+  wrap.classList.add("secret-mail-mode");
+  setTimeout(() => wrap.classList.add("show"), 300);
 
-    // Chỉ hiện card khi đúng ngày sinh nhật (30/09)
-    // Nếu muốn luôn hiện bất kể ngày nào → bỏ đoạn if này.
-    if(!isBirthdayToday()){
-      wrap.classList.remove("birthday-mode");
-      return;
-    }
-
-    wrap.classList.add("birthday-mode");
-
-    card.addEventListener("click", (e) => {
-      e.preventDefault();
-      playWishes();
-    });
-    card.addEventListener("keydown", (e) => {
-      if(e.key === "Enter" || e.key === " "){
-        e.preventDefault();
-        playWishes();
-      }
-    });
-  }
-
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", init);
-  }else{
-    init();
-  }
-
-  // Expose để có thể trigger từ console / nơi khác nếu cần
-  window.__playBirthdayWishes = playWishes;
 })();
 </script>
 <script>
