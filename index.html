@@ -9158,10 +9158,8 @@ window.__refreshSecretMail = fetchMessages;
 })();
 </script>
 
-})();
-</script>
 <script>
-if 'serviceWorker' in navigator) {
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js', { scope: '/' })
       .catch(err => console.warn('[PWA] SW failed:', err));
