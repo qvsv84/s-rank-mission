@@ -3135,6 +3135,11 @@ body #homeStack #questionWrap{
 #question .landing-top3-label .w{display:inline-block}#question .landing-top3-label{overflow:hidden}#question .landing-top3 .podium-slot{will-change:transform,opacity}
 @media(prefers-reduced-motion:reduce){#question.play .landing-kicker,#question.play .landing-title,#question.play .landing-cta,#question.play .landing-top3-label .w,#question.play .landing-top3 .podium-slot,#question.play .landing-top3-empty,
   #question.top3-replay .landing-top3-label .w,#question.top3-replay .landing-top3 .podium-slot,#question.top3-replay .landing-top3-empty{animation:none !important;opacity:1 !important;transform:none !important}}
+
+/* FIX #1: ẩn Top3 ngay khi wheel mở — không để lộ dưới nền */
+#question.hero-wheel-open .landing-top3,
+#question.hero-wheel-open .landing-top3-label,
+#question.hero-wheel-open .landing-top3-empty{display:none !important}
 </style>
 
 <style id="secretMailFabStyle">
@@ -5871,6 +5876,7 @@ body #homeStack #questionWrap{
   }
 
   function renderLandingState(forceFullReplay = false){
+  question.classList.remove("hero-wheel-open");
   const locked = isChecklistLocked();
   question.classList.toggle("checklist-locked-home", locked);
 
@@ -6009,6 +6015,7 @@ body #homeStack #questionWrap{
     }
     if(q1Opened || !names.length) return;
     q1Opened=true;
+    question.classList.add("hero-wheel-open");
     question.style.pointerEvents="none";
     question.style.opacity="0";
     question.style.transform="scale(.8)";
@@ -6496,6 +6503,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     syncQuickTools();
 
     q1Opened = false;
+    question.classList.remove("hero-wheel-open");
     current = 0;
     dragOffset = 0;
     dragging = false;
@@ -8248,11 +8256,25 @@ window.__getChecklistState = () => ({
     renderNameWheel();
   }
   function openNameWheel(){
-    wheelIndex=Math.max(0,ATTENDANCE_EMPLOYEES.indexOf(selectedName));
-    wheelOffset=0;
-    renderNameWheel();
+    // Chưa có danh sách → tải trước rồi mới mở, tránh màn trống
+    if(!ATTENDANCE_EMPLOYEES.length){
+      setAttendanceFooterState('syncing','Đang tải danh sách…');
+      loadAttendanceMonth(true).then(() => {
+        if(ATTENDANCE_EMPLOYEES.length) openNameWheel();
+        else setAttendanceFooterState('error','Chưa có danh sách kiểm duyệt viên');
+      }).catch(()=>{});
+      return;
+    }
+    wheelIndex = Math.max(0, ATTENDANCE_EMPLOYEES.indexOf(selectedName));
+    wheelOffset = 0;
     wheelOverlay.classList.add('show');
     wheelOverlay.setAttribute('aria-hidden','false');
+    renderNameWheel();
+    // Render lại sau 1 frame: lúc này viewport đã có kích thước thật
+    requestAnimationFrame(() => {
+      renderNameWheel();
+      requestAnimationFrame(() => renderNameWheel());
+    });
     if(typeof syncQuickTools==='function') syncQuickTools();
   }
   function closeNameWheel(){
@@ -8746,6 +8768,24 @@ const K="srank_secret_mail_sender_v1",ANON="Ẩn danh",MAX=200,MIN=12,MAXD=18,CO
 const page=$("secretMailPage"),back=$("smPageBack"),refresh=$("smPageRefresh"),input=$("smPageInput"),counter=$("smPageCounter"),check=$("smPageSignCheckbox"),senderBtn=$("smPageSenderBtn"),senderName=$("smPageSenderName"),send=$("smPageSendBtn"),status=$("smPageStatus"),count=$("smWallCount"),stage=$("smFloatStage"),empty=$("smCanvasEmpty"),navBtn=$("secretMailBtn");
 if(!page||!stage||!input||!send)return;
 let sender="",timers=[],open=false,wheel=null,wheelIndex=0,offset=0,drag=false,startY=0;
+const CACHE_KEY = "srank_secret_mail_cache_v1";
+const CACHE_TTL = 5 * 60 * 1000;
+function loadMailCache(){
+  try{
+    const raw = localStorage.getItem(CACHE_KEY);
+    if(!raw) return null;
+    const data = JSON.parse(raw);
+    if(!data || !Array.isArray(data.rows)) return null;
+    if(Date.now() - (data.ts||0) > CACHE_TTL) return null;
+    return data.rows;
+  }catch(_){ return null; }
+}
+function saveMailCache(rows){
+  try{ localStorage.setItem(CACHE_KEY, JSON.stringify({rows, ts:Date.now()})); }catch(_){}
+}
+function clearMailCache(){
+  try{ localStorage.removeItem(CACHE_KEY); }catch(_){}
+}
 function getNames(){try{return typeof window.__getChecklistNames==="function"?(window.__getChecklistNames()||[]).map(x=>String(x).trim()).filter(Boolean):[]}catch(_){return []}}
 function saveSender(x){try{x?localStorage.setItem(K,x):localStorage.removeItem(K)}catch(_){}}
 try{sender=String(localStorage.getItem(K)||"").trim()}catch(_){}
@@ -8758,12 +8798,67 @@ check.addEventListener("change",()=>{if(check.checked&&!sender)openWheel();else 
 function updateCounter(){counter.textContent=`${input.value.length}/${MAX}`;counter.classList.toggle("warn",input.value.length>MAX*.9)}input.addEventListener("input",updateCounter);updateCounter();
 function esc(x){return String(x||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}
 function heart(){const r=document.querySelector(".sm-composer")?.getBoundingClientRect();if(!r)return;const e=["♡","💗","💖","💌","♥","🌸"];for(let i=0;i<10;i++)setTimeout(()=>{const x=document.createElement("div");x.className="sm-heart-burst";x.textContent=e[i%e.length];x.style.left=r.left+r.width/2+(Math.random()-.5)*r.width*.7+"px";x.style.top=r.top+r.height/2+(Math.random()-.5)*30+"px";x.style.setProperty("--sm-dx",(Math.random()-.5)*200+"px");x.style.setProperty("--sm-dy",-(innerHeight*.85+Math.random()*120)+"px");x.style.setProperty("--sm-rot",(Math.random()*40-20)+"deg");document.body.appendChild(x);setTimeout(()=>x.remove(),3300)},i*90+Math.random()*80)}
-async function sendMessage(){const text=String(input.value||"").trim();if(!text){setStatus("Nhập gì đó đã nha ♡","error");input.focus();return}if(text.length>MAX){setStatus(`Tối đa ${MAX} ký tự`,"error");return}if(check.checked&&!sender){setStatus("Chọn tên trước đã nhé","error");openWheel();return}send.disabled=true;setStatus("Đang gửi...");try{const name=check.checked&&sender?sender:ANON,time=new Intl.DateTimeFormat("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date()),r=await window.__srankApi("sendSecretMessage",{name,message:text,clientTime:time},12000);if(!r?.ok)throw Error(r?.error||"Không gửi được");setStatus("Gửi xong rồi ♡","success");heart();input.value="";updateCounter();setTimeout(()=>spawn().catch(()=>{}),800)}catch(e){setStatus(e.message||"Không gửi được, thử lại nha","error")}finally{send.disabled=false}}send.onclick=e=>{e.preventDefault();e.stopPropagation();sendMessage()};input.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();sendMessage()}});
-async function fetchMessages(){try{const r=await window.__srankApi("getSecretMessages",{_ts:Date.now()},10000);if(!r?.ok||!Array.isArray(r.data?.rows))return[];const rows=r.data.rows.map(x=>({name:String(x?.name||"").trim()||ANON,message:String(x?.message||"").trim(),time:String(x?.clientTime||"").trim()})).filter(x=>x.message);count.textContent=rows.length?`${rows.length} lời nhắn`:`Chưa có lời nhắn nào`;return rows}catch(_){return []}}
+async function sendMessage(){const text=String(input.value||"").trim();if(!text){setStatus("Nhập gì đó đã nha ♡","error");input.focus();return}if(text.length>MAX){setStatus(`Tối đa ${MAX} ký tự`,"error");return}if(check.checked&&!sender){setStatus("Chọn tên trước đã nhé","error");openWheel();return}send.disabled=true;setStatus("Đang gửi...");try{const name=check.checked&&sender?sender:ANON,time=new Intl.DateTimeFormat("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date()),r=await window.__srankApi("sendSecretMessage",{name,message:text,clientTime:time},12000);if(!r?.ok)throw Error(r?.error||"Không gửi được");setStatus("Gửi xong rồi ♡","success");heart();input.value="";updateCounter();clearMailCache();setTimeout(()=>spawn().catch(()=>{}),800)
+catch(e){setStatus(e.message||"Không gửi được, thử lại nha","error")}finally{send.disabled=false}}send.onclick=e=>{e.preventDefault();e.stopPropagation();sendMessage()};input.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();sendMessage()}});
+function applyMailCount(rows){
+  count.textContent = rows.length ? `${rows.length} lời nhắn` : `Chưa có lời nhắn nào`;
+}
+function fetchMessages(force = false){
+  // Cache-first: trả ngay nếu có, refresh ngầm nền
+  if(!force){
+    const cached = loadMailCache();
+    if(cached){
+      applyMailCount(cached);
+      fetchMessages(true).then(rows => {
+        if(open && rows) spawnFromRows(rows);
+      }).catch(()=>{});
+      return Promise.resolve(cached);
+    }
+  }
+  return window.__srankApi("getSecretMessages",{_ts:Date.now()},10000).then(r => {
+    if(!r?.ok || !Array.isArray(r.data?.rows)) return [];
+    const rows = r.data.rows.map(x=>({
+      name:String(x?.name||"").trim()||ANON,
+      message:String(x?.message||"").trim(),
+      time:String(x?.clientTime||"").trim()
+    })).filter(x=>x.message);
+    saveMailCache(rows);
+    applyMailCount(rows);
+    return rows;
+  }).catch(()=>[]);
+}
 function note(m,i){const el=document.createElement("div"),cs=["color-pink","color-mint","color-yellow","color-lilac"];el.className="sm-note "+cs[i%4];el.style.setProperty("--sm-x",20+Math.random()*60+"%");el.style.setProperty("--sm-rotate",(Math.random()*10-5).toFixed(1)+"deg");el.style.setProperty("--sm-duration",(MIN+Math.random()*(MAXD-MIN)).toFixed(1)+"s");el.innerHTML=`<div class="sm-note-from"><span class="sm-note-avatar">${esc(m.name===ANON?"?":m.name.charAt(0).toUpperCase())}</span><span class="sm-note-name">${esc(m.name)}</span><span class="sm-note-time">${esc(m.time)}</span></div><div class="sm-note-text">${esc(m.message)}</div>`;el.onclick=e=>{e.stopPropagation();if(el.classList.contains("paused"))return;stage.querySelectorAll(".sm-note").forEach(n=>n.classList.remove("highlight"));el.classList.add("paused","highlight");setTimeout(()=>el.classList.remove("paused","highlight"),5000)};return el}
-function clearTimers(){timers.forEach(clearTimeout);timers=[]}async function spawn(){stage.innerHTML="";empty.hidden=true;clearTimers();const rows=await fetchMessages();if(!rows.length){empty.hidden=false;return}rows.slice(0,20).forEach((m,i)=>{const t=setTimeout(()=>{if(open&&stage.querySelectorAll(".sm-note:not(.paused)").length<CON)stage.appendChild(note(m,i))},i*SPAWN);timers.push(t)})}
-async function openPage(){if(open)return;open=true;page.classList.add("show");document.body.style.overflow="hidden";syncQuickTools?.();await spawn()}function closePage(){open=false;page.classList.remove("show");document.body.style.overflow="";clearTimers();syncQuickTools?.();setTimeout(()=>{if(!open)stage.innerHTML=""},400)}
-navBtn?.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openPage()});back?.addEventListener("click",closePage);refresh?.addEventListener("click",()=>spawn());document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(wheel?.classList.contains("show")){closeWheel();return}if(open)closePage()});window.__openSecretMailPage=openPage;window.__closeSecretMailPage=closePage;window.__refreshSecretMail=fetchMessages;
+function clearTimers(){timers.forEach(clearTimeout);timers=[]}
+function spawnFromRows(rows){
+  stage.innerHTML="";
+  empty.hidden=true;
+  clearTimers();
+  if(!rows.length){ empty.hidden=false; return; }
+  rows.slice(0,20).forEach((m,i)=>{
+    // Note đầu xuất hiện ngay, các note sau dãn 250ms (cũ: 1200ms)
+    const delay = i === 0 ? 0 : 250 + (i-1) * 250;
+    const t = setTimeout(()=>{
+      if(open && stage.querySelectorAll(".sm-note:not(.paused)").length<CON){
+        stage.appendChild(note(m,i));
+      }
+    }, delay);
+    timers.push(t);
+  });
+}
+async function spawn(){
+  const rows = await fetchMessages(false);
+  spawnFromRows(rows);
+}
+async function openPage(){
+  if(open) return;
+  open = true;
+  page.classList.add("show");
+  document.body.style.overflow = "hidden";
+  syncQuickTools?.();
+  spawn().catch(()=>{});
+}
+function closePage(){open=false;page.classList.remove("show");document.body.style.overflow="";clearTimers();syncQuickTools?.();setTimeout(()=>{if(!open)stage.innerHTML=""},400)}
+navBtn?.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openPage()});back?.addEventListener("click",closePage);refresh?.addEventListener("click",()=>{ clearMailCache(); spawn(); });document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(wheel?.classList.contains("show")){closeWheel();return}if(open)closePage()});window.__openSecretMailPage=openPage;window.__closeSecretMailPage=closePage;window.__refreshSecretMail=fetchMessages;
 })();
 </script>
 <script>
