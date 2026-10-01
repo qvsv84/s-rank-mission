@@ -8863,6 +8863,11 @@ let wheelOffset = 0;
 let wheelDrag = false;
 let wheelStartY = 0;
 
+// ===== Auto-refresh cho Hòm thư =====
+let mailAutoTimer = null;
+let lastRenderedRowsKey = "";
+const AUTO_REFRESH_MS = 12000;
+
 // ===== Cache =====
 function loadMailCache(){
   try{
@@ -8879,6 +8884,44 @@ function saveMailCache(rows){
 }
 function clearMailCache(){
   try{ localStorage.removeItem(CACHE_KEY); }catch(_){}
+}
+
+// ===== So sánh dữ liệu — chỉ render khi có thay đổi =====
+function rowsSignature(rows){
+  return (rows || []).map(r => `${r.name}|${r.message}|${r.time}`).join("::");
+}
+
+function renderListIfChanged(rows){
+  const sig = rowsSignature(rows);
+  if(sig === lastRenderedRowsKey) return false;
+  lastRenderedRowsKey = sig;
+  const scrollTop = stage.scrollTop;
+  renderList(rows);
+  stage.scrollTop = scrollTop;
+  return true;
+}
+
+// ===== Bật/tắt tự động cập nhật =====
+function startMailAutoRefresh(){
+  stopMailAutoRefresh();
+  if(!open) return;
+
+  mailAutoTimer = setInterval(async () => {
+    if(!open) return;
+    if(document.hidden) return;
+    try{
+      const rows = await fetchMessages(true);
+      if(!open) return;
+      renderListIfChanged(rows || []);
+    }catch(_){}
+  }, AUTO_REFRESH_MS);
+}
+
+function stopMailAutoRefresh(){
+  if(mailAutoTimer){
+    clearInterval(mailAutoTimer);
+    mailAutoTimer = null;
+  }
 }
 
 // ===== Names =====
@@ -9112,6 +9155,7 @@ function wallCard(m, i){
 }
 
 function renderList(rows){
+  lastRenderedRowsKey = rowsSignature(rows);
   stage.dataset.mode = "wall";
   stage.innerHTML = "";
   empty.classList.remove("show");
@@ -9161,7 +9205,7 @@ async function loadAndRender(force = false){
     return;
   }
 
-  renderList(rows || []);
+  renderListIfChanged(rows || []);
 }
 
 // ===== Lifecycle =====
@@ -9171,13 +9215,19 @@ async function openPage(){
   page.classList.add("show");
   document.body.style.overflow = "hidden";
   if (typeof window.syncQuickTools === "function") window.syncQuickTools();
-  loadAndRender(false).catch(() => {});
+
+  loadAndRender(false).then(() => {
+    startMailAutoRefresh();
+  }).catch(() => {
+    startMailAutoRefresh();
+  });
 }
 
 function closePage(){
   open = false;
   page.classList.remove("show");
   document.body.style.overflow = "";
+  stopMailAutoRefresh();
   if (typeof window.syncQuickTools === "function") window.syncQuickTools();
 }
 
@@ -9189,6 +9239,15 @@ document.addEventListener("keydown", e => {
   if(e.key !== "Escape") return;
   if(wheel?.classList.contains("show")){ closeWheel(); return; }
   if(open) closePage();
+});
+
+// Khi tab được focus lại → fetch ngay (không chờ 12s)
+document.addEventListener("visibilitychange", () => {
+  if(document.hidden) return;
+  if(!open) return;
+  fetchMessages(true).then(rows => {
+    if(open) renderListIfChanged(rows || []);
+  }).catch(() => {});
 });
 
 window.__openSecretMailPage = openPage;
