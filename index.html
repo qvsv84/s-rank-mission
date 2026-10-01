@@ -3467,7 +3467,7 @@ body #homeStack #questionWrap{
 
 <section id="checklistPanel">
   <div id="checklistScroll"><table id="checklist">
-    <thead><tr><th>Người chơi</th><th>Giờ</th><th>Hoàn thành</th></tr></thead><tbody></tbody>
+    <thead><tr><th>Kiểm duyệt viên</th><th>Giờ</th><th>Hoàn thành</th></tr></thead><tbody></tbody>
   </table></div>
   <div id="checklistActions"><button id="captureBtn" type="button">📸 Chụp checklist</button><button id="syncBtn" type="button">↻ Đồng bộ lại</button></div>
 </section>
@@ -3673,7 +3673,7 @@ body #homeStack #questionWrap{
     <div id="monitorSub">Bấm CHECK để mở Facebook của từng người</div>
     <div id="monitorScroll">
       <table id="monitorTable">
-        <thead><tr><th>Người chơi</th><th>Thao tác</th></tr></thead>
+        <thead><tr><th>Kiểm duyệt viên</th><th>Thao tác</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -4684,7 +4684,7 @@ body #homeStack #questionWrap{
 
   function openLinkEditor(name){
     editingMonitorName = String(name || "");
-    linkEditorName.textContent = editingMonitorName || "Người chơi";
+    linkEditorName.textContent = editingMonitorName || "Kiểm Duyệt Viên";
     linkEditorInput.value = String(monitorLinks[editingMonitorName] || "").trim();
     linkEditorOverlay.classList.add("show");
     linkEditorOverlay.setAttribute("aria-hidden","false");
@@ -4739,14 +4739,14 @@ body #homeStack #questionWrap{
 
     if(!names.length){
       const tr = document.createElement("tr");
-      tr.innerHTML = '<td colspan="2" class="monitorEmpty">Chưa có danh sách người chơi.</td>';
+      tr.innerHTML = '<td colspan="2" class="monitorEmpty">Chưa có danh sách kiểm duyệt viên.</td>';
       frag.appendChild(tr);
       monitorBody.appendChild(frag);
       return;
     }
 
     names.forEach((name, i) => {
-      const player = name || ("Người chơi " + (i+1));
+      const player = name || ("Kiểm duyệt viên " + (i+1));
       const customLink = String(monitorLinks[player] || "").trim();
       const defaultLink = String(MONITOR_DEFAULT_LINKS[player] || "").trim();
       const effectiveLink = customLink || defaultLink || MONITOR_FB_LINK;
@@ -4855,12 +4855,12 @@ body #homeStack #questionWrap{
   function renderAdminChecklistEditor(){
     if(!adminChecklistRows) return;
     adminChecklistRows.innerHTML="";
-    if(!names.length){adminChecklistRows.innerHTML='<div class="admin-list-empty">Chưa có danh sách người chơi</div>';if(adminChecklistStats)adminChecklistStats.innerHTML="";return;}
+    if(!names.length){adminChecklistRows.innerHTML='<div class="admin-list-empty">Chưa có danh sách kiểm duyệt viên</div>';if(adminChecklistStats)adminChecklistStats.innerHTML="";return;}
     const frag=document.createDocumentFragment();
     names.forEach((name,i)=>{
       const isChecked=!!checked[i],time=times[i]||"";
       const row=document.createElement("div");row.className="admin-row-item"+(isChecked?" checked":"");row.dataset.name=String(name||"").toLowerCase();row.dataset.checked=isChecked?"1":"0";
-      const nameEl=document.createElement("span");nameEl.className="admin-row-name";nameEl.textContent=name||("Người chơi "+(i+1));
+      const nameEl=document.createElement("span");nameEl.className="admin-row-name";nameEl.textContent=name||("Kiểm duyệt viên "+(i+1));
       const timeEl=document.createElement("span");timeEl.className="admin-row-time"+(time?"":" empty");timeEl.textContent=time||"—";
       const btn=document.createElement("button");btn.type="button";btn.className="admin-row-btn"+(isChecked?" checked":"");btn.textContent=isChecked?"Bỏ check":"Check";
       btn.addEventListener("click",async()=>{const next=!checked[i];btn.disabled=true;btn.textContent="...";try{const token=AdminSession.get();if(!token)throw new Error("Phiên admin đã hết hạn");const r=await window.__srankApi("adminSetCheck",{token,name:names[i],checked:next?"true":"false"},TIMEOUT.FAST);if(!r.ok)throw new Error(r.error||"Không cập nhật được");checked[i]=next;times[i]=next?((r.data&&r.data.time)||new Intl.DateTimeFormat("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date())):"";cacheSave();renderChecklist();renderAdminChecklistEditor();renderAdminStats();setStatus(next?"Đã check ✓":"Đã bỏ check ✓")}catch(e){adminStatus.textContent=e.message||"Không cập nhật được";adminStatus.classList.remove("warn");adminStatus.classList.add("error");btn.disabled=false;btn.textContent=isChecked?"Bỏ check":"Check"}});
@@ -7062,7 +7062,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     if(!names.length){
       const e = document.createElement("div");
       e.className = "quizNoNames";
-      e.textContent = "Chưa có danh sách người chơi.";
+      e.textContent = "Chưa có danh sách kiểm duyệt viên.";
       quizNameList.appendChild(e);
       return;
     }
