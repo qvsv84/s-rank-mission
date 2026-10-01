@@ -3704,7 +3704,7 @@ body #homeStack #questionWrap{
   // ===== Admin session (thay password hardcode) =====
   // Password chỉ dùng 1 lần để lấy token, sau đó dùng token.
   const ADMIN_TOKEN_KEY = "srank_admin_token_v1";
-  const ADMIN_SESSION_TTL = 30 * 60 * 1000;   // 30 phút
+  const ADMIN_SESSION_TTL = 8 * 60 * 60 * 1000;   // 8 giờ
   const ADMIN_RATE_LIMIT_KEY = "srank_admin_rl_v1";
   const ADMIN_MAX_ATTEMPTS = 5;
   const ADMIN_LOCKOUT_MS = 5 * 60 * 1000;     // 5 phút
@@ -8023,8 +8023,7 @@ window.__getChecklistState = () => ({
           await window.__clearCheckinForName(nameAtRequest);
         }
       }catch(e){
-        setAttendanceFooterState('error', 'Không xoá được checkin: ' + attendanceErrorText(e));
-        return;
+        console.warn("[attendance] Không xoá được checkin (có thể chưa đăng nhập admin):", e?.message || e);
       }
     }
 
@@ -8121,8 +8120,7 @@ window.__getChecklistState = () => ({
         }
       }catch(e){
         // Không xoá được checkin → báo lỗi, không tiếp tục
-        setAttendanceFooterState('error', 'Không xoá được checkin: ' + attendanceErrorText(e));
-        return;
+        console.warn("[attendance] Không xoá được checkin (có thể chưa đăng nhập admin):", e?.message || e);
       }
     }
 
