@@ -35,9 +35,10 @@ transition:opacity .25s,transform .25s;animation:breathe 2.8s ease-in-out infini
 @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
 
 #wheelArea{position:absolute;left:50%;top:65%;z-index:20;width:min(88vw,390px);height:250px;
-transform:translate(-50%,-50%);opacity:0;pointer-events:none;transition:opacity .25s}
-#wheelArea.show{opacity:1;pointer-events:auto}
-#wheelViewport{position:absolute;inset:0;overflow:hidden;border-radius:28px;
+transform:translate(-50%,-50%);opacity:0;pointer-events:none;transition:opacity .25s;
+visibility:hidden;will-change:opacity}
+#wheelArea.show{opacity:1;pointer-events:auto;visibility:visible}
+#wheelViewport{position:absolute;inset:0;overflow:hidden;border-radius:28px;contain:strict;
 background:linear-gradient(to bottom,rgba(0,0,0,.93),rgba(15,5,14,.32) 50%,rgba(0,0,0,.93));
 border:1px solid rgba(255,255,255,.10);box-shadow:inset 0 0 35px rgba(90,168,120,.08)}
 #selectionLine{position:absolute;left:8%;right:8%;top:50%;height:58px;transform:translateY(-50%);
@@ -45,7 +46,9 @@ border-top:1px solid rgba(90,168,120,.6);border-bottom:1px solid rgba(90,168,120
 background:rgba(90,168,120,.055);border-radius:14px;z-index:3;pointer-events:none}
 #items{position:absolute;left:0;right:0;top:0;height:100%}
 .item{position:absolute;left:0;right:0;height:58px;display:flex;align-items:center;justify-content:center;
-color:rgba(255,255,255,.22);font-size:21px;font-weight:650;transform-origin:center;user-select:none}
+color:rgba(255,255,255,.22);font-size:21px;font-weight:650;transform-origin:center;user-select:none;
+will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+transform:translate3d(0,0,0);contain:layout style}
 .item.selected{color:#fff;text-shadow:0 0 6px #fff,0 0 17px #5aa878,0 0 35px #5aa878}
 #wheelHint{position:absolute;bottom:-31px;left:50%;transform:translateX(-50%);
 color:rgba(255,255,255,.38);font-size:12px;white-space:nowrap}
@@ -54,6 +57,22 @@ padding:10px 22px;border-radius:999px;border:1px solid rgba(255,255,255,.25);
 background:linear-gradient(135deg,#4e9d6b,#74c69d);color:#fff;font-size:15px;font-weight:700;
 box-shadow:0 0 20px rgba(78,157,107,.45);opacity:0;pointer-events:none;transition:opacity .2s}
 #confirm.show{opacity:1;pointer-events:auto}
+
+/* iOS Safari wheel optimization — giảm blur để tăng FPS */
+@supports (-webkit-touch-callout: none) {
+  #wheelArea {
+    -webkit-transform: translate3d(-50%, -50%, 0);
+    transform: translate3d(-50%, -50%, 0);
+  }
+  .item {
+    filter: blur(1.8px);
+    -webkit-filter: blur(1.8px);
+  }
+  .item.selected {
+    filter: none;
+    -webkit-filter: none;
+  }
+}
 
 #message{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
 padding:25px;text-align:center;pointer-events:none;color:#fff;font-weight:800;
@@ -436,7 +455,6 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
     min-height:43px;
   }
 }
-
 
 #kdvRulesOverlay{
   position:fixed;
@@ -1066,7 +1084,6 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
 @media(max-width:600px){
   
 }
-
 
 /* =====================================================
    FINAL FIX — THANH LUẬT KDV / BÀI KIỂM TRA
@@ -1762,9 +1779,9 @@ button,input,textarea,select{font-family:inherit!important}
 #lunchChoicePanel,#lunchManagePanel,#quizPanel,#quizNamePanel,#quizTakePanel,#quizResultPanel,#quizBuilderPanel{
   color:var(--mint-text)!important;
   background:rgba(255,255,255,.97)!important;
-  border:1px solid var(--mint-border)!important;
-  box-shadow:0 18px 50px rgba(53,83,61,.13)!important;
-  backdrop-filter:blur(10px)!important;
+  border:1px solid var(--mSubint-border)!important;
+  box-shadow:0 ,#18px 50px rgba(53,quiz83,61Sub,.13)!important;
+  backdrop-filter:bl,#ur(10px)!important;
   -webkit-backdrop-filter:blur(10px)!important;
   text-shadow:none!important;
 }
@@ -1776,7 +1793,7 @@ button,input,textarea,select{font-family:inherit!important}
   font-weight:900!important;
 }
 #checklistSub,#topSub,#monitorSub,#linkEditorName,#adminSub,#adminPasswordSub,
-#lunchChoiceSub,#lunchManageSub,#quizSub,#quizNameSub,#quizBuilderSub{
+#lunchChoiceSub,#lunchManagequizNameSub,#quizBuilderSub{
   color:var(--mint-muted)!important;
 }
 
@@ -1967,7 +1984,6 @@ button,input,textarea,select{font-family:inherit!important}
 }
 
 </style>
-
 
 <style id="proDesignSystem">
 /* =========================================================
@@ -3100,6 +3116,7 @@ body #homeStack #questionWrap{
 #homeStack #question{
   pointer-events:auto;
 }
+</style>
 
 <style id="homeStaggerAnimation">
 /* =========================================================
@@ -3160,7 +3177,7 @@ body #homeStack #questionWrap{
 <main id="space">
 <div id="status"></div>
 <div id="connectionState" class="off"><span class="dot"></span><span id="connectionText">Đang kết nối…</span></div>
-<div id="appVersion" aria-label="Phiên bản">v1.04</div>
+<div id="appVersion" aria-label="Phiên bản">v1.05</div>
 
 <div id="homeStack">
 
@@ -3697,14 +3714,13 @@ body #homeStack #questionWrap{
   });
 
   // ===== Admin session (thay password hardcode) =====
-  // Password chỉ dùng 1 lần để lấy token, sau đó dùng token.
   const ADMIN_TOKEN_KEY = "srank_admin_token_v1";
   const ADMIN_SESSION_TTL = 30 * 60 * 1000;   // 30 phút
   const ADMIN_RATE_LIMIT_KEY = "srank_admin_rl_v1";
   const ADMIN_MAX_ATTEMPTS = 5;
   const ADMIN_LOCKOUT_MS = 5 * 60 * 1000;     // 5 phút
 
-  // ===== API timeout (giữ nguyên giá trị nhưng freeze) =====
+  // ===== API timeout =====
   const TIMEOUT = Object.freeze({
     FAST:      8000,
     NORMAL:   12000,
@@ -3842,31 +3858,28 @@ body #homeStack #questionWrap{
 
   // ===== Auto-sync interval động =====
   const CHECKLIST_SYNC_MS = 30000;  // 30s khi checklist mở
-  // Cache trạng thái khoá — tránh tính lại mỗi giây
   let _lastLockCheck = 0;
-  let _cachedLocked = false;   // sẽ được set đúng ở lần gọi đầu
+  let _cachedLocked = false;
 
   // ===== Signal: loadData đã xong chưa =====
-  // Dùng để tránh 2 request (loadData + getSettings) chạy song song,
-  // làm connection contention trên Apps Script.
   let _dataLoadResolve;
   const _dataLoadPromise = new Promise(r => { _dataLoadResolve = r; });
   let _dataLoadResolved = false;
 
-  // ---------- Settings cache (tránh gọi getSettings nhiều lần) ----------
+  // ---------- Settings cache ----------
   const SETTINGS_TTL = 5 * 60 * 1000;   // 5 phút
   let settingsCache = null;
   let settingsFetchedAt = 0;
-  let settingsFetchPromise = null;      // dedupe request đồng thời
+  let settingsFetchPromise = null;
 
   // ---------- Fast JSONP transport ----------
   let requestSeq = 0;
   let syncInFlight = false;
   let autoSyncTimer = null;
-  const AUTO_SYNC_MS = 15000;       // 15s khi ở Home — đủ nhanh để thấy toast
-  const AUTO_SYNC_MIN_GAP = 5000;   // throttle cứng: tối thiểu 5s giữa 2 request
+  const AUTO_SYNC_MS = 15000;
+  const AUTO_SYNC_MIN_GAP = 5000;
   let lastAutoSyncAt = 0;
-  let lastSyncSuccessAt = 0;        // timestamp sync thành công gần nhất
+  let lastSyncSuccessAt = 0;
   const Q1_CACHE_KEY = "srank_q1_answer_v1";
   const CHECKLIST_LOCK_KEY = "srank_checklist_lock_time_v1";
   const LAST_PICKED_NAME_KEY = "srank_last_picked_name_v1";
@@ -3875,7 +3888,6 @@ body #homeStack #questionWrap{
   const connectionText = document.getElementById("connectionText");
 
   // ===== Admin Auth + Session Manager =====
-  // Không cần bảo mật cao — ưu tiên UX tức thì.
   const AdminSession = (() => {
     let _token = null;
     let _expiresAt = 0;
@@ -3997,10 +4009,8 @@ body #homeStack #questionWrap{
     };
   })();
 
-  // Khôi phục session khi mở app
   AdminSession.load();
 
-  // Xoá lockout oan khi mở app (do timeout lần trước)
   try{
     const rlRaw = localStorage.getItem(ADMIN_RATE_LIMIT_KEY);
     if(rlRaw){
@@ -4010,7 +4020,6 @@ body #homeStack #questionWrap{
   }catch(_){ }
 
   // ===== Pre-warm Apps Script =====
-  // Gọi nền để server không bị cold start khi user cần.
   let _warmupStarted = false;
   function warmupAdmin(){
     if(_warmupStarted) return;
@@ -4033,8 +4042,6 @@ body #homeStack #questionWrap{
     connectionText.textContent = text;
   }
 
-  // ===== Indicator: hiển thị "vừa đồng bộ Xs trước" =====
-  // Chỉ cập nhật khi tab visible và app ở Home.
   setInterval(() => {
     if(document.hidden) return;
     if(!lastSyncSuccessAt) return;
@@ -4047,7 +4054,6 @@ body #homeStack #questionWrap{
     else if(sec < 60) txt = `đồng bộ ${sec}s trước`;
     else txt = `đồng bộ ${Math.round(sec/60)}p trước`;
 
-    // Chỉ đổi khi khác để tránh repaint
     if(connectionText.textContent !== txt){
       connectionText.textContent = txt;
     }
@@ -4055,8 +4061,6 @@ body #homeStack #questionWrap{
   window.__srankApi = function(action, data = {}, timeout = TIMEOUT.DEFAULT){
     return new Promise((resolve,reject) => {
       setConnection("busy", "Đang đồng bộ…");
-      // Watchdog: nếu vì lý do gì promise không resolve/reject,
-      // reject sau timeout + 3s để chắc chắn không leak syncInFlight.
       const watchdog = setTimeout(() => {
         setConnection("off", "Phản hồi chậm");
         reject(new Error("Request watchdog timeout"));
@@ -4104,7 +4108,6 @@ body #homeStack #questionWrap{
     return `${get("year")}-${get("month")}-${get("day")}`;
   }
 
-  // Debounced cacheSave — tránh ghi localStorage liên tục khi rapid updates
   let _cacheSaveTimer = null;
   function cacheSave(immediate = false){
     const doWrite = () => {
@@ -4139,7 +4142,6 @@ body #homeStack #questionWrap{
     _cacheSaveTimer = setTimeout(doWrite, 250);
   }
 
-  // Flush cache khi tab đóng (tránh mất data)
   window.addEventListener("beforeunload", () => {
     if(_cacheSaveTimer){
       clearTimeout(_cacheSaveTimer);
@@ -4165,19 +4167,16 @@ body #homeStack #questionWrap{
         return false;
       }
 
-      // Cache version mismatch → xóa cũ
       if(x.v !== CACHE_SCHEMA_VERSION){
         localStorage.removeItem(CACHE_KEY);
         return false;
       }
 
-      // Cache ngày cũ → xóa
       if(x.day !== todayKey()){
         localStorage.removeItem(CACHE_KEY);
         return false;
       }
 
-      // Validate arrays
       if(!Array.isArray(x.names) || !Array.isArray(x.checked)) return false;
 
       names = x.names.filter(n => typeof n === "string" && n.trim());
@@ -4196,8 +4195,6 @@ body #homeStack #questionWrap{
     return false;
   }
 
-  // CÂU 1 không tự nhớ tên và không tự resume khi mở lại web.
-
   let resetTime = "00:00";
   let resetTimer = null;
   let checklistLockTime = "21:00";
@@ -4207,21 +4204,13 @@ body #homeStack #questionWrap{
     return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || "").trim());
   }
 
-  /**
-   * Lấy settings với cache TTL 5 phút.
-   * - force = true: bỏ qua cache, gọi lại server
-   * - Trả về object { resetTime, checklistLockTime } hoặc ném lỗi
-   * - Dedupe: nhiều caller cùng lúc → chỉ 1 request thật sự
-   */
   async function getSettingsCached(force = false){
     const now = Date.now();
 
-    // Cache hit
     if(!force && settingsCache && (now - settingsFetchedAt) < SETTINGS_TTL){
       return settingsCache;
     }
 
-    // Đang có request chạy → chờ chung
     if(settingsFetchPromise){
       return settingsFetchPromise;
     }
@@ -4268,7 +4257,6 @@ body #homeStack #questionWrap{
       try{
         const token = AdminSession.get();
         if(!token) {
-          // Không có session → bỏ qua, thử lại sau
           return;
         }
         const r = await window.__srankApi("resetNow", {token}, TIMEOUT.FAST);
@@ -4278,7 +4266,6 @@ body #homeStack #questionWrap{
         cacheSave();
         renderChecklist();
 
-        // Chỉ render Admin khi panel đang mở
         if(adminPage.classList.contains("show")){
           renderAdminChecklistEditor();
         }
@@ -4286,7 +4273,6 @@ body #homeStack #questionWrap{
         setStatus("Checklist đã làm mới ✓");
       }catch(e){
         setStatus("Reset chưa thành công — sẽ thử lại ✓");
-        // Không xoá dữ liệu local nếu server chưa xác nhận reset.
       }finally{
         scheduleNextReset();
       }
@@ -4313,9 +4299,6 @@ body #homeStack #questionWrap{
   let editingMonitorName = "";
   let adminUnlocked = false;
 
-  // ===== ẢNH ĐẠI DIỆN TOP 3 =====
-  // Map mặc định — có thể để trống, sau đó gán qua Admin panel.
-  // Link ảnh được lưu vào localStorage, ưu tiên hơn map này.
   const AVATAR_LINKS = {
     "Tiến Lợi":     "https://drive.google.com/file/d/1d1u2VbvH3DtCUwUszKsqpU_Z4RCW4zZ-/view?usp=drivesdk",
     "Quỳnh Trang":  "https://drive.google.com/file/d/1dKGPL_u-MjheN938HCrMXJhq6X9VQy7F/view?usp=drivesdk",
@@ -4336,14 +4319,12 @@ body #homeStack #questionWrap{
   let avatarLinks = {};
 
   function loadAvatarLinks(){
-    // Avatar giờ chỉ đọc từ AVATAR_LINKS trong code.
-    // Xoá cache cũ (nếu có) để tránh ghi đè.
     avatarLinks = Object.assign({}, AVATAR_LINKS);
     try{ localStorage.removeItem(AVATAR_LINKS_KEY); }catch(_){}
   }
 
   function saveAvatarLinks(){
-    // Không dùng nữa — avatar chỉ từ AVATAR_LINKS.
+    // Không dùng nữa
   }
 
   function getAvatarUrl(name){
@@ -4351,20 +4332,16 @@ body #homeStack #questionWrap{
     const raw = String(avatarLinks[key] || AVATAR_LINKS[key] || "").trim();
     if(!raw) return "";
 
-    // Google Drive link → convert sang thumbnail
-    // Hỗ trợ: /file/d/FILE_ID/view và /open?id=FILE_ID
     const gdMatch = raw.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)
                  || raw.match(/[?&]id=([a-zA-Z0-9_-]+)/);
     if(gdMatch && /drive\.google\.com/i.test(raw)){
       return `https://drive.google.com/thumbnail?id=${gdMatch[1]}&sz=w800`;
     }
 
-    // Facebook ID (chỉ số) → Graph API
     if(/^\d+$/.test(raw)){
       return `https://graph.facebook.com/${raw}/picture?width=800&height=800`;
     }
 
-    // Full URL → dùng luôn
     if(/^https?:\/\//i.test(raw)) return raw;
 
     return raw;
@@ -4372,7 +4349,7 @@ body #homeStack #questionWrap{
 
   function isValidImageUrl(value){
     const v = String(value || "").trim();
-    if(!v) return true; // cho phép xoá
+    if(!v) return true;
     try{
       const u = new URL(v);
       return u.protocol === "http:" || u.protocol === "https:";
@@ -4385,12 +4362,7 @@ body #homeStack #questionWrap{
     try{
       const saved = JSON.parse(localStorage.getItem(MONITOR_LINKS_KEY) || "{}");
       const existing = saved && typeof saved === "object" ? saved : {};
-
-      // 12 link đã được admin gán chính thức trong file luôn được ưu tiên.
-      // Người chưa có link trong danh sách trên vẫn giữ nguyên link localStorage cũ.
       monitorLinks = Object.assign({}, existing, MONITOR_DEFAULT_LINKS);
-
-      // Ghi lại để lần mở sau không bị link cũ trong localStorage ghi đè.
       localStorage.setItem(MONITOR_LINKS_KEY, JSON.stringify(monitorLinks));
     }catch(_){
       monitorLinks = Object.assign({}, MONITOR_DEFAULT_LINKS);
@@ -4580,8 +4552,7 @@ body #homeStack #questionWrap{
     syncQuickTools();
     setStatus("Đã đăng xuất admin");
   }
-  
-  // Gán vào nút (thêm vào HTML nếu muốn)
+
   window.__adminLogout = adminLogout;
 
   const adminPasswordOverlay = document.getElementById("adminPasswordOverlay");
@@ -4618,8 +4589,6 @@ body #homeStack #questionWrap{
     adminChecklistRows.appendChild(frag);const checkedCount=checked.filter(Boolean).length;if(adminChecklistStats)adminChecklistStats.innerHTML=`<span>👥 ${names.length} người</span><span>✓ ${checkedCount} đã check</span><span>○ ${names.length-checkedCount} chưa check</span>`;applyChecklistFilter();
   }
 
-
-
   async function openAdminSettings(){
     if(!AdminSession.isValid()){closeAdminPassword();adminUnlocked=false;openAdminPassword();return;}
     closeAdminPassword();adminUnlocked=true;renderMonitor();renderQuizAdminButton();syncQuickTools();
@@ -4648,7 +4617,6 @@ body #homeStack #questionWrap{
   async function verifyAdmin(){
     if(_adminVerifying) return;
 
-    // 1. Rate limit
     const rl = AdminSession.checkRateLimit();
     if(!rl.allowed){
       adminPasswordMsg.textContent = `Quá nhiều lần thử. Vui lòng chờ ${rl.remainSec}s.`;
@@ -4667,11 +4635,9 @@ body #homeStack #questionWrap{
     adminPasswordOk.textContent = "⏳ Đang mở…";
 
     try{
-      // ===== CHECK HASH LOCAL TRƯỚC — mở UI tức thì =====
       const localOk = await AdminSession.checkPasswordLocal(password);
 
       if(localOk === true){
-        // Mở Admin ngay, verify server chạy nền
         adminPasswordInput.value = "";
         adminPasswordMsg.textContent = "";
         closeAdminPassword();
@@ -4686,7 +4652,6 @@ body #homeStack #questionWrap{
         document.body.style.overflow = "hidden";
         adminStatus.textContent = "Đang xác thực với server…";
 
-        // Render từ cache ngay
         if(settingsCache){
           resetTimeInput.value = settingsCache.resetTime || resetTime;
           checklistLockTimeInput.value = settingsCache.checklistLockTime || checklistLockTime;
@@ -4699,13 +4664,11 @@ body #homeStack #questionWrap{
         renderLandingState();
         renderAdminChecklistEditor();
 
-        // Verify server nền
         verifyAdminServer(password).catch(() => {});
         return;
       }
 
       if(localOk === false){
-        // Hash có mà không khớp → chắc chắn sai
         AdminSession.recordFailure();
         adminPasswordMsg.textContent = "Mật khẩu không đúng.";
         adminPasswordInput.value = "";
@@ -4713,7 +4676,6 @@ body #homeStack #questionWrap{
         return;
       }
 
-      // localOk === null → máy mới, chưa có hash → phải chờ server
       adminPasswordMsg.textContent = "Đang kết nối server (lần đầu có thể mất 10-15s)…";
       await verifyAdminServer(password);
 
@@ -4751,7 +4713,6 @@ body #homeStack #questionWrap{
       AdminSession.recordSuccess();
       await AdminSession.rememberPassword(password);
 
-      // Nếu UI chưa mở (máy mới) → mở luôn
       if(!adminPage.classList.contains("show")){
         await openAdminSettings();
       }else{
@@ -4831,7 +4792,6 @@ body #homeStack #questionWrap{
       saveChecklistLockTime(checklistLockTime);
       checklistLockTimeInput.value = checklistLockTime;
 
-      // Ghi đè cache bằng giá trị server vừa xác nhận
       settingsCache = {
         resetTime: resetTime,
         checklistLockTime: checklistLockTime
@@ -4840,15 +4800,15 @@ body #homeStack #questionWrap{
 
       scheduleNextReset();
 
-      // Reset cache lock để landing cập nhật ngay theo giờ khoá mới
+      // ===== PATCH 4.3: Invalidate lockInfoCache =====
       _lastLockCheck = 0;
+      _lockInfoCache = { at: 0, value: null };
       _cachedLocked = isChecklistLocked();
 
       renderLandingState();
       adminStatus.classList.remove("error","warn");
       adminStatus.textContent = `Đã lưu • Reset ${resetTime} • Khoá Checklist ${checklistLockTime}`;
     }catch(e){
-      // Không coi lưu local là lưu chung. Khi server lỗi, chỉ giữ giá trị hiện tại trên máy này.
       saveChecklistLockTime(lockTime);
       checklistLockTimeInput.value = checklistLockTime;
       renderLandingState();
@@ -4859,7 +4819,7 @@ body #homeStack #questionWrap{
   });
 
 
-  // ===== Toast System (#7) =====
+  // ===== Toast System =====
   const Toast = (() => {
     let container = null;
     const recentMessages = new Map();
@@ -4888,8 +4848,6 @@ body #homeStack #questionWrap{
 
     function show(text, options = {}){
       const type = options.type || "info";
-      // Mặc định cũ: 2400ms — quá lâu cho các thông báo ngắn.
-      // Giảm xuống 1800ms cho gọn, vẫn đủ đọc.
       const duration = Math.max(1200, options.duration || 1800);
       const icon = options.icon || iconFor(type);
       const dedup = options.dedup !== false;
@@ -4908,8 +4866,6 @@ body #homeStack #questionWrap{
 
       const c = ensureContainer();
 
-      // Nếu cùng type đang có 1 toast tồn tại → thay thế luôn
-      // (tránh xếp chồng 3 "Đã ghi 06:12" khi bấm nhanh)
       if(dedup){
         const sameType = Array.from(c.children).find(el =>
           el.classList.contains(type) &&
@@ -4956,7 +4912,7 @@ body #homeStack #questionWrap{
     return {show, dismiss};
   })();
 
-  // ===== Live Feed (#2) =====
+  // ===== Live Feed =====
   const LiveFeed = (() => {
     const STORAGE_KEY = "srank_live_feed_v1";
     const UNREAD_KEY  = "srank_live_feed_unread_v1";
@@ -4989,7 +4945,6 @@ body #homeStack #questionWrap{
     return "info";
   }
 
-  // ===== Notify người mới check (#8) =====
   function notifyNewlyChecked(list){
     if(!Array.isArray(list) || !list.length) return;
     const now = Date.now();
@@ -5013,15 +4968,11 @@ body #homeStack #questionWrap{
       });
     }
 
-    // Ghi từng người vào Live Feed
     filtered.forEach(p => {
       LiveFeed.push({ type:"check", name:p.name, time:p.time || "" });
     });
   }
 
-  // ===== Toast routine bị chặn =====
-  // Đây là các thông báo tự động (auto-sync, cache load, sync nền)
-  // → không toast, chỉ log nhẹ vào status ẩn góc trên.
   const ROUTINE_TOAST_PATTERNS = [
     /^Đã (cập nhật|đồng bộ|tải dữ liệu)/i,
     /^Đang (dùng|cập nhật|đồng bộ)/i,
@@ -5038,13 +4989,11 @@ body #homeStack #questionWrap{
   function setStatus(t){
     const text = String(t || "").trim();
 
-    // Status bar (góc trên, nhỏ, auto-hide) — luôn cập nhật
     status.textContent = text;
     status.classList.add("show");
     clearTimeout(setStatus.t);
     setStatus.t = setTimeout(() => status.classList.remove("show"), 1400);
 
-    // Toast — chỉ hiện khi KHÔNG phải routine
     if(text && !isRoutineMessage(text)){
       Toast.show(text, {type: inferToastType(text)});
     }
@@ -5059,17 +5008,18 @@ body #homeStack #questionWrap{
     return "B";
   }
 
-  // Rank VIP phải lấy từ server vì VIP phụ thuộc vị trí #1 toàn BXH.
   function normalizeServerRank(value, score){
     const r = String(value || "").trim().toUpperCase();
     return ["B","A","S","SS","SSS","VIP"].includes(r) ? r : rankClient(score);
   }
 
   function attendanceRankClient(value){
-    // Giữ tên hàm để không phá code cũ; Rank hiện tại dùng chung hệ mới.
     return rankClient(value);
   }
 
+  function escapeHtml(s){
+    return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
 
   function initTopMonthSelect(){
     if(!topMonthSelect) return;
@@ -5080,7 +5030,6 @@ body #homeStack #questionWrap{
       const option = document.createElement('option');
       option.value = String(month);
       option.textContent = `Tháng ${month}`;
-      // Chỉ cho chọn tháng đã tới trong năm hiện tại.
       option.disabled = month > currentMonth;
       topMonthSelect.appendChild(option);
     }
@@ -5097,8 +5046,6 @@ body #homeStack #questionWrap{
   let topRenderToken = 0;
 
   function renderTopRows(scoreRows, year, month){
-    // v2.02: BXH chính dùng ScoreAudit/server leaderboard.
-    // Giữ legacy attendance renderer bên dưới để không xoá flow cũ của hệ thống.
     if(Array.isArray(scoreRows) && scoreRows.length && (scoreRows[0]?.points != null || scoreRows[0]?.rank)){
       const frag = document.createDocumentFragment();
       scoreRows.map((row,index)=>({
@@ -5120,7 +5067,6 @@ body #homeStack #questionWrap{
       return;
     }
 
-    // ===== LEGACY ATTENDANCE VIEW — preserved, not used for the new score/rank =====
     const daysInMonth = new Date(year, month, 0).getDate();
     const rows = (Array.isArray(scoreRows) ? scoreRows : []).map((employee,index)=>{
       const days = employee && employee.days ? employee.days : {};
@@ -5165,8 +5111,6 @@ body #homeStack #questionWrap{
     topBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:18px">Đang tải BXH…</td></tr>';
 
     try{
-      // Cache-first: render ngay từ RAM/localStorage nếu tháng này đã tải trước đó.
-      // Nếu có cache, refresh 1 lần ở nền bằng chính getAttendance để dữ liệu vẫn mới.
       const first = await window.__srankApi("scoreLeaderboard", {month}, TIMEOUT.SLOW);
       if(!first.ok) throw new Error(first.error || "Không tải được BXH điểm");
       if(token !== topRenderToken) return;
@@ -5201,8 +5145,6 @@ body #homeStack #questionWrap{
     checklistBody.innerHTML = "";
     const frag = document.createDocumentFragment();
 
-    // Chỉ sắp xếp thứ tự HIỂN THỊ trên HTML.
-    // Không thay đổi names/checked/times gốc nên không ảnh hưởng Google Sheet.
     const rows = names.map((name,i) => ({
       name,
       index: i,
@@ -5211,10 +5153,8 @@ body #homeStack #questionWrap{
     }));
 
     rows.sort((a,b) => {
-      // Người đã check luôn ở trên người chưa check.
       if(a.checked !== b.checked) return a.checked ? -1 : 1;
 
-      // Trong nhóm đã check: giờ sớm hơn ở trên.
       if(a.checked && b.checked){
         const ta = a.time || "99:99";
         const tb = b.time || "99:99";
@@ -5222,7 +5162,6 @@ body #homeStack #questionWrap{
         if(cmp !== 0) return cmp;
       }
 
-      // Nếu cùng giờ / chưa check: giữ nguyên thứ tự trong Sheet.
       return a.index - b.index;
     });
 
@@ -5239,10 +5178,6 @@ body #homeStack #questionWrap{
     checklistBody.appendChild(frag);
   }
 
-  /**
-   * Smooth update checklist — chỉ update rows thay đổi.
-   * Không xóa DOM → không giật UI.
-   */
   function smoothUpdateChecklist(newData){
     if(!names.length) return false;
 
@@ -5250,7 +5185,6 @@ body #homeStack #questionWrap{
     const oldChecked = checked.slice();
     const oldTimes = times.slice();
 
-    // Detect người mới check (#8)
     const newlyChecked = [];
     for(let i = 0; i < names.length; i++){
       if(!oldChecked[i] && newData.checked[i]){
@@ -5261,14 +5195,11 @@ body #homeStack #questionWrap{
       }
     }
 
-    // Số người đổi → không smooth được
     if(oldNames.length !== newData.names.length) return false;
 
-    // Tên đổi (thêm/xóa) → không smooth được
     const namesChanged = oldNames.some((n, i) => n !== newData.names[i]);
     if(namesChanged) return false;
 
-    // Tìm các row thay đổi
     const changedIndexes = [];
     for(let i = 0; i < names.length; i++){
       const checkedChanged = oldChecked[i] !== newData.checked[i];
@@ -5278,18 +5209,15 @@ body #homeStack #questionWrap{
       }
     }
 
-    // Không có gì đổi
     if(changedIndexes.length === 0){
       return true;
     }
 
-    // Update state
     checked = newData.checked;
     times = newData.times;
     points = newData.points;
     ranks = newData.ranks;
 
-    // Update từng row đổi (flash tối đa 3 rows để tránh rối)
     changedIndexes.forEach((idx, i) => {
       const tr = checklistBody.querySelector(`tr[data-index="${idx}"]`);
       if(!tr) return;
@@ -5300,17 +5228,14 @@ body #homeStack #questionWrap{
       if(timeCell) timeCell.textContent = times[idx] || "—";
       if(box) box.classList.toggle("checked", !!checked[idx]);
 
-      // Flash highlight nhẹ cho tối đa 3 rows
       if(i < 3){
         tr.classList.add("row-updated");
         setTimeout(() => tr.classList.remove("row-updated"), 1200);
       }
     });
 
-    // Reorder DOM nếu cần (không tạo DOM mới, chỉ di chuyển)
     reorderChecklistRows();
 
-    // Notify người mới check
     if(newlyChecked.length > 0){
       notifyNewlyChecked(newlyChecked);
     }
@@ -5318,10 +5243,6 @@ body #homeStack #questionWrap{
     return true;
   }
 
-  /**
-   * Re-order rows trong DOM theo đúng thứ tự sort.
-   * Move row có sẵn → smooth, không giật.
-   */
   function reorderChecklistRows(){
     const scrollEl = document.getElementById("checklistScroll");
     const scrollTop = scrollEl ? scrollEl.scrollTop : 0;
@@ -5344,7 +5265,6 @@ body #homeStack #questionWrap{
       return a.index - b.index;
     });
 
-    // Move rows trong DOM (không tạo mới)
     const frag = document.createDocumentFragment();
     rows.forEach(row => {
       const tr = checklistBody.querySelector(`tr[data-index="${row.index}"]`);
@@ -5352,17 +5272,9 @@ body #homeStack #questionWrap{
     });
     checklistBody.appendChild(frag);
 
-    // Restore scroll position
     if(scrollEl) scrollEl.scrollTop = scrollTop;
   }
 
-  /**
-   * Cập nhật CHỈ 1 dòng trong checklist theo index gốc (trong mảng names).
-   * Nhanh hơn nhiều so với renderChecklist() khi chỉ có 1 người đổi trạng thái.
-   *
-   * Điều kiện dùng: thứ tự hiển thị KHÔNG đổi.
-   * Nếu người vừa check cần nhảy lên đầu bảng → phải dùng renderChecklist().
-   */
   function updateChecklistRow(index){
     const tr = checklistBody.querySelector(`tr[data-index="${index}"]`);
     if(!tr) return false;
@@ -5376,17 +5288,8 @@ body #homeStack #questionWrap{
     return true;
   }
 
-  /**
-   * Kiểm tra xem thứ tự hiển thị có bị thay đổi không,
-   * sau khi 1 người (index) vừa được check/bỏ check.
-   * Nếu CÓ thay đổi → cần renderChecklist() đầy đủ.
-   * Nếu KHÔNG → chỉ cần updateChecklistRow().
-   */
   function checklistOrderChanged(index){
     if(!checked[index]) {
-      // FIX #3: Bỏ check → người đó phải nằm DƯỚI nhóm đã check.
-      // Position đúng phải >= checkedCount (sau nhóm đã check).
-      // Nếu currentPosition < checkedCount → cần render lại.
       const tr = checklistBody.querySelector(`tr[data-index="${index}"]`);
       if(!tr) return true;
       const currentPosition = Array.from(checklistBody.children).indexOf(tr);
@@ -5394,8 +5297,6 @@ body #homeStack #questionWrap{
       for(let i=0; i<names.length; i++){
         if(i !== index && checked[i]) checkedCount++;
       }
-      // SAI cũ: currentPosition <= checkedCount  → render thừa
-      // ĐÚNG: currentPosition < checkedCount   → chỉ render khi thật sự cần
       return currentPosition < checkedCount;
     }
 
@@ -5416,34 +5317,73 @@ body #homeStack #questionWrap{
     return currentPosition !== shouldBeBefore;
   }
 
+  // ========================================================
+  // PATCH 1.1 — renderWheel() dùng wheelViewport + translate3d
+  // ========================================================
   function renderWheel(){
     if(!names.length) return;
-    const mid = wheelArea.clientHeight / 2;
+
+    // Dùng wheelViewport thay vì wheelArea để có clientHeight chính xác
+    const viewport = document.getElementById("wheelViewport");
+    if(!viewport) return;
+
+    const viewportHeight = viewport.clientHeight;
+    if(viewportHeight <= 0){
+      // Layout chưa sẵn sàng → thử lại ở frame kế tiếp
+      requestAnimationFrame(renderWheel);
+      return;
+    }
+
+    const mid = viewportHeight / 2;
     const children = itemsBox.children;
-    for(let i=0;i<children.length;i++){
+
+    for(let i = 0; i < children.length; i++){
       const el = children[i];
-      const y = (i-current)*ITEM_H + mid + dragOffset;
-      const d = Math.abs(y-mid);
-      const n = Math.min(1,d/(ITEM_H*2.3));
-      el.style.top = (y-ITEM_H/2) + "px";
-      el.style.transform = `scale(${1-n*.28})`;
-      el.style.opacity = .20 + (1-n)*.80;
-      el.style.filter = `blur(${n*2.5}px)`;
-      el.classList.toggle("selected", i===current && Math.abs(dragOffset)<ITEM_H*.35);
+      const y = (i - current) * ITEM_H + mid + dragOffset;
+      const d = Math.abs(y - mid);
+      const n = Math.min(1, d / (ITEM_H * 2.3));
+      const scaleValue = 1 - n * 0.28;
+      const opacityValue = 0.20 + (1 - n) * 0.80;
+      const blurValue = n * 2.5;
+
+      // Dùng translate3d để GPU tăng tốc
+      el.style.transform = "translate3d(0, " + (y - ITEM_H/2) + "px, 0) scale(" + scaleValue + ")";
+      el.style.opacity = opacityValue.toFixed(3);
+      el.style.filter = "blur(" + blurValue.toFixed(2) + "px)";
+
+      el.classList.toggle(
+        "selected",
+        i === current && Math.abs(dragOffset) < ITEM_H * 0.35
+      );
     }
   }
 
+  // ========================================================
+  // PATCH 4.1 — buildWheel() cache signature
+  // ========================================================
+  let _lastWheelSignature = "";
+
   function buildWheel(){
+    const sig = names.join("|");
+
+    // Chỉ rebuild khi danh sách tên thực sự thay đổi
+    if(sig === _lastWheelSignature && itemsBox.children.length === names.length){
+      current = Math.min(current, Math.max(0, names.length - 1));
+      renderWheel();
+      return;
+    }
+    _lastWheelSignature = sig;
+
     itemsBox.innerHTML = "";
     const frag = document.createDocumentFragment();
-    names.forEach(name => {
+    names.forEach(function(name){
       const el = document.createElement("div");
       el.className = "item";
       el.textContent = name;
       frag.appendChild(el);
     });
     itemsBox.appendChild(frag);
-    current = Math.min(current, Math.max(0,names.length-1));
+    current = Math.min(current, Math.max(0, names.length - 1));
     renderWheel();
   }
 
@@ -5462,22 +5402,17 @@ body #homeStack #questionWrap{
         renderChecklist();
         buildWheel();
       }else if(!names.length && checklistPanel.classList.contains("show")){
-        // Hiển thị skeleton khi đang tải lần đầu
         renderChecklistSkeleton();
       }
 
-      // Auto-sync chấp nhận chờ lâu hơn (Apps Script cold start ~15-20s).
-      // Ép cache-buster _ts để tránh mọi lớp cache trung gian.
       const r = await window.__srankApi("getData", { _ts: Date.now() }, TIMEOUT.SLOW);
       if(!r.ok) throw new Error(r.error || "getData lỗi");
 
-      // ===== Sanitize input từ server (defensive programming) =====
       const rawNames = Array.isArray(r.data?.names) ? r.data.names : [];
       const serverNames = rawNames
         .map(n => String(n ?? "").trim())
         .filter(n => n.length > 0 && n.length <= 100);
 
-      // Đảm bảo arrays cùng length với serverNames
       const rawPoints = Array.isArray(r.data?.points) ? r.data.points : [];
       const serverPoints = serverNames.map((_, i) => {
         const p = Number(rawPoints[i]);
@@ -5493,11 +5428,9 @@ body #homeStack #questionWrap{
       const rawTimes = Array.isArray(r.data?.times) ? r.data.times : [];
       const serverTimes = serverNames.map((_, i) => {
         const t = String(rawTimes[i] ?? "").trim();
-        // Chỉ chấp nhận format HH:mm
         return /^([01]\d|2[0-3]):[0-5]\d$/.test(t) ? t : "";
       });
 
-      // ===== Smooth update khi checklist mở + không phải lần đầu + không force =====
       const canSmoothUpdate = initialSheetLoaded
         && !force
         && checklistPanel.classList.contains("show")
@@ -5520,15 +5453,12 @@ body #homeStack #questionWrap{
           cacheSave();
           setStatus("Đã cập nhật ✓");
 
-          // Cập nhật Top 3 ngay khi có data mới
           maybeRenderLanding();
 
           return true;
         }
-        // Nếu smooth thất bại (thêm/xóa người) → fallback full render bên dưới
       }
 
-      // ===== Detect người mới check (#8) trước khi ghi đè =====
       let newlyChecked = [];
       if(initialSheetLoaded && names.length > 0){
         const prevNames = names.slice();
@@ -5543,7 +5473,6 @@ body #homeStack #questionWrap{
         }
       }
 
-      // ===== Full render =====
       names = serverNames;
       points = serverPoints;
       ranks = points.map(rankClient);
@@ -5568,7 +5497,6 @@ body #homeStack #questionWrap{
       setStatus(force ? "Đã cập nhật ✓" : "Đã đồng bộ ✓");
       lastSyncSuccessAt = Date.now();
 
-      // Cập nhật Top 3 ngay khi có data mới
       maybeRenderLanding();
 
       if(newlyChecked.length > 0){
@@ -5582,7 +5510,6 @@ body #homeStack #questionWrap{
     }finally{
       syncInFlight = false;
 
-      // Signal cho các tác vụ đang chờ (getSettings) biết loadData đã xong
       if(!_dataLoadResolved){
         _dataLoadResolved = true;
         _dataLoadResolve();
@@ -5591,7 +5518,6 @@ body #homeStack #questionWrap{
   }
 
   function startAutoSync(){
-    // Đảm bảo không có timer cũ trước khi start
     if(autoSyncTimer){
       clearTimeout(autoSyncTimer);
       autoSyncTimer = null;
@@ -5599,13 +5525,7 @@ body #homeStack #questionWrap{
     restartAutoSync();
   }
 
-  /**
-   * Restart auto-sync với interval phù hợp:
-   * - 30s khi checklist panel đang mở (user cần data mới)
-   * - 120s khi checklist đóng (tiết kiệm quota)
-   */
   function restartAutoSync(){
-    // Clear mọi timer cũ
     if(autoSyncTimer){
       clearTimeout(autoSyncTimer);
       autoSyncTimer = null;
@@ -5615,11 +5535,7 @@ body #homeStack #questionWrap{
       ? CHECKLIST_SYNC_MS
       : AUTO_SYNC_MS;
 
-    // Dùng setTimeout đệ quy thay setInterval:
-    // - Không bị Chrome/Safari throttle khi tab không focus
-    // - Timer reset sau mỗi lần chạy → không bị dồn request
     autoSyncTimer = setTimeout(async function tick(){
-      // Điều kiện skip (nhưng KHÔNG skip vòng lặp — vẫn schedule next)
       let skip = false;
       if(document.hidden) skip = true;
       else if(wheelArea.classList.contains("show")) skip = true;
@@ -5636,7 +5552,6 @@ body #homeStack #questionWrap{
         }catch(_){}
       }
 
-      // Schedule next — luôn chạy dù skip hay không
       if(autoSyncTimer !== null){
         autoSyncTimer = setTimeout(tick, interval);
       }
@@ -5644,41 +5559,28 @@ body #homeStack #questionWrap{
   }
 
   async function checkin(name, index){
-    // ===== GUARD: đã check rồi thì không gọi API lại =====
     if(checked[index] === true && times[index]){
       setStatus(`Đã ghi ${times[index]} ✓`);
       return;
     }
 
-    // ===== Track user action → pause auto-sync 5s =====
     _lastUserActionAt = Date.now();
-
-    // Track self-check để không tự thông báo chính mình (#8)
     _recentSelfChecks.set(name, Date.now());
-
-    // Ghi vào Live Feed
     LiveFeed.push({ type:"check", name });
 
-    // Chốt thời điểm CHECK ngay trên thiết bị của người thao tác.
     const clientTime = new Intl.DateTimeFormat("vi-VN",{
       timeZone:"Asia/Ho_Chi_Minh",
       hour:"2-digit",minute:"2-digit",hour12:false
     }).format(new Date());
 
-    // Optimistic UI: tick ngay, không chờ server.
     times[index] = clientTime;
     checked[index] = true;
     cacheSave();
 
-    // ===== Tối ưu: chỉ update 1 row thay vì full render =====
-    // Nếu thứ tự KHÔNG đổi → updateChecklistRow (siêu nhanh)
-    // Nếu thứ tự CÓ đổi → renderChecklist đầy đủ.
     if(!updateChecklistRow(index) || checklistOrderChanged(index)){
       renderChecklist();
     }
 
-    // ===== Cập nhật meta info ngay khi check xong =====
-    // (chỉ khi user đang ở Home)
     if(!q1Opened && !checklistPanel.classList.contains("show")){
       renderLandingState();
     }
@@ -5702,21 +5604,18 @@ body #homeStack #questionWrap{
       }
       cacheSave();
 
-      // Chỉ cần update time cell (points/rank chưa hiển thị ở checklist)
       if(!updateChecklistRow(index)){
         renderChecklist();
       }
 
       setStatus(`Đã ghi ${clientTime} ✓`);
 
-      // ===== Phát tín hiệu checkin xong → Chấm công tự render lại =====
       try{
         window.dispatchEvent(new CustomEvent("checkinDone", {
           detail: { name, time: clientTime }
         }));
       }catch(_){}
 
-      // Đồng thời ghi vào localStorage để trang Chấm công đọc được
       try{
         localStorage.setItem("srank_last_checkin", JSON.stringify({
           name, time: clientTime, date: todayKey()
@@ -5743,18 +5642,35 @@ body #homeStack #questionWrap{
     }
   }
 
-  function showMessage(html,duration=2200,next=null){
+  // ========================================================
+  // PATCH 2.1 — showMessage() ẩn hẳn question + wheel
+  // ========================================================
+  function showMessage(html, duration, next){
+    duration = duration == null ? 2200 : duration;
+
     wheelArea.classList.remove("show");
-    question.style.opacity="0";
-    hint.textContent="";
-    message.innerHTML=html;
-    message.classList.remove("show"); void message.offsetWidth; message.classList.add("show");
+    wheelArea.style.visibility = "hidden";
+
+    // Ẩn question hoàn toàn, không chỉ opacity
+    question.style.visibility = "hidden";
+    question.style.opacity = "0";
+    hint.textContent = "";
+
+    message.innerHTML = html;
+    message.classList.remove("show");
+    void message.offsetWidth;
+    message.classList.add("show");
     burst();
-    if(next) setTimeout(()=>{message.classList.remove("show");setTimeout(next,220)},duration);
+
+    if(next){
+      setTimeout(function(){
+        message.classList.remove("show");
+        setTimeout(next, 220);
+      }, duration);
+    }
   }
 
   function snap(){
-    // Tính số bậc dựa trên toàn bộ quãng vuốt, không chỉ ±1 bậc.
     const steps=Math.round(-dragOffset/ITEM_H);
     if(steps!==0){
       current=Math.max(0,Math.min(names.length-1,current+steps));
@@ -5781,7 +5697,6 @@ body #homeStack #questionWrap{
   wheelArea.addEventListener("pointermove",e=>{
     if(!dragging)return;
     dragOffset=e.clientY-startY;
-    // Không giới hạn về ±1. Có thể kéo qua nhiều tên trong một lần vuốt.
     if((current===0&&dragOffset>0)||(current===names.length-1&&dragOffset<0)) dragOffset*=.25;
     renderWheel();
   });
@@ -5800,7 +5715,6 @@ body #homeStack #questionWrap{
     }
   });
 
-  // Lăn chuột: mỗi lần lăn chỉ di chuyển đúng 1 bậc.
   wheelArea.addEventListener("wheel",e=>{
     if(!wheelArea.classList.contains("show") || !names.length) return;
     e.preventDefault();
@@ -5812,7 +5726,6 @@ body #homeStack #questionWrap{
     confirm.classList.add("show");
   },{passive:false});
 
-  // Điều khiển bằng bàn phím trên máy tính.
   addEventListener("keydown",e=>{
     if(!wheelArea.classList.contains("show")) return;
     if(e.key==="ArrowDown"){
@@ -5827,25 +5740,44 @@ body #homeStack #questionWrap{
     }
   });
 
+  // ========================================================
+  // PATCH 4.2 — checklistLockInfo() cache 15s
+  // ========================================================
+  let _lockInfoCache = { at: 0, value: null };
+
   function checklistLockInfo(){
+    const now = Date.now();
+    if(_lockInfoCache.value && (now - _lockInfoCache.at) < 15000){
+      return _lockInfoCache.value;
+    }
+
     const parts = new Intl.DateTimeFormat("en-US",{
-      timeZone:"Asia/Ho_Chi_Minh",
-      hour:"2-digit",minute:"2-digit",hour12:false
+      timeZone: "Asia/Ho_Chi_Minh",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
     }).formatToParts(new Date());
-    const hour = Number(parts.find(p=>p.type==="hour")?.value || 0);
-    const minute = Number(parts.find(p=>p.type==="minute")?.value || 0);
+
+    const hour = Number((parts.find(p => p.type === "hour") || {}).value || 0);
+    const minute = Number((parts.find(p => p.type === "minute") || {}).value || 0);
+
     const [lockHour, lockMinute] = String(checklistLockTime || "21:00").split(":").map(Number);
-    const lockMinutes = (Number.isFinite(lockHour) ? lockHour : 21) * 60 + (Number.isFinite(lockMinute) ? lockMinute : 0);
-    return { locked: (hour * 60 + minute) >= lockMinutes, time: checklistLockTime };
+    const lockMinutes = (Number.isFinite(lockHour) ? lockHour : 21) * 60
+                      + (Number.isFinite(lockMinute) ? lockMinute : 0);
+
+    const value = {
+      locked: (hour * 60 + minute) >= lockMinutes,
+      time: checklistLockTime
+    };
+
+    _lockInfoCache = { at: now, value };
+    return value;
   }
 
   function isChecklistLocked(){
     return checklistLockInfo().locked;
   }
 
-  // ===== Render landing nếu đang ở Home =====
-  // Điều kiện: không có wheel/message/panel nào đang mở.
-  // Dùng để kích hoạt update Top 3 ngay sau khi loadData xong.
   function maybeRenderLanding(){
     if(q1Opened) return;
     if(checklistPanel.classList.contains("show")) return;
@@ -5856,17 +5788,14 @@ body #homeStack #questionWrap{
 
     renderLandingState();
 
-    // Đánh dấu vừa render → ticker không render lại ngay lập tức
     _lastLockCheck = Date.now();
     _cachedLocked = isChecklistLocked();
   }
 
-  // ===== Cache DOM Top 3 — chỉ render lại khi thật sự cần =====
   let _lastTop3Signature = "";
-  let _top3Nodes = null;   // { label, wrap, slots: [...] }
+  let _top3Nodes = null;
 
   function top3Signature(list){
-    // So sánh: tên + giờ + URL avatar. Nếu y hệt → giữ nguyên DOM.
     return list.map(p => `${p.name}|${p.time}|${getAvatarUrl(p.name)}`).join("::");
   }
 
@@ -5950,6 +5879,7 @@ body #homeStack #questionWrap{
     question.style.opacity = "1";
     question.style.transform = "scale(1)";
     question.style.pointerEvents = locked ? "none" : "auto";
+    question.style.visibility = "visible";
     return;
   }
 
@@ -5999,8 +5929,12 @@ body #homeStack #questionWrap{
   question.style.opacity = "1";
   question.style.transform = "scale(1)";
   question.style.pointerEvents = locked ? "none" : "auto";
+  question.style.visibility = "visible";
 }
 
+  // ========================================================
+  // PATCH 1.2 — openQuestion1() ẩn question + reset current + 2 rAF
+  // ========================================================
   function openQuestion1(e){
     e?.preventDefault();
     if(isChecklistLocked()){
@@ -6008,36 +5942,58 @@ body #homeStack #questionWrap{
       return;
     }
     if(q1Opened || !names.length) return;
-    q1Opened=true;
-    question.style.pointerEvents="none";
-    question.style.opacity="0";
-    question.style.transform="scale(.8)";
-    // Ẩn card TOP LEO RANK TUẦN khi vào wheel chọn tên
-        burst();
-    setTimeout(()=>{
-      wheelArea.style.opacity = "1";
-      wheelArea.style.pointerEvents = "auto";
-      wheelArea.classList.add("show");
+    q1Opened = true;
 
-      // Nhảy về tên đã chọn lần trước (nếu còn trong danh sách)
+    // Ẩn hoàn toàn #question khỏi layout (không chỉ opacity)
+    // → Top 3 & podium không render nền dưới wheel
+    question.style.visibility = "hidden";
+    question.style.pointerEvents = "none";
+    question.style.opacity = "0";
+    question.style.transform = "scale(.8)";
+
+    burst();
+
+    setTimeout(() => {
+      // Reset `current` LUÔN hợp lệ trước khi show wheel
+      let targetIndex = 0;
       try{
         const lastPicked = localStorage.getItem(LAST_PICKED_NAME_KEY);
         if(lastPicked){
           const idx = names.indexOf(lastPicked);
-          if(idx >= 0) current = idx;
+          if(idx >= 0) targetIndex = idx;
         }
       }catch(_){}
 
-      renderWheel();
-      hint.textContent="Vuốt lên / xuống • ↑ ↓ để chọn • Enter để xác nhận";
+      // Clamp cứng — chống out-of-bounds nếu names đổi giữa chừng
+      current = Math.max(0, Math.min(names.length - 1, targetIndex));
+      dragOffset = 0;
+
+      // Hiện wheel
+      wheelArea.style.visibility = "visible";
+      wheelArea.style.opacity = "1";
+      wheelArea.style.pointerEvents = "auto";
+      wheelArea.classList.add("show");
+
+      // 2 tầng requestAnimationFrame để layout đã paint xong
+      // → clientHeight chính xác → renderWheel đúng frame đầu
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          renderWheel();
+          // Double check nếu vẫn chưa có height
+          const vp = document.getElementById("wheelViewport");
+          if(vp && vp.clientHeight === 0){
+            requestAnimationFrame(renderWheel);
+          }
+        });
+      });
+
+      hint.textContent = "Vuốt lên / xuống • ↑ ↓ để chọn • Enter để xác nhận";
       syncQuickTools();
-    },180);
+    }, 180);
   }
   question.addEventListener("pointerup",openQuestion1,{passive:false});
   question.addEventListener("click",openQuestion1);
 
-  // ===== Patch C: Enter/Space kích hoạt CTA Hero =====
-  // Chỉ khi focus đang nằm ở .landing-cta (không phải các element khác)
   question.addEventListener("keydown", (e) => {
     const cta = e.target.closest(".landing-cta");
     if(!cta) return;
@@ -6048,7 +6004,6 @@ body #homeStack #questionWrap{
     }
   });
 
-  // Sau khi chọn tên và xác nhận: vào thẳng CÂU 2, không hiện màn Ký chủ/Rank/Điểm.
   confirm.addEventListener("click",()=>{
     if(isChecklistLocked()){
       resetHome();
@@ -6057,26 +6012,33 @@ body #homeStack #questionWrap{
     const selected = names[current];
     if(!selected) return;
 
-    // Nhớ tên vừa chọn cho lần sau
     try{ localStorage.setItem(LAST_PICKED_NAME_KEY, selected); }catch(_){}
 
     showQuestion2();
   });
 
+  // ========================================================
+  // PATCH 2.2 — showQuestion2() ẩn hẳn wheel + khôi phục question
+  // ========================================================
   function showQuestion2(){
-    // Đã sang Câu 2 thì ẩn hoàn toàn vòng chọn tên, không còn mờ phía sau
-    // và không thể chạm/chọn lại tên.
     wheelArea.classList.remove("show");
+    wheelArea.style.visibility = "hidden";
     wheelArea.style.opacity = "0";
     wheelArea.style.pointerEvents = "none";
     confirm.classList.remove("show");
 
-    counter.textContent="CÂU 2";
-    question.innerHTML=`<div class="system-question">
-      <div class="system-question-title">HỆ THỐNG ĐẢO MÈO</div>
-      <div class="system-question-sub">Hôm nay bạn đã hoàn thành checklist chưa?</div>
-    </div>`;
-    question.style.opacity="1";question.style.pointerEvents="none";question.style.transform="scale(1)";
+    counter.textContent = "CÂU 2";
+
+    // Khôi phục question trước khi đổi nội dung
+    question.style.visibility = "visible";
+    question.innerHTML = '<div class="system-question">' +
+      '<div class="system-question-title">HỆ THỐNG ĐẢO MÈO</div>' +
+      '<div class="system-question-sub">Hôm nay bạn đã hoàn thành checklist chưa?</div>' +
+    '</div>';
+    question.style.opacity = "1";
+    question.style.pointerEvents = "none";
+    question.style.transform = "scale(1)";
+
     const box=document.createElement("div");
     box.id="q2answers";
     box.innerHTML=`<button id="doneBtn">Tôi đã hoàn thành</button><button id="laterBtn">Tôi chưa hoàn thành</button>`;
@@ -6090,20 +6052,19 @@ body #homeStack #questionWrap{
     requestAnimationFrame(()=>box.style.opacity="1");
 
     box.querySelector("#doneBtn").addEventListener("click",()=>{
-      const completedIndex=current, selected=names[current];
+      const completedIndex = current;
+      const selected = names[current];
       box.remove();
 
-      // Ẩn hoàn toàn màn hình câu hỏi và đi thẳng tới Checklist.
+      // Ẩn hẳn question
+      question.style.visibility = "hidden";
       question.style.opacity = "0";
       question.style.pointerEvents = "none";
       hint.textContent = "";
       message.classList.remove("show");
 
-      // Ghi nhận hoàn thành vào Sheet; UI đã được cập nhật optimistic.
-      // checkin() tự xử lý việc update row vs full render.
       checkin(selected, completedIndex);
 
-      // Mở Checklist ngay lập tức
       checklistPanel.classList.add("show");
       checklistPanel.style.visibility = "visible";
       checklistPanel.style.opacity = "1";
@@ -6123,7 +6084,6 @@ body #homeStack #questionWrap{
 
 
   // ---------- Chụp checklist ----------
-  // ---------- Chụp checklist: Chrome + Cốc Cốc mobile ----------
   let html2canvasPromise = null;
   function ensureHtml2Canvas(){
     if(typeof html2canvas === "function") return Promise.resolve();
@@ -6222,12 +6182,6 @@ body #homeStack #questionWrap{
 
       imageUrl = URL.createObjectURL(blob);
 
-      /*
-       * Không cố tải file ngay lập tức.
-       * Chrome/Cốc Cốc mobile có thể chặn download/blob sau
-       * một chuỗi await. Thay vào đó mở cửa sổ ảnh ngay trong
-       * trang, để người dùng có nút Chia sẻ / Lưu ảnh.
-       */
       showCapturePreview(imageUrl, blob);
 
       setStatus("Đã tạo ảnh checklist ✓");
@@ -6404,11 +6358,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
     overlay.querySelector("#captureDownloadBtn")
       .addEventListener("click",()=>{
-        /*
-         * Giữ anchor download cho Chrome Android.
-         * Nếu Cốc Cốc không tải trực tiếp, ảnh vẫn đang hiển thị:
-         * người dùng có thể nhấn giữ ảnh -> Lưu hình ảnh.
-         */
         setStatus("Đang lưu ảnh…");
       });
 
@@ -6473,9 +6422,13 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
   captureBtn.addEventListener("click",captureChecklist);
   document.getElementById("topCaptureBtn")?.addEventListener("click",captureTop);
+📦 PHẦN 6c/6 — Script chính (phần cuối)
 
+```html
 
-  // ---------- Navigation ----------
+  // ========================================================
+  // PATCH 1.3 — resetHome() khôi phục visibility
+  // ========================================================
   function resetHome(){
     document.getElementById("q2answers")?.remove();
     closeTop();
@@ -6484,11 +6437,11 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     checklistPanel.style.opacity = "0";
     checklistPanel.style.pointerEvents = "none";
 
-    // ===== Restart auto-sync với interval 120s khi đóng checklist =====
     if(typeof restartAutoSync === "function") restartAutoSync();
 
     message.classList.remove("show");
     wheelArea.classList.remove("show");
+    wheelArea.style.visibility = "hidden";
     wheelArea.style.opacity = "0";
     wheelArea.style.pointerEvents = "none";
     confirm.classList.remove("show");
@@ -6501,15 +6454,16 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     dragging = false;
 
     counter.textContent = "CÂU 1";
-        _lastTop3Signature = "";
+    _lastTop3Signature = "";
+
+    // Khôi phục question.visibility trước khi render lại
+    question.style.visibility = "";
     renderLandingState(true);
     
     hint.textContent = isChecklistLocked() ? "" : (names.length ? "Chạm vào câu hỏi" : "Đang tải dữ liệu…");
     renderWheel();
-    // (không trigger animation ở đây — animation đã chạy 1 lần lúc init)
   }
 
-  // ===== Animation trigger =====
   let _heroAnimationPlayed = false;
   let _top3Revealed = false;
 
@@ -6537,7 +6491,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     const q = document.getElementById("question");
     if(!q) return;
 
-    // Đợi 2 frame để CSS kịp apply opacity 0 ban đầu
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         q.classList.add("top3-in");
@@ -6549,9 +6502,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     resetHome();
     if(typeof syncQuickTools === "function") syncQuickTools();
 
-    // ===== Sync ngay khi quay lại Home (#7+#8) =====
-    // Tránh trường hợp user vừa ở tab khác (Checklist/Chấm công) quay về Home
-    // mà phải chờ tới kỳ auto-sync tiếp theo mới thấy toast.
     if(syncInFlight) return;
     if(!initialSheetLoaded) return;
     if(Date.now() - _lastUserActionAt < USER_ACTION_PAUSE_MS) return;
@@ -6569,26 +6519,22 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
     if (willShow) {
       closeTop();
-      // HIỆN bảng
       checklistPanel.classList.add("show");
       checklistPanel.style.visibility = "visible";
       checklistPanel.style.opacity = "1";
       checklistPanel.style.pointerEvents = "auto";
       renderChecklist();
       if(!initialSheetLoaded) loadData(false);
-      checklistBtn.setAttribute("aria-expanded", "true");   // ← THÊM
+      checklistBtn.setAttribute("aria-expanded", "true");
     } else {
-      // ẨN bảng — xoá cả class lẫn inline style để chắc chắn ẩn
       checklistPanel.classList.remove("show");
       checklistPanel.style.visibility = "hidden";
       checklistPanel.style.opacity = "0";
       checklistPanel.style.pointerEvents = "none";
-      checklistBtn.setAttribute("aria-expanded", "false");  // ← THÊM
+      checklistBtn.setAttribute("aria-expanded", "false");
     }
 
-    // ===== Restart auto-sync: 30s khi mở, 120s khi đóng =====
     restartAutoSync();
-
     syncQuickTools();
   });
 
@@ -6600,7 +6546,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     checklistPanel.style.opacity = "0";
     checklistPanel.style.pointerEvents = "none";
 
-    // Mỗi lần mở BXH luôn quay về tháng hiện tại.
     resetTopToCurrentMonth();
     topPanel.classList.add("show");
     topPanel.setAttribute("aria-hidden","false");
@@ -6622,12 +6567,9 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     loadData(true, true);
   });
 
-  // Hiển thị trạng thái ngay lập tức
   loadChecklistLockTime();
   checklistLockTimeInput.value = checklistLockTime;
 
-  // ===== Gọi loadData TRƯỚC (không await) =====
-  // getSettings sẽ chờ loadData xong mới gọi → tránh 2 request song song
   let _loadDataPromise = null;
   if(cacheLoad()){
     initialSheetLoaded = true;
@@ -6641,18 +6583,12 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     _loadDataPromise = loadData(true);
   }
 
-  // ===== Render landing SAU khi cache đã load xong =====
-  // Đặt ở đây để Top3 từ cache hiện ra ngay lập tức,
-  // thay vì render rỗng trước rồi mới render lại.
   renderLandingState();
 
-  // ===== Chờ loadData xong rồi mới gọi getSettings =====
   (async()=>{
     try{
-      // Chờ loadData hoàn tất (thành công hoặc thất bại đều signal)
       await _dataLoadPromise;
 
-      // Bây giờ connection đã rảnh → gọi getSettings
       const s = await getSettingsCached(false);
       if(isValid24hTime(s.resetTime)) resetTime = s.resetTime;
       if(isValid24hTime(s.checklistLockTime)){
@@ -6666,28 +6602,19 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
   scheduleNextReset();
 
-  // ===== Tối ưu: chỉ render khi thực sự cần =====
-  // Trước: mỗi 1s gọi renderLandingState() + isChecklistLocked() → tốn CPU
-  // Sau:  - Tab ẩn → bỏ qua hoàn toàn (không tốn pin)
-  //       - Chỉ tính lại lock state mỗi 30s (đủ chính xác cho mốc giờ khoá)
-  //       - Chỉ render lại khi trạng thái lock THỰC SỰ thay đổi
   _cachedLocked = isChecklistLocked();
 
   setInterval(()=>{
-    // Tab đang ẩn → không làm gì
     if(document.hidden) return;
 
     const now = Date.now();
 
-    // Mỗi 30s mới tính lại trạng thái khoá (không phải mỗi 1s)
     if(now - _lastLockCheck > 30000){
       _lastLockCheck = now;
       const nextLocked = isChecklistLocked();
       const lockChanged = nextLocked !== _cachedLocked;
       _cachedLocked = nextLocked;
 
-      // Chỉ render khi lock state THỰC SỰ đổi (ví dụ qua giờ khoá).
-      // Không render định kỳ nữa — vì loadData đã tự render khi có data mới.
       if(lockChanged){
         if(!q1Opened && !checklistPanel.classList.contains("show") && !topPanel.classList.contains("show")){
           renderLandingState();
@@ -6695,7 +6622,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       }
     }
 
-    // Cập nhật hint (rất nhẹ, chỉ set textContent)
     if(!q1Opened && !checklistPanel.classList.contains("show") && !topPanel.classList.contains("show")){
       if(_cachedLocked){
         if(hint.textContent !== "") hint.textContent = "";
@@ -6706,10 +6632,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   }, 1000);
 
   startAutoSync();
-  // ===== Patch B: ESC đóng panel =====
-  // Chỉ chạy khi user bấm phím Escape.
-  // Thứ tự ưu tiên: đóng panel trên cùng trước.
-  // KHÔNG gọi API, KHÔNG ảnh hưởng Google Sheet.
+
   document.addEventListener("keydown", (e) => {
     if(e.key !== "Escape") return;
 
@@ -6723,7 +6646,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     if(quizBuilderOverlay.classList.contains("show")){ closeQuizBuilder(); e.preventDefault(); return; }
     if(quizResultOverlay.classList.contains("show")){ closeQuizResult(); e.preventDefault(); return; }
     if(quizTakeOverlay.classList.contains("show")){
-      // FIX #9: dùng chung logic với nút X
       if(confirm("Bạn đang làm bài kiểm tra. Thoát sẽ mất toàn bộ câu trả lời. Tiếp tục thoát?")){
         quizTakeOverlay.classList.remove("show");
         quizTakeOverlay.setAttribute("aria-hidden", "true");
@@ -6772,12 +6694,8 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   });
   document.addEventListener("visibilitychange", () => {
     if(document.hidden) return;
-    // Tab vừa hiện lại → reset timer để check ngay ở tick kế tiếp
     _lastLockCheck = 0;
 
-    // ===== Trigger sync ngay khi quay lại tab (#7+#8) =====
-    // Browser throttle setInterval khi tab ẩn → auto-sync có thể trễ.
-    // Quay lại tab → đồng bộ luôn để toast "ai vừa check" hiện kịp.
     if(syncInFlight) return;
     if(!initialSheetLoaded) return;
     if(wheelArea.classList.contains("show")) return;
@@ -6789,7 +6707,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     loadData(false, true);
   });
 
-  // Khi app được focus lại (từ task switcher, notification, v.v.)
   window.addEventListener("focus", () => {
     if(document.hidden) return;
     if(syncInFlight) return;
@@ -6852,8 +6769,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   function syncQuickTools(){
     renderQuizAdminButton();
 
-    // Thanh 2 (Luật KDV / Bài kiểm tra / Tạo Ktra) chỉ xuất hiện ở HOME.
-    // Bất kỳ bảng/tab/màn hình con nào mở ra -> ẩn hoàn toàn.
     const otherViewOpen =
       kdvRulesOverlay.classList.contains("show") ||
       monitorOverlay.classList.contains("show") ||
@@ -6881,7 +6796,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     lunchResult.classList.toggle("show", !otherViewOpen && lunchResult.dataset.hasResult === "1");
     lunchResult.setAttribute("aria-hidden", otherViewOpen ? "true" : "false");
 
-    // Ẩn/hiện nút Hòm thư
     const smFab = document.getElementById("secretMailBtn");
     if(smFab){
       smFab.classList.toggle("hidden", otherViewOpen);
@@ -6925,7 +6839,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       const b = document.createElement("button");
       b.type = "button";
       b.className = "quizNameItem";
-      // XSS-safe
       b.textContent = `👤 ${String(name).slice(0, 60)}`;
       b.addEventListener("click", () => startQuizForName(name));
       quizNameList.appendChild(b);
@@ -6958,8 +6871,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     if(!q){ finishQuiz(); return; }
     
     quizProgress.textContent = `Câu ${quizCurrentIndex+1}/${quizQuestions.length}`;
-    
-    // ===== XSS-safe: dùng textContent thay innerHTML =====
     quizQuestion.textContent = String(q.question || "").slice(0, 500);
     
     quizAnswers.innerHTML = "";
@@ -6977,7 +6888,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       l.textContent = String.fromCharCode(65 + i);
       
       const t = document.createElement("span");
-      // textContent tự escape HTML → an toàn
       t.textContent = String(a.text || "").slice(0, 300);
       
       b.append(l, t);
@@ -7080,13 +6990,11 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     const saved=JSON.parse(localStorage.getItem(LUNCH_CUSTOM_KEY)||"null");
     if(saved && Array.isArray(saved.savory) && Array.isArray(saved.soup) && Array.isArray(saved.out)){
       LUNCH_DATA={savory:saved.savory.filter(Boolean),soup:saved.soup.filter(Boolean),out:saved.out.filter(Boolean)};
-      // Nếu dữ liệu cũ bị rỗng do phiên bản trước, khôi phục danh sách mặc định tương ứng.
       if(!LUNCH_DATA.savory.length) LUNCH_DATA.savory=[...LUNCH_SAVORY];
       if(!LUNCH_DATA.soup.length) LUNCH_DATA.soup=[...LUNCH_SOUP];
       if(!LUNCH_DATA.out.length) LUNCH_DATA.out=[...LUNCH_OUT];
       saveLunchData();
     }else{
-      // Migrate danh sách món tự thêm từ phiên bản cũ: món ăn tại nhà được xếp vào nhóm món mặn.
       const old=JSON.parse(localStorage.getItem("DAOMEo_LUNCH_CUSTOM_V1")||"null");
       if(old && Array.isArray(old.home)) LUNCH_DATA.savory.push(...old.home.filter(Boolean));
       if(old && Array.isArray(old.out)) LUNCH_DATA.out.push(...old.out.filter(Boolean));
@@ -7132,7 +7040,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     }
   }
   function updateLunchAddStatus(msg){lunchAddStatus.textContent=msg;clearTimeout(updateLunchAddStatus.t);if(msg) updateLunchAddStatus.t=setTimeout(()=>lunchAddStatus.textContent="",2200);}
-  // ===== Mở/đóng trang Bữa trưa full-screen =====
   function openLunchChoice(){
     updateLunchCounts();
     const page = document.getElementById("lunchPage");
@@ -7196,7 +7103,7 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       const no=document.createElement('div');no.className='lunchManageNo';no.textContent=String(i+1);
       const input=document.createElement('input');input.className='lunchManageInput';input.value=name;input.maxLength=60;input.dataset.index=i;
       const save=document.createElement('button');save.className='lunchManageSave';save.type='button';save.textContent='Lưu';save.addEventListener('click',()=>{
-        const value=input.value.trim().replace(/\\s+/g,' ');if(!value){updateLunchManageStatus('Tên món không được để trống');return;}
+        const value=input.value.trim().replace(/\s+/g,' ');if(!value){updateLunchManageStatus('Tên món không được để trống');return;}
         const duplicate=Object.entries(LUNCH_DATA).some(([cat,items])=>items.some((x,j)=>x.toLowerCase()===value.toLowerCase() && !(cat===lunchManageCategory && j===i)));
         if(duplicate){updateLunchManageStatus('Tên món này đã tồn tại');return;}
         LUNCH_DATA[lunchManageCategory][i]=value;saveLunchData();renderLunchManage();updateLunchCounts();updateLunchManageStatus('Đã cập nhật món ✓');
@@ -7221,7 +7128,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   lunchChoiceOverlay.addEventListener("click",e=>{if(e.target===lunchChoiceOverlay)closeLunchChoice()});
   lunchModeButtons.forEach(btn=>btn.addEventListener("click",()=>chooseLunchMode(btn.dataset.mode)));
 
-  // ===== Trang Bữa trưa mới — sự kiện =====
   document.getElementById("lunchBack")?.addEventListener("click", closeLunchChoice);
   document.querySelectorAll(".lunch-mode-card").forEach(btn => {
     btn.addEventListener("click", () => chooseLunchMode(btn.dataset.mode));
@@ -7306,7 +7212,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   quizNextBtn.addEventListener("click",submitQuizAnswer);
   quizResultClose.addEventListener("click",closeQuizResult);
 
-  // FIX #9: nút X thoát Quiz Take với confirm
   const quizTakeClose = document.getElementById("quizTakeClose");
   if(quizTakeClose){
     quizTakeClose.addEventListener("click", () => {
@@ -7331,17 +7236,13 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   saveQuizBtn.addEventListener("click",saveQuizBuilder);
   loadQuizStore();renderQuizAdminButton();syncQuickTools();
 
-  // Cầu nối an toàn để Page 2 đọc đúng danh sách names của checklist.
   window.__getChecklistNames = () => Array.isArray(names) ? names.slice() : [];
-// Cầu nối cho Page 2 đọc trạng thái checkin
-window.__getChecklistState = () => ({
-  names: Array.isArray(names) ? names.slice() : [],
-  checked: Array.isArray(checked) ? checked.slice() : [],
-  times: Array.isArray(times) ? times.slice() : []
-});
+  window.__getChecklistState = () => ({
+    names: Array.isArray(names) ? names.slice() : [],
+    checked: Array.isArray(checked) ? checked.slice() : [],
+    times: Array.isArray(times) ? times.slice() : []
+  });
 
-  // Cầu nối cho Page 2 yêu cầu xoá checkin của 1 người
-  // → set checked=false, times="" + đồng bộ lên server + render lại
   window.__clearCheckinForName = async function(name){
     const cleanName = String(name || "").trim();
     if(!cleanName) return false;
@@ -7349,25 +7250,20 @@ window.__getChecklistState = () => ({
     const idx = names.indexOf(cleanName);
     if(idx < 0) return false;
 
-    // Nếu chưa checkin → không cần xoá
     if(!checked[idx] && !times[idx]) return true;
 
-    // Snapshot để rollback nếu server fail
     const prevChecked = checked[idx];
     const prevTime = times[idx];
 
-    // Optimistic: xoá ngay trên UI
     checked[idx] = false;
     times[idx] = "";
     cacheSave();
     renderChecklist();
 
-    // Cập nhật Top 3 nếu đang ở Home
     if(!q1Opened && !checklistPanel.classList.contains("show")){
       renderLandingState();
     }
 
-    // Gọi server xoá
     try{
       const token = AdminSession.get();
       if(!token){
@@ -7399,9 +7295,6 @@ window.__getChecklistState = () => ({
     }
   };
 
-  // ===== Khởi động Live Feed =====
-  // Dùng requestAnimationFrame để chắc chắn DOM ready,
-  // tránh trường hợp init() chạy trước khi button được render.
   requestAnimationFrame(() => {
     try{
       LiveFeed.init();
@@ -7439,7 +7332,6 @@ window.__getChecklistState = () => ({
 
   let ATTENDANCE_EMPLOYEES = [];
 
-  // ===== Auto-refresh =====
   let attendanceAutoRefreshTimer = null;
   let attendanceAutoRefreshCountdown = 60;
   let attendanceLastSaveAt = 0;
@@ -7484,7 +7376,6 @@ window.__getChecklistState = () => ({
     if(el) el.textContent = String(Math.max(0, attendanceAutoRefreshCountdown));
   }
 
-  // ===== Footer state =====
   function setAttendanceFooterState(state, message){
     const bar = document.getElementById('attendanceSyncStatus');
     if(!bar) return;
@@ -7504,7 +7395,6 @@ window.__getChecklistState = () => ({
     }
   }
 
-  // ===== Preload tháng ±1 =====
   let attendancePreloadedKeys = new Set();
 
   async function preloadAdjacentMonths(){
@@ -7516,7 +7406,6 @@ window.__getChecklistState = () => ({
     let nm = m + 1, ny = y;
     if(nm > 11){ nm = 0; ny = y + 1; }
 
-    // Preload ±2 tháng để khi user bấm liên tiếp không phải chờ
     const tasks = [];
     for(let offset = -2; offset <= 2; offset++){
       if(offset === 0) continue;
@@ -7546,7 +7435,6 @@ window.__getChecklistState = () => ({
     }
   }
 
-  // ===== Employee avatar =====
   function updateEmployeeAvatar(){
     const el = document.getElementById('attendanceEmployeeAvatar');
     if(!el) return;
@@ -7565,9 +7453,6 @@ window.__getChecklistState = () => ({
     }
   }
 
-  // Chấm công đọc trực tiếp từ Check!C19:C32 và dải ngày D:AH (31 cột).
-  // D = ngày 1, E = ngày 2, ... AH = ngày 31.
-  // Mã compact: [ngày][P/O/T][tháng]. Ví dụ 26P9 = ngày 26, phép, tháng 9.
   const ATTENDANCE_DATA = {};
   const ATTENDANCE_CACHE_PREFIX = 'srank_attendance_check_v2_';
   const ATTENDANCE_RAW_MEMORY = new Map();
@@ -7579,7 +7464,7 @@ window.__getChecklistState = () => ({
   let attendanceEditingDay = 0;
   let attendanceMultiMode = false;
   const attendanceMultiDays = new Set();
-  let attendanceLockUntil = 0; // Khóa auto-sync trong 3s sau khi save thành công
+  let attendanceLockUntil = 0;
 
   const attendanceStatusOverlay = document.getElementById('attendanceStatusOverlay');
   const attendanceMultiBtn = document.getElementById('attendanceMultiBtn');
@@ -7655,19 +7540,16 @@ window.__getChecklistState = () => ({
       });
     });
 
-    // ===== MERGE: chỉ ghi đè user có trong response, không xoá user khác =====
     Object.keys(map).forEach(name => {
       ATTENDANCE_DATA[name] = map[name];
     });
 
-    // Merge danh sách kiểm duyệt viên: giữ thứ tự cũ, thêm người mới vào cuối
     const seen = new Set();
     const merged = [];
     (payload?.employees || []).forEach(x => {
       const name = String(x?.name || '').trim();
       if(name && !seen.has(name)){ seen.add(name); merged.push(name); }
     });
-    // Giữ người cũ không có trong response (tránh mất tạm thời)
     ATTENDANCE_EMPLOYEES.forEach(n => {
       if(!seen.has(n)){ seen.add(n); merged.push(n); }
     });
@@ -7697,7 +7579,6 @@ window.__getChecklistState = () => ({
       if(!name) return;
       if(!ATTENDANCE_DATA[name]) ATTENDANCE_DATA[name] = {};
 
-      // Xoá data THÁNG NÀY của user (để ghi lại đúng) nhưng không xoá user khác / tháng khác
       Object.keys(ATTENDANCE_DATA[name]).forEach(k => {
         if(k.startsWith(prefix)) delete ATTENDANCE_DATA[name][k];
       });
@@ -7711,7 +7592,6 @@ window.__getChecklistState = () => ({
       });
     });
 
-    // Merge danh sách kiểm duyệt viên — không xoá người cũ
     const seen = new Set(ATTENDANCE_EMPLOYEES);
     cache.employees.forEach(p => {
       const name = String(p?.name || '').trim();
@@ -7778,7 +7658,6 @@ window.__getChecklistState = () => ({
   }
 
   async function loadAttendanceMonth(force = false){
-    // Nếu đang trong thời gian khóa (vừa save xong), bỏ qua request không force
     if(!force && Date.now() < attendanceLockUntil){
       return Promise.resolve({ok:true, locked:true});
     }
@@ -7787,8 +7666,6 @@ window.__getChecklistState = () => ({
     const m = viewDate.getMonth();
     const requestKey = y + '-' + (m + 1);
 
-    // Nếu đã có request cùng tháng đang chạy, chờ chính request đó.
-    // Tránh tình trạng lần đồng bộ đầu bị request sau làm vô hiệu hóa.
     if(attendanceLoadPromise && attendanceLoadPromiseKey === requestKey){
       if(force){
         setAttendanceSyncStatus('warn','Đang chờ đồng bộ từ Google Sheet…');
@@ -7800,20 +7677,15 @@ window.__getChecklistState = () => ({
 
     const token = ++attendanceLoadToken;
 
-    // Đã đồng bộ đúng tháng thì dùng state hiện có, không gọi lại API.
     if(!force && attendanceServerLoaded && attendanceServerLoadedKey === requestKey){
       return Promise.resolve({ok:true, cached:true});
     }
 
     if(force){
-      // Chỉ sync button mới hiện "đang đồng bộ" rõ ràng
       attendanceSyncBtn?.classList.add('busy');
       setAttendanceFooterState?.('syncing', 'Đang đồng bộ…') ||
         setAttendanceSyncStatus('warn', 'Đang đồng bộ…');
     }else{
-      // Non-force: goToMonth đã render rồi → chỉ fetch nền,
-      // không báo "đang tải" gây cảm giác chờ đợi.
-      // Nếu chưa có cache nào, mới cần apply cache (lần đầu vào page).
       if(!ATTENDANCE_EMPLOYEES.length){
         applyAttendanceCache(y, m);
         render();
@@ -7826,8 +7698,6 @@ window.__getChecklistState = () => ({
         if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet trả về dữ liệu không hợp lệ');
         if(!r.data || !Array.isArray(r.data.employees)) throw new Error('Phản hồi getAttendance thiếu danh sách employees');
 
-        // Không bỏ qua response thành công chỉ vì có request khác chạy sau.
-        // Nếu response thuộc đúng tháng hiện tại thì luôn áp dụng dữ liệu server.
         if(viewDate.getFullYear() === y && viewDate.getMonth() === m){
           applyAttendanceData(r.data, y, m);
           attendanceServerLoaded = true;
@@ -7894,9 +7764,6 @@ window.__getChecklistState = () => ({
     return {score, rank:attendanceRankClient(score), tCount, pCount, qCount, xCount, off:daysInMonth - tCount - pCount - qCount - xCount, year, month};
   };
 
-  // Preload tháng hiện tại nếu chưa có cache/RAM để kích hoạt và BXH mở gần như tức thời.
-  // Cầu nối duy nhất cho BXH: giữ toàn bộ state chấm công trong IIFE này,
-  // không đưa viewDate / ATTENDANCE_DATA ra global.
   window.__getAttendanceTopData = async function(){
     await loadAttendanceMonth(false).catch(()=>{});
     const y = viewDate.getFullYear();
@@ -7959,7 +7826,6 @@ window.__getChecklistState = () => ({
     return {year, month, employees, cached};
   };
 
-  // Preload tháng hiện tại nếu chưa có cache/RAM để kích hoạt và BXH mở gần như tức thời.
   window.__attendanceCurrentMonthReady = window.__getAttendanceTopDataForMonth((new Date()).getMonth() + 1, false).catch(()=>null);
 
   function updateAttendanceMultiUI(){
@@ -8001,14 +7867,12 @@ window.__getChecklistState = () => ({
     const cleanStatus = String(status || '').trim().toUpperCase();
     if(cleanStatus && !['P','O','T','Q','X'].includes(cleanStatus)) return;
 
-    // Snapshot
     const snapshots = days.map(day => ({
       day,
       key: key(y,m,day),
       prev: ATTENDANCE_DATA[nameAtRequest]?.[key(y,m,day)] || ''
     }));
 
-    // ===== XOÁ: cần xoá cả checkin nếu có =====
     if(!cleanStatus){
       try{
         if(typeof window.__clearCheckinForName === "function"){
@@ -8020,7 +7884,6 @@ window.__getChecklistState = () => ({
       }
     }
 
-    // ===== Optimistic =====
     if(!ATTENDANCE_DATA[nameAtRequest]) ATTENDANCE_DATA[nameAtRequest] = {};
     days.forEach(day => {
       const k = key(y,m,day);
@@ -8037,7 +7900,6 @@ window.__getChecklistState = () => ({
     setAttendanceFooterState('syncing', `Đang lưu ${days.length} ngày…`);
     attendanceLastSaveAt = Date.now();
 
-    // ===== API nền =====
     try{
       const r = await window.__srankApi('setAttendanceBatch', {
         month: monthAtRequest, days, name: nameAtRequest, status: cleanStatus
@@ -8051,7 +7913,6 @@ window.__getChecklistState = () => ({
       setAttendanceFooterState('ok', `Đã lưu ${days.length} ngày ✓`);
 
     }catch(e){
-      // ===== Rollback =====
       snapshots.forEach(s => {
         if(s.prev) ATTENDANCE_DATA[nameAtRequest][s.key] = s.prev;
         else delete ATTENDANCE_DATA[nameAtRequest][s.key];
@@ -8101,24 +7962,19 @@ window.__getChecklistState = () => ({
     const dayAtRequest = day;
     const k = key(y, m, day);
 
-    // Snapshot để rollback nếu API fail
     const prevValue = ATTENDANCE_DATA[nameAtRequest]?.[k] || '';
 
-    // ===== XOÁ: cần xoá cả checkin nếu có =====
     if(!cleanStatus){
-      // Xoá checkin trước (nếu có)
       try{
         if(typeof window.__clearCheckinForName === "function"){
           await window.__clearCheckinForName(nameAtRequest);
         }
       }catch(e){
-        // Không xoá được checkin → báo lỗi, không tiếp tục
         setAttendanceFooterState('error', 'Không xoá được checkin: ' + attendanceErrorText(e));
         return;
       }
     }
 
-    // ===== Optimistic update =====
     if(!ATTENDANCE_DATA[nameAtRequest]) ATTENDANCE_DATA[nameAtRequest] = {};
     if(cleanStatus){
       ATTENDANCE_DATA[nameAtRequest][k] = cleanStatus;
@@ -8130,14 +7986,11 @@ window.__getChecklistState = () => ({
       render();
     }
 
-    // Đóng bottom sheet ngay
     closeAttendanceStatus();
 
-    // Hiện trạng thái đang lưu
     setAttendanceFooterState('syncing', 'Đang lưu…');
     attendanceLastSaveAt = Date.now();
 
-    // ===== Gọi API nền =====
     try{
       const r = await window.__srankApi('setAttendance', {
         month: monthAtRequest,
@@ -8156,7 +8009,6 @@ window.__getChecklistState = () => ({
       setAttendanceFooterState('ok', 'Đã lưu ✓');
 
     }catch(e){
-      // ===== Rollback nếu lỗi =====
       if(prevValue){
         ATTENDANCE_DATA[nameAtRequest][k] = prevValue;
       }else{
@@ -8185,9 +8037,6 @@ window.__getChecklistState = () => ({
   const wheelStep = 58;
 
   function syncAttendanceEmployees(){
-    // KHÔNG lấy danh sách từ checklist C4:C17.
-    // Danh sách chấm công bắt buộc lấy từ API getAttendance(),
-    // tức Check!C19:C32.
     if(!ATTENDANCE_EMPLOYEES.length){
       loadAttendanceMonth(true);
       return;
@@ -8219,9 +8068,6 @@ window.__getChecklistState = () => ({
   function renderNameWheel(){
     if(!wheelItems) return;
 
-    // Dùng cùng cơ chế với vòng quay chọn tên ở Page 1:
-    // vị trí của mọi tên được tính theo current + toàn bộ quãng vuốt,
-    // nên có thể vuốt qua nhiều tên trong một lần kéo.
     const mid = (wheelViewport?.clientHeight || 292) / 2;
     const children = wheelItems.children;
     for(let i=0;i<children.length;i++){
@@ -8239,7 +8085,6 @@ window.__getChecklistState = () => ({
   function settleNameWheel(){
     if(!ATTENDANCE_EMPLOYEES.length) return;
 
-    // Giống Page 1: số bậc di chuyển = toàn bộ quãng vuốt / chiều cao 1 tên.
     const steps = Math.round(-wheelOffset / wheelStep);
     if(steps!==0){
       wheelIndex = Math.max(0, Math.min(ATTENDANCE_EMPLOYEES.length-1, wheelIndex + steps));
@@ -8270,13 +8115,11 @@ window.__getChecklistState = () => ({
   const m = date.getMonth();
   const d = date.getDate();
 
-  // 1) Sheet chấm công có P/O/T/Q/X → hiện đúng
   const raw = String(ATTENDANCE_DATA[selectedName]?.[key(y,m,d)] || '').trim().toUpperCase();
   if(raw === 'P' || raw === 'O' || raw === 'T' || raw === 'Q' || raw === 'X'){
     return { status: raw };
   }
 
-  // 2) Hôm nay đã checkin → tự đánh ✓ (hoặc T nếu CN)
   const state = (typeof window.__getChecklistState === "function")
     ? window.__getChecklistState()
     : null;
@@ -8295,7 +8138,6 @@ window.__getChecklistState = () => ({
     }
   }
 
-  // 3) Không có gì → trống
   return null;
 }
 
@@ -8413,7 +8255,6 @@ window.__getChecklistState = () => ({
     page.classList.add('show');
     if(typeof syncQuickTools==='function') syncQuickTools();
 
-    // ===== Cache-first: render ngay, không chờ API =====
     const y = viewDate.getFullYear();
     const m = viewDate.getMonth();
     const hasCache = applyAttendanceCache(y, m);
@@ -8421,16 +8262,11 @@ window.__getChecklistState = () => ({
 
     updateEmployeeAvatar();
 
-    // Bắt đầu auto-refresh + đếm ngược
     startAttendanceAutoRefresh();
 
-    // ===== Fetch nền, không chặn UI =====
     loadAttendanceMonth(false).then(() => {
-      // Preload tháng ±1 sau khi load xong
       preloadAdjacentMonths();
-    }).catch(() => {
-      // Không có cache, chờ fetch
-    });
+    }).catch(() => {});
   }
   function closePage(){
     page.classList.remove('show');
@@ -8442,7 +8278,6 @@ window.__getChecklistState = () => ({
     e.preventDefault();
     e.stopPropagation();
 
-    // Visual: xoay nút
     attendanceSyncBtn.classList.add('spinning');
 
     setAttendanceFooterState('syncing', 'Đang đồng bộ…');
@@ -8474,15 +8309,9 @@ window.__getChecklistState = () => ({
     closeNameWheel();
     render();
   });
-  // ===== Patch A: Phím mũi tên cho wheel Chấm công =====
-  // Đồng bộ trải nghiệm với wheel Home (Page 1).
-  // Chỉ chạy khi overlay wheel đang mở. Không gọi API.
   document.addEventListener('keydown', (e) => {
-    // Chỉ hoạt động khi wheel chọn NV đang mở
     if(!wheelOverlay.classList.contains('show')) return;
     if(!ATTENDANCE_EMPLOYEES.length) return;
-
-    // ESC đã được Patch B xử lý ở IIFE 1 → không xử lý ở đây nữa
 
     if(e.key === 'ArrowDown'){
       e.preventDefault();
@@ -8496,7 +8325,6 @@ window.__getChecklistState = () => ({
       renderNameWheel();
     }else if(e.key === 'Enter'){
       e.preventDefault();
-      // Confirm chọn kiểm duyệt viên — giống bấm nút "Xác nhận"
       selectedName = ATTENDANCE_EMPLOYEES[wheelIndex] || '';
       employee.value = selectedName;
       updateWheelButton();
@@ -8512,8 +8340,6 @@ window.__getChecklistState = () => ({
   });
   wheelViewport.addEventListener('pointermove',e=>{
     if(!wheelDragging) return;
-    // Giống Page 1: lấy trực tiếp khoảng cách từ điểm bắt đầu vuốt,
-    // không giới hạn ở ±1 bậc.
     wheelOffset=e.clientY-wheelStartY;
     if((wheelIndex===0 && wheelOffset>0) || (wheelIndex===ATTENDANCE_EMPLOYEES.length-1 && wheelOffset<0)){
       wheelOffset*=.25;
@@ -8533,7 +8359,6 @@ window.__getChecklistState = () => ({
     if(e.pointerId!=null) wheelViewport.releasePointerCapture?.(e.pointerId);
   });
 
-  // Cuộn chuột trên máy tính cũng dùng cùng kiểu chọn từng bậc như Page 1.
   wheelViewport.addEventListener('wheel',e=>{
     if(!wheelOverlay.classList.contains('show') || !ATTENDANCE_EMPLOYEES.length) return;
     e.preventDefault();
@@ -8543,8 +8368,6 @@ window.__getChecklistState = () => ({
     wheelOffset=0;
     renderNameWheel();
   },{passive:false});
-  // FIX #5: reset promise key khi đổi tháng để tránh dữ liệu tháng cũ
-  // ghi đè lên tháng mới khi user bấm prev/next nhanh.
   function goToMonth(delta){
     viewDate.setMonth(viewDate.getMonth() + delta);
     attendanceLoadPromise = null;
@@ -8553,16 +8376,12 @@ window.__getChecklistState = () => ({
     const y = viewDate.getFullYear();
     const m = viewDate.getMonth();
 
-    // ===== Bước 1: áp cache + render NGAY (0ms) =====
     const hasCache = applyAttendanceCache(y, m);
     if(!hasCache){
-      // Không có cache → xoá data cũ để grid hiện trống
-      // (nếu giữ data cũ sẽ hiện sai trạng thái của tháng khác)
       Object.keys(ATTENDANCE_DATA).forEach(k => delete ATTENDANCE_DATA[k]);
     }
     render();
 
-    // ===== Bước 2: fetch nền, không chặn UI =====
     loadAttendanceMonth(false).catch(() => {});
   }
 
@@ -8577,7 +8396,6 @@ window.__getChecklistState = () => ({
   attendanceTodayBtn?.addEventListener('click', () => {
     const now = new Date();
     if(viewDate.getFullYear() === now.getFullYear() && viewDate.getMonth() === now.getMonth()){
-      // Đã ở tháng hiện tại → chỉ refresh
       loadAttendanceMonth(true).catch(()=>{});
       return;
     }
@@ -8586,7 +8404,6 @@ window.__getChecklistState = () => ({
     attendanceLoadPromise = null;
     attendanceLoadPromiseKey = '';
 
-    // Cache-first: render ngay nếu có cache
     const hasCache = applyAttendanceCache(now.getFullYear(), now.getMonth());
     if(hasCache) render();
 
@@ -8598,16 +8415,10 @@ window.__getChecklistState = () => ({
   updateWheelButton();
   buildNameWheel();
   render();
-  // Tên và dữ liệu chấm công chỉ lấy từ Check!C19:C32 + toàn bộ hàng tương ứng.
-
-/* =========================================================
-   LẮNG NGHE CHECKIN → TỰ ĐÁNH ✓ NGAY TRÊN LỊCH CHẤM CÔNG
-========================================================= */
 
 function renderAttendanceIfCheckinMatches(){
   if(!page.classList.contains('show')) return;
 
-  // Kiểm tra event từ localStorage
   let ev = null;
   try{
     const raw = localStorage.getItem("srank_last_checkin");
@@ -8615,30 +8426,23 @@ function renderAttendanceIfCheckinMatches(){
   }catch(_){}
   if(!ev || !ev.name || !ev.date) return;
 
-  // Chỉ áp dụng cho hôm nay
   if(ev.date !== todayKeyAttendance()) return;
 
-  // Chỉ áp dụng nếu người vừa check là người đang chọn
   if(ev.name !== selectedName) return;
 
-  // Đang xem tháng hiện tại không?
   const now = new Date();
   if(viewDate.getFullYear() !== now.getFullYear() || viewDate.getMonth() !== now.getMonth()) return;
 
-  // Nếu sheet chưa có gì cho hôm nay → render lại để dataFor tự hiện ✓
   const day = now.getDate();
   const k = key(now.getFullYear(), now.getMonth(), day);
   const existing = ATTENDANCE_DATA[selectedName]?.[k];
 
-  // Nếu đã có P/O/T/Q/X thì không cần (đã hiển thị)
   if(existing === 'P' || existing === 'O' || existing === 'T' ||
      existing === 'Q' || existing === 'X') return;
 
-  // Render lại → dataFor sẽ đọc từ checked[]/times[] (IIFE 1) → hiện ✓
   render();
 }
 
-// Helper: todayKey giống IIFE 1
 function todayKeyAttendance(){
   const d = new Date();
   const parts = new Intl.DateTimeFormat("en-CA",{
@@ -8649,27 +8453,22 @@ function todayKeyAttendance(){
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
-// Lắng nghe event từ IIFE 1
 window.addEventListener("checkinDone", (e) => {
-  // Đợi 1 frame để checked[]/times[] đã update
   requestAnimationFrame(() => {
     renderAttendanceIfCheckinMatches();
   });
 });
 
-// Lắng nghe cả khi tab visible lại (trường hợp browser suspend)
 document.addEventListener("visibilitychange", () => {
   if(document.hidden) return;
   if(!page.classList.contains('show')) return;
   renderAttendanceIfCheckinMatches();
 });
 
-// Xoá localStorage khi render xong (tránh apply lặp lại)
 function clearLastCheckin(){
   try{ localStorage.removeItem("srank_last_checkin"); }catch(_){}
 }
 window.addEventListener("checkinDone", () => {
-  // Xoá sau 5s — đủ thời gian cho IIFE 2 đọc
   setTimeout(clearLastCheckin, 5000);
 });
 })();
@@ -8682,7 +8481,6 @@ window.addEventListener("checkinDone", () => {
    FIX AVATAR TOP 3 — hiển thị đúng kiểu avatar Facebook
    ========================================================= */
 
-/* Ảnh bên trong khung tròn: crop vuông ở giữa, không méo, không tràn */
 #question div.landing-top3 .podium-avatar img{
   width:100% !important;
   height:100% !important;
@@ -8693,7 +8491,6 @@ window.addEventListener("checkinDone", () => {
   background:#fff !important;
 }
 
-/* Đảm bảo khung avatar luôn bo tròn và cắt phần thừa */
 #question div.landing-top3 .podium-avatar{
   position:relative !important;
   overflow:hidden !important;
@@ -8701,7 +8498,6 @@ window.addEventListener("checkinDone", () => {
   background:#fff !important;
 }
 
-/* Fallback (chữ cái "?") phủ đúng khung khi ảnh lỗi */
 #question div.landing-top3 .podium-avatar-fallback{
   position:absolute !important;
   inset:0 !important;
@@ -8710,7 +8506,6 @@ window.addEventListener("checkinDone", () => {
   border-radius:50% !important;
 }
 
-/* Nếu ảnh không load được, ẩn img và hiện fallback */
 #question div.landing-top3 .podium-avatar img[style*="display: none"] + .podium-avatar-fallback,
 #question div.landing-top3 .podium-avatar img[style*="display:none"] + .podium-avatar-fallback{
   display:flex !important;
@@ -8738,14 +8533,45 @@ window.addEventListener("checkinDone", () => {
 
 <script>
 /* =========================================================
-   HÒM THƯ BÍ MẬT — Full page
+   HÒM THƯ BÍ MẬT — Full page (PATCH 3: cache-first + SPAWN 380ms)
 ========================================================= */
 (function(){
 "use strict";
-const K="srank_secret_mail_sender_v1",ANON="Ẩn danh",MAX=200,MIN=12,MAXD=18,CON=8,SPAWN=1200,$=id=>document.getElementById(id);
+const K = "srank_secret_mail_sender_v1",
+      ANON = "Ẩn danh",
+      MAX = 200,
+      MIN = 12,
+      MAXD = 18,
+      CON = 8,
+      SPAWN = 380,
+      SM_CACHE_KEY = "srank_sm_cache_v1",
+      SM_CACHE_TTL = 60 * 1000,
+      $ = id => document.getElementById(id);
+
 const page=$("secretMailPage"),back=$("smPageBack"),refresh=$("smPageRefresh"),input=$("smPageInput"),counter=$("smPageCounter"),check=$("smPageSignCheckbox"),senderBtn=$("smPageSenderBtn"),senderName=$("smPageSenderName"),send=$("smPageSendBtn"),status=$("smPageStatus"),count=$("smWallCount"),stage=$("smFloatStage"),empty=$("smCanvasEmpty"),navBtn=$("secretMailBtn");
 if(!page||!stage||!input||!send)return;
 let sender="",timers=[],open=false,wheel=null,wheelIndex=0,offset=0,drag=false,startY=0;
+
+function loadSmCache(){
+  try{
+    const raw = localStorage.getItem(SM_CACHE_KEY);
+    if(!raw) return null;
+    const data = JSON.parse(raw);
+    if(!data || !Array.isArray(data.rows)) return null;
+    if(Date.now() - (data.ts || 0) > SM_CACHE_TTL) return null;
+    return data.rows;
+  }catch(_){ return null; }
+}
+
+function saveSmCache(rows){
+  try{
+    localStorage.setItem(SM_CACHE_KEY, JSON.stringify({
+      rows: Array.isArray(rows) ? rows.slice(0, 30) : [],
+      ts: Date.now()
+    }));
+  }catch(_){}
+}
+
 function getNames(){try{return typeof window.__getChecklistNames==="function"?(window.__getChecklistNames()||[]).map(x=>String(x).trim()).filter(Boolean):[]}catch(_){return []}}
 function saveSender(x){try{x?localStorage.setItem(K,x):localStorage.removeItem(K)}catch(_){}}
 try{sender=String(localStorage.getItem(K)||"").trim()}catch(_){}
@@ -8759,11 +8585,105 @@ function updateCounter(){counter.textContent=`${input.value.length}/${MAX}`;coun
 function esc(x){return String(x||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}
 function heart(){const r=document.querySelector(".sm-composer")?.getBoundingClientRect();if(!r)return;const e=["♡","💗","💖","💌","♥","🌸"];for(let i=0;i<10;i++)setTimeout(()=>{const x=document.createElement("div");x.className="sm-heart-burst";x.textContent=e[i%e.length];x.style.left=r.left+r.width/2+(Math.random()-.5)*r.width*.7+"px";x.style.top=r.top+r.height/2+(Math.random()-.5)*30+"px";x.style.setProperty("--sm-dx",(Math.random()-.5)*200+"px");x.style.setProperty("--sm-dy",-(innerHeight*.85+Math.random()*120)+"px");x.style.setProperty("--sm-rot",(Math.random()*40-20)+"deg");document.body.appendChild(x);setTimeout(()=>x.remove(),3300)},i*90+Math.random()*80)}
 async function sendMessage(){const text=String(input.value||"").trim();if(!text){setStatus("Nhập gì đó đã nha ♡","error");input.focus();return}if(text.length>MAX){setStatus(`Tối đa ${MAX} ký tự`,"error");return}if(check.checked&&!sender){setStatus("Chọn tên trước đã nhé","error");openWheel();return}send.disabled=true;setStatus("Đang gửi...");try{const name=check.checked&&sender?sender:ANON,time=new Intl.DateTimeFormat("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date()),r=await window.__srankApi("sendSecretMessage",{name,message:text,clientTime:time},12000);if(!r?.ok)throw Error(r?.error||"Không gửi được");setStatus("Gửi xong rồi ♡","success");heart();input.value="";updateCounter();setTimeout(()=>spawn().catch(()=>{}),800)}catch(e){setStatus(e.message||"Không gửi được, thử lại nha","error")}finally{send.disabled=false}}send.onclick=e=>{e.preventDefault();e.stopPropagation();sendMessage()};input.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();sendMessage()}});
-async function fetchMessages(){try{const r=await window.__srankApi("getSecretMessages",{_ts:Date.now()},10000);if(!r?.ok||!Array.isArray(r.data?.rows))return[];const rows=r.data.rows.map(x=>({name:String(x?.name||"").trim()||ANON,message:String(x?.message||"").trim(),time:String(x?.clientTime||"").trim()})).filter(x=>x.message);count.textContent=rows.length?`${rows.length} lời nhắn`:`Chưa có lời nhắn nào`;return rows}catch(_){return []}}
+
+async function fetchMessages(){
+  try{
+    const r = await window.__srankApi("getSecretMessages", {_ts: Date.now()}, 10000);
+    if(!r || !r.ok || !Array.isArray(r.data && r.data.rows)){
+      return loadSmCache() || [];
+    }
+    const rows = r.data.rows.map(function(x){
+      return {
+        name: String((x && x.name) || "").trim() || ANON,
+        message: String((x && x.message) || "").trim(),
+        time: String((x && x.clientTime) || "").trim()
+      };
+    }).filter(function(x){ return x.message; });
+
+    count.textContent = rows.length
+      ? rows.length + " lời nhắn"
+      : "Chưa có lời nhắn nào";
+
+    saveSmCache(rows);
+    return rows;
+  }catch(_){
+    return loadSmCache() || [];
+  }
+}
+
 function note(m,i){const el=document.createElement("div"),cs=["color-pink","color-mint","color-yellow","color-lilac"];el.className="sm-note "+cs[i%4];el.style.setProperty("--sm-x",20+Math.random()*60+"%");el.style.setProperty("--sm-rotate",(Math.random()*10-5).toFixed(1)+"deg");el.style.setProperty("--sm-duration",(MIN+Math.random()*(MAXD-MIN)).toFixed(1)+"s");el.innerHTML=`<div class="sm-note-from"><span class="sm-note-avatar">${esc(m.name===ANON?"?":m.name.charAt(0).toUpperCase())}</span><span class="sm-note-name">${esc(m.name)}</span><span class="sm-note-time">${esc(m.time)}</span></div><div class="sm-note-text">${esc(m.message)}</div>`;el.onclick=e=>{e.stopPropagation();if(el.classList.contains("paused"))return;stage.querySelectorAll(".sm-note").forEach(n=>n.classList.remove("highlight"));el.classList.add("paused","highlight");setTimeout(()=>el.classList.remove("paused","highlight"),5000)};return el}
-function clearTimers(){timers.forEach(clearTimeout);timers=[]}async function spawn(){stage.innerHTML="";empty.hidden=true;clearTimers();const rows=await fetchMessages();if(!rows.length){empty.hidden=false;return}rows.slice(0,20).forEach((m,i)=>{const t=setTimeout(()=>{if(open&&stage.querySelectorAll(".sm-note:not(.paused)").length<CON)stage.appendChild(note(m,i))},i*SPAWN);timers.push(t)})}
-async function openPage(){if(open)return;open=true;page.classList.add("show");document.body.style.overflow="hidden";syncQuickTools?.();await spawn()}function closePage(){open=false;page.classList.remove("show");document.body.style.overflow="";clearTimers();syncQuickTools?.();setTimeout(()=>{if(!open)stage.innerHTML=""},400)}
+
+function clearTimers(){
+  timers.forEach(clearTimeout);
+  timers = [];
+}
+
+function renderNotes(rows, startIndex){
+  startIndex = startIndex || 0;
+  if(!rows.length){ empty.hidden = false; return; }
+  empty.hidden = true;
+  rows.slice(0, 20).forEach(function(m, i){
+    const t = setTimeout(function(){
+      if(open && stage.querySelectorAll(".sm-note:not(.paused)").length < CON){
+        stage.appendChild(note(m, startIndex + i));
+      }
+    }, i * SPAWN);
+    timers.push(t);
+  });
+}
+
+async function spawn(){
+  clearTimers();
+
+  // CACHE-FIRST: hiển thị ngay nếu có cache
+  const cached = loadSmCache();
+  if(cached && cached.length){
+    stage.innerHTML = "";
+    renderNotes(cached, 0);
+
+    // Fetch nền, chỉ append tin mới
+    fetchMessages().then(function(rows){
+      if(rows.length > cached.length){
+        const existingMsgs = new Set(cached.map(function(x){
+          return x.name + "|" + x.message;
+        }));
+        const freshOnly = rows.filter(function(x){
+          return !existingMsgs.has(x.name + "|" + x.message);
+        });
+        freshOnly.forEach(function(m, i){
+          const t = setTimeout(function(){
+            if(open && stage.querySelectorAll(".sm-note:not(.paused)").length < CON){
+              stage.appendChild(note(m, cached.length + i));
+            }
+          }, i * SPAWN);
+          timers.push(t);
+        });
+      }
+    }).catch(function(){});
+    return;
+  }
+
+  // Không có cache → chờ API (lần đầu mở)
+  stage.innerHTML = "";
+  empty.hidden = true;
+  const rows = await fetchMessages();
+  renderNotes(rows, 0);
+}
+
+async function openPage(){if(open)return;open=true;page.classList.add("show");document.body.style.overflow="hidden";syncQuickTools?.();await spawn()}
+function closePage(){open=false;page.classList.remove("show");document.body.style.overflow="";clearTimers();syncQuickTools?.();setTimeout(()=>{if(!open)stage.innerHTML=""},400)}
 navBtn?.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openPage()});back?.addEventListener("click",closePage);refresh?.addEventListener("click",()=>spawn());document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(wheel?.classList.contains("show")){closeWheel();return}if(open)closePage()});window.__openSecretMailPage=openPage;window.__closeSecretMailPage=closePage;window.__refreshSecretMail=fetchMessages;
+
+// Prefetch cache khi browser rảnh — mở Hòm thư lần sau sẽ tức thì
+if("requestIdleCallback" in window){
+  requestIdleCallback(function(){
+    fetchMessages().catch(function(){});
+  }, { timeout: 5000 });
+} else {
+  setTimeout(function(){
+    fetchMessages().catch(function(){});
+  }, 2500);
+}
 })();
 </script>
 <script>
