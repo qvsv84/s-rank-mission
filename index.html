@@ -6758,6 +6758,18 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     }
   }, 1000);
 
+  // ===== Keep-warm endpoint Hòm thư — chống cold start =====
+  (function warmSecretMail(){
+    const ping = () => {
+      try {
+        if(document.hidden) return;
+        window.__srankApi("getSecretMessages", { _ts: Date.now() }, 8000).catch(()=>{});
+      } catch(_) {}
+    };
+    setTimeout(ping, 800);
+    setInterval(ping, 3 * 60 * 1000);
+  })();
+
   startAutoSync();
   // ===== Patch B: ESC đóng panel =====
   // Chỉ chạy khi user bấm phím Escape.
@@ -9112,24 +9124,6 @@ function renderLoading(){
   stage.innerHTML = '<div class="sm-wall-loading">Đang tải lời nhắn…</div>';
   empty.classList.remove("show");
 }
-
-// ===== Orchestrate =====
-async function loadAndRender(force = false){
-  if(!force){
-    const cached = loadMailCache();
-    if(cached) renderList(cached);
-    else renderLoading();
-  }
-
-  // Hard timeout 12s: chắc chắn không treo UI dù backend có chuyện gì
-  let rows = null;
-  let timedOut = false;
-  try{
-    rows = await Promise.race([
-      fetchMessages(force),
-      new Promise(resolve => setTimeout(() => { timedOut = true; resolve([]); }, 12000))
-    ]);
-  }catch(_){ rows = []; }
 
   if(!open) return;
 
