@@ -9308,8 +9308,12 @@ async function openPage(){
   if (typeof window.syncQuickTools === "function") window.syncQuickTools();
 
   // Nếu có cache → render NGAY, không hiện loading
+  // Chỉ hiện loading khi thực sự chưa có gì để hiện
   const cached = loadMailCache();
-  if(cached && cached.length){
+  const hasList = stage.querySelector(".sm-wall-list");
+  if(hasList){
+    // Đang có list rồi → giữ nguyên, không xoá
+  } else if(cached && cached.length){
     renderListIfChanged(cached);
   } else {
     renderLoading();
@@ -9335,7 +9339,28 @@ function closePage(){
 
 navBtn?.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); openPage(); });
 back?.addEventListener("click", closePage);
-refresh?.addEventListener("click", () => { loadAndRender(true).catch(() => {}); });
+refresh?.addEventListener("click", async () => {
+  // Không xoá list cũ — chỉ fetch nền
+  const icon = refresh.querySelector("span") || refresh;
+  const oldIcon = icon.textContent;
+  icon.textContent = "↻";
+  icon.style.animation = "attSpin 1s linear infinite";
+
+  try{
+    const rows = await fetchMessages(true);
+    if(rows && Array.isArray(rows)){
+      renderListIfChanged(rows);
+      setStatus("Đã làm mới ✓", "success");
+    } else {
+      setStatus("Server đang khởi động, giữ list cũ", "error");
+    }
+  }catch(_){
+    setStatus("Không tải được — giữ list cũ", "error");
+  }finally{
+    icon.style.animation = "";
+    icon.textContent = oldIcon;
+  }
+});
 
 document.addEventListener("keydown", e => {
   if(e.key !== "Escape") return;
