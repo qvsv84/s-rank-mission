@@ -3186,6 +3186,15 @@ body #homeStack #questionWrap{
 .sm-wall-card:nth-child(3){animation-delay:.08s}
 .sm-wall-card:nth-child(n+4){animation-delay:.12s}
 @keyframes smCardIn{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:translateY(0)}}
+/* Tin mới trượt xuống từ trên cùng — cảm giác như Messenger */
+.sm-wall-card.sm-wall-card-enter{
+  animation:smCardSlideIn .42s cubic-bezier(.16,.9,.25,1) both !important;
+}
+@keyframes smCardSlideIn{
+  0%{opacity:0;transform:translateY(-24px) scale(.96);box-shadow:0 0 0 0 rgba(255,120,180,.4)}
+  60%{opacity:1;transform:translateY(2px) scale(1.01);box-shadow:0 8px 24px -6px rgba(255,120,180,.3)}
+  100%{opacity:1;transform:translateY(0) scale(1);box-shadow:0 6px 16px -8px rgba(255,120,180,.15)}
+}
 .sm-wall-card.color-pink{background:#fff0f8;border-color:rgba(255,158,199,.35)}
 .sm-wall-card.color-mint{background:#eefff7;border-color:rgba(92,189,145,.3)}
 .sm-wall-card.color-yellow{background:#fff9e0;border-color:rgba(246,213,116,.4)}
@@ -8868,6 +8877,10 @@ let mailAutoTimer = null;
 let lastRenderedRowsKey = "";
 const AUTO_REFRESH_MS = 12000;
 
+// ===== State cho smart render =====
+let _mailCurrentRows = [];       // danh sách đang hiển thị
+let _mailHasLoadedOnce = false;  // đã load thành công lần đầu chưa
+
 // ===== Cache =====
 function loadMailCache(){
   try{
@@ -8891,13 +8904,84 @@ function rowsSignature(rows){
   return (rows || []).map(r => `${r.name}|${r.message}|${r.time}`).join("::");
 }
 
+function rowKey(r){
+  return `${r.name}|${r.message}|${r.time}`;
+}
+
+// Sắp xếp mới nhất lên trên. time là "HH:mm" nên so string là đủ.
+function sortMailRows(rows){
+  return (rows || []).slice().sort((a, b) => {
+    const ta = String(a.time || "");
+    const tb = String(b.time || "");
+    if(ta === tb) return 0;
+    return tb.localeCompare(ta);
+  });
+}
+
 function renderListIfChanged(rows){
-  const sig = rowsSignature(rows);
+  // Fetch lỗi (null) → không làm gì, giữ nguyên list cũ
+  if(rows === null || typeof rows === "undefined") return false;
+
+  const sorted = sortMailRows(rows);
+  const sig = rowsSignature(sorted);
+
+  // Lần đầu load → render full
+  if(!_mailHasLoadedOnce){
+    _mailHasLoadedOnce = true;
+    lastRenderedRowsKey = sig;
+    _mailCurrentRows = sorted;
+    renderList(sorted);
+    return true;
+  }
+
+  // Không có gì đổi → bỏ qua
   if(sig === lastRenderedRowsKey) return false;
-  lastRenderedRowsKey = sig;
+
+  // Tìm tin mới (có trong list mới nhưng không có trong list cũ)
+  const oldKeys = new Set(_mailCurrentRows.map(rowKey));
+  const newOnes = sorted.filter(r => !oldKeys.has(rowKey(r)));
+  const removedAny = _mailCurrentRows.some(r => !sorted.some(s => rowKey(s) === rowKey(r)));
+
+  // Chỉ có thêm tin mới → prepend mượt
+  if(newOnes.length > 0 && !removedAny){
+    const list = stage.querySelector(".sm-wall-list");
+
+    if(list){
+      empty.classList.remove("show");
+      const oldHeight = list.offsetHeight;
+      const scrollBefore = stage.scrollTop;
+
+      // Chèn từ cuối newOnes lên để thứ tự đúng (mới nhất ở trên cùng)
+      for(let i = newOnes.length - 1; i >= 0; i--){
+        const m = newOnes[i];
+        const card = wallCard(m, 0);
+        card.classList.add("sm-wall-card-enter");
+        card.addEventListener("animationend", () => {
+          card.classList.remove("sm-wall-card-enter");
+        }, {once: true});
+        list.insertBefore(card, list.firstChild);
+      }
+
+      // Nếu user đang scroll giữa list → giữ nguyên vị trí đọc
+      const addedHeight = list.offsetHeight - oldHeight;
+      if(scrollBefore > 2 && addedHeight > 0){
+        stage.scrollTop = scrollBefore + addedHeight;
+      }
+
+      count.textContent = `${sorted.length} lời nhắn`;
+      _mailCurrentRows = sorted;
+      lastRenderedRowsKey = sig;
+      return true;
+    }
+  }
+
+  // Fallback: có tin bị xoá hoặc cấu trúc đổi → render full
   const scrollTop = stage.scrollTop;
-  renderList(rows);
-  stage.scrollTop = scrollTop;
+  const wasAtTop = scrollTop < 40;
+  _mailCurrentRows = sorted;
+  lastRenderedRowsKey = sig;
+  renderList(sorted);
+  stage.scrollTop = wasAtTop ? 0 : scrollTop;
   return true;
 }
 
@@ -8912,7 +8996,8 @@ function startMailAutoRefresh(){
     try{
       const rows = await fetchMessages(true);
       if(!open) return;
-      renderListIfChanged(rows || []);
+      if(rows === null) return;   // ← fetch lỗi → giữ nguyên list
+      renderListIfChanged(rows);
     }catch(_){}
   }, AUTO_REFRESH_MS);
 }
@@ -9101,7 +9186,12 @@ async function sendMessage(){
     input.value = "";
     updateCounter();
     clearMailCache();
-    setTimeout(() => loadAndRender(true).catch(() => {}), 800);
+    setTimeout(async () => {
+  try{
+    const rows = await fetchMessages(true);
+    if(rows) renderListIfChanged(rows);
+  }catch(_){}
+}, 800);
   }catch(e){
     setStatus(e.message || "Không gửi được, thử lại nha", "error");
   }finally{
@@ -9119,13 +9209,14 @@ function fetchMessages(force = false){
     const cached = loadMailCache();
     if(cached){
       fetchMessages(true).then(rows => {
-        if(open && rows) renderList(rows);
+        if(open && rows) renderListIfChanged(rows);
       }).catch(() => {});
       return Promise.resolve(cached);
     }
   }
   return window.__srankApi("getSecretMessages", { _ts: Date.now() }, 10000).then(r => {
-    if(!r?.ok || !Array.isArray(r.data?.rows)) return [];
+    // Lỗi server / data hỏng → trả null để KHÔNG wipe list
+    if(!r?.ok || !Array.isArray(r.data?.rows)) return null;
     const rows = r.data.rows.map(x => ({
       name: String(x?.name || "").trim() || ANON,
       message: String(x?.message || "").trim(),
@@ -9133,7 +9224,7 @@ function fetchMessages(force = false){
     })).filter(x => x.message);
     saveMailCache(rows);
     return rows;
-  }).catch(() => []);
+  }).catch(() => null);
 }
 
 // ===== Render list =====
@@ -9246,9 +9337,10 @@ document.addEventListener("visibilitychange", () => {
   if(document.hidden) return;
   if(!open) return;
   fetchMessages(true).then(rows => {
-    if(open) renderListIfChanged(rows || []);
+    if(!open) return;
+    if(rows === null) return;
+    renderListIfChanged(rows);
   }).catch(() => {});
-});
 
 window.__openSecretMailPage = openPage;
 window.__closeSecretMailPage = closePage;
