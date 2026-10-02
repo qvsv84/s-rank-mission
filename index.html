@@ -693,7 +693,7 @@ button{font:inherit}
 }
 
 /* =========================================================
-   13. SECRET MAIL
+   13. SECRET MAIL (CSS giữ lại — dùng cho js/secret-mail.js)
    ========================================================= */
 .sm-fab{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 84px);transform:translateX(-50%);z-index:19000;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 22px;border:1.5px solid rgba(255,158,199,.5);border-radius:999px;background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(255,247,252,.98) 50%,rgba(255,240,250,.98));font-family:inherit;font-size:12.5px;font-weight:900;letter-spacing:.06em;cursor:pointer;overflow:hidden;box-shadow:0 12px 28px -10px rgba(255,120,180,.4),0 4px 12px -4px rgba(95,140,120,.15),inset 0 1px 0 rgba(255,255,255,.95);transition:transform .25s cubic-bezier(.16,.9,.25,1),box-shadow .25s ease,border-color .25s ease,opacity .25s ease}
 .sm-fab.hidden{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(10px)}
@@ -925,39 +925,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px soli
   <button id="attendanceBtn" type="button" aria-label="Mở Chấm công">🗓 Chấm công</button>
 </nav>
 
-<button id="secretMailBtn" class="sm-fab" type="button" aria-label="Mở Hòm thư bí mật">
-  <span class="sm-fab-icon" aria-hidden="true">💌</span>
-  <span class="sm-fab-text">Hòm thư bí mật</span>
-  <span class="sm-fab-shine" aria-hidden="true"></span>
-</button>
-
-<section id="secretMailPage" class="secret-mail-page" aria-label="Hòm thư bí mật">
-  <div class="sm-page-inner">
-    <header class="sm-page-head">
-      <button id="smPageBack" class="sm-page-icon-btn" type="button" aria-label="Quay lại"><span aria-hidden="true">←</span></button>
-      <div class="sm-page-title"><span class="sm-page-kicker">HỆ THỐNG 04</span><span class="sm-page-name">💌 Hòm thư bí mật</span></div>
-      <button id="smPageRefresh" class="sm-page-icon-btn" type="button" aria-label="Tải lại"><span aria-hidden="true">↻</span></button>
-    </header>
-    <section class="sm-composer">
-      <div class="sm-composer-head"><span class="sm-composer-icon" aria-hidden="true">✎</span><span class="sm-composer-title">Viết lời nhắn mới</span></div>
-      <textarea id="smPageInput" class="sm-page-input" maxlength="200" rows="3" placeholder="Viết điều gì đó thật dễ thương..." autocomplete="off" aria-label="Nội dung lời nhắn"></textarea>
-      <label class="sm-sign-toggle" for="smPageSignCheckbox">
-        <input type="checkbox" id="smPageSignCheckbox" class="sm-sign-check" />
-        <span class="sm-sign-box" aria-hidden="true"><span class="sm-sign-checkmark">✓</span></span>
-        <span class="sm-sign-label">Ký tên:</span>
-        <button type="button" id="smPageSenderBtn" class="sm-sender-pill empty" aria-label="Chọn tên người gửi"><span id="smPageSenderName" class="sm-sender-name">Ẩn danh</span><span class="sm-sender-chevron" aria-hidden="true">⌄</span></button>
-      </label>
-      <div class="sm-send-row"><span id="smPageCounter" class="sm-counter">0/200</span><button type="button" id="smPageSendBtn" class="sm-send-btn"><span aria-hidden="true">📮</span><span class="sm-send-text">Gửi</span></button></div>
-      <div id="smPageStatus" class="sm-status" aria-live="polite"></div>
-    </section>
-    <section class="sm-wall-wrap">
-      <div class="sm-wall-head"><span class="sm-wall-deco" aria-hidden="true">✧</span><span id="smWallCount">Đang tải...</span><span class="sm-wall-deco" aria-hidden="true">✧</span></div>
-      <div id="smFloatStage" class="sm-float-stage"></div>
-      <div id="smCanvasEmpty" class="sm-canvas-empty" hidden><div class="sm-empty-emoji">📭</div><div class="sm-empty-text">Chưa có lời nhắn nào</div><div class="sm-empty-sub">Hãy là người đầu tiên gửi nhé!</div></div>
-    </section>
-  </div>
-</section>
-
 <div id="monitorOverlay" aria-hidden="true">
   <section id="monitorPanel" role="dialog" aria-modal="true">
     <div id="monitorTitle">👁 Giám sát</div>
@@ -1042,7 +1009,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px soli
 </section>
 
 <div id="hint" aria-hidden="true" hidden></div>
-
 
 </main>
 
@@ -1162,7 +1128,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px soli
   const ITEM_H = 58;
 
   // =========================================================
-  // DOM CACHE — 1 lookup duy nhất
+  // DOM CACHE
   // =========================================================
   const $ = id => document.getElementById(id);
   const els = {
@@ -1182,13 +1148,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px soli
     monitorCloseBtn: $("monitorCloseBtn"),
     secondaryNav: $("secondaryNav"),
     lunchBtn: $("lunchBtn"),
-    lunchAddBtn2: $("lunchAddBtn2"), lunchAddForm2: $("lunchAddForm2"),
-    lunchAddInput2: $("lunchAddInput2"), lunchAddStatus2: $("lunchAddStatus2"),
-    lunchResultBody: $("lunchResultBody"), lunchResultCard: $("lunchResultCard"),
-    lunchRerollBtn: $("lunchRerollBtn"), lunchPage: $("lunchPage"),
-    lunchManageBtn2: $("lunchManageBtn2"), lunchManageOverlay: $("lunchManageOverlay"),
-    lunchManageClose: $("lunchManageClose"), lunchManageList: $("lunchManageList"),
-    lunchManageStatus: $("lunchManageStatus"),
     linkEditorOverlay: $("linkEditorOverlay"), linkEditorName: $("linkEditorName"),
     linkEditorInput: $("linkEditorInput"),
     linkEditorCancel: $("linkEditorCancel"), linkEditorClear: $("linkEditorClear"), linkEditorSave: $("linkEditorSave"),
@@ -1374,6 +1333,7 @@ AdminSession.load();
 
   // =========================================================
   // REUSABLE WHEEL FACTORY
+  // ✅ FIX: gọi onChange khi settle (kéo xong)
   // =========================================================
   function createWheel({viewport, itemsBox, itemHeight = 58, itemClass = "", onChange}){
     let index = 0, offset = 0, dragging = false, startY = 0, items = [];
@@ -1419,6 +1379,8 @@ AdminSession.load();
       if(steps !== 0) index = Math.max(0, Math.min(items.length - 1, index + steps));
       offset = 0;
       render();
+      // ✅ FIX: gọi onChange để hiện nút xác nhận
+      if(typeof onChange === "function"){ try{ onChange(index, items[index]); }catch(_){} }
     }
     function attach(){
       viewport.addEventListener("pointerdown", e => {
@@ -1446,6 +1408,8 @@ AdminSession.load();
         index = Math.max(0, Math.min(items.length - 1, index));
         offset = 0;
         render();
+        // ✅ FIX: khi cuộn chuột, gọi onChange luôn
+        if(typeof onChange === "function"){ try{ onChange(index, items[index]); }catch(_){} }
       }, {passive:false});
     }
     return {setItems, setIndex, getIndex: () => index, getItems: () => items, schedule, settle, attach, render};
@@ -1779,7 +1743,7 @@ AdminSession.load();
     }
     return {push, init, open, close, clear, markAllSeen, updateBadge};
   })();
-  
+
   window.SRank = window.SRank || {};
   window.SRank.LiveFeed = LiveFeed;
 
@@ -1885,7 +1849,7 @@ AdminSession.load();
   const closeTop = () => { els.topPanel.classList.remove("show"); els.topPanel.setAttribute("aria-hidden","true"); };
 
   // =========================================================
-  // CHECKLIST RENDER (chỉ rebuild khi thay đổi)
+  // CHECKLIST RENDER
   // =========================================================
   let _checklistSignature = "";
   function checklistSig(){ return names.map((n,i) => `${n}|${checked[i]?1:0}|${times[i]||""}`).join("::"); }
@@ -1945,7 +1909,6 @@ AdminSession.load();
     if(!changedIdx.length) return true;
     checked = newData.checked; times = newData.times; points = newData.points; ranks = newData.ranks;
     renderChecklist(true);
-    // Flash animation cho tối đa 5 row vừa đổi
     changedIdx.slice(0, 5).forEach((idx, k) => {
       const tr = els.checklistBody.querySelector(`tr[data-index="${idx}"]`);
       if(!tr) return;
@@ -1955,7 +1918,7 @@ AdminSession.load();
     if(newlyChecked.length) notifyNewlyChecked(newlyChecked);
     return true;
   }
-  
+
   function updateChecklistRow(index){
     const tr = els.checklistBody.querySelector(`tr[data-index="${index}"]`);
     if(!tr) return false;
@@ -1963,12 +1926,13 @@ AdminSession.load();
     const box = tr.querySelector(".checkBox");
     if(timeCell) timeCell.textContent = times[index] || "—";
     if(box) box.classList.toggle("checked", !!checked[index]);
-    _checklistSignature = checklistSig();   // giữ signature đồng bộ với DOM
+    _checklistSignature = checklistSig();
     return true;
   }
 
   // =========================================================
   // MAIN WHEEL
+  // ✅ FIX: onChange sẽ được gọi khi settle
   // =========================================================
   const mainWheel = createWheel({
     viewport: els.wheelArea.querySelector("#wheelViewport") || els.wheelArea,
@@ -1977,7 +1941,6 @@ AdminSession.load();
     onChange: () => els.confirm.classList.add("show")
   });
   mainWheel.attach();
-  // Re-render khi wheel opening (clientHeight đổi)
   const origSetItems = mainWheel.setItems;
   mainWheel.setItems = list => { origSetItems(list); setTimeout(() => mainWheel.schedule(), 20); };
   const buildWheel = () => mainWheel.setItems(names);
@@ -2091,7 +2054,6 @@ AdminSession.load();
     if(checked[index] === true && times[index]){ setStatus(`Đã ghi ${times[index]} ✓`); return; }
     _lastUserActionAt = Date.now();
     _recentSelfChecks.set(name, Date.now());
-    // GC Map định kỳ
     if(_recentSelfChecks.size > 100){
       const now = Date.now();
       for(const [k,v] of _recentSelfChecks){ if(now-v > SELF_CHECK_IGNORE_MS*2) _recentSelfChecks.delete(k); }
@@ -2140,7 +2102,7 @@ AdminSession.load();
     }
     setTimeout(() => { for(const h of hearts) h.remove(); }, 1600);
   }
-  
+
   function showMessage(html, duration = 2200, next = null){
     els.wheelArea.classList.remove("show");
     els.question.style.opacity = "0";
@@ -2283,6 +2245,7 @@ AdminSession.load();
 
   // =========================================================
   // QUESTION 1 / 2
+  // ✅ FIX: hiện nút Xác nhận ngay khi mở wheel (fallback)
   // =========================================================
   function openQuestion1(e){
     e?.preventDefault();
@@ -2298,6 +2261,8 @@ AdminSession.load();
       els.wheelArea.style.opacity = "1";
       els.wheelArea.style.pointerEvents = "auto";
       els.wheelArea.classList.add("show");
+      // ✅ FIX: hiện nút xác nhận ngay khi wheel mở (fallback)
+      els.confirm.classList.add("show");
       try{
         const lastPicked = localStorage.getItem(LAST_PICKED_NAME_KEY);
         if(lastPicked){ const idx = names.indexOf(lastPicked); if(idx >= 0) mainWheel.setIndex(idx); }
@@ -2822,14 +2787,11 @@ AdminSession.load();
   const syncQuickTools = throttleRAF(_syncQuickTools);
   window.syncQuickTools = syncQuickTools;
 
-
   // =========================================================
   // EVENT WIRING
   // =========================================================
-  // Landing CTA
   document.getElementById("topCaptureBtn")?.addEventListener("click", captureTop);
 
-  // Nav buttons
   els.homeBtn.addEventListener("click", () => {
     resetHome();
     syncQuickTools();
@@ -2871,7 +2833,7 @@ AdminSession.load();
   els.topPanel.addEventListener("click", e => { if(e.target === els.topPanel) closeTop(); });
   els.syncBtn.addEventListener("click", () => { lastAutoSyncAt = Date.now(); loadData(true, true); });
 
-els.monitorBtn.addEventListener("click", openMonitor);
+  els.monitorBtn.addEventListener("click", openMonitor);
   els.monitorCloseBtn.addEventListener("click", closeMonitor);
   els.monitorOverlay.addEventListener("click", e => { if(e.target === els.monitorOverlay) closeMonitor(); });
   els.linkEditorCancel.addEventListener("click", closeLinkEditor);
@@ -2901,7 +2863,6 @@ els.monitorBtn.addEventListener("click", openMonitor);
   }));
   els.adminChecklistSearch?.addEventListener("input", e => { _adminSearchTerm = String(e.target.value||"").trim().toLowerCase(); applyChecklistFilter(); });
 
-  // Time input formatting
   els.resetTimeInput.addEventListener("input", () => {
     let v = els.resetTimeInput.value.replace(/\D/g, "").slice(0, 4);
     if(v.length > 2) v = v.slice(0,2) + ":" + v.slice(2);
@@ -2943,12 +2904,7 @@ els.monitorBtn.addEventListener("click", openMonitor);
     }finally{ els.adminSaveBtn.disabled = false; }
   });
 
-  // Checkin delegation cho checklist rows (optional click)
-  // ---------------------------------------------------------
-
-  // ---------------------------------------------------------
   // Keyboard events
-  // ---------------------------------------------------------
   addEventListener("keydown", e => {
     if(!els.wheelArea.classList.contains("show")) return;
     if(e.key === "ArrowDown"){ e.preventDefault(); mainWheel.setIndex(mainWheel.getIndex() + 1); els.confirm.classList.add("show"); }
@@ -3007,7 +2963,7 @@ els.monitorBtn.addEventListener("click", openMonitor);
   });
 
   // =========================================================
-  // PUBLIC API (used by attendance IIFE)
+  // PUBLIC API
   // =========================================================
   window.__getChecklistNames = () => Array.isArray(names) ? names.slice() : [];
   window.__getChecklistState = () => ({
@@ -3090,7 +3046,6 @@ els.monitorBtn.addEventListener("click", openMonitor);
     }
   }, 1000);
 
-  // Warmup admin settings (chỉ khi tab visible)
   let _warmupStarted = false;
   function warmupAdmin(){
     if(_warmupStarted) return;
@@ -3101,7 +3056,6 @@ els.monitorBtn.addEventListener("click", openMonitor);
   }
   warmupAdmin();
 
-  // Warmup secret mail
   (function warmSecretMail(){
     const ping = () => { if(document.hidden) return; try{ window.__srankApi("getSecretMessages", {_ts:Date.now()}, 8000).catch(()=>{}); }catch(_){} };
     setTimeout(ping, 800);
@@ -3487,9 +3441,6 @@ els.monitorBtn.addEventListener("click", openMonitor);
     }
   }
 
-  // =========================================================
-  // NAME WHEEL (dùng factory)
-  // =========================================================
   const viewport = $("attendanceNameWheelViewport");
   const itemsBox = $("attendanceNameWheelItems");
   const wheelOverlay = $("attendanceNameWheel");
@@ -3617,7 +3568,6 @@ els.monitorBtn.addEventListener("click", openMonitor);
     leaveCount.textContent = leave;
   }
 
-  // Event wiring
   grid.addEventListener("click", e => {
     const dayEl = e.target.closest(".att-day[data-day]");
     if(!dayEl) return;
@@ -3746,7 +3696,6 @@ els.monitorBtn.addEventListener("click", openMonitor);
     renderAttendanceIfCheckinMatches();
   });
 
-  // Expose top data helper (dùng bởi BXH top nếu cần)
   window.__getAttendanceTopDataForMonth = async function(monthNumber, force = false){
     const now = new Date();
     const year = now.getFullYear();
@@ -3773,324 +3722,14 @@ els.monitorBtn.addEventListener("click", openMonitor);
   };
 })();
 
-
-/* ===== HÒM THƯ BÍ MẬT ===== */
-(function(){
-"use strict";
-const K = "srank_secret_mail_sender_v1";
-const ANON = "Ẩn danh";
-const MAX = 200;
-const $ = id => document.getElementById(id);
-const page = $("secretMailPage"), back = $("smPageBack"), refresh = $("smPageRefresh");
-const input = $("smPageInput"), counter = $("smPageCounter");
-const check = $("smPageSignCheckbox"), senderBtn = $("smPageSenderBtn"), senderName = $("smPageSenderName");
-const send = $("smPageSendBtn"), statusEl = $("smPageStatus"), count = $("smWallCount");
-const stage = $("smFloatStage"), empty = $("smCanvasEmpty"), navBtn = $("secretMailBtn");
-if(!page || !stage || !input || !send) return;
-
-const CACHE_KEY = "srank_secret_mail_cache_v1";
-const CACHE_TTL = 5 * 60 * 1000;
-let sender = "", open = false, wheel = null, wheelIndex = 0, wheelOffset = 0, wheelDrag = false, wheelStartY = 0;
-let mailAutoTimer = null, lastRenderedRowsKey = "";
-const AUTO_REFRESH_MS = 5000;
-let _mailCurrentRows = [], _mailHasLoadedOnce = false;
-
-const loadMailCache = () => {
-  try{
-    const raw = localStorage.getItem(CACHE_KEY);
-    if(!raw) return null;
-    const data = JSON.parse(raw);
-    if(!data || !Array.isArray(data.rows)) return null;
-    if(Date.now() - (data.ts || 0) > CACHE_TTL) return null;
-    return data.rows;
-  }catch(_){ return null; }
-};
-const saveMailCache = rows => { try{ localStorage.setItem(CACHE_KEY, JSON.stringify({rows, ts:Date.now()})); }catch(_){} };
-const clearMailCache = () => { try{ localStorage.removeItem(CACHE_KEY); }catch(_){} };
-const rowsSignature = rows => (rows || []).map(r => `${r.name}|${r.message}|${r.time}`).join("::");
-const rowKey = r => `${r.name}|${r.message}|${r.time}`;
-const sortMailRows = rows => (rows || []).slice().sort((a, b) => String(b.time||"").localeCompare(String(a.time||"")));
-
-function renderListIfChanged(rows){
-  if(rows === null || typeof rows === "undefined") return false;
-  const sorted = sortMailRows(rows);
-  const sig = rowsSignature(sorted);
-  if(!_mailHasLoadedOnce){
-    _mailHasLoadedOnce = true;
-    lastRenderedRowsKey = sig;
-    _mailCurrentRows = sorted;
-    renderList(sorted);
-    return true;
-  }
-  if(sig === lastRenderedRowsKey) return false;
-  const oldKeys = new Set(_mailCurrentRows.map(rowKey));
-  const newOnes = sorted.filter(r => !oldKeys.has(rowKey(r)));
-  const removedAny = _mailCurrentRows.some(r => !sorted.some(s => rowKey(s) === rowKey(r)));
-  if(newOnes.length > 0 && !removedAny){
-    const list = stage.querySelector(".sm-wall-list");
-    if(list){
-      empty.classList.remove("show");
-      const oldHeight = list.offsetHeight;
-      const scrollBefore = stage.scrollTop;
-      for(let i = newOnes.length - 1; i >= 0; i--){
-        const m = newOnes[i];
-        const card = wallCard(m, 0);
-        card.classList.add("sm-wall-card-enter");
-        card.addEventListener("animationend", () => card.classList.remove("sm-wall-card-enter"), {once:true});
-        list.insertBefore(card, list.firstChild);
-      }
-      const addedHeight = list.offsetHeight - oldHeight;
-      if(scrollBefore > 2 && addedHeight > 0) stage.scrollTop = scrollBefore + addedHeight;
-      count.textContent = `${sorted.length} lời nhắn`;
-      _mailCurrentRows = sorted;
-      lastRenderedRowsKey = sig;
-      return true;
-    }
-  }
-  const scrollTop = stage.scrollTop;
-  const wasAtTop = scrollTop < 40;
-  _mailCurrentRows = sorted;
-  lastRenderedRowsKey = sig;
-  renderList(sorted);
-  stage.scrollTop = wasAtTop ? 0 : scrollTop;
-  return true;
-}
-
-function startMailAutoRefresh(){
-  stopMailAutoRefresh();
-  if(!open) return;
-  mailAutoTimer = setInterval(async () => {
-    if(!open || document.hidden) return;
-    try{ const rows = await fetchMessages(true); if(open && rows) renderListIfChanged(rows); }catch(_){}
-  }, AUTO_REFRESH_MS);
-}
-function stopMailAutoRefresh(){ if(mailAutoTimer){ clearInterval(mailAutoTimer); mailAutoTimer = null; } }
-const getNames = () => {
-  try{ return typeof window.__getChecklistNames === "function" ? (window.__getChecklistNames() || []).map(x => String(x).trim()).filter(Boolean) : []; }catch(_){ return []; }
-};
-const saveSender = x => { try{ x ? localStorage.setItem(K, x) : localStorage.removeItem(K); }catch(_){} };
-try{ sender = String(localStorage.getItem(K) || "").trim(); }catch(_){}
-function renderSender(){
-  check.checked = !!sender;
-  senderName.textContent = sender || ANON;
-  senderBtn.classList.toggle("empty", !sender);
-}
-renderSender();
-function setStatus(x, t){
-  statusEl.textContent = String(x || "").trim();
-  statusEl.className = "sm-status" + (t ? " " + t : "");
-}
-
-function buildWheel(){
-  if(wheel) return wheel;
-  wheel = document.createElement("div");
-  wheel.id = "smWheelOverlay";
-  wheel.style.cssText = "position:fixed;inset:0;z-index:45000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(80,60,80,.32);backdrop-filter:blur(14px)";
-  wheel.innerHTML = '<div class="sm-wheel-panel" role="dialog" aria-modal="true"><div class="sm-wheel-head"><div class="sm-wheel-title">Chọn tên của bạn</div><button type="button" class="sm-wheel-close">×</button></div><div class="sm-wheel-viewport wheel-viewport"><div class="wheel-selection"></div><div class="sm-wheel-items wheel-items"></div></div><div class="sm-wheel-hint">Vuốt lên / xuống để chọn</div><button type="button" class="sm-wheel-confirm">Xác nhận</button></div>';
-  document.body.appendChild(wheel);
-  const vp = wheel.querySelector(".sm-wheel-viewport");
-  const itemsBox = wheel.querySelector(".sm-wheel-items");
-  const inner = createWheel({viewport: vp, itemsBox, itemHeight: 58, itemClass: "sm-wheel-item"});
-  inner.attach();
-  wheel._innerWheel = inner;
-  wheel.querySelector(".sm-wheel-close").onclick = closeWheel;
-  wheel.onclick = e => { if(e.target === wheel) closeWheel(); };
-  wheel.querySelector(".sm-wheel-confirm").onclick = () => {
-    const ns = getNames();
-    if(ns.length){ sender = ns[inner.getIndex()] || ""; saveSender(sender); renderSender(); closeWheel(); }
-  };
-  return wheel;
-}
-function renderWheel(){
-  if(!wheel) return;
-  const ns = getNames();
-  wheel._innerWheel.setItems(ns);
-  wheel._innerWheel.setIndex(wheelIndex);
-}
-function openWheel(){
-  const ns = getNames();
-  if(!ns.length){ setStatus("Đang tải danh sách…"); setTimeout(openWheel, 1200); return; }
-  buildWheel();
-  const i = sender ? ns.indexOf(sender) : -1;
-  wheelIndex = i >= 0 ? i : 0;
-  wheel._innerWheel.setIndex(wheelIndex);
-  wheel.style.display = "flex";
-  requestAnimationFrame(() => wheel._innerWheel.schedule());
-}
-function closeWheel(){ if(wheel) wheel.style.display = "none"; }
-check.addEventListener("change", () => {
-  if(check.checked && !sender) openWheel();
-  else if(!check.checked){ sender = ""; saveSender(""); renderSender(); }
-});
-senderBtn.onclick = e => { e.preventDefault(); e.stopPropagation(); check.checked = true; openWheel(); };
-
-function updateCounter(){
-  counter.textContent = `${input.value.length}/${MAX}`;
-  counter.classList.toggle("warn", input.value.length > MAX * .9);
-}
-input.addEventListener("input", updateCounter);
-updateCounter();
-const esc = x => String(x || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-
-function heart(){
-  const r = document.querySelector(".sm-composer")?.getBoundingClientRect();
-  if(!r) return;
-  const e = ["♡", "💗", "💖", "💌", "♥", "🌸"];
-  const frag = document.createDocumentFragment();
-  const timeouts = [];
-  for(let i = 0; i < 10; i++){
-    timeouts.push(setTimeout(() => {
-      const x = document.createElement("div");
-      x.className = "sm-heart-burst";
-      x.textContent = e[i % e.length];
-      x.style.left = r.left + r.width / 2 + (Math.random() - .5) * r.width * .7 + "px";
-      x.style.top = r.top + r.height / 2 + (Math.random() - .5) * 30 + "px";
-      x.style.setProperty("--sm-dx", (Math.random() - .5) * 200 + "px");
-      x.style.setProperty("--sm-dy", -(innerHeight * .85 + Math.random() * 120) + "px");
-      x.style.setProperty("--sm-rot", (Math.random() * 40 - 20) + "deg");
-      document.body.appendChild(x);
-      setTimeout(() => x.remove(), 3300);
-    }, i * 90 + Math.random() * 80));
-  }
-}
-
-async function sendMessage(){
-  const text = String(input.value || "").trim();
-  if(!text){ setStatus("Nhập gì đó đã nha ♡", "error"); input.focus(); return; }
-  if(text.length > MAX){ setStatus(`Tối đa ${MAX} ký tự`, "error"); return; }
-  if(check.checked && !sender){ setStatus("Chọn tên trước đã nhé", "error"); openWheel(); return; }
-  send.disabled = true;
-  setStatus("Đang gửi...");
-  try{
-    const name = check.checked && sender ? sender : ANON;
-    const time = new Intl.DateTimeFormat("vi-VN", {timeZone:"Asia/Ho_Chi_Minh", hour:"2-digit", minute:"2-digit", hour12:false}).format(new Date());
-    const r = await window.__srankApi("sendSecretMessage", {name, message:text, clientTime:time}, 12000);
-    if(!r?.ok) throw Error(r?.error || "Không gửi được");
-    setStatus("Gửi xong rồi ♡", "success");
-    heart();
-    input.value = "";
-    updateCounter();
-    clearMailCache();
-    setTimeout(async () => {
-      try{ const rows = await fetchMessages(true); if(rows) renderListIfChanged(rows); }catch(_){}
-    }, 150);
-  }catch(e){
-    setStatus(e.message || "Không gửi được, thử lại nha", "error");
-  }finally{ send.disabled = false; }
-}
-send.onclick = e => { e.preventDefault(); e.stopPropagation(); sendMessage(); };
-input.addEventListener("keydown", e => { if((e.ctrlKey || e.metaKey) && e.key === "Enter"){ e.preventDefault(); sendMessage(); } });
-
-function fetchMessages(force = false){
-  if(!force){
-    const cached = loadMailCache();
-    if(cached){
-      fetchMessages(true).then(rows => { if(open && rows) renderListIfChanged(rows); }).catch(() => {});
-      return Promise.resolve(cached);
-    }
-  }
-  return window.__srankApi("getSecretMessages", {_ts:Date.now()}, 10000).then(r => {
-    if(!r?.ok || !Array.isArray(r.data?.rows)) return null;
-    const rows = r.data.rows.map(x => ({
-      name: String(x?.name || "").trim() || ANON,
-      message: String(x?.message || "").trim(),
-      time: String(x?.clientTime || "").trim()
-    })).filter(x => x.message);
-    saveMailCache(rows);
-    return rows;
-  }).catch(() => null);
-}
-
-function wallCard(m, i){
-  const el = document.createElement("article");
-  const cs = ["color-pink", "color-mint", "color-yellow", "color-lilac"];
-  el.className = "sm-wall-card " + cs[i % 4];
-  el.innerHTML = `<div class="card-avatar"></div><div class="card-body"><div class="card-head"><span class="card-name"></span><span class="card-time"></span></div><div class="card-text"></div></div>`;
-  el.querySelector(".card-avatar").textContent = m.name === ANON ? "?" : m.name.charAt(0).toUpperCase();
-  el.querySelector(".card-name").textContent = m.name;
-  el.querySelector(".card-time").textContent = m.time;
-  el.querySelector(".card-text").textContent = m.message;
-  return el;
-}
-
-function renderList(rows){
-  lastRenderedRowsKey = rowsSignature(rows);
-  stage.dataset.mode = "wall";
-  count.textContent = rows.length ? `${rows.length} lời nhắn` : "Chưa có lời nhắn";
-  if(!rows.length){ stage.innerHTML = ""; empty.classList.add("show"); return; }
-  empty.classList.remove("show");
-  const list = document.createElement("div");
-  list.className = "sm-wall-list";
-  const frag = document.createDocumentFragment();
-  rows.forEach((m, i) => frag.appendChild(wallCard(m, i)));
-  list.appendChild(frag);
-  stage.innerHTML = "";
-  stage.appendChild(list);
-}
-
-function renderLoading(){
-  stage.dataset.mode = "wall";
-  stage.innerHTML = '<div class="sm-wall-loading">Đang tải lời nhắn…</div>';
-  empty.classList.remove("show");
-}
-
-async function openPage(){
-  if(open) return;
-  open = true;
-  page.classList.add("show");
-  document.body.style.overflow = "hidden";
-  if(typeof window.syncQuickTools === "function") window.syncQuickTools();
-  const cached = loadMailCache();
-  const hasList = stage.querySelector(".sm-wall-list");
-  if(!hasList && cached && cached.length) renderListIfChanged(cached);
-  else if(!hasList) renderLoading();
-  fetchMessages(true).then(rows => {
-    if(!open) return;
-    if(rows) renderListIfChanged(rows);
-    startMailAutoRefresh();
-  }).catch(() => startMailAutoRefresh());
-}
-function closePage(){
-  open = false;
-  page.classList.remove("show");
-  document.body.style.overflow = "";
-  stopMailAutoRefresh();
-  if(typeof window.syncQuickTools === "function") window.syncQuickTools();
-}
-navBtn?.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); openPage(); });
-back?.addEventListener("click", closePage);
-refresh?.addEventListener("click", async () => {
-  const icon = refresh.querySelector("span") || refresh;
-  const oldIcon = icon.textContent;
-  icon.textContent = "↻";
-  icon.style.animation = "attSpin 1s linear infinite";
-  try{
-    const rows = await fetchMessages(true);
-    if(rows && Array.isArray(rows)){ renderListIfChanged(rows); setStatus("Đã làm mới ✓", "success"); }
-    else setStatus("Server đang khởi động, giữ list cũ", "error");
-  }catch(_){ setStatus("Không tải được — giữ list cũ", "error"); }
-  finally{ icon.style.animation = ""; icon.textContent = oldIcon; }
-});
-document.addEventListener("keydown", e => {
-  if(e.key !== "Escape") return;
-  if(wheel && wheel.style.display === "flex"){ closeWheel(); return; }
-  if(open) closePage();
-});
-document.addEventListener("visibilitychange", () => {
-  if(document.hidden || !open) return;
-  fetchMessages(true).then(rows => { if(open && rows) renderListIfChanged(rows); }).catch(() => {});
-});
-window.__openSecretMailPage = openPage;
-window.__closeSecretMailPage = closePage;
-window.__refreshSecretMail = fetchMessages;
-})();
-
 if("serviceWorker" in navigator){
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js", {scope:"/"}).catch(err => console.warn("[PWA] SW failed:", err));
   });
 }
 </script>
-  <script src="js/lunch.js" defer></script>
-  <script src="js/kdv-rules.js" defer></script>
+<script src="js/lunch.js" defer></script>
+<script src="js/kdv-rules.js" defer></script>
+<script src="js/secret-mail.js" defer></script>
 </body>
+</html>
