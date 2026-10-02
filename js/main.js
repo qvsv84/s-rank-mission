@@ -5,7 +5,7 @@
   "use strict";
 
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJ1ebyNNe7fxlNR6TObBYebp7zRORGZTO0kTzlFl-S39I2vIJjDx9h0quV84od9JAfeg/exec";
-  const CACHE_SCHEMA_VERSION = 6; // bump version vì đổi format state
+  const CACHE_SCHEMA_VERSION = 6;
   const CACHE_KEY = `srank_check_v${CACHE_SCHEMA_VERSION}`;
   const ADMIN_TOKEN_KEY = "srank_admin_token_v1";
   const ADMIN_SESSION_TTL = 8 * 60 * 60 * 1000;
@@ -291,7 +291,6 @@
   let current = 0, q1Opened = false;
   let _lastUserActionAt = 0;
   const _recentSelfChecks = new Map();
-  // FIX #3: theo dõi checkin đang chờ server xác nhận → không bị auto-sync overwrite
   const _pendingChecks = new Set();
   let _lastLockCheck = 0, _cachedLocked = false;
   let _dataLoadResolve;
@@ -303,7 +302,6 @@
   let resetTime = "00:00", resetTimer = null;
   let checklistLockTime = "21:00";
   let initialSheetLoaded = false;
-  // FIX #2: adminUnlocked sync với AdminSession
   let adminUnlocked = AdminSession.isValid();
   let monitorLinks = {}, editingMonitorName = "";
 
@@ -592,7 +590,6 @@
       return full;
     }
 
-    // FIX: cho phép rollback khi server fail
     function removeLocal(localId){
       const idx = events.findIndex(e => e.id === localId);
       if(idx < 0) return;
@@ -729,12 +726,16 @@
       overlay.setAttribute("aria-hidden","false");
       render(); markAllSeen();
       syncFromServer();
+      // FIX: ẩn nút chat + FAB khác khi mở Live Feed
+      if (typeof window.syncQuickTools === "function") window.syncQuickTools();
     };
     const close = () => {
       const overlay = document.getElementById("liveFeedOverlay");
       if(!overlay) return;
       overlay.classList.remove("show");
       overlay.setAttribute("aria-hidden","true");
+      // FIX: hiện lại nút chat + FAB khác khi đóng Live Feed
+      if (typeof window.syncQuickTools === "function") window.syncQuickTools();
     };
 
     function init(){
@@ -814,7 +815,6 @@
     els.checklistBody.appendChild(frag);
   }
 
-  // FIX #3: không overwrite pending checks
   function smoothUpdateChecklist(newData){
     if(!names.length) return false;
     if(names.length !== newData.names.length) return false;
@@ -826,7 +826,6 @@
     const mergedChecked = newData.checked.slice();
     const mergedTimes = newData.times.slice();
     for(let i = 0; i < names.length; i++){
-      // FIX: nếu index đang chờ server xác nhận (pending), KHÔNG ghi đè
       if(_pendingChecks.has(names[i])){
         mergedChecked[i] = oldChecked[i];
         mergedTimes[i] = oldTimes[i];
@@ -875,9 +874,7 @@
   const buildWheel = () => mainWheel.setItems(names);
 
   async function loadData(showError = true, force = false){
-    // FIX #6: nếu đang sync, chờ promise hiện tại thay vì return false im lặng
     if(syncInFlight){
-      // Nếu user bấm sync thủ công (force=true), báo cho họ biết
       if(force) setStatus("Đang đồng bộ, vui lòng chờ...");
       return false;
     }
@@ -930,7 +927,6 @@
         }
       }
 
-      // Merge: giữ pending checks local, không để server null/empty ghi đè
       const mergedChecks = serverChecks.slice();
       const mergedTimes = serverTimes.slice();
       if(initialSheetLoaded && names.length === serverNames.length){
@@ -945,8 +941,7 @@
       names = serverNames;
       points = serverPoints;
       ranks = serverRanks;
-      if(!initialSheetLoaded || force){ checked = mergedChecks; times = mergedTimes; }
-      else { checked = mergedChecks; times = mergedTimes; }
+      checked = mergedChecks; times = mergedTimes;
       initialSheetLoaded = true;
       lastAutoSyncAt = Date.now();
       window.syncAttendanceEmployees?.();
@@ -996,10 +991,7 @@
       for(const [k,v] of _recentSelfChecks){ if(now-v > SELF_CHECK_IGNORE_MS*2) _recentSelfChecks.delete(k); }
     }
 
-    // FIX #3: đánh dấu pending trước khi push
     _pendingChecks.add(name);
-
-    // LiveFeed: push local trước, nhưng giữ ref để có thể rollback
     const liveEvent = LiveFeed.push({type:"check", name});
 
     const clientTime = hhmm();
@@ -1015,7 +1007,6 @@
       const r = await window.__srankApi("checkin", {name, clientTime, clientEpoch:String(Date.now())}, TIMEOUT.NORMAL);
       if(!r.ok) throw new Error(r.error || "Checkin thất bại");
 
-      // Success → cập nhật state từ server
       if(r.data && Number.isFinite(Number(r.data.points))){
         points[index] = Number(r.data.points);
         ranks[index] = normalizeServerRank(r.data.rank, points[index]);
@@ -1023,7 +1014,6 @@
       if(r.data && /^([01]\d|2[0-3]):[0-5]\d$/.test(String(r.data.time || ""))){
         times[index] = String(r.data.time);
       }
-      // Gỡ pending khi server đã xác nhận
       _pendingChecks.delete(name);
       cacheSave();
       updateChecklistRow(index);
@@ -1031,7 +1021,6 @@
       try{ window.dispatchEvent(new CustomEvent("checkinDone", {detail:{name, time:times[index] || clientTime}})); }catch(_){}
       try{ localStorage.setItem("srank_last_checkin", JSON.stringify({name, time:times[index] || clientTime, date:todayKey()})); }catch(_){}
     }catch(err){
-      // FIX #1: ROLLBACK khi server fail
       _pendingChecks.delete(name);
       checked[index] = prevChecked;
       times[index] = prevTime;
@@ -1039,7 +1028,6 @@
       cacheSave();
       if(!updateChecklistRow(index)) renderChecklist(true);
       if(!q1Opened && !els.checklistPanel.classList.contains("show")) renderLandingState();
-      // Rollback LiveFeed nếu event còn pending (server chưa ack)
       if(liveEvent && liveEvent._pending){ try{ LiveFeed.removeLocal(liveEvent.id); }catch(_){} }
       const msg = String(err?.message || "").trim();
       setStatus(msg ? `Không ghi được: ${msg}` : "Không ghi được — kiểm tra mạng");
@@ -1410,7 +1398,6 @@
     applyChecklistFilter();
   }
 
-  // FIX #4: update points từ server sau adminSetCheck
   async function adminToggleCheck(i, btn){
     const next = !checked[i];
     btn.disabled = true; btn.textContent = "...";
@@ -1421,7 +1408,6 @@
       if(!r.ok) throw new Error(r.error || "Không cập nhật được");
       checked[i] = next;
       times[i] = next ? ((r.data && r.data.time) || hhmm()) : "";
-      // FIX: update points/ranks nếu server trả về
       if(r.data && Number.isFinite(Number(r.data.points))){
         points[i] = Number(r.data.points);
         ranks[i] = normalizeServerRank(r.data.rank, points[i]);
@@ -1467,7 +1453,6 @@
 
   function openAdminSettings(){
     if(!AdminSession.isValid()){
-      // FIX: sync adminUnlocked với session thực tế
       closeAdminPassword();
       adminUnlocked = false;
       openAdminPassword();
@@ -1519,8 +1504,6 @@
     els.adminPasswordOverlay.setAttribute("aria-hidden","true");
   }
   let _adminVerifying = false;
-
-  // FIX #5: verifyAdmin chờ server token trước khi mở admin page
   async function verifyAdmin(){
     if(_adminVerifying) return;
     const rl = AdminSession.checkRateLimit();
@@ -1531,11 +1514,8 @@
     els.adminPasswordOk.disabled = true;
     els.adminPasswordOk.textContent = "⏳ Đang mở…";
     try{
-      // 1. Kiểm tra local hash trước (nếu có) → quyết định có gửi lên server không
       const localOk = await AdminSession.checkPasswordLocal(password);
 
-      // Nếu local hash khớp → vẫn PHẢI verify với server để lấy token
-      // (không mở admin page khi chưa có token server, tránh trạng thái nửa vời)
       if(localOk === false){
         AdminSession.recordFailure();
         els.adminPasswordMsg.textContent = "Mật khẩu không đúng.";
@@ -1549,9 +1529,7 @@
         : "Đang kết nối server (lần đầu có thể mất 10-15s)…";
 
       await verifyAdminServer(password);
-      // Nếu tới đây verifyAdminServer đã gọi openAdminSettings
     }catch(_){
-      // verifyAdminServer đã set message
       if(!els.adminPasswordMsg.textContent) els.adminPasswordMsg.textContent = "Không kết nối được server. Kiểm tra mạng rồi thử lại.";
     }finally{
       _adminVerifying = false;
@@ -1576,7 +1554,6 @@
       await AdminSession.rememberPassword(password);
       els.adminPasswordInput.value = "";
       els.adminPasswordMsg.textContent = "";
-      // Bây giờ mới mở admin page
       openAdminSettings();
     }catch(e){
       if(els.adminPage.classList.contains("show") && !AdminSession.isValid()){
@@ -1679,6 +1656,7 @@
       document.getElementById("attendanceNameWheel")?.classList.contains("show") ||
       document.getElementById("attendancePage")?.classList.contains("show") ||
       document.getElementById("lunchPage")?.classList.contains("show") ||
+      document.getElementById("liveFeedOverlay")?.classList.contains("show") ||
       document.getElementById("secretMailPage")?.classList.contains("show");
     els.secondaryNav.classList.toggle("nav-hidden", otherOpen);
     els.secondaryNav.setAttribute("aria-hidden", otherOpen ? "true" : "false");
