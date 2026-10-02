@@ -1,14 +1,10 @@
 /* =========================================================
    SERVICE WORKER — Đảo Mèo / S Rank
-   - Precache app shell (HTML, CSS, JS, icon, manifest)
-   - Network-first cho API Google Script (không cache để tránh stale data)
-   - Cache-first cho static assets
-   - Stale-while-revalidate cho CSS/JS để update mượt
-   - Auto skipWaiting + clients.claim để update tức thì
+   Version: v1.2.0 — Minify CSS + main.js
    ========================================================= */
 "use strict";
 
-const SW_VERSION = "v1.1.0";
+const SW_VERSION = "v1.2.0";
 const CACHE_NAME = `srank-cache-${SW_VERSION}`;
 const RUNTIME_CACHE = `srank-runtime-${SW_VERSION}`;
 
@@ -19,9 +15,9 @@ const PRECACHE_URLS = [
   "/manifest.json",
   "/icon.svg",
 
-  "/css/main.css",
+  "/css/main.min.css",
 
-  "/js/main.js",
+  "/js/main.min.js",
   "/js/attendance.js",
   "/js/bxh-top.js",
   "/js/lunch.js",
@@ -47,7 +43,6 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
-      // addAll fail nếu 1 URL 404 → dùng add riêng từng cái để không fail toàn bộ
       const results = await Promise.allSettled(
         PRECACHE_URLS.map((url) =>
           cache.add(new Request(url, { cache: "reload" }))
@@ -77,7 +72,6 @@ self.addEventListener("activate", (event) => {
           .map((k) => caches.delete(k))
       );
 
-      // Bật điều hướng preload nếu browser hỗ trợ
       if (self.registration.navigationPreload) {
         try {
           await self.registration.navigationPreload.disable();
@@ -117,13 +111,11 @@ function isStaticAsset(request) {
          d === "font" || d === "manifest" || d === "worker";
 }
 
-// Giới hạn số entry runtime cache để tránh phình bộ nhớ
 async function trimRuntimeCache(maxEntries = 60) {
   try {
     const cache = await caches.open(RUNTIME_CACHE);
     const keys = await cache.keys();
     if (keys.length <= maxEntries) return;
-    // Xoá các entry cũ nhất (theo thứ tự insertion)
     const excess = keys.length - maxEntries;
     for (let i = 0; i < excess; i++) {
       await cache.delete(keys[i]);
@@ -137,7 +129,6 @@ async function trimRuntimeCache(maxEntries = 60) {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 
-  // Chỉ xử lý GET
   if (request.method !== "GET") return;
 
   let url;
@@ -147,10 +138,9 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Bỏ qua scheme không mong muốn
   if (url.protocol !== "http:" && url.protocol !== "https:") return;
 
-  // 1) API Google Script → network-only, không cache
+  // 1) API Google Script → network-only
   if (isApiRequest(url)) {
     event.respondWith(
       fetch(request).catch(() => new Response(
@@ -161,42 +151,38 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 2) HTML navigation → network-first, fallback cache, fallback offline
+  // 2) HTML navigation → network-first
   if (isHtmlRequest(request, url)) {
     event.respondWith(networkFirstHtml(request));
     return;
   }
 
-  // 3) CDN (html2canvas...) → stale-while-revalidate
+  // 3) CDN → stale-while-revalidate
   if (isCdnRequest(url)) {
     event.respondWith(staleWhileRevalidate(request, RUNTIME_CACHE));
     return;
   }
 
-  // 4) Static assets cùng origin (CSS, JS, ảnh, font) → stale-while-revalidate
+  // 4) Static assets cùng origin → stale-while-revalidate
   if (isSameOrigin(url) && isStaticAsset(request)) {
     event.respondWith(staleWhileRevalidate(request, CACHE_NAME));
     return;
   }
 
-  // 5) Mặc định: network-first, fallback cache
+  // 5) Mặc định → network-first
   event.respondWith(networkFirstGeneric(request));
 });
 
 // =========================================================
 // STRATEGIES
 // =========================================================
-
-// HTML: ưu tiên mạng, fallback cache, cuối cùng là offline page
 async function networkFirstHtml(request) {
   const cache = await caches.open(CACHE_NAME);
   try {
     const fresh = await fetch(request);
-    // Chỉ cache nếu response ok và không phải redirect cross-origin
     if (fresh && fresh.ok && fresh.type !== "opaqueredirect") {
       try {
         cache.put(request, fresh.clone());
-        // Cũng cache "/" và "/index.html" để fallback chuẩn
         const url = new URL(request.url);
         if (url.pathname === "/" || url.pathname === "/index.html") {
           cache.put("/index.html", fresh.clone());
@@ -217,7 +203,6 @@ async function networkFirstHtml(request) {
   }
 }
 
-// Generic: network-first, fallback cache
 async function networkFirstGeneric(request) {
   const cache = await caches.open(CACHE_NAME);
   try {
@@ -236,7 +221,6 @@ async function networkFirstGeneric(request) {
   }
 }
 
-// Stale-while-revalidate: trả cache ngay, cập nhật nền
 async function staleWhileRevalidate(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
@@ -267,7 +251,6 @@ self.addEventListener("message", (event) => {
       (async () => {
         const keys = await caches.keys();
         await Promise.all(keys.map((k) => caches.delete(k)));
-        // Báo lại cho client
         event.source?.postMessage?.({ type: "CACHES_CLEARED" });
       })()
     );
