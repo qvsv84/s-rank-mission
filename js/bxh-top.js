@@ -249,7 +249,7 @@
       showCapturePreview(
         imageUrl,
         blob,
-        "📸 BXH TOP đã chụp",
+        "📸 BXH TOP đã chụpp",
         "bxh-top-dao-meo.png",
         "Chrome / Cốc Cốc: bấm Lưu ảnh hoặc nhấn giữ vào ảnh để lưu."
       );
