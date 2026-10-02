@@ -1,14 +1,9 @@
 /* =========================================================
    MAIN — Core app (IIFE #1)
-   Phụ thuộc DOM đã có trong index.html
-   Export qua window.SRank cho các module khác
    ========================================================= */
 (function(){
   "use strict";
 
-  // =========================================================
-  // CONSTANTS
-  // =========================================================
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJ1ebyNNe7fxlNR6TObBYebp7zRORGZTO0kTzlFl-S39I2vIJjDx9h0quV84od9JAfeg/exec";
   const CACHE_SCHEMA_VERSION = 5;
   const CACHE_KEY = `srank_check_v${CACHE_SCHEMA_VERSION}`;
@@ -28,9 +23,6 @@
   const SETTINGS_TTL = 5 * 60 * 1000;
   const ITEM_H = 58;
 
-  // =========================================================
-  // DOM CACHE
-  // =========================================================
   const $ = id => document.getElementById(id);
   const els = {
     space: $("space"), question: $("question"), counter: $("counter"),
@@ -64,9 +56,6 @@
     adminPasswordMsg: $("adminPasswordMsg"), adminPasswordOk: $("adminPasswordOk"), adminPasswordCancel: $("adminPasswordCancel")
   };
 
-  // =========================================================
-  // UTILITIES
-  // =========================================================
   const dtParts = () => new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Ho_Chi_Minh",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
   const todayKey = () => {
     const p = dtParts(); const g = k => p.find(x=>x.type===k)?.value || "";
@@ -77,9 +66,6 @@
   const isValid24hTime = v => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(v||"").trim());
   const throttleRAF = fn => { let s = false, arg; return (...a) => { arg = a; if(s) return; s = true; requestAnimationFrame(() => { s = false; fn(...arg); }); }; };
 
-  // =========================================================
-  // REQUEST LAYER — JSONP
-  // =========================================================
   let requestSeq = 0;
   window.__srankApi = function(action, data = {}, timeout = TIMEOUT.DEFAULT){
     return new Promise((resolve, reject) => {
@@ -106,9 +92,6 @@
     });
   };
 
-  // =========================================================
-  // ADMIN SESSION
-  // =========================================================
   const AdminSession = (() => {
     let _token = null, _expiresAt = 0;
     const HASH_KEY = "srank_admin_pwd_hash_v1";
@@ -168,9 +151,6 @@
   })();
   AdminSession.load();
 
-  // =========================================================
-  // TOAST SYSTEM
-  // =========================================================
   const Toast = (() => {
     let container = null;
     const recent = new Map();
@@ -228,9 +208,6 @@
     return {show, dismiss};
   })();
 
-  // =========================================================
-  // WHEEL FACTORY
-  // =========================================================
   function createWheel({viewport, itemsBox, itemHeight = 58, itemClass = "", onChange}){
     let index = 0, offset = 0, dragging = false, startY = 0, items = [];
     const raf = {id: 0};
@@ -310,9 +287,6 @@
   }
   window.createWheel = createWheel;
 
-  // =========================================================
-  // STATE
-  // =========================================================
   let names = [], checked = [], times = [], points = [], ranks = [];
   let current = 0, q1Opened = false;
   let _lastUserActionAt = 0;
@@ -330,9 +304,6 @@
   let adminUnlocked = false;
   let monitorLinks = {}, editingMonitorName = "";
 
-  // =========================================================
-  // CACHE LAYER
-  // =========================================================
   let _cacheSaveTimer = null, _cacheDirty = false;
   const cacheSchedule = (immediate = false) => {
     _cacheDirty = true;
@@ -367,9 +338,6 @@
     return false;
   }
 
-  // =========================================================
-  // SETTINGS
-  // =========================================================
   async function getSettingsCached(force = false){
     const now = Date.now();
     if(!force && settingsCache && (now - settingsFetchedAt) < SETTINGS_TTL) return settingsCache;
@@ -421,9 +389,6 @@
     }, Math.max(1000, next.getTime()-now.getTime()));
   }
 
-  // =========================================================
-  // AVATARS / MONITOR LINKS
-  // =========================================================
   const MONITOR_FB_LINK = "https://facebook.com/kinya03";
   const MONITOR_DEFAULT_LINKS = {
     "Huong Lye":"https://www.facebook.com/groups/263510030791508/admin_activities/?activity_actor=61593390746763&with_note=false&automatic_action=false",
@@ -493,9 +458,6 @@
     try{ win.location.replace(link); try{ win.focus(); }catch(_){} }catch(_){ try{ win.close(); }catch(_){} setStatus("Không mở được liên kết."); }
   }
 
-  // =========================================================
-  // RANK
-  // =========================================================
   function rankClient(value){
     const score = Number(value) || 0;
     if(score >= 340) return "SSS";
@@ -510,9 +472,6 @@
   }
   window.attendanceRankClient = rankClient;
 
-  // =========================================================
-  // STATUS MESSAGES
-  // =========================================================
   const ROUTINE_TOAST_PATTERNS = [
     /^Đã (cập nhật|đồng bộ|tải dữ liệu)/i,
     /^Đang (dùng|cập nhật|đồng bộ)/i,
@@ -539,24 +498,50 @@
   }
 
   // =========================================================
-  // LIVE FEED
+  // LIVE FEED — Sync realtime qua server
   // =========================================================
   const LiveFeed = (() => {
     const STORAGE_KEY = "srank_live_feed_v1";
     const UNREAD_KEY = "srank_live_feed_unread_v1";
+    const LAST_SYNC_KEY = "srank_live_feed_last_sync_v1";
     const MAX_EVENTS = 60, DEDUP_MS = 60000;
+    const POLL_INTERVAL = 8000;
     let events = [], unreadCount = 0;
+    let _pollTimer = null, _lastServerTs = 0, _syncInFlight = false;
+
     const isValid = e => e && typeof e === "object" && typeof e.type === "string" && typeof e.name === "string" && typeof e.ts === "number";
 
     function load(){
       try{ const arr = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); events = Array.isArray(arr) ? arr.filter(isValid) : []; }catch(_){ events = []; }
       try{ unreadCount = Math.max(0, Number(localStorage.getItem(UNREAD_KEY) || 0) || 0); }catch(_){ unreadCount = 0; }
+      try{ _lastServerTs = Number(localStorage.getItem(LAST_SYNC_KEY) || 0) || 0; }catch(_){ _lastServerTs = 0; }
     }
     function save(){
       try{
         localStorage.setItem(STORAGE_KEY, JSON.stringify(events.slice(0, MAX_EVENTS)));
         localStorage.setItem(UNREAD_KEY, String(unreadCount));
+        localStorage.setItem(LAST_SYNC_KEY, String(_lastServerTs));
       }catch(_){}
+    }
+
+    function formatTsToTime(ts){
+      const d = new Date(ts);
+      return String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+    }
+
+    async function pushToServer(ev){
+      const api = window.__srankApi || (window.SRank && window.SRank.api);
+      if(!api) return null;
+      try{
+        const r = await api("pushLiveEvent", {
+          type: ev.type,
+          name: ev.name,
+          meta: JSON.stringify(ev.meta || {}),
+          clientTs: String(Date.now())
+        }, 12000);
+        if(!r || !r.ok) return null;
+        return r.data || null;
+      }catch(_){ return null; }
     }
 
     function push(ev){
@@ -564,28 +549,96 @@
       const now = Date.now();
       const time = ev.time || hhmm();
 
-      // skipDedup: true → bỏ qua check trùng (lunch: ai quay cũng hiện)
       if (!ev.skipDedup){
         const dup = events.find(e => e.type === ev.type && e.name === ev.name && (now - e.ts) < DEDUP_MS);
-        if(dup){ dup.ts = now; dup.time = time; if(ev.meta) dup.meta = ev.meta; save(); render(); return dup; }
+        if(dup){
+          dup.ts = now; dup.time = time;
+          if(ev.meta) dup.meta = ev.meta;
+          save(); render();
+          return dup;
+        }
       }
 
+      const localId = "local_" + now + "_" + Math.random().toString(36).slice(2, 8);
       const full = {
-        id: "ev_" + now + "_" + Math.random().toString(36).slice(2, 8),
+        id: localId,
         type: ev.type,
         name: String(ev.name).slice(0, 60),
         time,
         meta: ev.meta || {},
-        ts: now
+        ts: now,
+        _pending: true
       };
       events.unshift(full);
       if(events.length > MAX_EVENTS) events.length = MAX_EVENTS;
       unreadCount++;
       save(); render(); updateBadge();
+
+      pushToServer(ev).then(function(serverEv){
+        if(!serverEv || !serverEv.id) return;
+        const idx = events.findIndex(e => e.id === localId);
+        if(idx >= 0){
+          events[idx].id = serverEv.id;
+          events[idx].ts = Number(serverEv.ts) || now;
+          events[idx]._pending = false;
+          if(events[idx].ts > _lastServerTs) _lastServerTs = events[idx].ts;
+          save();
+        }
+      }).catch(function(){});
+
       return full;
     }
 
-    function clear(){ events = []; unreadCount = 0; save(); render(); updateBadge(); }
+    async function syncFromServer(){
+      if(_syncInFlight) return;
+      const api = window.__srankApi || (window.SRank && window.SRank.api);
+      if(!api) return;
+      _syncInFlight = true;
+      try{
+        const since = _lastServerTs > 0 ? _lastServerTs - 1000 : 0;
+        const r = await api("getLiveEvents", { since, _ts: Date.now() }, 12000);
+        if(!r || !r.ok) return;
+        const arr = Array.isArray(r.data && r.data.events) ? r.data.events : [];
+        let added = 0;
+        let newest = 0;
+        arr.forEach(function(raw){
+          if(!raw || !raw.id) return;
+          if(events.some(e => e.id === String(raw.id))) return;
+          const ts = Number(raw.ts) || Date.now();
+          events.push({
+            id: String(raw.id),
+            type: String(raw.type || "check"),
+            name: String(raw.name || "Ẩn danh"),
+            time: formatTsToTime(ts),
+            meta: raw.meta || {},
+            ts: ts
+          });
+          added++;
+          if(ts > newest) newest = ts;
+        });
+        if(newest > _lastServerTs) _lastServerTs = newest;
+        if(added > 0){
+          events.sort((a, b) => b.ts - a.ts);
+          if(events.length > MAX_EVENTS) events.length = MAX_EVENTS;
+          unreadCount += added;
+          save(); render(); updateBadge();
+        }
+      }catch(_){}
+      finally{ _syncInFlight = false; }
+    }
+
+    function startPolling(){
+      stopPolling();
+      _pollTimer = setInterval(function(){
+        if(document.hidden) return;
+        syncFromServer();
+      }, POLL_INTERVAL);
+    }
+    function stopPolling(){
+      if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
+    }
+
+    function clear(){ events = []; unreadCount = 0; _lastServerTs = 0; save(); render(); updateBadge(); }
     function markAllSeen(){ if(unreadCount === 0) return; unreadCount = 0; save(); updateBadge(); }
 
     function updateBadge(){
@@ -605,7 +658,6 @@
       }
       return "vừa hoạt động";
     };
-
     const typeIcon = function(ev){
       if (ev.type === "check") return "🌸";
       if (ev.type === "lunch"){
@@ -643,8 +695,8 @@
             lastDay = dl;
           }
           const row = document.createElement("div");
-          row.className = "live-event type-" + ev.type;
-          row.innerHTML = `<div class="ev-icon"></div><div class="ev-body"><div class="ev-name"></div><div class="ev-meta"></div></div><div class="ev-time"></div>`;
+          row.className = "live-event type-" + ev.type + (ev._pending ? " pending" : "");
+          row.innerHTML = '<div class="ev-icon"></div><div class="ev-body"><div class="ev-name"></div><div class="ev-meta"></div></div><div class="ev-time"></div>';
           row.querySelector(".ev-icon").textContent = typeIcon(ev);
           row.querySelector(".ev-name").textContent = ev.name;
           row.querySelector(".ev-meta").textContent = typeLabel(ev);
@@ -655,7 +707,7 @@
         list.appendChild(frag);
       }
       const count = document.getElementById("liveFeedCount");
-      if(count) count.textContent = events.length ? `${events.length} hoạt động` : "Không có hoạt động";
+      if(count) count.textContent = events.length ? (events.length + " hoạt động") : "Không có hoạt động";
     }
 
     const open = () => {
@@ -664,6 +716,7 @@
       overlay.classList.add("show");
       overlay.setAttribute("aria-hidden","false");
       render(); markAllSeen();
+      syncFromServer();
     };
     const close = () => {
       const overlay = document.getElementById("liveFeedOverlay");
@@ -671,14 +724,20 @@
       overlay.classList.remove("show");
       overlay.setAttribute("aria-hidden","true");
     };
+
     function init(){
       load(); updateBadge(); render();
+      setTimeout(syncFromServer, 800);
+      startPolling();
       document.getElementById("liveFeedBtn")?.addEventListener("click", open);
       document.getElementById("liveFeedClose")?.addEventListener("click", close);
       document.getElementById("liveFeedOverlay")?.addEventListener("click", e => { if(e.target && e.target.id === "liveFeedOverlay") close(); });
-      document.getElementById("liveFeedClear")?.addEventListener("click", () => { if(confirm("Xoá toàn bộ lịch sử hoạt động?")) clear(); });
+      document.getElementById("liveFeedClear")?.addEventListener("click", () => { if(confirm("Xoá lịch sử hiển thị trên máy này?\n(Sự kiện trên server vẫn còn)")) clear(); });
+      document.addEventListener("visibilitychange", () => {
+        if(!document.hidden) syncFromServer();
+      });
     }
-    return {push, init, open, close, clear, markAllSeen, updateBadge};
+    return {push, init, open, close, clear, markAllSeen, updateBadge, syncFromServer};
   })();
 
   window.SRank = window.SRank || {};
@@ -701,9 +760,7 @@
     }
     filtered.forEach(p => LiveFeed.push({type:"check", name:p.name, time:p.time || ""}));
   }
-  // =========================================================
-  // CHECKLIST RENDER
-  // =========================================================
+
   let _checklistSignature = "";
   function checklistSig(){ return names.map((n,i) => `${n}|${checked[i]?1:0}|${times[i]||""}`).join("::"); }
   function renderChecklistSkeleton(){
@@ -782,9 +839,6 @@
     return true;
   }
 
-  // =========================================================
-  // MAIN WHEEL
-  // =========================================================
   const mainWheel = createWheel({
     viewport: els.wheelArea.querySelector("#wheelViewport") || els.wheelArea,
     itemsBox: els.itemsBox,
@@ -796,9 +850,6 @@
   mainWheel.setItems = list => { origSetItems(list); setTimeout(() => mainWheel.schedule(), 20); };
   const buildWheel = () => mainWheel.setItems(names);
 
-  // =========================================================
-  // DATA LOADING
-  // =========================================================
   async function loadData(showError = true, force = false){
     if(syncInFlight) return false;
     if(initialSheetLoaded && !force){ renderChecklist(); buildWheel(); renderAdminChecklistEditor(); return true; }
@@ -877,9 +928,6 @@
     }
   }
 
-  // =========================================================
-  // AUTO SYNC
-  // =========================================================
   function restartAutoSync(){
     if(autoSyncTimer){ clearTimeout(autoSyncTimer); autoSyncTimer = null; }
     const interval = els.checklistPanel.classList.contains("show") ? CHECKLIST_SYNC_MS : AUTO_SYNC_MS;
@@ -897,9 +945,6 @@
   }
   const startAutoSync = restartAutoSync;
 
-  // =========================================================
-  // CHECKIN
-  // =========================================================
   async function checkin(name, index){
     if(checked[index] === true && times[index]){ setStatus(`Đã ghi ${times[index]} ✓`); return; }
     _lastUserActionAt = Date.now();
@@ -932,9 +977,6 @@
     }
   }
 
-  // =========================================================
-  // BURST / MESSAGE
-  // =========================================================
   function burst(){
     const f = document.createElement("div"); f.className = "flash"; els.space.appendChild(f);
     setTimeout(() => f.remove(), 700);
@@ -963,9 +1005,6 @@
     if(next) setTimeout(() => { els.message.classList.remove("show"); setTimeout(next, 220); }, duration);
   }
 
-  // =========================================================
-  // CHECKLIST LOCK
-  // =========================================================
   function checklistLockInfo(){
     const parts = new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date());
     const hour = Number(parts.find(p => p.type === "hour")?.value || 0);
@@ -988,9 +1027,6 @@
     _cachedLocked = isChecklistLocked();
   }
 
-  // =========================================================
-  // LANDING STATE
-  // =========================================================
   let _lastTop3Signature = "";
   const top3Signature = list => list.map(p => `${p.name}|${p.time}|${getAvatarUrl(p.name)}`).join("::");
 
@@ -1093,9 +1129,6 @@
     els.question.style.pointerEvents = locked ? "none" : "auto";
   }
 
-  // =========================================================
-  // QUESTION 1 / 2
-  // =========================================================
   function openQuestion1(e){
     e?.preventDefault();
     if(isChecklistLocked()){ renderLandingState(); return; }
@@ -1172,9 +1205,6 @@
     });
   }
 
-  // =========================================================
-  // CAPTURE
-  // =========================================================
   let html2canvasPromise = null;
   function ensureHtml2Canvas(){
     if(typeof html2canvas === "function") return Promise.resolve();
@@ -1253,9 +1283,6 @@
   }
   els.captureBtn.addEventListener("click", captureChecklist);
 
-  // =========================================================
-  // RESET HOME
-  // =========================================================
   function resetHome(){
     document.getElementById("q2answers")?.remove();
     window.BXH?.close?.();
@@ -1277,9 +1304,6 @@
     els.hint.textContent = isChecklistLocked() ? "" : (names.length ? "Chạm vào câu hỏi" : "Đang tải dữ liệu…");
   }
 
-  // =========================================================
-  // ADMIN HELPERS
-  // =========================================================
   let _adminFilter = "all", _adminSearchTerm = "";
   function renderAdminChecklistEditor(){
     if(!els.adminChecklistRows) return;
@@ -1487,9 +1511,6 @@
     }
   }
 
-  // =========================================================
-  // MONITOR
-  // =========================================================
   function renderMonitor(){
     if(!els.monitorBody) return;
     if(!names.length){
@@ -1567,9 +1588,6 @@
     saveMonitorLinks(); closeLinkEditor(); renderMonitor(); setStatus("Đã xoá link riêng ✓");
   }
 
-  // =========================================================
-  // QUICK TOOLS VISIBILITY
-  // =========================================================
   function _syncQuickTools(){
     const otherOpen =
       document.getElementById("kdvRulesOverlay")?.classList.contains("show") ||
@@ -1597,9 +1615,6 @@
   const syncQuickTools = throttleRAF(_syncQuickTools);
   window.syncQuickTools = syncQuickTools;
 
-  // =========================================================
-  // EVENT WIRING
-  // =========================================================
   els.homeBtn.addEventListener("click", () => {
     resetHome();
     syncQuickTools();
@@ -1698,7 +1713,6 @@
     }finally{ els.adminSaveBtn.disabled = false; }
   });
 
-  // Keyboard events
   addEventListener("keydown", e => {
     if(!els.wheelArea.classList.contains("show")) return;
     if(e.key === "ArrowDown"){ e.preventDefault(); mainWheel.setIndex(mainWheel.getIndex() + 1); els.confirm.classList.add("show"); }
@@ -1756,9 +1770,6 @@
     loadData(false, true);
   });
 
-  // =========================================================
-  // PUBLIC API
-  // =========================================================
   window.__getChecklistNames = () => Array.isArray(names) ? names.slice() : [];
   window.__getChecklistState = () => ({
     names: Array.isArray(names) ? names.slice() : [],
@@ -1789,9 +1800,6 @@
     }
   };
 
-  // =========================================================
-  // EXPORTS cho các module con
-  // =========================================================
   window.SRank = window.SRank || {};
   Object.assign(window.SRank, {
     api: window.__srankApi,
@@ -1808,9 +1816,6 @@
     }
   });
 
-  // =========================================================
-  // BOOT
-  // =========================================================
   loadChecklistLockTime();
   els.checklistLockTimeInput.value = checklistLockTime;
 
