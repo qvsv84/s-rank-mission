@@ -37,7 +37,7 @@
     pollInFlight: false,
     isAtBottom: true,
     unread: 0,
-    pendingSends: new Map(), // localId -> {text, name}
+    pendingSends: new Map(),
   };
 
   // =========================================================
@@ -91,7 +91,6 @@
       const saved = String(localStorage.getItem(LAST_PICKED_KEY) || "").trim();
       if (saved) return saved;
     }catch(_){}
-    // fallback: lấy từ checklist state
     try{
       const s = window.__getChecklistState && window.__getChecklistState();
       if (s && Array.isArray(s.names) && s.names.length) return s.names[0];
@@ -172,7 +171,6 @@
 }
 .secret-chat-page.show{display:flex}
 
-/* --- Header --- */
 .sc-header{
   flex:0 0 auto;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;
   padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
@@ -218,7 +216,6 @@
   animation:scPulse 2s ease-in-out infinite;
 }
 
-/* --- Message list --- */
 .sc-list{
   flex:1 1 auto;overflow-y:auto;overflow-x:hidden;
   -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
@@ -237,7 +234,6 @@
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
 }
 
-/* --- Message row --- */
 .sc-row{
   display:flex;gap:8px;align-items:flex-end;
   margin-top:8px;animation:scMsgIn .28s cubic-bezier(.16,.9,.25,1) both;
@@ -300,7 +296,6 @@
   color:#d9663f;letter-spacing:.02em;
 }
 
-/* --- Empty state --- */
 .sc-empty{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:10px;padding:60px 24px;text-align:center;color:#b7a8b8;
@@ -309,7 +304,6 @@
 .sc-empty-title{font-size:16px;font-weight:900;color:#8a9a91}
 .sc-empty-sub{font-size:12px;font-weight:700;color:#b7a8b8;line-height:1.5}
 
-/* --- Scroll-to-bottom button --- */
 .sc-jump-btn{
   position:absolute;right:16px;bottom:88px;z-index:5;
   width:40px;height:40px;border-radius:50%;border:1.5px solid rgba(255,158,199,.4);
@@ -321,12 +315,11 @@
 .sc-jump-btn.show{opacity:1;pointer-events:auto}
 .sc-jump-btn:active{transform:scale(.92)}
 
-/* --- Composer --- */
 .sc-composer{
   flex:0 0 auto;display:flex;gap:8px;align-items:flex-end;
   padding:10px 12px calc(10px + env(safe-area-inset-bottom));
   background:rgba(255,255,255,.96);backdrop-filter:blur(20px) saturate(120%);
-  -webkit-backdrop-filter:blur(20px) saturate(120%);
+  -webkit-backdrop-filter:blur(20pxurate) sat(120%);
   border-top:1px solid rgba(255,158,199,.2);
   box-shadow:0 -4px 24px rgba(255,120,180,.06);
   z-index:10;
@@ -365,7 +358,6 @@
 .sc-send-btn:active{transform:scale(.92)}
 .sc-send-btn:disabled{opacity:.4;pointer-events:none;box-shadow:none}
 
-/* --- Identity picker --- */
 .sc-picker-overlay{
   position:fixed;inset:0;z-index:20600;display:none;align-items:center;justify-content:center;
   padding:18px;background:rgba(17,52,45,.42);
@@ -518,7 +510,6 @@
     if (!force && sig === _lastRenderSig) return;
     _lastRenderSig = sig;
 
-    // Sắp xếp theo ts tăng dần
     const sorted = state.messages.slice().sort((a, b) => a.ts - b.ts);
 
     if (sorted.length === 0){
@@ -540,7 +531,6 @@
     for (let i = 0; i < sorted.length; i++){
       const m = sorted[i];
 
-      // Day divider
       if (!lastTs || !sameDay(lastTs, m.ts)){
         const div = document.createElement("div");
         div.className = "sc-day-divider";
@@ -559,7 +549,6 @@
       row.className = "sc-row" + (isMe ? " me" : "") + (compact ? " compact" : "");
       row.dataset.id = m.id;
 
-      // Avatar
       const av = document.createElement("div");
       av.className = "sc-avatar";
       const avUrl = getAvatar(m.name);
@@ -569,21 +558,17 @@
         av.textContent = getInitial(m.name);
       }
 
-      // Bubble wrap
       const wrap = document.createElement("div");
       wrap.className = "sc-bubble-wrap";
 
-      // Meta (name + time)
       const meta = document.createElement("div");
       meta.className = "sc-meta";
       meta.innerHTML = `<span class="sc-sender">${escapeHtml(m.name || "Ẩn danh")}</span><span class="sc-time">${formatTime(m.ts)}</span>`;
 
-      // Bubble
       const bubble = document.createElement("div");
       bubble.className = "sc-bubble" + (m.pending ? " pending" : "") + (m.failed ? " failed" : "");
       bubble.textContent = m.text;
 
-      // Retry on fail (own messages)
       if (m.failed && isMe){
         bubble.style.cursor = "pointer";
         bubble.addEventListener("click", () => retrySend(m.id), { once: true });
@@ -643,16 +628,16 @@
       const since = state.lastTs > 0 ? state.lastTs - 1000 : 0;
       const r = await api("getSecretMessages", { since, _ts: Date.now() }, 12000);
       if (!r || !r.ok) return;
-      const arr = Array.isArray(r.data?.messages) ? r.data.messages : [];
+      const arr = Array.isArray(r.data && r.data.messages) ? r.data.messages : [];
       let added = 0;
       let newest = 0;
       for (const raw of arr){
-        const id = String(raw?.id || "").trim();
-        const text = String(raw?.text || "").trim();
+        const id = String(raw && raw.id || "").trim();
+        const text = String(raw && raw.text || "").trim();
         if (!id || !text) continue;
         if (state.messages.some(m => m.id === id)) continue;
-        const name = String(raw?.name || "").trim() || "Ẩn danh";
-        const ts = Number(raw?.ts) || Date.now();
+        const name = String(raw && raw.name || "").trim() || "Ẩn danh";
+        const ts = Number(raw && raw.ts) || Date.now();
         state.messages.push({ id, name, text, ts });
         added++;
         if (ts > newest) newest = ts;
@@ -663,11 +648,9 @@
         _lastRenderSig = "";
       }
       if (added > 0){
-        // Nếu page không mở → tăng unread
         if (!state.pageOpen){
-          // đếm tin không phải của mình
           for (const raw of arr){
-            const name = String(raw?.name || "").trim() || "Ẩn danh";
+            const name = String(raw && raw.name || "").trim() || "Ẩn danh";
             if (name !== state.myName) state.unread++;
           }
           saveUnread();
@@ -698,7 +681,6 @@
     const raw = String(text || "").trim();
     if (!raw) return;
     if (!state.myName){
-      // chưa chọn danh tính → mở picker
       openPicker();
       return;
     }
@@ -715,7 +697,6 @@
     renderMessages();
     requestAnimationFrame(() => scrollToBottom(true));
 
- {
     await doSend(localId, raw, state.myName);
   }
 
@@ -735,7 +716,6 @@
         markSendFailed(localId);
         return;
       }
-      // Server trả về tin nhắn chính thức
       const official = r.data || {};
       const idx = state.messages.findIndex(m => m.id === localId);
       if (idx >= 0){
@@ -770,16 +750,15 @@
     const idx = state.messages.findIndex(m => m.id === localId);
     if (idx < 0) return;
     const m = state.messages[idx];
-    const text = info?.text || m.text;
-    const name = info?.name || m.name;
+    const text = info && info.text || m.text;
+    const name = info && info.name || m.name;
     m.pending = true;
     m.failed = false;
     _lastRenderSig = "";
     renderMessages();
-    doSend(localId,      img text, name);
+    doSend(localId, text, name);
   }
-
-  // =========================================================
+// =========================================================
   // IDENTITY PICKER
   // =========================================================
   function openPicker(){
@@ -807,7 +786,6 @@
           saveMyName(n);
           closePicker();
           renderMessages(true);
-          // refresh header sub
           updateHeaderSub();
         });
         list.appendChild(item);
@@ -846,7 +824,8 @@
         fallback.textContent = getInitial(state.myName);
       };
       fallback.style.display = "none";
-    } else.style.display = "none";
+    } else {
+      img.style.display = "none";
       fallback.style.display = "";
       fallback.textContent = getInitial(state.myName);
     }
@@ -857,7 +836,7 @@
     if (!sub) return;
     const names = getAllNames();
     if (names.length > 0){
-      sub.textContent = `${names.length} thành viên`;
+      sub.textContent = names.length + " thành viên";
     } else {
       sub.textContent = "Đang hoạt động";
     }
@@ -892,7 +871,6 @@
     page.setAttribute("aria-hidden", "true");
     state.pageOpen = false;
     document.body.style.overflow = "";
-    // Poll tiếp nhưng chậm (để bắt tin mới cho badge)
     if (typeof window.syncQuickTools === "function") window.syncQuickTools();
   }
 
@@ -909,21 +887,28 @@
       });
     }
 
-    $("scBackBtn")?.addEventListener("click", closePage);
-    $("scComposerAvatar")?.addEventListener("click", openPicker);
-    $("scPickerClose")?.addEventListener("click", closePicker);
-    $("scPickerOverlay")?.addEventListener("click", (e) => {
-      if (e.target && e.target.id === "scPickerOverlay") closePicker();
-    });
+    const backBtn = $("scBackBtn");
+    if (backBtn) backBtn.addEventListener("click", closePage);
 
-    // Send
+    const composerAv = $("scComposerAvatar");
+    if (composerAv) composerAv.addEventListener("click", openPicker);
+
+    const pickerClose = $("scPickerClose");
+    if (pickerClose) pickerClose.addEventListener("click", closePicker);
+
+    const pickerOverlay = $("scPickerOverlay");
+    if (pickerOverlay){
+      pickerOverlay.addEventListener("click", (e) => {
+        if (e.target && e.target.id === "scPickerOverlay") closePicker();
+      });
+    }
+
     const input = $("scInput");
     const sendBtn = $("scSendBtn");
     if (input && sendBtn){
       const refreshSendState = () => {
         const has = input.value.trim().length > 0;
         sendBtn.disabled = !has;
-        // auto-grow
         input.style.height = "auto";
         input.style.height = Math.min(input.scrollHeight, 120) + "px";
       };
@@ -948,7 +933,6 @@
       refreshSendState();
     }
 
-    // Scroll handling
     const list = $("scList");
     if (list){
       list.addEventListener("scroll", () => {
@@ -957,27 +941,33 @@
         updateJumpBtn();
       }, { passive: true });
     }
-    $("scJumpBtn")?.addEventListener("click", () => {
-      state.isAtBottom = true;
-      scrollToBottom(true);
-      updateJumpBtn();
-    });
 
-    // Menu: clear chat local
-    $("scMenuBtn")?.addEventListener("click", () => {
-      const choice = confirm("Xoá lịch sử chat trên thiết bị này?\n(Tin nhắn trên server vẫn còn)");
-      if (choice){
-        state.messages = [];
-        state.lastTs = 0;
-        _lastRenderSig = "";
-        renderMessages(true);
-      }
-    });
+    const jumpBtn = $("scJumpBtn");
+    if (jumpBtn){
+      jumpBtn.addEventListener("click", () => {
+        state.isAtBottom = true;
+        scrollToBottom(true);
+        updateJumpBtn();
+      });
+    }
 
-    // Escape
+    const menuBtn = $("scMenuBtn");
+    if (menuBtn){
+      menuBtn.addEventListener("click", () => {
+        const choice = confirm("Xoá lịch sử chat trên thiết bị này?\n(Tin nhắn trên server vẫn còn)");
+        if (choice){
+          state.messages = [];
+          state.lastTs = 0;
+          _lastRenderSig = "";
+          renderMessages(true);
+        }
+      });
+    }
+
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
-      if ($("scPickerOverlay")?.classList.contains("show")){
+      const picker = $("scPickerOverlay");
+      if (picker && picker.classList.contains("show")){
         closePicker();
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -990,7 +980,6 @@
       }
     });
 
-    // Visibility
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden && state.pageOpen){
         fetchMessages();
@@ -998,9 +987,8 @@
       }
     });
 
-    // Sau khi user check-in đổi danh tính
     window.addEventListener("checkinDone", (e) => {
-      const name = e?.detail?.name;
+      const name = e && e.detail && e.detail.name;
       if (name && name !== state.myName){
         saveMyName(name);
       }
@@ -1017,13 +1005,11 @@
     state.myName = loadMyName();
     loadUnread();
 
-    // Warmup: chạy 1 lần để đồng bộ tin + đếm unread
     setTimeout(() => {
       fetchMessages();
       updateFabBadge();
     }, 800);
 
-    // Poll nền 15s để cập nhật badge
     setInterval(() => {
       if (state.pageOpen) return;
       if (document.hidden) return;
