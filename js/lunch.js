@@ -1,5 +1,5 @@
 /* =========================================================
-   LUNCH v2 — Bữa trưa ăn gì? (Bản lột xác + polling)
+   LUNCH v2 — Bữa trưa ăn gì? (Bản lột xác + polling + LiveFeed)
    ========================================================= */
 (function(){
   "use strict";
@@ -13,6 +13,7 @@
   const SPIN_TICK_END_MS = 260;
   const MAX_NAME_LEN = 80;
   const POLL_INTERVAL = 5000;
+  const LAST_PICKED_NAME_KEY = "srank_last_picked_name_v1";
 
   const CATEGORIES = [
     { key: "home", label: "Cơm nhà",  icon: "🏠", desc: "Món cơm, mì, bún khô" },
@@ -83,6 +84,33 @@
       const t = a[i]; a[i] = a[j]; a[j] = t;
     }
     return a;
+  }
+
+  // ============ LUNCH → LIVE FEED ============
+  function getMyName(){
+    try{
+      var saved = String(localStorage.getItem(LAST_PICKED_NAME_KEY) || "").trim();
+      return saved || "Ẩn danh";
+    }catch(_){ return "Ẩn danh"; }
+  }
+
+  function pushLunchToFeed(dish){
+    if (!dish || !dish.name) return;
+    try{
+      var lf = window.SRank && window.SRank.LiveFeed;
+      if (!lf || typeof lf.push !== "function") return;
+      var cat = CATEGORY_MAP[dish.category] || CATEGORY_MAP.home;
+      lf.push({
+        type: "lunch",
+        name: getMyName(),
+        skipDedup: true,
+        meta: {
+          dish: dish.name,
+          category: dish.category,
+          icon: cat.icon
+        }
+      });
+    }catch(e){ console.log("[lunch] push feed error", e); }
   }
 
   // =========================================================
@@ -334,7 +362,6 @@
     page.innerHTML = [
       '<div class="lc-inner">',
         '<div class="lc-shell">',
-
           '<header class="lc-head">',
             '<button type="button" class="lc-icon-btn" id="lcBackBtn" aria-label="Quay lại">←</button>',
             '<div class="lc-head-title">',
@@ -343,7 +370,6 @@
             '</div>',
             '<button type="button" class="lc-icon-btn" id="lcRefreshBtn" aria-label="Tải lại">⟳</button>',
           '</header>',
-
           '<section class="lc-hero" id="lcHero">',
             '<div class="lc-hero-icon" id="lcHeroIcon">🍜</div>',
             '<span class="lc-hero-label">Hôm nay ăn gì?</span>',
@@ -357,27 +383,20 @@
               '</button>',
             '</div>',
           '</section>',
-
           '<div class="lc-modes" id="lcModes"></div>',
-
           '<div class="lc-search">',
             '<span class="lc-search-icon">🔍</span>',
             '<input type="text" class="lc-search-input" id="lcSearchInput" placeholder="Tìm món ăn…" autocomplete="off">',
             '<button type="button" class="lc-search-clear" id="lcSearchClear" aria-label="Xoá tìm kiếm">×</button>',
           '</div>',
-
           '<div class="lc-section">',
             '<span class="lc-section-title">Danh sách món</span>',
             '<span class="lc-section-count" id="lcSectionCount">0 món</span>',
           '</div>',
-
           '<div class="lc-grid" id="lcGrid"></div>',
-
         '</div>',
       '</div>',
-
       '<button type="button" class="lc-fab" id="lcAddFab" aria-label="Thêm món">+</button>',
-
       '<div class="lc-sheet-overlay" id="lcSheetOverlay" aria-hidden="true">',
         '<div class="lc-sheet" id="lcSheet" role="dialog" aria-modal="true">',
           '<div class="lc-sheet-handle"></div>',
@@ -460,7 +479,6 @@
     }
 
     var filtered = getFilteredDishes();
-
     if (countEl) countEl.textContent = filtered.length + " món";
 
     if (filtered.length === 0){
@@ -525,7 +543,7 @@
   }
 
   // =========================================================
-  // SPIN
+  // SPIN  (push LiveFeed khi quay xong)
   // =========================================================
   function spin(){
     if (state.spinning) return;
@@ -541,6 +559,7 @@
       renderHero();
       renderDishGrid();
       notify("Chỉ có 1 món — chọn luôn: " + pool[0].name, "success");
+      pushLunchToFeed(pool[0]);
       return;
     }
 
@@ -599,6 +618,8 @@
         renderHero();
         renderDishGrid();
         notify("Chọn: " + finalDish.name, "success");
+        // ✅ PUSH VÀO LIVE FEED
+        pushLunchToFeed(finalDish);
       }
     }
     tick();
