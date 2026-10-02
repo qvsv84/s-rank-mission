@@ -201,7 +201,6 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
 #linkEditorSave{background:linear-gradient(135deg,#4e9d6b,#74c69d)!important}
 #linkEditorClear{color:#ffb3d6!important}
 @media(max-width:420px){#monitorPanel{padding:15px;max-height:calc(100dvh - 22px)}#monitorScroll{max-height:calc(100dvh - 170px)}#monitorTable th,#monitorTable td{padding-left:5px;padding-right:5px}.monitorLinkState{max-width:105px}.monitorCheckBtn,.monitorAssignBtn{padding:6px 7px;font-size:9px}}
-@media (max-width:420px){}
 
 /* ===== ADMIN ===== */
 #adminBtn{color:rgba(255,255,255,.86)}
@@ -226,7 +225,6 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
 #adminActions button{flex:1;min-height:42px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font-weight:700}
 #adminSaveBtn{background:linear-gradient(135deg,#4e9d6b,#74c69d)!important;box-shadow:0 0 18px rgba(78,157,107,.3)}
 #adminResetNowBtn{margin-top:10px;width:100%;min-height:40px;border-radius:999px;border:1px solid rgba(255,120,180,.18);background:rgba(78,157,107,.08);color:#6b8f7b;font-weight:700}
-@media (max-width:420px){}
 
 /* Landing: title and Click here are always separate, centered lines */
 #question{
@@ -678,7 +676,6 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
   #kdvRulesBtn{
     max-width:calc(100vw - 24px);
   }
-  /* Prevent wide headings/buttons/cards from touching the viewport edge */
   .container,.main,.content,.panel,.card,.section{
     max-width:100%;
     box-sizing:border-box;
@@ -706,8 +703,6 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
   border:1px solid rgba(90,168,120,.20);background:rgba(255,70,155,.06);
   color:#557164;font-size:10px;font-weight:850;white-space:nowrap;
 }
-#quickToolsBar #quizBtn{border-color:rgba(220,170,80,.20);color:#ffd8a8;background:rgba(255,170,70,.06)}
-#quickToolsBar #quizAdminBtn{border-color:rgba(130,190,255,.20);color:#bcdcff;background:rgba(80,150,255,.06)}
 #quickToolsBar button[hidden]{display:none!important}
 @media(max-width:600px){
   #quickToolsBar{top:clamp(55px,14vw,66px);gap:3px;width:calc(100vw - 24px);padding:3px}
@@ -715,146 +710,7 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
 }
 
 
-/* ===== BÀI KIỂM TRA ===== */
-#quizOverlay,#quizNameOverlay,#quizTakeOverlay,#quizResultOverlay,#quizBuilderOverlay{
-  position:fixed;inset:0;z-index:25000;display:none;align-items:center;justify-content:center;
-  padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right))
-           max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
-  box-sizing:border-box;background:rgba(0,0,0,.74);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-}
-#quizOverlay.show,#quizNameOverlay.show,#quizTakeOverlay.show,#quizResultOverlay.show,#quizBuilderOverlay.show{display:flex}
-#quizPanel,#quizNamePanel,#quizTakePanel,#quizResultPanel,#quizBuilderPanel{
-  position:relative;width:min(92vw,500px);max-height:calc(100dvh - 24px);box-sizing:border-box;
-  border:1px solid rgba(90,168,120,.18);border-radius:26px;
-  background:radial-gradient(circle at 50% -10%,rgba(255,75,165,.15),transparent 38%),linear-gradient(145deg,rgba(25,8,28,.99),rgba(7,4,13,.99));
-  box-shadow:0 24px 80px rgba(0,0,0,.62),0 0 40px rgba(90,168,120,.11);color:#fff;
-}
-#quizPanel,#quizNamePanel,#quizBuilderPanel{padding:21px 15px 15px;overflow:hidden}
-#quizTakePanel,#quizResultPanel{padding:22px 16px 17px}
-#quizClose,#quizNameClose,#quizBuilderClose{
-  position:absolute;top:10px;right:10px;z-index:3;width:34px;height:34px;padding:0;border-radius:50%;
-  border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.07);color:rgba(255,255,255,.86);
-  font-size:22px;line-height:32px;
-}
-#quizTitle,#quizNameTitle,#quizBuilderTitle,#quizTakeTitle,#quizResultTitle{
-  text-align:center;font-size:21px;font-weight:900;text-shadow:0 0 14px rgba(255,76,169,.75)
-}
-#quizSub,#quizNameSub,#quizBuilderSub{text-align:center;margin:5px 26px 13px;color:rgba(255,255,255,.45);font-size:10px}
-#quizLeaderboardWrap{max-height:min(52dvh,430px);overflow:auto;-webkit-overflow-scrolling:touch;border-radius:15px}
-#quizLeaderboard{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:11px}
-#quizLeaderboard th{color:rgba(255,255,255,.40);font-size:9px;font-weight:800;text-align:left;padding:0 8px 3px}
-#quizLeaderboard td{padding:9px 8px;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.045)}
-#quizLeaderboard td:first-child{border-left:1px solid rgba(255,255,255,.07);border-radius:11px 0 0 11px;text-align:center;width:36px}
-#quizLeaderboard td:last-child{border-right:1px solid rgba(255,255,255,.07);border-radius:0 11px 11px 0;text-align:right;color:#5b9d74;font-weight:900}
-#quizEmpty{text-align:center;color:rgba(255,255,255,.36);font-size:10px;padding:18px 8px}
-#startQuizBtn,#quizNextBtn,#quizResultClose{
-  width:100%;min-height:44px;margin-top:12px;border:0;border-radius:999px;
-  background:linear-gradient(135deg,#4e9d6b,#74c69d);color:#fff;font-size:12px;font-weight:900;
-  box-shadow:0 8px 22px rgba(255,45,140,.18)
-}
-#quizNextBtn:disabled{opacity:.38;box-shadow:none}
-#quizNameList{max-height:min(58dvh,500px);overflow:auto;-webkit-overflow-scrolling:touch;padding:2px}
-.quizNameItem{
-  width:100%;min-height:43px;margin:6px 0;padding:9px 12px;box-sizing:border-box;border-radius:14px;
-  border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045);color:rgba(255,255,255,.88);
-  text-align:left;font-size:12px;font-weight:750
-}
-.quizNoNames{text-align:center;color:rgba(255,255,255,.40);padding:20px;font-size:11px}
-#quizTakeTop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-right:44px}
-
-/* FIX #9: nút X cho Quiz Take — thoát giữa chừng trên mobile */
-#quizTakeClose{
-  position:absolute;
-  top:10px;
-  right:10px;
-  z-index:3;
-  width:34px;
-  height:34px;
-  padding:0;
-  border-radius:50%;
-  border:1px solid rgba(255,255,255,.13);
-  background:rgba(255,255,255,.07);
-  color:rgba(255,255,255,.86);
-  font-size:22px;
-  line-height:32px;
-  font-weight:500;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  transition:background .18s ease,transform .18s ease;
-}
-#quizTakeClose:hover{background:rgba(255,255,255,.12)}
-#quizTakeClose:active{transform:scale(.94)}
-
-/* Theme xanh mát override */
-#quizTakeClose{
-  color:#70907c !important;
-  background:#f1f7f0 !important;
-  border-color:#d5e2d2 !important;
-}
-#quizTakeClose:hover{background:#e5f2e7 !important}
-#quizTakeTitle{text-align:left;font-size:17px}
-#quizProgress{font-size:10px;color:rgba(255,255,255,.42);white-space:nowrap}
-#quizQuestion{
-  margin-top:18px;padding:15px;border:1px solid rgba(255,255,255,.09);border-radius:17px;
-  background:rgba(255,255,255,.045);font-size:14px;line-height:1.5;font-weight:800
-}
-.quizAnswer{
-  display:grid;grid-template-columns:32px minmax(0,1fr);gap:9px;align-items:center;width:100%;min-height:48px;
-  margin:8px 0;padding:8px 10px;box-sizing:border-box;border-radius:15px;
-  border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);color:rgba(255,255,255,.88);
-  text-align:left;font-size:11px;line-height:1.4
-}
-.quizAnswerLetter{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(255,70,155,.12);color:#5b9d74;font-weight:900}
-.quizAnswer.selected{border-color:rgba(255,100,180,.60);background:rgba(255,60,155,.12);box-shadow:0 0 14px rgba(78,157,107,.10)}
-#quizResultPanel{text-align:center;width:min(88vw,370px)}
-.quizResultIcon{font-size:38px;margin-bottom:4px}
-#quizResultName{margin-top:7px;color:rgba(255,255,255,.50);font-size:11px}
-#quizResultScore{margin:12px 0 3px;font-size:34px;font-weight:950;color:#5b9d74;text-shadow:0 0 18px rgba(255,65,160,.55)}
-#quizResultDetail{font-size:10px;color:rgba(255,255,255,.42)}
-#quizBuilderPanel{width:min(94vw,600px)}
-#quizBuilderList{max-height:calc(100dvh - 245px);overflow:auto;-webkit-overflow-scrolling:touch;padding:2px 2px 5px}
-.quizQuestionCard{margin:8px 0;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:17px;background:rgba(255,255,255,.035)}
-.quizQuestionHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.quizQuestionNo{color:#5b9d74;font-size:11px;font-weight:900}
-.quizQuestionRemove{border:0;background:transparent;color:rgba(255,255,255,.38);font-size:10px}
-.quizQuestionInput{
-  width:100%;min-height:58px;resize:vertical;box-sizing:border-box;padding:10px;border-radius:12px;
-  border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.20);color:#fff;font-size:11px;outline:none
-}
-.quizAnswerEdit{display:grid;grid-template-columns:28px minmax(0,1fr) 30px;gap:6px;align-items:center;margin-top:7px}
-.quizAnswerEdit .letter{color:#5b9d74;font-weight:900;text-align:center}
-.quizAnswerInput{
-  width:100%;min-height:37px;box-sizing:border-box;padding:8px 9px;border-radius:10px;
-  border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.18);color:#fff;font-size:10px;outline:none
-}
-.quizCorrectRadio{width:18px;height:18px;accent-color:#5aa878}
-.quizAddAnswer{
-  margin-top:8px;border:1px dashed rgba(90,168,120,.25);background:transparent;color:#ffafd2;
-  border-radius:999px;min-height:30px;padding:5px 10px;font-size:9px;font-weight:800
-}
-#quizBuilderActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
-#quizBuilderActions button{min-height:42px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.06);color:#fff;font-size:10px;font-weight:850}
-#saveQuizBtn{background:linear-gradient(135deg,#4e9d6b,#74c69d)!important;border:0!important}
-#quizBuilderStatus{text-align:center;min-height:15px;margin-top:7px;color:#5b9d74;font-size:9px}
-@media(max-width:600px){
-  #quizPanel,#quizNamePanel,#quizTakePanel,#quizResultPanel,#quizBuilderPanel{width:calc(100vw - 20px);max-height:calc(100dvh - 20px);border-radius:22px}
-  #quizTitle,#quizNameTitle,#quizBuilderTitle{font-size:19px}
-  #quizQuestion{font-size:13px}
-  #quizBuilderList{max-height:calc(100dvh - 235px)}
-}
-
-
-/* ===== iOS SAFARI ZOOM FIX =====
-   Safari auto-zooms focused text fields below 16px.
-   Keep all editable controls at >=16px so focusing them does not zoom the page.
-*/
-#quizBuilderPanel input,
-#quizBuilderPanel textarea,
-#quizBuilderPanel select,
-#quizNamePanel input,
-#quizNamePanel textarea,
+/* iOS Safari zoom fix */
 #adminOverlay input,
 #adminOverlay textarea,
 #adminOverlay select,
@@ -866,52 +722,14 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
   text-size-adjust:100%;
 }
 
-#quizBuilderPanel input,
-#quizBuilderPanel textarea,
 #adminOverlay input,
 #adminOverlay textarea,
 #linkEditorOverlay input{
   touch-action:manipulation;
 }
 
-/* Never allow a modal's internal content to create a horizontal page zoom. */
-#quizBuilderOverlay,
-#quizBuilderPanel,
-#quizBuilderList{
-  max-width:100vw;
-  overflow-x:hidden;
-}
-
-/* Keep the quiz builder usable when Safari's keyboard reduces the viewport. */
-#quizBuilderOverlay{
-  align-items:flex-start;
-  padding-top:max(12px,env(safe-area-inset-top));
-  padding-bottom:max(12px,env(safe-area-inset-bottom));
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-}
-#quizBuilderPanel{
-  margin:auto;
-  max-height:calc(100dvh - 24px);
-}
-@media(max-width:600px){
-  #quizBuilderPanel{
-    max-height:calc(100dvh - 20px);
-  }
-}
-
-/* Prevent long answer/question text from widening the builder. */
-.quizQuestionInput,
-.quizAnswerInput{
-  min-width:0;
-  max-width:100%;
-  overflow-wrap:anywhere;
-}
-
 
 /* ===== CLEAN FIXED NAVIGATION ===== */
-#bottomNav,
-
 #lunchManageBtn{width:100%;min-height:42px;margin-top:8px;border-radius:15px;border:1px solid rgba(150,190,255,.20);background:rgba(100,150,255,.06);color:#cfe2ff;font-size:11px;font-weight:900}
 #lunchManageOverlay{position:fixed;inset:0;z-index:20600;display:none;align-items:center;justify-content:center;padding:14px;background:rgba(3,1,7,.80);backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px)}
 #lunchManageOverlay.show{display:flex}
@@ -934,6 +752,7 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
 .lunchLine .lineLabel{display:inline-block;margin-right:6px;color:rgba(255,205,230,.58);font-size:.42em;letter-spacing:1px;vertical-align:middle}
 .lunchLine.soup .lineLabel{color:rgba(180,220,255,.62)}
 @media(max-width:600px){#lunchManagePanel{max-height:78dvh}.lunchManageRow{grid-template-columns:24px minmax(0,1fr) 44px 44px}.lunchManageSave,.lunchManageDelete{font-size:7px}}
+
 #secondaryNav{
   position:absolute;
   left:50%;
@@ -1001,14 +820,6 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
   border-color:rgba(255,160,210,.34);
   box-shadow:0 0 18px rgba(255,55,155,.18);
 }
-#secondaryNav #quizBtn{
-  color:#ffd8a8;
-  border-color:rgba(220,170,80,.20);
-}
-#secondaryNav #quizAdminBtn{
-  color:#bcdcff;
-  border-color:rgba(130,190,255,.20);
-}
 #secondaryNav button[hidden]{display:none!important}
 #secondaryNav.nav-hidden{
   display:none !important;
@@ -1062,14 +873,8 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
   }
 }
 
-
-@media(max-width:600px){
-  
-}
-
-
 /* =====================================================
-   FINAL FIX — THANH LUẬT KDV / BÀI KIỂM TRA
+   FINAL FIX — THANH LUẬT KDV
    ===================================================== */
 #secondaryNav{
   position:absolute !important;
@@ -1110,15 +915,11 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
 #secondaryNav #kdvRulesBtn{
   top:auto !important;right:auto !important;bottom:auto !important;left:auto !important;
 }
-#secondaryNav #quizBtn{
-  top:auto !important;right:auto !important;bottom:auto !important;left:auto !important;
-}
 #secondaryNav.admin-visible{
   width:calc(100vw - 16px) !important;
   max-width:620px !important;
   grid-template-columns:repeat(3,minmax(0,1fr)) !important;
 }
-#secondaryNav #quizAdminBtn{position:relative !important;inset:auto !important;}
 #secondaryNav.nav-hidden{
   display:none !important;
   visibility:hidden !important;
@@ -1401,7 +1202,6 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
    TOP 3 PODIUM — v2 (fix override)
    ========================================================= */
 
-/* Label */
 #question span.landing-top3-label{display:block !important;width:100% !important;text-align:center !important;margin:4px 0 8px !important;padding:0 !important;color:#7d9184 !important;-webkit-text-fill-color:#7d9184 !important;font-size:9.5px !important;font-weight:900 !important;letter-spacing:.24em !important;text-transform:uppercase !important;line-height:1 !important;text-shadow:none !important}
 #question span.landing-top3-label::before{content:"⚡ " !important;margin-right:2px !important}
 #question div.landing-top3{display:flex !important;flex-direction:row !important;align-items:flex-end !important;justify-content:center !important;gap:8px !important;width:100% !important;margin:0 0 4px !important;padding:0 !important}
@@ -1416,11 +1216,7 @@ box-shadow:0 0 14px rgba(90,168,120,.08)}
 #question div.landing-top3-empty{display:block !important;width:100% !important;max-width:340px !important;margin:6px auto !important;padding:14px 18px !important;box-sizing:border-box !important;text-align:center !important;color:#8aa299 !important;-webkit-text-fill-color:#8aa299 !important;font-family:var(--font,sans-serif) !important;font-size:clamp(10px,2.6vw,12px) !important;font-weight:800 !important;text-shadow:none !important;border-radius:16px !important;background:rgba(79,155,112,.05) !important;border:1px dashed rgba(120,175,135,.30) !important;line-height:1.4 !important}
 /* =========================================================
    Patch D: Focus visible toàn cục
-   Áp dụng cho mọi element interactive — chỉ hiện khi dùng keyboard
-   (không hiện khi click chuột nhờ :focus-visible)
    ========================================================= */
-
-/* Reset mặc định focus — không hiện outline khi click chuột */
 button:focus,
 input:focus,
 textarea:focus,
@@ -1430,7 +1226,6 @@ a:focus,
   outline:none !important;
 }
 
-/* Hiện outline đẹp khi dùng keyboard */
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
@@ -1444,7 +1239,6 @@ a:focus-visible,
   transition:outline-offset .12s ease, outline-color .12s ease;
 }
 
-/* Nút dạng pill (bo tròn) — outline theo hình pill */
 #bottomNav button:focus-visible,
 #secondaryNav button:focus-visible,
 #homeBtn:focus-visible,
@@ -1455,13 +1249,8 @@ a:focus-visible,
 #kdvRulesBtn:focus-visible,
 #lunchBtn:focus-visible,
 #attendanceBtn:focus-visible,
-#quizBtn:focus-visible,
-#quizAdminBtn:focus-visible,
 #checklistActions button:focus-visible,
 #confirm:focus-visible,
-#startQuizBtn:focus-visible,
-#quizNextBtn:focus-visible,
-#quizResultClose:focus-visible,
 #topCloseBtn:focus-visible,
 #topCaptureBtn:focus-visible,
 #captureBtn:focus-visible,
@@ -1478,16 +1267,10 @@ a:focus-visible,
   border-radius:999px !important;
 }
 
-/* Nút trong overlay tối — outline sáng hơn */
 #monitorOverlay button:focus-visible,
 #adminOverlay button:focus-visible,
 #linkEditorOverlay button:focus-visible,
 #kdvRulesOverlay button:focus-visible,
-#quizOverlay button:focus-visible,
-#quizNameOverlay button:focus-visible,
-#quizTakeOverlay button:focus-visible,
-#quizResultOverlay button:focus-visible,
-#quizBuilderOverlay button:focus-visible,
 #lunchChoiceOverlay button:focus-visible,
 #lunchManageOverlay button:focus-visible,
 #attendanceNameWheel button:focus-visible,
@@ -1496,7 +1279,6 @@ a:focus-visible,
   outline-offset:3px !important;
 }
 
-/* Input — outline hình chữ nhật bo góc */
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible{
@@ -1505,18 +1287,15 @@ select:focus-visible{
   border-radius:12px !important;
 }
 
-/* Người trong wheel — không cần outline (dùng màu chọn) */
 .att-name-wheel-item:focus-visible,
 .item:focus-visible{
   outline:none !important;
 }
 
-/* Top 3 podium slot (không tương tác) — bỏ qua */
 .podium-slot:focus-visible{
   outline:none !important;
 }
 
-/* Chỉ hiện outline khi user dùng keyboard — không hiện khi click/touch */
 @media (hover: hover) and (pointer: fine){
   button:focus:not(:focus-visible),
   input:focus:not(:focus-visible),
@@ -1557,7 +1336,6 @@ html,body{background:#061015}
 #connectionState.busy .dot{background:#8fe4ed;color:#8fe4ed}
 #connectionState.off .dot{background:#78d7df;color:#78d7df}
 
-/* Khung checklist: tiêu đề và bảng nằm cùng một panel */
 #checklistPanel{
   position:absolute;
   left:50%;top:50%;
@@ -1600,7 +1378,6 @@ html,body{background:#061015}
 #checklistActions button{border-color:rgba(100,220,215,.14);background:rgba(90,210,205,.07);color:rgba(225,249,247,.86);box-shadow:0 0 14px rgba(40,190,185,.06)}
 #captureBtn{background:linear-gradient(135deg,rgba(21,160,151,.92),rgba(69,210,198,.76)) !important;color:#fff !important}
 
-/* Thanh điều hướng: xanh lam - xanh ngọc dịu mắt, giữ nguyên kích thước/bố cục */
 #bottomNav,#secondaryNav{
   border-color:rgba(105,210,225,.15);
   background:rgba(4,17,24,.78);
@@ -1618,27 +1395,25 @@ html,body{background:#061015}
 }
 #homeBtn{background:linear-gradient(135deg,rgba(22,157,170,.88),rgba(54,202,192,.70)) !important;color:#fff !important;box-shadow:0 0 16px rgba(40,190,195,.16)}
 #topBtn,#checklistBtn,#adminBtn,#monitorBtn{color:rgba(225,246,248,.82)}
-#kdvRulesBtn,#lunchBtn,#quizBtn,#quizAdminBtn{color:#cceff1 !important;border-color:rgba(105,210,225,.18) !important}
+#kdvRulesBtn,#lunchBtn{color:#cceff1 !important;border-color:rgba(105,210,225,.18) !important}
 #lunchBtn{background:linear-gradient(135deg,rgba(32,170,165,.11),rgba(75,180,220,.07)) !important}
 #lunchBtn.running{background:linear-gradient(135deg,rgba(21,160,151,.78),rgba(67,197,190,.62)) !important;box-shadow:0 0 18px rgba(40,190,195,.20)}
 
-/* Kết quả bữa trưa */
 #lunchResult{color:#eafffd;text-shadow:0 0 5px rgba(255,255,255,.95),0 0 15px rgba(70,215,205,.72),0 0 34px rgba(45,190,190,.42)}
 #lunchResult .lunchLabel{color:rgba(200,244,240,.66)}
 .lunchLine .lineLabel{color:rgba(180,235,230,.62)}
 .lunchLine.soup .lineLabel{color:rgba(175,220,242,.70)}
 
-/* Các cửa sổ phụ */
 #topPanel,#monitorPanel,#linkEditorPanel,#adminPanel,#adminPasswordBox,
-#lunchChoicePanel,#lunchManagePanel,#quizPanel,#quizNamePanel,#quizTakePanel,#quizResultPanel,#quizBuilderPanel{
+#lunchChoicePanel,#lunchManagePanel{
   border-color:rgba(100,220,215,.18);
   background:linear-gradient(145deg,rgba(8,29,35,.98),rgba(3,13,18,.99));
   box-shadow:0 22px 70px rgba(0,0,0,.55),0 0 40px rgba(45,195,190,.10);
 }
-#topTitle,#monitorTitle,#linkEditorTitle,#adminTitle,#adminPasswordTitle,#lunchChoiceTitle,#lunchManageTitle,#quizTitle,#quizNameTitle,#quizBuilderTitle,#quizTakeTitle,#quizResultTitle{
+#topTitle,#monitorTitle,#linkEditorTitle,#adminTitle,#adminPasswordTitle,#lunchChoiceTitle,#lunchManageTitle{
   text-shadow:0 0 14px rgba(70,215,205,.55);
 }
-#topCloseBtn,#monitorCloseBtn,#linkEditorSave,#adminPasswordOk,#startQuizBtn,#quizNextBtn,#quizResultClose{
+#topCloseBtn,#monitorCloseBtn,#linkEditorSave,#adminPasswordOk{
   background:linear-gradient(135deg,#159f99,#45d4c8) !important;
 }
 .lunchModeBtn.home,.lunchAddCat.home{border-color:rgba(90,220,170,.24);color:#bff4dc}
@@ -1652,7 +1427,6 @@ html,body{background:#061015}
 #lunchAddBtn{border-color:rgba(100,220,215,.24);color:#c8f3f0}
 #lunchAddStatus,#lunchManageStatus{color:#8ee2da}
 
-/* Luật KDV */
 #kdvRulesPanel{border-color:rgba(100,220,215,.20);background:radial-gradient(circle at 50% -10%,rgba(55,205,195,.14),transparent 38%),linear-gradient(145deg,rgba(8,29,35,.98),rgba(3,13,18,.99));box-shadow:0 24px 80px rgba(0,0,0,.62),0 0 42px rgba(45,195,190,.10)}
 #kdvRulesTitle{ text-shadow:0 0 14px rgba(70,215,205,.65)}
 .kdvSparkle{color:#76ddd5;text-shadow:0 0 12px rgba(70,215,205,.55)}
@@ -1660,7 +1434,6 @@ html,body{background:#061015}
 .kdvRule b{color:#8fe0d8;text-shadow:0 0 8px rgba(70,215,205,.22)}
 .kdvNum{background:linear-gradient(135deg,rgba(20,160,155,.88),rgba(70,210,200,.58));box-shadow:0 0 13px rgba(40,190,195,.20)}
 
-/* Bảng BXH */
 #topPanel,#monitorPanel{color:#fff}
 .topPoints{color:#8fe0d8}.topRow1{background:linear-gradient(90deg,rgba(90,220,180,.10),transparent)}.topRow2{background:linear-gradient(90deg,rgba(100,200,220,.08),transparent)}.topRow3{background:linear-gradient(90deg,rgba(80,170,190,.08),transparent)}
 
@@ -1683,7 +1456,6 @@ html,body{background:#061015}
 
 <style>
 /* ===== GIAO DIỆN XANH MÁT — phong cách nhẹ, sạch, thân thiện ===== */
-/* External font intentionally removed for reliable offline/mobile rendering. */
 :root{
   --mint-bg:#f4f8f1;
   --mint-green:#2f6b4f;
@@ -1708,7 +1480,6 @@ button,input,textarea,select{font-family:inherit!important}
     radial-gradient(circle at 50% 8%,rgba(255,255,255,.96),transparent 30%),
     linear-gradient(180deg,#f8fbf5 0%,#eef6eb 100%)!important;
 }
-/* Trang chính: bỏ neon, chuyển sang hiệu ứng chữ nhẹ */
 #question{
   color:var(--mint-green)!important;
   text-shadow:0 2px 0 rgba(255,255,255,.85),0 4px 14px rgba(47,107,79,.12)!important;
@@ -1724,7 +1495,6 @@ button,input,textarea,select{font-family:inherit!important}
 }
 #hint{color:var(--mint-muted)!important}
 
-/* Thanh điều hướng */
 #bottomNav,#secondaryNav{
   background:rgba(255,255,255,.94)!important;
   border:1px solid var(--mint-border)!important;
@@ -1745,8 +1515,7 @@ button,input,textarea,select{font-family:inherit!important}
   border-color:#4a9d6d!important;
   box-shadow:0 5px 13px rgba(63,150,100,.18)!important;
 }
-#secondaryNav #quizBtn,#secondaryNav #quizAdminBtn,
-#kdvRulesBtn,#lunchBtn,#quizBtn,#quizAdminBtn{
+#kdvRulesBtn,#lunchBtn{
   color:#527061!important;
   border-color:transparent!important;
   background:transparent!important;
@@ -1757,9 +1526,8 @@ button,input,textarea,select{font-family:inherit!important}
   box-shadow:0 5px 14px rgba(67,157,100,.18)!important;
 }
 
-/* Các panel chung */
 #checklistPanel,#topPanel,#monitorPanel,#linkEditorPanel,#adminPanel,#adminPasswordBox,
-#lunchChoicePanel,#lunchManagePanel,#quizPanel,#quizNamePanel,#quizTakePanel,#quizResultPanel,#quizBuilderPanel{
+#lunchChoicePanel,#lunchManagePanel{
   color:var(--mint-text)!important;
   background:rgba(255,255,255,.97)!important;
   border:1px solid var(--mint-border)!important;
@@ -1769,18 +1537,17 @@ button,input,textarea,select{font-family:inherit!important}
   text-shadow:none!important;
 }
 #checklistTitle,#topTitle,#monitorTitle,#linkEditorTitle,#adminTitle,#adminPasswordTitle,
-#lunchChoiceTitle,#lunchManageTitle,#quizTitle,#quizNameTitle,#quizBuilderTitle,#quizTakeTitle,#quizResultTitle{
+#lunchChoiceTitle,#lunchManageTitle{
   color:var(--mint-green)!important;
   text-shadow:none!important;
   font-family:'Nunito','Avenir Next','Segoe UI',Arial,sans-serif!important;
   font-weight:900!important;
 }
 #checklistSub,#topSub,#monitorSub,#linkEditorName,#adminSub,#adminPasswordSub,
-#lunchChoiceSub,#lunchManageSub,#quizSub,#quizNameSub,#quizBuilderSub{
+#lunchChoiceSub,#lunchManageSub{
   color:var(--mint-muted)!important;
 }
 
-/* Checklist: giữ nguyên bố cục, chỉ đổi skin */
 #checklistScroll{background:transparent!important}
 #checklist{
   background:#fff!important;
@@ -1808,7 +1575,6 @@ button,input,textarea,select{font-family:inherit!important}
 }
 #captureBtn{background:#55a973!important;color:#fff!important;box-shadow:0 5px 12px rgba(75,160,105,.15)!important}
 
-/* Bữa trưa — bám sát phong cách ảnh mẫu */
 #lunchChoiceOverlay,#lunchManageOverlay{
   background:rgba(235,243,232,.72)!important;
   backdrop-filter:blur(8px)!important;
@@ -1874,10 +1640,9 @@ button,input,textarea,select{font-family:inherit!important}
 .lunchLine .lineLabel{color:#759181!important;text-shadow:none!important}
 .lunchLine.soup .lineLabel{color:#72917e!important}
 
-/* Bảng xếp hạng / giám sát / quản trị */
-#topTable,#monitorTable,#quizLeaderboard{background:#fff!important;border-color:#d8e4d5!important}
-#topTable th,#monitorTable th,#quizLeaderboard th{color:#819187!important}
-#topTable td,#monitorTable td,#quizLeaderboard td{border-color:#e4ece1!important;color:#456251!important;background:#fff!important}
+#topTable,#monitorTable{background:#fff!important;border-color:#d8e4d5!important}
+#topTable th,#monitorTable th{color:#819187!important}
+#topTable td,#monitorTable td{border-color:#e4ece1!important;color:#456251!important;background:#fff!important}
 .topName,.topPoints,.topRank{color:#3f6752!important}
 .topPoints{color:#4b9565!important}
 .topRank{background:#eef6ed!important;border-color:#d1e1ce!important}
@@ -1887,25 +1652,21 @@ button,input,textarea,select{font-family:inherit!important}
 .monitorDot{background:#62aa7c!important;box-shadow:0 0 7px rgba(98,170,124,.25)!important}
 .monitorCheckBtn,.monitorAssignBtn{background:#eef7ef!important;color:#427257!important;border-color:#c8ddcb!important;box-shadow:none!important}
 
-/* Nút và input của các popup */
-#topCloseBtn,#adminPasswordOk,#linkEditorSave,#startQuizBtn,#quizNextBtn,#quizResultClose{
+#topCloseBtn,#adminPasswordOk,#linkEditorSave{
   background:#55a973!important;color:#fff!important;border-color:#55a973!important;
   box-shadow:0 6px 14px rgba(75,160,105,.14)!important;
 }
-#topCloseBtn,#adminPasswordActions button,#adminActions button,#linkEditorActions button,#quizBuilderActions button{
+#topCloseBtn,#adminPasswordActions button,#adminActions button,#linkEditorActions button{
   border-color:#d0dfce!important;background:#f7fbf6!important;color:#557264!important;box-shadow:none!important;
 }
-#adminPasswordOk,#linkEditorSave,#startQuizBtn,#quizNextBtn,#quizResultClose{background:#55a973!important;color:#fff!important}
+#adminPasswordOk,#linkEditorSave{background:#55a973!important;color:#fff!important}
 
-/* Các overlay chung */
-#monitorOverlay,#adminOverlay,#linkEditorOverlay,#kdvRulesOverlay,
-#quizOverlay,#quizNameOverlay,#quizTakeOverlay,#quizResultOverlay,#quizBuilderOverlay{
+#monitorOverlay,#adminOverlay,#linkEditorOverlay,#kdvRulesOverlay{
   background:rgba(232,241,229,.70)!important;
   backdrop-filter:blur(8px)!important;
   -webkit-backdrop-filter:blur(8px)!important;
 }
 
-/* Luật KDV */
 #kdvRulesPanel{background:#fff!important;border-color:#d0dfce!important;box-shadow:0 18px 50px rgba(53,83,61,.13)!important}
 #kdvRulesTitle{color:#315f48!important;text-shadow:none!important}
 #kdvRulesSub,.kdvFooter{color:#829189!important}
@@ -1914,12 +1675,6 @@ button,input,textarea,select{font-family:inherit!important}
 .kdvNum{background:#e4f2e6!important;color:#3d7354!important;box-shadow:none!important}
 #kdvRulesClose{color:#7a9885!important;background:#f2f8f1!important;border-color:#d5e2d2!important}
 
-/* Quiz */
-#quizQuestion{background:#f7fbf6!important;border-color:#dce7d9!important;color:#456251!important}
-.quizNameItem{background:#f7fbf6!important;border-color:#dce7d9!important;color:#456251!important}
-#quizEmpty,.quizNoNames{color:#8b9991!important}
-
-/* Trạng thái kết nối */
 #connectionState{background:rgba(255,255,255,.92)!important;border-color:#d5e2d2!important;color:#6f8176!important;box-shadow:var(--mint-shadow-soft)!important}
 #connectionState .dot{background:#d7aa62!important;color:#d7aa62!important;box-shadow:0 0 7px rgba(215,170,98,.22)!important}
 #connectionState.ok .dot{background:#59a977!important;color:#59a977!important}
@@ -1927,7 +1682,6 @@ button,input,textarea,select{font-family:inherit!important}
 #connectionState.off .dot{background:#c97b70!important;color:#c97b70!important}
 #status{color:#708278!important}
 
-/* Chuyển các hiệu ứng neon còn sót lại thành đổ bóng nhẹ */
 *{text-shadow:none!important}
 #question .landing-title{ text-shadow:0 2px 0 #fff,0 5px 16px rgba(47,107,79,.12)!important }
 #question{ text-shadow:0 2px 0 #fff,0 5px 16px rgba(47,107,79,.12)!important }
@@ -1937,7 +1691,7 @@ button,input,textarea,select{font-family:inherit!important}
   #bottomNav,#secondaryNav{box-shadow:0 7px 20px rgba(54,91,65,.09)!important}
   #lunchChoicePanel,#lunchManagePanel{width:calc(100vw - 28px)!important}
 }
-/* Final soft-mint landing text — keep the title readable on the light background */
+/* Final soft-mint landing text */
 #question{
   color:#2f6b4f!important;
   text-shadow:0 2px 0 rgba(255,255,255,.92),0 5px 16px rgba(47,107,79,.12)!important;
@@ -1972,7 +1726,6 @@ button,input,textarea,select{font-family:inherit!important}
 <style id="proDesignSystem">
 /* =========================================================
    ĐẢO MÈO — SOFT MINT DESIGN SYSTEM
-   Stable system fonts • responsive • low-glare • touch-first
    ========================================================= */
 :root{
   --bg:#f3f7f1;
@@ -2007,7 +1760,6 @@ button,input,textarea,select{font-family:var(--font)!important}
     radial-gradient(circle at 10% 72%,rgba(217,238,220,.48),transparent 27%),
     linear-gradient(180deg,#f8fbf6 0%,#f1f7ef 58%,#eaf3e8 100%)!important;
 }
-/* ---------- Navigation ---------- */
 #bottomNav,#secondaryNav{
   background:rgba(255,255,255,.92)!important;
   border:1px solid var(--line)!important;
@@ -2048,7 +1800,7 @@ button,input,textarea,select{font-family:var(--font)!important}
   box-shadow:0 4px 12px rgba(61,137,88,.10)!important;
 }
 #bottomNav button:active,#secondaryNav button:active{transform:scale(.97)}
-#secondaryNav #quizBtn,#secondaryNav #quizAdminBtn,#kdvRulesBtn,#lunchBtn,#quizBtn,#quizAdminBtn{
+#kdvRulesBtn,#lunchBtn{
   color:#5c7165!important;
   background:transparent!important;
   border-color:transparent!important;
@@ -2068,8 +1820,6 @@ button,input,textarea,select{font-family:var(--font)!important}
 #connectionState.ok .dot{background:#5aa873!important;color:#5aa873!important}
 #connectionState.busy .dot{background:#d5a75e!important;color:#d5a75e!important}
 #connectionState.off .dot{background:#c47b71!important;color:#c47b71!important}
-
-/* ---------- Landing ---------- */
 
 #question{
   display:flex!important;
@@ -2132,24 +1882,20 @@ button,input,textarea,select{font-family:var(--font)!important}
 }
 #hint{color:#8a9b90!important;font-size:11px!important}
 
-/* ---------- Generic panels / overlays ---------- */
 #checklistPanel,#topPanel,#monitorPanel,#linkEditorPanel,#adminPanel,#adminPasswordBox,
-#lunchChoicePanel,#lunchManagePanel,#quizPanel,#quizNamePanel,#quizTakePanel,#quizResultPanel,#quizBuilderPanel,
-#kdvRulesPanel{
+#lunchChoicePanel,#lunchManagePanel,#kdvRulesPanel{
   background:rgba(255,255,255,.98)!important;
   color:var(--ink)!important;
   border:1px solid var(--line)!important;
   box-shadow:var(--shadow)!important;
   text-shadow:none!important;
 }
-#monitorOverlay,#adminOverlay,#linkEditorOverlay,#kdvRulesOverlay,
-#quizOverlay,#quizNameOverlay,#quizTakeOverlay,#quizResultOverlay,#quizBuilderOverlay,#lunchChoiceOverlay,#lunchManageOverlay{
+#monitorOverlay,#adminOverlay,#linkEditorOverlay,#kdvRulesOverlay,#lunchChoiceOverlay,#lunchManageOverlay{
   background:rgba(232,241,229,.74)!important;
   backdrop-filter:blur(14px)!important;
   -webkit-backdrop-filter:blur(14px)!important;
 }
 
-/* ---------- Checklist ---------- */
 #checklistPanel{
   width:min(92vw,520px)!important;
   max-height:82vh!important;
@@ -2157,7 +1903,7 @@ button,input,textarea,select{font-family:var(--font)!important}
   border-radius:var(--radius-xl)!important;
 }
 #checklistTitle,#topTitle,#monitorTitle,#linkEditorTitle,#adminTitle,#adminPasswordTitle,
-#lunchChoiceTitle,#lunchManageTitle,#quizTitle,#quizNameTitle,#quizBuilderTitle,#quizTakeTitle,#quizResultTitle{
+#lunchChoiceTitle,#lunchManageTitle{
   font-family:var(--font)!important;
   color:var(--green-strong)!important;
   font-weight:900!important;
@@ -2165,7 +1911,7 @@ button,input,textarea,select{font-family:var(--font)!important}
 }
 #checklistTitle{font-size:clamp(22px,6vw,28px)!important;letter-spacing:-.03em!important}
 #checklistSub,#topSub,#monitorSub,#linkEditorName,#adminSub,#adminPasswordSub,
-#lunchChoiceSub,#lunchManageSub,#quizSub,#quizNameSub,#quizBuilderSub{
+#lunchChoiceSub,#lunchManageSub{
   color:var(--muted)!important;
 }
 #checklistScroll{background:transparent!important}
@@ -2190,7 +1936,6 @@ button,input,textarea,select{font-family:var(--font)!important}
 }
 #captureBtn{background:#4e9d6b!important;color:#fff!important}
 
-/* ---------- Lunch: match the supplied reference style ---------- */
 #lunchChoicePanel,#lunchManagePanel{
   border-radius:26px!important;
   padding:22px 16px 16px!important;
@@ -2236,10 +1981,9 @@ button,input,textarea,select{font-family:var(--font)!important}
 #lunchResult .lunchLabel{color:#819388!important}
 .lunchLine .lineLabel,.lunchLine.soup .lineLabel{color:#729080!important;text-shadow:none!important}
 
-/* ---------- Tables / secondary content ---------- */
-#topTable,#monitorTable,#quizLeaderboard{background:#fff!important;border-color:var(--line)!important}
-#topTable th,#monitorTable th,#quizLeaderboard th{color:#819187!important}
-#topTable td,#monitorTable td,#quizLeaderboard td{color:#456251!important;border-color:var(--line-2)!important;background:#fff!important}
+#topTable,#monitorTable{background:#fff!important;border-color:var(--line)!important}
+#topTable th,#monitorTable th{color:#819187!important}
+#topTable td,#monitorTable td{color:#456251!important;border-color:var(--line-2)!important;background:#fff!important}
 .topName,.topPoints,.topRank{color:#3f6752!important}
 .topPoints{color:#4e9466!important}
 .topRank{background:#eef6ed!important;border-color:#d0e0ce!important}
@@ -2249,14 +1993,12 @@ button,input,textarea,select{font-family:var(--font)!important}
 .monitorDot{background:#62aa7c!important;box-shadow:none!important}
 .monitorCheckBtn,.monitorAssignBtn{background:#eef7ef!important;color:#427257!important;border-color:#c8ddcb!important;box-shadow:none!important}
 
-/* ---------- BXH capture ---------- */
 #topActions{display:flex;justify-content:center;gap:8px;margin:13px auto 0;flex-wrap:wrap}
 #topActions button{min-height:42px;padding:9px 14px;border-radius:14px;border:1px solid var(--line);font:inherit;font-weight:850;color:#557164;background:#f7faf6;box-shadow:none;cursor:pointer}
 #topActions #topCaptureBtn{background:#4e9d6b!important;color:#fff!important;border-color:#4e9d6b!important;box-shadow:0 5px 12px rgba(75,160,105,.15)!important}
 #topActions #topCloseBtn{margin:0;min-width:90px}
 #topActions button:active{transform:scale(.97)}
 
-/* ---------- KDV ---------- */
 #kdvRulesPanel{background:#fff!important;border-color:var(--line)!important}
 #kdvRulesTitle{color:#315f48!important}
 #kdvRulesSub,.kdvFooter{color:#829189!important}
@@ -2265,17 +2007,13 @@ button,input,textarea,select{font-family:var(--font)!important}
 .kdvNum{background:#e4f2e6!important;color:#3d7354!important;box-shadow:none!important}
 #kdvRulesClose{color:#70907c!important;background:#f1f7f0!important;border-color:#d5e2d2!important}
 
-/* ---------- Quiz / Admin / inputs ---------- */
-#quizQuestion,.quizNameItem{background:#f7fbf6!important;border-color:#dce7d9!important;color:#456251!important}
-#quizEmpty,.quizNoNames{color:#8b9991!important}
-#topCloseBtn,#adminPasswordOk,#linkEditorSave,#startQuizBtn,#quizNextBtn,#quizResultClose,#adminSaveBtn{
+#topCloseBtn,#adminPasswordOk,#linkEditorSave,#adminSaveBtn{
   background:#4e9d6b!important;color:#fff!important;border-color:#4e9d6b!important;box-shadow:0 6px 14px rgba(75,154,107,.13)!important
 }
-#adminActions button,#adminPasswordActions button,#linkEditorActions button,#quizBuilderActions button{
+#adminActions button,#adminPasswordActions button,#linkEditorActions button{
   background:#f7faf6!important;color:#557264!important;border-color:var(--line)!important;box-shadow:none!important
 }
 
-/* Dynamic question screens also use the same visual language. */
 .system-question-title,.system-question-sub,.system-final-kicker,.system-final-line,.system-final-name,
 .question-text,.congrats-text,.activation-line{
   font-family:var(--font)!important;
@@ -2297,7 +2035,6 @@ button,input,textarea,select{font-family:var(--font)!important}
 #message .later-title{display:block;font-size:clamp(40px,10.5vw,72px);font-weight:950;color:#2f6b4f!important;text-shadow:none!important}
 #message .later-name{display:block;margin-top:12px;font-size:clamp(19px,5.2vw,30px);font-weight:900;color:#315744!important;text-shadow:none!important}
 
-/* Message / wheel: calm, not neon */
 #message{color:var(--green-strong)!important;text-shadow:none!important}
 #wheelViewport{background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(241,248,239,.96))!important;border-color:var(--line)!important;box-shadow:inset 0 0 30px rgba(67,130,87,.05)!important}
 #selectionLine{border-color:#8fbea0!important;background:rgba(80,157,107,.07)!important}
@@ -2305,13 +2042,11 @@ button,input,textarea,select{font-family:var(--font)!important}
 .item.selected{color:var(--green-strong)!important;text-shadow:none!important}
 #confirm{background:#4e9d6b!important;border-color:#4e9d6b!important;box-shadow:0 8px 18px rgba(75,154,107,.16)!important}
 
-/* Focus / accessibility */
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{
   outline:3px solid rgba(78,157,107,.18)!important;
   outline-offset:2px;
 }
 
-/* Capture preview — đồng bộ hoàn toàn với giao diện xanh */
 #capturePreview{background:rgba(236,244,233,.82)!important;backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important}
 .capturePreviewBox{background:linear-gradient(145deg,#ffffff,#f4faf3)!important;border:1px solid #cbdcc9!important;box-shadow:0 18px 55px rgba(53,91,61,.16),inset 0 1px 0 rgba(255,255,255,.96)!important}
 .capturePreviewTitle{color:#315744!important;text-shadow:none!important}
@@ -2326,7 +2061,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
   #secondaryNav{top:clamp(64px,14vw,76px)!important}
   #bottomNav button,#secondaryNav button{min-height:43px!important;font-size:clamp(8.6px,2.35vw,10px)!important;border-radius:14px!important}
   #connectionState{top:clamp(116px,23vw,130px)!important}
-  
   #question .landing-title{font-size:clamp(29px,8.2vw,48px)!important;letter-spacing:-.045em!important}
   #question .landing-cta{min-height:46px!important;padding:9px 23px!important}
 }
@@ -2342,10 +2076,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 </style>
 
 <style id="premiumDesignLayer">
-/* =========================================================
-   ĐẢO MÈO — PREMIUM SOFT MINT UI
-   Visual-only layer. No application logic changed.
-   ========================================================= */
 :root{
   --p-forest:#245943;
   --p-green:#4f9b70;
@@ -2355,7 +2085,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 html,body{font-family:ui-rounded,"SF Pro Rounded","Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif!important}
 body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecision!important}
 
-/* Ambient background — layered, calm and dimensional */
 #space{
   isolation:isolate!important;
   background:
@@ -2369,7 +2098,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 }
 #space::before{width:280px;height:280px;left:-150px;top:43%;background:rgba(151,203,168,.10)}
 #space::after{width:360px;height:360px;right:-190px;bottom:7%;background:rgba(239,215,151,.10)}
-/* Top navigation becomes a deliberate control surface */
 #bottomNav,#secondaryNav{
   background:rgba(255,255,255,.78)!important;
   border:1px solid rgba(62,112,79,.17)!important;
@@ -2410,8 +2138,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   box-shadow:0 7px 18px rgba(42,78,57,.05)!important;color:#80958a!important;
 }
 
-/* Hero: stronger hierarchy, softer than neon */
-
 #question{
   gap:17px!important;animation:none!important;filter:none!important;
 }
@@ -2440,19 +2166,17 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 #question .landing-cta:active{transform:translateY(1px) scale(.98)!important;box-shadow:0 7px 18px rgba(42,91,65,.08)!important}
 #hint{color:#82978b!important}
 
-/* Cards: premium paper + glass hybrid */
 #checklistPanel,#topPanel,#monitorPanel,#linkEditorPanel,#adminPanel,#adminPasswordBox,
-#lunchChoicePanel,#lunchManagePanel,#quizPanel,#quizNamePanel,#quizTakePanel,#quizResultPanel,#quizBuilderPanel,#kdvRulesPanel{
+#lunchChoicePanel,#lunchManagePanel,#kdvRulesPanel{
   background:linear-gradient(180deg,rgba(255,255,255,.985),rgba(249,252,248,.985))!important;
   border:1px solid rgba(62,112,79,.16)!important;
   box-shadow:var(--p-shadow)!important;
   border-radius:26px!important;
 }
-#monitorOverlay,#adminOverlay,#linkEditorOverlay,#kdvRulesOverlay,#quizOverlay,#quizNameOverlay,#quizTakeOverlay,#quizResultOverlay,#quizBuilderOverlay,#lunchChoiceOverlay,#lunchManageOverlay{
+#monitorOverlay,#adminOverlay,#linkEditorOverlay,#kdvRulesOverlay,#lunchChoiceOverlay,#lunchManageOverlay{
   background:rgba(228,239,226,.68)!important;backdrop-filter:blur(20px) saturate(110%)!important;-webkit-backdrop-filter:blur(20px) saturate(110%)!important;
 }
 
-/* Checklist gets a real visual hierarchy */
 #checklistPanel{padding:21px!important}
 #checklistTitle{font-size:clamp(23px,6vw,29px)!important;color:var(--p-forest)!important;letter-spacing:-.035em!important}
 #checklistSub{font-size:11px!important;color:#83968b!important}
@@ -2467,7 +2191,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .checkBox.checked{background:linear-gradient(145deg,#4f9b70,#6db487)!important;box-shadow:0 5px 13px rgba(64,137,91,.15)!important}
 #checklistActions button{border-radius:14px!important}
 
-/* Lunch popup: make it the visual signature of the app */
 #lunchChoicePanel{padding:23px 16px 17px!important;overflow:hidden!important}
 .lunchChoiceIcon{font-size:34px!important;filter:drop-shadow(0 5px 7px rgba(54,96,66,.10));margin-bottom:3px!important}
 #lunchChoiceTitle{font-size:clamp(23px,6vw,30px)!important;color:var(--p-forest)!important;letter-spacing:-.04em!important}
@@ -2489,23 +2212,20 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 #lunchAddForm{border-radius:20px!important;background:#f4f9f5!important;border:1px solid #d8e6d7!important}
 #lunchAddBtn,#lunchManageBtn{border-radius:14px!important;background:#4f9b70!important;box-shadow:0 8px 16px rgba(64,137,91,.13)!important}
 
-/* Tables / buttons get consistent tactile depth */
-#topTable,#monitorTable,#quizLeaderboard{border-radius:18px!important;overflow:hidden!important}
-#topTable th,#monitorTable th,#quizLeaderboard th{background:#f5f9f4!important;color:#71867b!important}
+#topTable,#monitorTable{border-radius:18px!important;overflow:hidden!important}
+#topTable th,#monitorTable th{background:#f5f9f4!important;color:#71867b!important}
 .topRow1,.topRow2,.topRow3{background:#f7fbf7!important}
 .topRank{border-radius:10px!important}
 .monitorCheckBtn,.monitorAssignBtn{border-radius:12px!important}
-#topCloseBtn,#adminPasswordOk,#linkEditorSave,#startQuizBtn,#quizNextBtn,#quizResultClose,#adminSaveBtn{border-radius:14px!important}
+#topCloseBtn,#adminPasswordOk,#linkEditorSave,#adminSaveBtn{border-radius:14px!important}
 
-/* Keep all text comfortably readable on iPhone */
-#question .landing-title,#checklistTitle,#topTitle,#monitorTitle,#lunchChoiceTitle,#lunchManageTitle,#quizTitle,#quizNameTitle,#quizBuilderTitle,#quizTakeTitle,#quizResultTitle{
+#question .landing-title,#checklistTitle,#topTitle,#monitorTitle,#lunchChoiceTitle,#lunchManageTitle{
   -webkit-font-smoothing:antialiased!important;font-variant-ligatures:none!important;
 }
 
 @media(max-width:600px){
   #bottomNav,#secondaryNav{width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important}
   #bottomNav button,#secondaryNav button{min-height:43px!important}
-  
   #question .landing-title{font-size:clamp(28px,8vw,48px)!important}
   #question .landing-cta{min-height:47px!important}
 }
@@ -2515,9 +2235,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   #bottomNav button,#secondaryNav button{min-height:40px!important;font-size:8px!important}
   #question .landing-title{font-size:clamp(26px,7.8vw,42px)!important}
 }
-/* =========================================================
-   TRANG BỮA TRƯA — full-screen overlay
-   ========================================================= */
+
 #lunchPage{
   position:fixed;
   inset:0;
@@ -2559,8 +2277,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .lunch-add-form{display:none;margin-top:10px;padding:14px;border:1px solid rgba(200,140,80,.18);border-radius:18px;background:rgba(255,250,240,.96);box-shadow:0 8px 20px rgba(120,80,40,.06)}.lunch-add-form.show{display:block}.lunch-add-input{width:100%;height:44px;padding:0 14px;border:1px solid rgba(200,140,80,.24);border-radius:13px;background:#fff;color:#4a2410;font-family:inherit;font-size:16px;font-weight:700;outline:none}.lunch-add-input::placeholder{color:#b89878}.lunch-add-input:focus{border-color:rgba(224,136,64,.6);box-shadow:0 0 0 3px rgba(224,136,64,.12)}.lunch-add-cats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:10px}.lunch-add-cat{min-height:42px;padding:8px 10px;border:1px solid rgba(200,140,80,.2);border-radius:13px;background:#fff;color:#5a3a18;font-family:inherit;font-size:11px;font-weight:900;cursor:pointer;transition:background .18s ease,transform .18s ease}.lunch-add-cat:active{transform:scale(.97)}.lunch-add-cat.home{background:#eef9ef;border-color:#b7d5bd;color:#3a7856}.lunch-add-cat.soup{background:#f0f6fc;border-color:#c0d8ec;color:#3a5a78}.lunch-add-cat.out{background:#fdf4e8;border-color:#e8c8a0;color:#7a5a28}.lunch-add-status{min-height:14px;margin-top:9px;text-align:center;color:#4a8a58;font-size:10px;font-weight:800}
 @media(max-width:600px){.lunch-page-inner{padding:16px 12px calc(120px + env(safe-area-inset-bottom))}.lunch-result-card{padding:22px 18px 20px;border-radius:24px}.lunch-mode-grid{gap:6px}.lunch-mode-card{padding:12px 8px;border-radius:16px}.lunch-mode-card .mode-icon{font-size:22px}.lunch-mode-card .mode-label{font-size:11px}}
 @media(max-width:390px){.lunch-title{font-size:22px}.lunch-mode-card{padding:10px 6px}.lunch-mode-card .mode-desc{font-size:8px}}
-
-
 
 /* ===== Smooth update: flash row khi có người mới check ===== */
 #checklist tbody tr{
@@ -2660,7 +2376,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 #attendanceSyncStatus.error{color:#b24b4b}
 #attendanceSyncStatus.warn{color:#9a762e}
 .att-note{margin-top:8px;text-align:center;font-size:9px;color:#8aa29c;line-height:1.45}
-@media(max-width:420px){.att-page-inner{padding-left:11px;padding-right:11px}.att-card{border-radius:21px}.att-day{min-height:65px;padding:6px 3px}.att-time{font-size:7px}.att-status{font-size:7px}.att-month-badge{display:none}.att-summary{gap:6px}.att-stat{padding:10px 6px}}
+@media(max-width:420px){.att-page-inner{padding-left:11px;padding-right:11px}.att-card{border-radius:21px}.att-day{min-height:65px;padding:6px 3px}.att-status{font-size:7px}.att-month-badge{display:none}.att-summary{gap:6px}.att-stat{padding:10px 6px}}
 </style>
 
 
@@ -2705,12 +2421,11 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .att-multi-action.p{background:#fff0a8;color:#8a6500}.att-multi-action.o{background:#ffd9df;color:#b33a4b}.att-multi-action.t{background:#d9f5e6;color:#24724d}.att-multi-action.q{background:#ffe4d6;color:#c2560c}.att-multi-action.x{background:#ffd6d6;color:#b02020}.att-multi-action.clear{background:#f4f4f4;color:#8b6666}.att-multi-action.cancel{background:#edf7f3;color:#477a6d}
 @media(max-width:420px){#attendanceMultiBar{gap:4px;padding:7px}.att-multi-action{padding:0 7px;font-size:9px}}
 
-/* ===== CHẤM CÔNG: nút nằm bên phải Bữa trưa ===== */
 #secondaryNav{grid-template-columns:repeat(4,minmax(0,1fr)) !important;}
 #secondaryNav.admin-visible{grid-template-columns:repeat(5,minmax(0,1fr)) !important;}
 
 /* =========================================================
-   HERO CARD HOME — redesign màn hình chính
+   HERO CARD HOME
    ========================================================= */
 
 #question{position:relative !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;gap:12px !important;width:100% !important;padding:20px 22px 22px !important;box-sizing:border-box !important;border-radius:28px !important;background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(255,255,255,.98) 0%,rgba(255,255,255,.72) 45%,transparent 75%),linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(248,252,246,.94) 55%,rgba(240,248,238,.92) 100%) !important;border:1px solid rgba(120,175,135,.18) !important;box-shadow:0 24px 60px -20px rgba(42,78,57,.18),0 12px 32px -12px rgba(42,78,57,.12),0 2px 8px rgba(42,78,57,.05),inset 0 1px 0 rgba(255,255,255,.95) !important;backdrop-filter:blur(20px) saturate(120%) !important;-webkit-backdrop-filter:blur(20px) saturate(120%) !important;animation:none !important;overflow:hidden !important}
@@ -2720,7 +2435,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 #question .landing-title::after{content:"" !important;display:block !important;width:min(120px,26vw) !important;height:4px !important;margin:8px auto 0 !important;border-radius:99px !important;background:linear-gradient(90deg,transparent,#efd48a 15%,#efd48a 85%,transparent) !important;opacity:.9 !important}
 #question .landing-cta{position:relative !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;gap:8px !important;width:auto !important;min-width:160px !important;min-height:46px !important;padding:10px 28px !important;margin-top:2px !important;border:1px solid rgba(67,137,93,.42) !important;border-radius:999px !important;background:linear-gradient(180deg,#5aad7f 0%,#4a9a6c 100%) !important;color:#fff !important;-webkit-text-fill-color:#fff !important;font-size:13px !important;font-weight:950 !important;letter-spacing:.16em !important;text-shadow:0 1px 2px rgba(42,78,57,.20) !important;box-shadow:0 12px 28px -8px rgba(74,154,108,.42),0 4px 10px -2px rgba(42,78,57,.14),inset 0 1px 0 rgba(255,255,255,.30) !important;transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease,background .22s ease !important;cursor:pointer !important;overflow:hidden !important}
 
-/* ===== Patch C+D: Focus visible cho CTA Hero ===== */
 #question .landing-cta:focus-visible{
   outline:3px solid rgba(79,155,112,.42) !important;
   outline-offset:4px !important;
@@ -2877,10 +2591,9 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 #liveFeedPanel{width:min(94vw,440px);max-height:min(78vh,620px);border-radius:26px;border:1px solid rgba(62,112,79,.16);background:linear-gradient(180deg,rgba(255,255,255,.985),rgba(249,252,248,.985));box-shadow:0 22px 60px rgba(42,78,57,.18),0 3px 12px rgba(42,78,57,.06);display:flex;flex-direction:column;overflow:hidden;animation:liveFeedIn .32s cubic-bezier(.16,.9,.25,1)}
 @keyframes liveFeedIn{from{opacity:0;transform:translateY(30px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 #liveFeedHead{padding:16px 18px 12px;border-bottom:1px solid rgba(62,112,79,.10);display:flex;align-items:center;justify-content:space-between;gap:10px}#liveFeedTitle{font-size:17px;font-weight:950;color:#245943;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}#liveFeedTitle .live-pulse{width:8px;height:8px;border-radius:50%;background:#4e9d6b;box-shadow:0 0 8px #4e9d6b;animation:liveDot 1.6s ease-in-out infinite}#liveFeedClose{width:34px;height:34px;border:1px solid rgba(62,112,79,.13);border-radius:50%;background:#f4f9f3;color:#47725b;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
-#liveFeedList{flex:1;overflow-y:auto;padding:6px 8px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}.live-day-label{font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#8ca598;padding:10px 12px 6px}.live-event{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;transition:background .2s ease}.live-event:hover{background:rgba(79,155,112,.05)}.live-event .ev-icon{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;background:#eaf6ec;color:#2f6b4f}.live-event.type-check .ev-icon{background:#ffe6f2;color:#b84b8a}.live-event.type-quiz .ev-icon{background:#e0eef8;color:#4a7898}.live-event.type-lunch .ev-icon{background:#fff2d6;color:#a5762e}.live-event.type-first .ev-icon{background:#fff2cf;color:#a5762e}.live-event .ev-body{min-width:0;display:flex;flex-direction:column;gap:2px}.live-event .ev-name{font-size:13px;font-weight:850;color:#315744;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.live-event .ev-meta{font-size:10.5px;color:#7d9184;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.live-event .ev-time{font-size:11px;font-weight:800;color:#8aa299;font-variant-numeric:tabular-nums;white-space:nowrap}.live-empty{padding:40px 20px;text-align:center;color:#8aa299;font-size:12px;font-weight:700}.live-empty .live-empty-icon{font-size:36px;margin-bottom:10px;opacity:.55}#liveFeedFoot{padding:8px 18px 12px;border-top:1px solid rgba(62,112,79,.08);text-align:center;font-size:10px;color:#96a89c;font-weight:700}#liveFeedClear{background:none;border:none;color:#b84b8a;font-size:10px;font-weight:800;cursor:pointer;padding:4px 8px;text-decoration:underline}@media(max-width:600px){#liveFeedBtn{right:12px;bottom:max(92px,calc(82px + env(safe-area-inset-bottom)))}#liveFeedPanel{width:100%;max-height:82vh;border-radius:24px 24px 0 0}}
+#liveFeedList{flex:1;overflow-y:auto;padding:6px 8px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}.live-day-label{font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#8ca598;padding:10px 12px 6px}.live-event{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;transition:background .2s ease}.live-event:hover{background:rgba(79,155,112,.05)}.live-event .ev-icon{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;background:#eaf6ec;color:#2f6b4f}.live-event.type-check .ev-icon{background:#ffe6f2;color:#b84b8a}.live-event.type-lunch .ev-icon{background:#fff2d6;color:#a5762e}.live-event .ev-body{min-width:0;display:flex;flex-direction:column;gap:2px}.live-event .ev-name{font-size:13px;font-weight:850;color:#315744;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.live-event .ev-meta{font-size:10.5px;color:#7d9184;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.live-event .ev-time{font-size:11px;font-weight:800;color:#8aa299;font-variant-numeric:tabular-nums;white-space:nowrap}.live-empty{padding:40px 20px;text-align:center;color:#8aa299;font-size:12px;font-weight:700}.live-empty .live-empty-icon{font-size:36px;margin-bottom:10px;opacity:.55}#liveFeedFoot{padding:8px 18px 12px;border-top:1px solid rgba(62,112,79,.08);text-align:center;font-size:10px;color:#96a89c;font-weight:700}#liveFeedClear{background:none;border:none;color:#b84b8a;font-size:10px;font-weight:800;cursor:pointer;padding:4px 8px;text-decoration:underline}@media(max-width:600px){#liveFeedBtn{right:12px;bottom:max(92px,calc(82px + env(safe-area-inset-bottom)))}#liveFeedPanel{width:100%;max-height:82vh;border-radius:24px 24px 0 0}}
 </style>
 <style id="avatarAdminSystem">
-/* Avatar trong Top 3 podium */
 #question div.landing-top3 .podium-avatar{display:flex !important;align-items:center !important;justify-content:center !important;width:34px !important;height:34px !important;border-radius:50% !important;overflow:hidden !important;border:2px solid #fff !important;box-shadow:0 4px 10px rgba(42,78,57,.15),0 1px 3px rgba(42,78,57,.08) !important;background:#fff !important;box-sizing:border-box !important}
 #question div.landing-top3 .podium-slot.rank-1 .podium-avatar{width:42px !important;height:42px !important;border-color:#efd48a !important;border-width:2.5px !important;box-shadow:0 6px 16px rgba(239,212,138,.45),0 2px 5px rgba(42,78,57,.10) !important}
 #question div.landing-top3 .podium-avatar-fallback{
@@ -2908,9 +2621,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   font-size:20px !important;
 }
 
-
-
-/* Editor ảnh trong Admin panel */
 #adminAvatarRows{
   max-height:260px;
   overflow:auto;
@@ -2993,10 +2703,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 .admin-card{background:#fff;border:1px solid rgba(62,112,79,.14);border-radius:20px;overflow:hidden;box-shadow:0 8px 24px rgba(47,78,59,.06)}.admin-card-row{display:grid;grid-template-columns:44px minmax(0,1fr) 110px;align-items:center;gap:12px;padding:16px;border-bottom:1px solid rgba(62,112,79,.08)}.admin-card-row:last-child{border-bottom:0}.admin-card-icon{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:linear-gradient(135deg,#eef8ef,#e4f3e6);color:#2f6b4f;font-size:20px}.admin-card-info{min-width:0}.admin-card-info label{display:block;font-size:14px;font-weight:900;color:#245943}.admin-card-info p{margin:3px 0 0;font-size:11px;color:#82958a;font-weight:700;line-height:1.35}#resetTimeInput,#checklistLockTimeInput{width:110px;height:46px;padding:0 12px;border:1px solid rgba(62,112,79,.18);border-radius:12px;background:#f7fbf6;color:#245943;font-size:18px;font-weight:900;font-family:inherit;text-align:center;outline:none;letter-spacing:.05em}#resetTimeInput:focus,#checklistLockTimeInput:focus{border-color:rgba(79,155,112,.55);background:#fff;box-shadow:0 0 0 3px rgba(79,155,112,.12)}
 .admin-note{display:flex;align-items:flex-start;gap:10px;margin-top:14px;padding:12px 14px;background:linear-gradient(135deg,rgba(255,244,214,.6),rgba(255,250,235,.6));border:1px solid rgba(216,168,104,.28);border-radius:14px;color:#7a5a28;font-size:12px;font-weight:700;line-height:1.45}.admin-note-icon{font-size:16px;flex:0 0 auto}.admin-note b{color:#5a3a18;font-weight:900}.admin-status{min-height:20px;margin:14px 0 0;text-align:center;font-size:12px;font-weight:800;color:#4e8c62}.admin-status.error{color:#b84b4b}.admin-status.warn{color:#9a762e}.admin-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.admin-actions button{min-height:48px;padding:0 24px;border:0;border-radius:14px;background:linear-gradient(180deg,#5aad7f 0%,#4a9a6c 100%);color:#fff;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 10px 24px -8px rgba(74,154,108,.5)}.admin-actions button:disabled{opacity:.5;cursor:default;box-shadow:none}
 .admin-toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}#adminChecklistSearch{flex:1 1 200px;min-width:0;height:44px;padding:0 14px;border:1px solid rgba(62,112,79,.16);border-radius:13px;background:#fff;color:#245943;font-size:14px;font-weight:700;font-family:inherit;outline:none}.admin-filters{display:flex;gap:4px;padding:4px;background:rgba(255,255,255,.7);border:1px solid rgba(62,112,79,.12);border-radius:13px}.admin-filter-btn{min-height:36px;padding:0 14px;border:0;border-radius:9px;background:transparent;color:#7b8e82;font-family:inherit;font-size:12px;font-weight:800}.admin-filter-btn.active{background:#e5f3e7;color:#245943}.admin-stats-bar{display:flex;gap:12px;padding:12px 16px;margin-bottom:12px;background:linear-gradient(135deg,rgba(79,155,112,.08),rgba(200,230,205,.08));border:1px solid rgba(79,155,112,.14);border-radius:14px;font-size:12px;font-weight:800;color:#3d7653;flex-wrap:wrap}.admin-list{display:flex;flex-direction:column;gap:6px}.admin-list-empty{padding:30px 20px;text-align:center;color:#8aa299;font-size:13px;font-weight:700;background:rgba(255,255,255,.5);border:1px dashed rgba(62,112,79,.16);border-radius:16px}.admin-row-item{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:12px 14px;background:#fff;border:1px solid rgba(62,112,79,.12);border-radius:14px}.admin-row-item.checked{background:linear-gradient(135deg,#f4fbf5,#eef7f0);border-color:rgba(79,155,112,.28)}.admin-row-name{min-width:0;font-size:14px;font-weight:850;color:#315744;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.admin-row-time{font-size:12px;font-weight:900;color:#4e8c62;font-variant-numeric:tabular-nums;white-space:nowrap}.admin-row-time.empty{color:#b8c4bb}.admin-row-btn{min-height:34px;padding:0 14px;border:1px solid rgba(62,112,79,.16);border-radius:999px;background:#f7fbf6;color:#3d7653;font-family:inherit;font-size:12px;font-weight:900}.admin-row-btn.checked{background:linear-gradient(135deg,#4f9b70,#6db487);border-color:transparent;color:#fff}
-/* =========================================================
-   AVATAR LIST — đơn giản, 3 cột, không header
-   Row ~56px, không sticky, không display:contents
-   ========================================================= */
 #adminAvatarRows{display:flex;flex-direction:column;gap:6px;padding:0;background:transparent;border:0;border-radius:0}
 .admin-avatar-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.78);border:1px solid rgba(62,112,79,.10);border-radius:12px;min-height:56px;transition:border-color .15s ease,background .15s ease}
 .admin-avatar-row:hover{background:rgba(255,255,255,.92);border-color:rgba(62,112,79,.18)}
@@ -3018,7 +2724,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 @media(min-width:900px){#adminPageBody{flex-direction:row;overflow:hidden}#adminPageNav{flex-direction:column;width:220px;padding:20px 14px;border-right:1px solid rgba(62,112,79,.10);border-bottom:0;background:rgba(255,255,255,.7);overflow-y:auto}.admin-tab{flex-direction:row;justify-content:flex-start;gap:10px;padding:12px 14px;font-size:13px;min-height:52px;width:100%}.admin-tab-icon{font-size:18px}#adminPageContent{padding:28px 32px 60px}.admin-panel-view.active{max-width:720px;margin:0 auto}}@media(max-width:600px){#adminPageHeader{padding:12px 14px}.admin-page-name{font-size:18px}#adminPageNav{padding:8px 10px}.admin-tab{padding:8px 12px;min-height:44px}#adminPageContent{padding:16px 14px 40px}.admin-section-title{font-size:18px}.admin-card-row{grid-template-columns:40px minmax(0,1fr) 92px;padding:14px 12px;gap:10px}#resetTimeInput,#checklistLockTimeInput{width:92px;height:44px;font-size:17px}.admin-avatar-row{grid-template-columns:48px minmax(0,1fr);gap:10px}.admin-avatar-actions{grid-column:1/-1;flex-direction:row}.admin-avatar-save,.admin-avatar-clear{flex:1}.admin-avatar-preview{width:48px;height:48px}.admin-stats-grid{gap:6px}.admin-stat-card{padding:14px 8px}.admin-stat-value{font-size:22px}.admin-stat-label{font-size:9px}}
 </style><style id="attendancePageV2">
 /* =========================================================
-   TRANG CHẤM CÔNG V2 — redesign + bottom sheet + optimistic
+   TRANG CHẤM CÔNG V2
    ========================================================= */
 
 #attendancePage{position:fixed;inset:0;z-index:18000;overflow:hidden;display:none;background:radial-gradient(circle at 15% 0%,rgba(79,155,112,.06),transparent 40%),radial-gradient(circle at 90% 100%,rgba(239,212,138,.06),transparent 40%),linear-gradient(180deg,#f8fbf6 0%,#eef6ec 100%);color:#1d3d31;font-family:var(--font,ui-rounded,"SF Pro Rounded",system-ui,-apple-system,sans-serif)}
@@ -3056,7 +2762,7 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
 </style>
 <style id="homeStackLayout">
 /* =========================================================
-   HOME STACK — flex column, ổn định mọi màn hình
+   HOME STACK — flex column
    ========================================================= */
 
 #homeStack{
@@ -3075,7 +2781,6 @@ body{-webkit-font-smoothing:antialiased!important;text-rendering:geometricPrecis
   justify-content:center;
   gap:12px;
 
-  /* Chặn scroll hoàn toàn */
   overflow:hidden;
 
   pointer-events:none;
@@ -3105,8 +2810,6 @@ body #homeStack #questionWrap{
 <style id="homeStaggerAnimation">
 /* =========================================================
    HERO CARD STAGGER ANIMATION — v3
-   - Lần đầu: full animation (kicker → title → CTA → top3 → podium)
-   - Lần sau: chỉ top3 chạy lại, delay = 0 (dùng --top3-base)
    ========================================================= */
 #question{--top3-base:.35s}
 #question .landing-kicker{display:block;width:100%;margin:0 0 6px;color:#8ca598;font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,sans-serif;font-size:clamp(9px,2.3vw,11px);font-weight:900;letter-spacing:.32em;text-align:center;text-transform:uppercase;line-height:1;opacity:.85}
@@ -3118,7 +2821,6 @@ body #homeStack #questionWrap{
 #question.play .landing-top3 .podium-slot[data-rank="1"]{animation-delay:calc(var(--top3-base) + .60s)}#question.play .landing-top3 .podium-slot[data-rank="2"]{animation-delay:calc(var(--top3-base) + .82s)}#question.play .landing-top3 .podium-slot[data-rank="3"]{animation-delay:calc(var(--top3-base) + 1.04s)}
 #question.play .landing-top3-empty{animation:heroSlideIn .7s cubic-bezier(.16,.9,.25,1) both;animation-delay:var(--top3-base)}
 
-/* Top 3 replay riêng — không đụng Hero */
 #question.top3-replay .landing-top3-label .w,
 #question.top3-replay .landing-top3 .podium-slot{
   animation:heroSlideIn .7s cubic-bezier(.16,.9,.25,1) both;
@@ -3137,7 +2839,6 @@ body #homeStack #questionWrap{
 @media(prefers-reduced-motion:reduce){#question.play .landing-kicker,#question.play .landing-title,#question.play .landing-cta,#question.play .landing-top3-label .w,#question.play .landing-top3 .podium-slot,#question.play .landing-top3-empty,
   #question.top3-replay .landing-top3-label .w,#question.top3-replay .landing-top3 .podium-slot,#question.top3-replay .landing-top3-empty{animation:none !important;opacity:1 !important;transform:none !important}}
 
-/* FIX #1: ẩn Top3 ngay khi wheel mở — không để lộ dưới nền */
 #question.hero-wheel-open .landing-top3,
 #question.hero-wheel-open .landing-top3-label,
 #question.hero-wheel-open .landing-top3-empty{display:none !important}
@@ -3161,12 +2862,10 @@ body #homeStack #questionWrap{
 .secret-mail-page{position:fixed;inset:0;z-index:20500;display:none;background:radial-gradient(circle at 15% 0%,rgba(255,214,232,.55),transparent 40%),radial-gradient(circle at 88% 100%,rgba(197,240,220,.5),transparent 42%),linear-gradient(180deg,#fffbf7,#fdf6ff 50%,#f5fffa);color:var(--sm-ink);font-family:var(--font,ui-rounded,"SF Pro Rounded",system-ui,-apple-system,sans-serif);overflow:hidden}.secret-mail-page.show{display:block}.sm-page-inner{width:min(100%,720px);height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(14px + env(safe-area-inset-top)) 14px calc(24px + env(safe-area-inset-bottom));box-sizing:border-box;display:flex;flex-direction:column;gap:14px;margin:0 auto}.sm-page-head{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:10px}.sm-page-icon-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,158,199,.35);border-radius:14px;background:rgba(255,255,255,.88);color:var(--sm-pink-deep);font-size:20px;font-weight:900;cursor:pointer}.sm-page-icon-btn:active{transform:scale(.94)}.sm-page-title{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center}.sm-page-kicker{font-size:9px;font-weight:900;letter-spacing:.26em;color:#b7a8b8;text-transform:uppercase}.sm-page-name{margin-top:4px;font-size:18px;font-weight:950;color:var(--sm-mint-deep);line-height:1}.sm-composer{padding:16px;border-radius:22px;background:linear-gradient(160deg,#fff,#fffafd);border:1.5px solid rgba(255,158,199,.25);box-shadow:0 14px 36px -16px rgba(255,120,180,.24),0 4px 12px -4px rgba(95,140,120,.08);display:flex;flex-direction:column;gap:10px}.sm-composer-head{display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px dashed rgba(255,158,199,.3)}.sm-composer-icon{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ffd6e8,#ff9ec7);color:#fff;font-size:13px;font-weight:900}.sm-composer-title{font-size:12px;font-weight:900;letter-spacing:.1em;color:var(--sm-pink-deep);text-transform:uppercase}.sm-page-input{width:100%;min-height:80px;max-height:180px;padding:12px 14px;border:1.5px dashed rgba(255,158,199,.45);border-radius:16px;background:linear-gradient(145deg,#fff,#fdf8fc);color:var(--sm-ink);font-family:inherit;font-size:16px;font-weight:650;line-height:1.5;resize:vertical;outline:none;box-sizing:border-box}.sm-page-input:focus{border-color:var(--sm-pink-deep);box-shadow:0 0 0 4px rgba(255,158,199,.14)}.sm-input-wrap{position:relative;border-radius:var(--sm-radius-md);background:linear-gradient(145deg,#fff,#fdf8fc);border:1.5px dashed rgba(255,158,199,.45);overflow:hidden}.sm-input-wrap:focus-within{border-color:var(--sm-pink-deep);box-shadow:0 0 0 4px rgba(255,158,199,.14)}.sm-input-icon{position:absolute;top:10px;left:12px;color:var(--sm-pink-deep);pointer-events:none}.sm-input{width:100%;min-height:64px;padding:10px 14px 10px 34px;border:0;background:transparent;color:var(--sm-ink);font:650 16px/1.5 inherit;resize:vertical;outline:none;box-sizing:border-box}.sm-sign-toggle{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--sm-radius-sm);background:rgba(255,251,240,.7);border:1px solid rgba(246,213,116,.35);cursor:pointer;user-select:none;font-size:11.5px}.sm-sign-check{position:absolute;opacity:0;pointer-events:none}.sm-sign-box{display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:6px;background:#fff;border:1.5px solid var(--sm-yellow-deep)}.sm-sign-checkmark{font-size:11px;font-weight:900;color:#fff;opacity:0}.sm-sign-check:checked+.sm-sign-box{background:var(--sm-yellow-deep)}.sm-sign-check:checked+.sm-sign-box .sm-sign-checkmark{opacity:1}.sm-sign-label{font-weight:800;color:var(--sm-ink)}.sm-sender-pill{display:flex;align-items:center;gap:6px;padding:4px 10px;border:1.5px dashed rgba(255,158,199,.55);border-radius:999px;background:#fff5fa;color:var(--sm-pink-deep);font:850 11px inherit;cursor:pointer;min-width:0;max-width:100%;margin-left:auto}.sm-sender-pill.empty{color:#b7a8b8;border-color:rgba(183,168,184,.4);background:rgba(255,255,255,.6);font-style:italic}.sm-sender-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px}.sm-sender-chevron{font-size:12px}.sm-send-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.sm-counter{font-size:10.5px;font-weight:800;color:var(--sm-ink-soft)}.sm-counter.warn{color:#d9663f}.sm-send-btn{display:flex;align-items:center;gap:6px;padding:9px 22px 9px 18px;border:0;border-radius:999px;background:linear-gradient(135deg,#ffa5d0,#ff85bb 60%,#ff9ec7);color:#fff;font:900 13px inherit;cursor:pointer}.sm-send-btn:disabled{opacity:.5;pointer-events:none}.sm-status{min-height:16px;text-align:center;font-size:11px;font-weight:800;color:var(--sm-mint-deep)}.sm-status.error{color:#d9663f}.sm-status.success{color:var(--sm-mint-deep)}.sm-wall-wrap{position:relative;flex:1;min-height:420px;border-radius:22px;background:radial-gradient(circle at 20% 15%,rgba(255,214,232,.4),transparent 55%),radial-gradient(circle at 80% 85%,rgba(197,240,220,.4),transparent 55%),linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.5));border:1.5px solid rgba(255,158,199,.2);overflow:hidden;display:flex;flex-direction:column}.sm-wall-head{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px 8px;font-size:11px;font-weight:900;letter-spacing:.12em;color:var(--sm-mint-deep);text-transform:uppercase;z-index:2}.sm-wall-deco{color:var(--sm-pink-deep)}.sm-float-stage{position:relative;flex:1;min-height:0;overflow:hidden}.sm-note{position:absolute;left:var(--sm-x,50%);bottom:-180px;width:min(72vw,260px);padding:14px 16px 16px;border-radius:var(--sm-radius-md);background:#fff;color:var(--sm-ink);box-shadow:0 12px 30px -12px rgba(95,140,120,.22);transform:translate(-50%,0) rotate(var(--sm-rotate,0deg));animation:smFloatUp var(--sm-duration,14s) linear forwards;cursor:pointer}.sm-note.color-pink{background:#fff0f8;border:1px solid rgba(255,158,199,.35)}.sm-note.color-mint{background:#eefff7;border:1px solid rgba(92,189,145,.3)}.sm-note.color-yellow{background:#fff9e0;border:1px solid rgba(246,213,116,.4)}.sm-note.color-lilac{background:#f5f0ff;border:1px solid rgba(181,158,232,.35)}.sm-note-from{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:10.5px;font-weight:900;color:var(--sm-ink-soft);text-transform:uppercase}.sm-note-avatar{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--sm-pink),var(--sm-lilac));color:#fff;font-size:10px;font-weight:900}.sm-note-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}.sm-note-time{margin-left:auto;font-size:10px;color:#b7a8b8}.sm-note-text{font-size:13.5px;font-weight:700;line-height:1.5;word-break:break-word}.sm-note.paused{animation-play-state:paused}.sm-note.highlight{box-shadow:0 24px 55px -12px rgba(255,100,180,.35),0 0 0 3px rgba(255,158,199,.35);transform:translate(-50%,0) scale(1.04);z-index:100}.sm-canvas-empty{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:40px 24px;text-align:center;z-index:3;pointer-events:none}
 .sm-canvas-empty.show{display:flex}
 
-/* ===== 3 chế độ cho #smFloatStage ===== */
 .sm-float-stage[data-mode="intro"]{display:flex;align-items:center;justify-content:center;padding:20px}
 .sm-float-stage[data-mode="float"]{position:relative;overflow:hidden}
 .sm-float-stage[data-mode="wall"]{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:10px 8px 20px}
 
-/* ===== Intro: số lượng + nút Xem ===== */
 .sm-intro{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:32px 20px}
 .sm-intro-icon{font-size:52px;line-height:1;margin-bottom:4px;filter:drop-shadow(0 6px 12px rgba(255,120,180,.25));animation:smIntroBounce 2.6s ease-in-out infinite}
 @keyframes smIntroBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
@@ -3178,7 +2877,6 @@ body #homeStack #questionWrap{
 .sm-intro-btn:disabled{opacity:.55;cursor:default;background:linear-gradient(135deg,#e8d6e0,#d8c4d0);box-shadow:none}
 .sm-intro-hint{font-size:10px;color:#b7a8b8;font-weight:700;margin-top:4px}
 
-/* ===== Wall: danh sách card dọc ===== */
 .sm-wall-list{display:flex;flex-direction:column;gap:9px;width:100%}
 .sm-wall-card{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;padding:11px 13px;border-radius:16px;background:#fff;border:1.5px solid rgba(255,158,199,.22);box-shadow:0 6px 16px -8px rgba(255,120,180,.15);animation:smCardIn .3s cubic-bezier(.16,.9,.25,1) both}
 .sm-wall-card:nth-child(1){animation-delay:0s}
@@ -3186,7 +2884,6 @@ body #homeStack #questionWrap{
 .sm-wall-card:nth-child(3){animation-delay:.08s}
 .sm-wall-card:nth-child(n+4){animation-delay:.12s}
 @keyframes smCardIn{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:translateY(0)}}
-/* Tin mới trượt xuống từ trên cùng — cảm giác như Messenger */
 .sm-wall-card.sm-wall-card-enter{
   animation:smCardSlideIn .42s cubic-bezier(.16,.9,.25,1) both !important;
 }
@@ -3206,11 +2903,9 @@ body #homeStack #questionWrap{
 .sm-wall-card .card-time{font-size:10px;font-weight:800;color:#b7a8b8;font-variant-numeric:tabular-nums;margin-left:auto}
 .sm-wall-card .card-text{font-size:13.5px;font-weight:700;color:#3d4a58;line-height:1.5;word-break:break-word}
 
-/* ===== Nút skip animation (góc phải trên stage) ===== */
 .sm-stage-skip{position:absolute;right:10px;top:10px;z-index:50;min-height:32px;padding:6px 12px;border:1.5px solid rgba(255,158,199,.4);border-radius:999px;background:rgba(255,255,255,.92);color:#c04a90;font:850 10.5px/1 inherit;letter-spacing:.04em;cursor:pointer;box-shadow:0 4px 12px -4px rgba(255,120,180,.3);animation:smCardIn .25s ease both}
 .sm-stage-skip:active{transform:scale(.95)}
 
-/* ===== Note bay theo làn (không chồng) ===== */
 .sm-note{will-change:transform,opacity}.sm-empty-emoji{font-size:56px;opacity:.55}.sm-empty-text{font-size:16px;font-weight:900;color:var(--sm-mint-deep)}.sm-empty-sub{font-size:12px;font-weight:700;color:var(--sm-ink-soft)}.sm-heart-burst{position:fixed;z-index:99999;font-size:22px;pointer-events:none;animation:smHeartFly 2.8s cubic-bezier(.2,.6,.4,1) forwards}#smWheelOverlay{position:fixed;inset:0;z-index:45000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(80,60,80,.32);backdrop-filter:blur(14px)}#smWheelOverlay.show{display:flex}.sm-wheel-panel{width:min(92vw,390px);padding:18px 14px 16px;border:1.5px solid rgba(255,214,232,.75);border-radius:26px;background:#fff8fd;box-shadow:0 24px 70px rgba(180,100,150,.22)}.sm-wheel-head{display:flex;align-items:center;justify-content:space-between}.sm-wheel-title{font-size:17px;font-weight:900;color:var(--sm-pink-deep)}.sm-wheel-close{width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,214,232,.5);color:var(--sm-pink-deep);font-size:20px}.sm-wheel-viewport{position:relative;height:292px;overflow:hidden;border-radius:22px;background:#fff;border:1px solid rgba(255,158,199,.2);touch-action:none}.sm-wheel-selection{position:absolute;left:10px;right:10px;top:50%;height:58px;transform:translateY(-50%);border-top:1.5px solid rgba(255,158,199,.5);border-bottom:1.5px solid rgba(255,158,199,.5);border-radius:15px;background:rgba(255,214,232,.15);z-index:3}.sm-wheel-items{position:absolute;inset:0}.sm-wheel-item{position:absolute;left:0;right:0;height:58px;display:flex;align-items:center;justify-content:center;color:rgba(180,120,160,.28);font-size:17px;font-weight:750}.sm-wheel-item.selected{color:var(--sm-pink-deep);font-size:20px;font-weight:900}.sm-wheel-hint{text-align:center;margin-top:10px;font-size:10px;color:#b7a8b8}.sm-wheel-confirm{width:100%;height:44px;margin-top:12px;border:0;border-radius:999px;background:linear-gradient(135deg,#ffa5d0,#ff7db5);color:#fff;font-size:12px;font-weight:900}@keyframes smFloatUp{0%{transform:translate(-50%,0) rotate(var(--sm-rotate,0deg));opacity:0}6%{opacity:1}88%{opacity:1}100%{transform:translate(-50%,calc(-1*(100vh + 240px))) rotate(var(--sm-rotate,0deg));opacity:0}}@keyframes smHeartFly{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}100%{opacity:0;transform:translate(calc(-50% + var(--sm-dx,0px)),calc(-50% + var(--sm-dy,-70vh))) scale(.7) rotate(var(--sm-rot,0deg))}}
 .sm-canvas-empty[hidden]{display:none !important}
 @media(max-width:520px){.sm-page-name{font-size:16px}.sm-composer{padding:14px}.sm-wall-wrap{min-height:360px}.sm-note{width:min(80vw,240px)}.sm-note-text{font-size:13px}.sm-sender-name{max-width:100px}}@media(prefers-reduced-motion:reduce){.sm-note{animation-duration:60s!important}}
@@ -3269,8 +2964,6 @@ body #homeStack #questionWrap{
   <button id="kdvRulesBtn" type="button" aria-label="Mở Luật KDV" aria-haspopup="dialog">📜 Luật KDV</button>
   <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?" aria-haspopup="dialog">🍜 Bữa trưa ăn gì?</button>
   <button id="attendanceBtn" type="button" aria-label="Mở Chấm công" aria-haspopup="dialog">🗓 Chấm công</button>
-  <button id="quizBtn" type="button" aria-label="Mở Bài kiểm tra" aria-haspopup="dialog">📝 Bài kiểm tra</button>
-  <button id="quizAdminBtn" type="button" aria-label="Tạo bài kiểm tra" aria-haspopup="dialog" hidden>⚙ Tạo Ktra</button>
 </nav>
 
 <!-- ===== NÚT NỔI: HÒM THƯ BÍ MẬT ===== -->
@@ -3412,69 +3105,6 @@ body #homeStack #questionWrap{
   </section>
 </div>
 
-
-<div id="quizOverlay" aria-hidden="true">
-  <section id="quizPanel" role="dialog" aria-modal="true" aria-labelledby="quizTitle">
-    <button id="quizClose" type="button" aria-label="Đóng Bài kiểm tra">×</button>
-    <div id="quizTitle">📝 BÀI KIỂM TRA</div>
-    <div id="quizSub">Bảng điểm kiểm tra</div>
-    <div id="quizLeaderboardWrap">
-      <table id="quizLeaderboard">
-        <thead><tr><th>#</th><th>Tên</th><th>Điểm</th></tr></thead>
-        <tbody></tbody>
-      </table>
-      <div id="quizEmpty">Chưa có ai hoàn thành bài kiểm tra.</div>
-    </div>
-    <button id="startQuizBtn" type="button">🎯 Làm bài kiểm tra</button>
-  </section>
-</div>
-
-<div id="quizNameOverlay" aria-hidden="true">
-  <section id="quizNamePanel" role="dialog" aria-modal="true" aria-labelledby="quizNameTitle">
-    <button id="quizNameClose" type="button" aria-label="Đóng chọn tên">×</button>
-    <div id="quizNameTitle">👤 Chọn tên</div>
-    <div id="quizNameSub">Chọn tên của bạn để bắt đầu</div>
-    <div id="quizNameList"></div>
-  </section>
-</div>
-
-<div id="quizTakeOverlay" aria-hidden="true">
-  <section id="quizTakePanel" role="dialog" aria-modal="true" aria-labelledby="quizTakeTitle">
-    <button id="quizTakeClose" type="button" aria-label="Thoát bài kiểm tra">×</button>
-    <div id="quizTakeTop">
-      <div id="quizTakeTitle">📝 Bài kiểm tra</div>
-      <div id="quizProgress"></div>
-    </div>
-    <div id="quizQuestion"></div>
-    <div id="quizAnswers"></div>
-    <button id="quizNextBtn" type="button" disabled>Tiếp tục</button>
-  </section>
-</div>
-
-<div id="quizResultOverlay" aria-hidden="true">
-  <section id="quizResultPanel" role="dialog" aria-modal="true">
-    <div class="quizResultIcon">🎉</div>
-    <div id="quizResultTitle">Hoàn thành!</div>
-    <div id="quizResultName"></div>
-    <div id="quizResultScore">0 điểm</div>
-    <div id="quizResultDetail"></div>
-    <button id="quizResultClose" type="button">Xem BXH</button>
-  </section>
-</div>
-
-<div id="quizBuilderOverlay" aria-hidden="true">
-  <section id="quizBuilderPanel" role="dialog" aria-modal="true" aria-labelledby="quizBuilderTitle">
-    <button id="quizBuilderClose" type="button" aria-label="Đóng Tạo Ktra">×</button>
-    <div id="quizBuilderTitle">⚙ TẠO BÀI KIỂM TRA</div>
-    <div id="quizBuilderSub">Mỗi câu đúng = 10 điểm • Chọn 1 đáp án đúng</div>
-    <div id="quizBuilderList"></div>
-    <div id="quizBuilderActions">
-      <button id="addQuizQuestionBtn" type="button">＋ Thêm câu hỏi</button>
-      <button id="saveQuizBtn" type="button">💾 Lưu bài kiểm tra</button>
-    </div>
-    <div id="quizBuilderStatus"></div>
-  </section>
-</div>
 
 <div id="monitorOverlay" aria-hidden="true">
   <section id="monitorPanel" role="dialog" aria-modal="true" aria-labelledby="monitorTitle">
@@ -3752,19 +3382,16 @@ body #homeStack #questionWrap{
     LUNCH_STATUS_HINT_MS: 2200,
     FOCUS_DELAY_MS: 50,
     BUILDER_CLOSE_DELAY_MS: 500,
-    NAME_WHEEL_STEP_PX: 58,
-    QUIZ_TEACHER: 2
+    NAME_WHEEL_STEP_PX: 58
   });
 
-  // ===== Admin session (thay password hardcode) =====
-  // Password chỉ dùng 1 lần để lấy token, sau đó dùng token.
+  // ===== Admin session =====
   const ADMIN_TOKEN_KEY = "srank_admin_token_v1";
-  const ADMIN_SESSION_TTL = 8 * 60 * 60 * 1000;   // 8 giờ
+  const ADMIN_SESSION_TTL = 8 * 60 * 60 * 1000;
   const ADMIN_RATE_LIMIT_KEY = "srank_admin_rl_v1";
   const ADMIN_MAX_ATTEMPTS = 5;
-  const ADMIN_LOCKOUT_MS = 5 * 60 * 1000;     // 5 phút
+  const ADMIN_LOCKOUT_MS = 5 * 60 * 1000;
 
-  // ===== API timeout (giữ nguyên giá trị nhưng freeze) =====
   const TIMEOUT = Object.freeze({
     FAST:      8000,
     NORMAL:   12000,
@@ -3796,33 +3423,7 @@ body #homeStack #questionWrap{
   const monitorOverlay = document.getElementById("monitorOverlay");
   const monitorBody = document.querySelector("#monitorTable tbody");
   const monitorCloseBtn = document.getElementById("monitorCloseBtn");
-  const quizBtn = document.getElementById("quizBtn");
-  const quizAdminBtn = document.getElementById("quizAdminBtn");
   const secondaryNav = document.getElementById("secondaryNav");
-  const quizOverlay = document.getElementById("quizOverlay");
-  const quizClose = document.getElementById("quizClose");
-  const quizLeaderboardBody = document.querySelector("#quizLeaderboard tbody");
-  const quizEmpty = document.getElementById("quizEmpty");
-  const startQuizBtn = document.getElementById("startQuizBtn");
-  const quizNameOverlay = document.getElementById("quizNameOverlay");
-  const quizNameClose = document.getElementById("quizNameClose");
-  const quizNameList = document.getElementById("quizNameList");
-  const quizTakeOverlay = document.getElementById("quizTakeOverlay");
-  const quizProgress = document.getElementById("quizProgress");
-  const quizQuestion = document.getElementById("quizQuestion");
-  const quizAnswers = document.getElementById("quizAnswers");
-  const quizNextBtn = document.getElementById("quizNextBtn");
-  const quizResultOverlay = document.getElementById("quizResultOverlay");
-  const quizResultName = document.getElementById("quizResultName");
-  const quizResultScore = document.getElementById("quizResultScore");
-  const quizResultDetail = document.getElementById("quizResultDetail");
-  const quizResultClose = document.getElementById("quizResultClose");
-  const quizBuilderOverlay = document.getElementById("quizBuilderOverlay");
-  const quizBuilderClose = document.getElementById("quizBuilderClose");
-  const quizBuilderList = document.getElementById("quizBuilderList");
-  const addQuizQuestionBtn = document.getElementById("addQuizQuestionBtn");
-  const saveQuizBtn = document.getElementById("saveQuizBtn");
-  const quizBuilderStatus = document.getElementById("quizBuilderStatus");
   const kdvRulesBtn = document.getElementById("kdvRulesBtn");
   const kdvRulesOverlay = document.getElementById("kdvRulesOverlay");
   const kdvRulesClose = document.getElementById("kdvRulesClose");
@@ -3865,11 +3466,7 @@ body #homeStack #questionWrap{
   const adminStatus = document.getElementById("adminStatus");
   const adminSaveBtn = document.getElementById("adminSaveBtn");
   const adminChecklistRows = document.getElementById("adminChecklistRows");
-  const adminOverlay = null;
-  const adminPanel = null;
-  const adminCloseBtn = null;
 
-  // Giờ reset luôn dùng định dạng 24 giờ HH:mm
   resetTimeInput.addEventListener("input", () => {
     let v = resetTimeInput.value.replace(/\D/g, "").slice(0, 4);
     if(v.length > 2) v = v.slice(0,2) + ":" + v.slice(2);
@@ -3892,41 +3489,32 @@ body #homeStack #questionWrap{
   let dragging = false, startY = 0, dragOffset = 0;
   const ITEM_H = 58;
 
-  // ===== Smooth auto-refresh: track khi user vừa tương tác =====
   let _lastUserActionAt = 0;
   const USER_ACTION_PAUSE_MS = 5000;
 
-  // ===== Self-check tracking (#8) =====
   const _recentSelfChecks = new Map();
   const SELF_CHECK_IGNORE_MS = 20000;
 
-  // ===== Auto-sync interval động =====
-  const CHECKLIST_SYNC_MS = 30000;  // 30s khi checklist mở
-  // Cache trạng thái khoá — tránh tính lại mỗi giây
+  const CHECKLIST_SYNC_MS = 30000;
   let _lastLockCheck = 0;
-  let _cachedLocked = false;   // sẽ được set đúng ở lần gọi đầu
+  let _cachedLocked = false;
 
-  // ===== Signal: loadData đã xong chưa =====
-  // Dùng để tránh 2 request (loadData + getSettings) chạy song song,
-  // làm connection contention trên Apps Script.
   let _dataLoadResolve;
   const _dataLoadPromise = new Promise(r => { _dataLoadResolve = r; });
   let _dataLoadResolved = false;
 
-  // ---------- Settings cache (tránh gọi getSettings nhiều lần) ----------
-  const SETTINGS_TTL = 5 * 60 * 1000;   // 5 phút
+  const SETTINGS_TTL = 5 * 60 * 1000;
   let settingsCache = null;
   let settingsFetchedAt = 0;
-  let settingsFetchPromise = null;      // dedupe request đồng thời
+  let settingsFetchPromise = null;
 
-  // ---------- Fast JSONP transport ----------
   let requestSeq = 0;
   let syncInFlight = false;
   let autoSyncTimer = null;
-  const AUTO_SYNC_MS = 15000;       // 15s khi ở Home — đủ nhanh để thấy toast
-  const AUTO_SYNC_MIN_GAP = 5000;   // throttle cứng: tối thiểu 5s giữa 2 request
+  const AUTO_SYNC_MS = 15000;
+  const AUTO_SYNC_MIN_GAP = 5000;
   let lastAutoSyncAt = 0;
-  let lastSyncSuccessAt = 0;        // timestamp sync thành công gần nhất
+  let lastSyncSuccessAt = 0;
   const Q1_CACHE_KEY = "srank_q1_answer_v1";
   const CHECKLIST_LOCK_KEY = "srank_checklist_lock_time_v1";
   const LAST_PICKED_NAME_KEY = "srank_last_picked_name_v1";
@@ -3934,8 +3522,6 @@ body #homeStack #questionWrap{
   const connectionState = document.getElementById("connectionState");
   const connectionText = document.getElementById("connectionText");
 
-  // ===== Admin Auth + Session Manager =====
-  // Không cần bảo mật cao — ưu tiên UX tức thì.
   const AdminSession = (() => {
     let _token = null;
     let _expiresAt = 0;
@@ -4057,10 +3643,8 @@ body #homeStack #questionWrap{
     };
   })();
 
-  // Khôi phục session khi mở app
   AdminSession.load();
 
-  // Xoá lockout oan khi mở app (do timeout lần trước)
   try{
     const rlRaw = localStorage.getItem(ADMIN_RATE_LIMIT_KEY);
     if(rlRaw){
@@ -4069,8 +3653,6 @@ body #homeStack #questionWrap{
     }
   }catch(_){ }
 
-  // ===== Pre-warm Apps Script =====
-  // Gọi nền để server không bị cold start khi user cần.
   let _warmupStarted = false;
   function warmupAdmin(){
     if(_warmupStarted) return;
@@ -4093,8 +3675,6 @@ body #homeStack #questionWrap{
     connectionText.textContent = text;
   }
 
-  // ===== Indicator: hiển thị "vừa đồng bộ Xs trước" =====
-  // Chỉ cập nhật khi tab visible và app ở Home.
   setInterval(() => {
     if(document.hidden) return;
     if(!lastSyncSuccessAt) return;
@@ -4107,16 +3687,14 @@ body #homeStack #questionWrap{
     else if(sec < 60) txt = `đồng bộ ${sec}s trước`;
     else txt = `đồng bộ ${Math.round(sec/60)}p trước`;
 
-    // Chỉ đổi khi khác để tránh repaint
     if(connectionText.textContent !== txt){
       connectionText.textContent = txt;
     }
   }, 3000);
+
   window.__srankApi = function(action, data = {}, timeout = TIMEOUT.DEFAULT){
     return new Promise((resolve,reject) => {
       setConnection("busy", "Đang đồng bộ…");
-      // Watchdog: nếu vì lý do gì promise không resolve/reject,
-      // reject sau timeout + 3s để chắc chắn không leak syncInFlight.
       const watchdog = setTimeout(() => {
         setConnection("off", "Phản hồi chậm");
         reject(new Error("Request watchdog timeout"));
@@ -4163,7 +3741,7 @@ body #homeStack #questionWrap{
     const get = k => parts.find(x=>x.type===k)?.value || "";
     return `${get("year")}-${get("month")}-${get("day")}`;
   }
-  
+
   function escapeHtml(str){
     return String(str ?? "")
       .replace(/&/g, "&amp;")
@@ -4173,7 +3751,6 @@ body #homeStack #questionWrap{
       .replace(/'/g, "&#39;");
   }
 
-  // Debounced cacheSave — tránh ghi localStorage liên tục khi rapid updates
   let _cacheSaveTimer = null;
   function cacheSave(immediate = false){
     const doWrite = () => {
@@ -4208,7 +3785,6 @@ body #homeStack #questionWrap{
     _cacheSaveTimer = setTimeout(doWrite, 250);
   }
 
-  // Flush cache khi tab đóng (tránh mất data)
   window.addEventListener("beforeunload", () => {
     if(_cacheSaveTimer){
       clearTimeout(_cacheSaveTimer);
@@ -4234,19 +3810,16 @@ body #homeStack #questionWrap{
         return false;
       }
 
-      // Cache version mismatch → xóa cũ
       if(x.v !== CACHE_SCHEMA_VERSION){
         localStorage.removeItem(CACHE_KEY);
         return false;
       }
 
-      // Cache ngày cũ → xóa
       if(x.day !== todayKey()){
         localStorage.removeItem(CACHE_KEY);
         return false;
       }
 
-      // Validate arrays
       if(!Array.isArray(x.names) || !Array.isArray(x.checked)) return false;
 
       names = x.names.filter(n => typeof n === "string" && n.trim());
@@ -4265,8 +3838,6 @@ body #homeStack #questionWrap{
     return false;
   }
 
-  // CÂU 1 không tự nhớ tên và không tự resume khi mở lại web.
-
   let resetTime = "00:00";
   let resetTimer = null;
   let checklistLockTime = "21:00";
@@ -4276,21 +3847,13 @@ body #homeStack #questionWrap{
     return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || "").trim());
   }
 
-  /**
-   * Lấy settings với cache TTL 5 phút.
-   * - force = true: bỏ qua cache, gọi lại server
-   * - Trả về object { resetTime, checklistLockTime } hoặc ném lỗi
-   * - Dedupe: nhiều caller cùng lúc → chỉ 1 request thật sự
-   */
   async function getSettingsCached(force = false){
     const now = Date.now();
 
-    // Cache hit
     if(!force && settingsCache && (now - settingsFetchedAt) < SETTINGS_TTL){
       return settingsCache;
     }
 
-    // Đang có request chạy → chờ chung
     if(settingsFetchPromise){
       return settingsFetchPromise;
     }
@@ -4337,7 +3900,6 @@ body #homeStack #questionWrap{
       try{
         const token = AdminSession.get();
         if(!token) {
-          // Không có session → bỏ qua, thử lại sau
           return;
         }
         const r = await window.__srankApi("resetNow", {token}, TIMEOUT.FAST);
@@ -4347,7 +3909,6 @@ body #homeStack #questionWrap{
         cacheSave();
         renderChecklist();
 
-        // Chỉ render Admin khi panel đang mở
         if(adminPage.classList.contains("show")){
           renderAdminChecklistEditor();
         }
@@ -4355,7 +3916,6 @@ body #homeStack #questionWrap{
         setStatus("Checklist đã làm mới ✓");
       }catch(e){
         setStatus("Reset chưa thành công — sẽ thử lại ✓");
-        // Không xoá dữ liệu local nếu server chưa xác nhận reset.
       }finally{
         scheduleNextReset();
       }
@@ -4382,9 +3942,6 @@ body #homeStack #questionWrap{
   let editingMonitorName = "";
   let adminUnlocked = false;
 
-  // ===== ẢNH ĐẠI DIỆN TOP 3 =====
-  // Map mặc định — có thể để trống, sau đó gán qua Admin panel.
-  // Link ảnh được lưu vào localStorage, ưu tiên hơn map này.
   const AVATAR_LINKS = {
     "Tiến Lợi":     "https://drive.google.com/file/d/1d1u2VbvH3DtCUwUszKsqpU_Z4RCW4zZ-/view?usp=drivesdk",
     "Quỳnh Trang":  "https://drive.google.com/file/d/1dKGPL_u-MjheN938HCrMXJhq6X9VQy7F/view?usp=drivesdk",
@@ -4405,14 +3962,11 @@ body #homeStack #questionWrap{
   let avatarLinks = {};
 
   function loadAvatarLinks(){
-    // Avatar giờ chỉ đọc từ AVATAR_LINKS trong code.
-    // Xoá cache cũ (nếu có) để tránh ghi đè.
     avatarLinks = Object.assign({}, AVATAR_LINKS);
     try{ localStorage.removeItem(AVATAR_LINKS_KEY); }catch(_){}
   }
 
   function saveAvatarLinks(){
-    // Không dùng nữa — avatar chỉ từ AVATAR_LINKS.
   }
 
   function getAvatarUrl(name){
@@ -4420,20 +3974,16 @@ body #homeStack #questionWrap{
     const raw = String(avatarLinks[key] || AVATAR_LINKS[key] || "").trim();
     if(!raw) return "";
 
-    // Google Drive link → convert sang thumbnail
-    // Hỗ trợ: /file/d/FILE_ID/view và /open?id=FILE_ID
     const gdMatch = raw.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)
                  || raw.match(/[?&]id=([a-zA-Z0-9_-]+)/);
     if(gdMatch && /drive\.google\.com/i.test(raw)){
       return `https://drive.google.com/thumbnail?id=${gdMatch[1]}&sz=w800`;
     }
 
-    // Facebook ID (chỉ số) → Graph API
     if(/^\d+$/.test(raw)){
       return `https://graph.facebook.com/${raw}/picture?width=800&height=800`;
     }
 
-    // Full URL → dùng luôn
     if(/^https?:\/\//i.test(raw)) return raw;
 
     return raw;
@@ -4441,7 +3991,7 @@ body #homeStack #questionWrap{
 
   function isValidImageUrl(value){
     const v = String(value || "").trim();
-    if(!v) return true; // cho phép xoá
+    if(!v) return true;
     try{
       const u = new URL(v);
       return u.protocol === "http:" || u.protocol === "https:";
@@ -4455,11 +4005,8 @@ body #homeStack #questionWrap{
       const saved = JSON.parse(localStorage.getItem(MONITOR_LINKS_KEY) || "{}");
       const existing = saved && typeof saved === "object" ? saved : {};
 
-      // 12 link đã được admin gán chính thức trong file luôn được ưu tiên.
-      // Người chưa có link trong danh sách trên vẫn giữ nguyên link localStorage cũ.
       monitorLinks = Object.assign({}, existing, MONITOR_DEFAULT_LINKS);
 
-      // Ghi lại để lần mở sau không bị link cũ trong localStorage ghi đè.
       localStorage.setItem(MONITOR_LINKS_KEY, JSON.stringify(monitorLinks));
     }catch(_){
       monitorLinks = Object.assign({}, MONITOR_DEFAULT_LINKS);
@@ -4637,20 +4184,19 @@ body #homeStack #questionWrap{
     adminPage.classList.remove("show");
     adminPage.setAttribute("aria-hidden","true");
     document.body.style.overflow = "";
-    if(typeof renderQuizAdminButton==="function") renderQuizAdminButton();
+    renderAdminVisibleState();
     syncQuickTools();
   }
 
   function adminLogout(){
     AdminSession.clear();
     adminUnlocked = false;
-    renderQuizAdminButton();
+    renderAdminVisibleState();
     closeAdmin();
     syncQuickTools();
     setStatus("Đã đăng xuất admin");
   }
-  
-  // Gán vào nút (thêm vào HTML nếu muốn)
+
   window.__adminLogout = adminLogout;
 
   const adminPasswordOverlay = document.getElementById("adminPasswordOverlay");
@@ -4687,11 +4233,9 @@ body #homeStack #questionWrap{
     adminChecklistRows.appendChild(frag);const checkedCount=checked.filter(Boolean).length;if(adminChecklistStats)adminChecklistStats.innerHTML=`<span>👥 ${names.length} người</span><span>✓ ${checkedCount} đã check</span><span>○ ${names.length-checkedCount} chưa check</span>`;applyChecklistFilter();
   }
 
-
-
   async function openAdminSettings(){
     if(!AdminSession.isValid()){closeAdminPassword();adminUnlocked=false;openAdminPassword();return;}
-    closeAdminPassword();adminUnlocked=true;renderMonitor();renderQuizAdminButton();syncQuickTools();
+    closeAdminPassword();adminUnlocked=true;renderMonitor();renderAdminVisibleState();syncQuickTools();
     adminPage.classList.add("show");adminPage.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";switchAdminTab("schedule");
     if(settingsCache){resetTimeInput.value=settingsCache.resetTime||resetTime;checklistLockTimeInput.value=settingsCache.checklistLockTime||checklistLockTime;adminStatus.textContent=`Giờ reset: ${resetTime} • Khoá: ${checklistLockTime}`}else{resetTimeInput.value=resetTime;checklistLockTimeInput.value=checklistLockTime;adminStatus.textContent="Đang tải cài đặt…"}adminStatus.classList.remove("error","warn");
     renderAdminChecklistEditor();renderAdminStats();
@@ -4707,7 +4251,7 @@ body #homeStack #questionWrap{
   }
   adminTabs.forEach(tab=>tab.addEventListener("click",()=>switchAdminTab(tab.dataset.adminTab)));
   adminPageBack?.addEventListener("click",closeAdmin);
-  adminPageLogout?.addEventListener("click",()=>{if(confirm("Đăng xuất khỏi Admin?")){AdminSession.clear();AdminSession.forgetPassword();adminUnlocked=false;renderQuizAdminButton();closeAdmin();setStatus("Đã đăng xuất admin")}});
+  adminPageLogout?.addEventListener("click",()=>{if(confirm("Đăng xuất khỏi Admin?")){AdminSession.clear();AdminSession.forgetPassword();adminUnlocked=false;renderAdminVisibleState();closeAdmin();setStatus("Đã đăng xuất admin")}});
   let _adminFilter="all",_adminSearchTerm="";
   adminFilterBtns.forEach(btn=>btn.addEventListener("click",()=>{adminFilterBtns.forEach(b=>b.classList.remove("active"));btn.classList.add("active");_adminFilter=btn.dataset.filter;applyChecklistFilter()}));
   adminChecklistSearch?.addEventListener("input",e=>{_adminSearchTerm=String(e.target.value||"").trim().toLowerCase();applyChecklistFilter()});
@@ -4717,7 +4261,6 @@ body #homeStack #questionWrap{
   async function verifyAdmin(){
     if(_adminVerifying) return;
 
-    // 1. Rate limit
     const rl = AdminSession.checkRateLimit();
     if(!rl.allowed){
       adminPasswordMsg.textContent = `Quá nhiều lần thử. Vui lòng chờ ${rl.remainSec}s.`;
@@ -4736,18 +4279,16 @@ body #homeStack #questionWrap{
     adminPasswordOk.textContent = "⏳ Đang mở…";
 
     try{
-      // ===== CHECK HASH LOCAL TRƯỚC — mở UI tức thì =====
       const localOk = await AdminSession.checkPasswordLocal(password);
 
       if(localOk === true){
-        // Mở Admin ngay, verify server chạy nền
         adminPasswordInput.value = "";
         adminPasswordMsg.textContent = "";
         closeAdminPassword();
 
         adminUnlocked = true;
         renderMonitor();
-        renderQuizAdminButton();
+        renderAdminVisibleState();
         syncQuickTools();
 
         adminPage.classList.add("show");
@@ -4755,7 +4296,6 @@ body #homeStack #questionWrap{
         document.body.style.overflow = "hidden";
         adminStatus.textContent = "Đang xác thực với server…";
 
-        // Render từ cache ngay
         if(settingsCache){
           resetTimeInput.value = settingsCache.resetTime || resetTime;
           checklistLockTimeInput.value = settingsCache.checklistLockTime || checklistLockTime;
@@ -4768,13 +4308,11 @@ body #homeStack #questionWrap{
         renderLandingState();
         renderAdminChecklistEditor();
 
-        // Verify server nền
         verifyAdminServer(password).catch(() => {});
         return;
       }
 
       if(localOk === false){
-        // Hash có mà không khớp → chắc chắn sai
         AdminSession.recordFailure();
         adminPasswordMsg.textContent = "Mật khẩu không đúng.";
         adminPasswordInput.value = "";
@@ -4782,7 +4320,6 @@ body #homeStack #questionWrap{
         return;
       }
 
-      // localOk === null → máy mới, chưa có hash → phải chờ server
       adminPasswordMsg.textContent = "Đang kết nối server (lần đầu có thể mất 10-15s)…";
       await verifyAdminServer(password);
 
@@ -4820,7 +4357,6 @@ body #homeStack #questionWrap{
       AdminSession.recordSuccess();
       await AdminSession.rememberPassword(password);
 
-      // Nếu UI chưa mở (máy mới) → mở luôn
       if(!adminPage.classList.contains("show")){
         await openAdminSettings();
       }else{
@@ -4887,7 +4423,7 @@ body #homeStack #questionWrap{
     try{
       const token = AdminSession.get();
       if(!token) throw new Error("Phiên admin đã hết hạn");
-      
+
       const r = await window.__srankApi("setSettings", {
         token,
         resetTime: time,
@@ -4900,7 +4436,6 @@ body #homeStack #questionWrap{
       saveChecklistLockTime(checklistLockTime);
       checklistLockTimeInput.value = checklistLockTime;
 
-      // Ghi đè cache bằng giá trị server vừa xác nhận
       settingsCache = {
         resetTime: resetTime,
         checklistLockTime: checklistLockTime
@@ -4909,7 +4444,6 @@ body #homeStack #questionWrap{
 
       scheduleNextReset();
 
-      // Reset cache lock để landing cập nhật ngay theo giờ khoá mới
       _lastLockCheck = 0;
       _cachedLocked = isChecklistLocked();
 
@@ -4917,7 +4451,6 @@ body #homeStack #questionWrap{
       adminStatus.classList.remove("error","warn");
       adminStatus.textContent = `Đã lưu • Reset ${resetTime} • Khoá Checklist ${checklistLockTime}`;
     }catch(e){
-      // Không coi lưu local là lưu chung. Khi server lỗi, chỉ giữ giá trị hiện tại trên máy này.
       saveChecklistLockTime(lockTime);
       checklistLockTimeInput.value = checklistLockTime;
       renderLandingState();
@@ -4928,7 +4461,7 @@ body #homeStack #questionWrap{
   });
 
 
-  // ===== Toast System (#7) =====
+  // ===== Toast System =====
   const Toast = (() => {
     let container = null;
     const recentMessages = new Map();
@@ -4957,8 +4490,6 @@ body #homeStack #questionWrap{
 
     function show(text, options = {}){
       const type = options.type || "info";
-      // Mặc định cũ: 2400ms — quá lâu cho các thông báo ngắn.
-      // Giảm xuống 1800ms cho gọn, vẫn đủ đọc.
       const duration = Math.max(1200, options.duration || 1800);
       const icon = options.icon || iconFor(type);
       const dedup = options.dedup !== false;
@@ -4977,8 +4508,6 @@ body #homeStack #questionWrap{
 
       const c = ensureContainer();
 
-      // Nếu cùng type đang có 1 toast tồn tại → thay thế luôn
-      // (tránh xếp chồng 3 "Đã ghi 06:12" khi bấm nhanh)
       if(dedup){
         const sameType = Array.from(c.children).find(el =>
           el.classList.contains(type) &&
@@ -5025,7 +4554,7 @@ body #homeStack #questionWrap{
     return {show, dismiss};
   })();
 
-  // ===== Live Feed (#2) =====
+  // ===== Live Feed =====
   const LiveFeed = (() => {
     const STORAGE_KEY = "srank_live_feed_v1";
     const UNREAD_KEY  = "srank_live_feed_unread_v1";
@@ -5040,8 +4569,8 @@ body #homeStack #questionWrap{
     function clear(){events=[];unreadCount=0;save();render();updateBadge();}
     function markAllSeen(){if(unreadCount===0)return;unreadCount=0;save();updateBadge();}
     function updateBadge(){const badge=document.getElementById("liveFeedBadge");if(!badge)return;if(unreadCount<=0){badge.hidden=true;badge.textContent="";}else{badge.hidden=false;badge.textContent=unreadCount>99?"99+":String(unreadCount);}}
-    function typeLabel(ev){switch(ev.type){case "check":return "vừa check";case "quiz":return ev.meta.score!=null?`làm quiz ${ev.meta.score} điểm`:"làm quiz";case "lunch":return ev.meta.dish?`quay bữa trưa: ${ev.meta.dish}`:"quay bữa trưa";default:return "vừa hoạt động";}}
-    function typeIcon(ev){switch(ev.type){case "check":return "🌸";case "quiz":return "📝";case "lunch":return "🍜";default:return "•";}}
+    function typeLabel(ev){switch(ev.type){case "check":return "vừa check";case "lunch":return ev.meta.dish?`quay bữa trưa: ${ev.meta.dish}`:"quay bữa trưa";default:return "vừa hoạt động";}}
+    function typeIcon(ev){switch(ev.type){case "check":return "🌸";case "lunch":return "🍜";default:return "•";}}
     function dayLabel(ts){const d=new Date(ts),now=new Date();const day=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime(),diff=Math.round((today-day)/86400000);if(diff===0)return "Hôm nay";if(diff===1)return "Hôm qua";return new Intl.DateTimeFormat("vi-VN",{day:"2-digit",month:"2-digit"}).format(d);}
     function render(){const list=document.getElementById("liveFeedList");if(!list)return;if(!events.length){list.innerHTML='<div class="live-empty"><div class="live-empty-icon">📭</div>Chưa có hoạt động nào.<br>Mọi người check đi nào!</div>';}else{list.innerHTML="";const frag=document.createDocumentFragment();let lastDay="";events.forEach(ev=>{const dl=dayLabel(ev.ts);if(dl!==lastDay){const label=document.createElement("div");label.className="live-day-label";label.textContent=dl;frag.appendChild(label);lastDay=dl;}const row=document.createElement("div");row.className="live-event type-"+ev.type;const icon=document.createElement("div");icon.className="ev-icon";icon.textContent=typeIcon(ev);const body=document.createElement("div");body.className="ev-body";const nameEl=document.createElement("div");nameEl.className="ev-name";nameEl.textContent=ev.name;const metaEl=document.createElement("div");metaEl.className="ev-meta";metaEl.textContent=typeLabel(ev);body.append(nameEl,metaEl);const timeEl=document.createElement("div");timeEl.className="ev-time";timeEl.textContent=ev.time;row.append(icon,body,timeEl);frag.appendChild(row);});list.appendChild(frag);}const count=document.getElementById("liveFeedCount");if(count)count.textContent=events.length?`${events.length} hoạt động`:"Không có hoạt động";}
     function open(){const overlay=document.getElementById("liveFeedOverlay");if(!overlay)return;overlay.classList.add("show");overlay.setAttribute("aria-hidden","false");render();markAllSeen();}
@@ -5058,7 +4587,6 @@ body #homeStack #questionWrap{
     return "info";
   }
 
-  // ===== Notify người mới check (#8) =====
   function notifyNewlyChecked(list){
     if(!Array.isArray(list) || !list.length) return;
     const now = Date.now();
@@ -5082,15 +4610,11 @@ body #homeStack #questionWrap{
       });
     }
 
-    // Ghi từng người vào Live Feed
     filtered.forEach(p => {
       LiveFeed.push({ type:"check", name:p.name, time:p.time || "" });
     });
   }
 
-  // ===== Toast routine bị chặn =====
-  // Đây là các thông báo tự động (auto-sync, cache load, sync nền)
-  // → không toast, chỉ log nhẹ vào status ẩn góc trên.
   const ROUTINE_TOAST_PATTERNS = [
     /^Đã (cập nhật|đồng bộ|tải dữ liệu)/i,
     /^Đang (dùng|cập nhật|đồng bộ)/i,
@@ -5107,13 +4631,11 @@ body #homeStack #questionWrap{
   function setStatus(t){
     const text = String(t || "").trim();
 
-    // Status bar (góc trên, nhỏ, auto-hide) — luôn cập nhật
     status.textContent = text;
     status.classList.add("show");
     clearTimeout(setStatus.t);
     setStatus.t = setTimeout(() => status.classList.remove("show"), 1400);
 
-    // Toast — chỉ hiện khi KHÔNG phải routine
     if(text && !isRoutineMessage(text)){
       Toast.show(text, {type: inferToastType(text)});
     }
@@ -5128,14 +4650,12 @@ body #homeStack #questionWrap{
     return "B";
   }
 
-  // Rank VIP phải lấy từ server vì VIP phụ thuộc vị trí #1 toàn BXH.
   function normalizeServerRank(value, score){
     const r = String(value || "").trim().toUpperCase();
     return ["B","A","S","SS","SSS","VIP"].includes(r) ? r : rankClient(score);
   }
 
   function attendanceRankClient(value){
-    // Giữ tên hàm để không phá code cũ; Rank hiện tại dùng chung hệ mới.
     return rankClient(value);
   }
 
@@ -5149,7 +4669,6 @@ body #homeStack #questionWrap{
       const option = document.createElement('option');
       option.value = String(month);
       option.textContent = `Tháng ${month}`;
-      // Chỉ cho chọn tháng đã tới trong năm hiện tại.
       option.disabled = month > currentMonth;
       topMonthSelect.appendChild(option);
     }
@@ -5166,8 +4685,6 @@ body #homeStack #questionWrap{
   let topRenderToken = 0;
 
   function renderTopRows(scoreRows, year, month){
-    // v2.02: BXH chính dùng ScoreAudit/server leaderboard.
-    // Giữ legacy attendance renderer bên dưới để không xoá flow cũ của hệ thống.
     if(Array.isArray(scoreRows) && scoreRows.length && (scoreRows[0]?.points != null || scoreRows[0]?.rank)){
       const frag = document.createDocumentFragment();
       scoreRows.map((row,index)=>({
@@ -5189,7 +4706,6 @@ body #homeStack #questionWrap{
       return;
     }
 
-    // ===== LEGACY ATTENDANCE VIEW — preserved, not used for the new score/rank =====
     const daysInMonth = new Date(year, month, 0).getDate();
     const rows = (Array.isArray(scoreRows) ? scoreRows : []).map((employee,index)=>{
       const days = employee && employee.days ? employee.days : {};
@@ -5234,8 +4750,6 @@ body #homeStack #questionWrap{
     topBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:18px">Đang tải BXH…</td></tr>';
 
     try{
-      // Cache-first: render ngay từ RAM/localStorage nếu tháng này đã tải trước đó.
-      // Nếu có cache, refresh 1 lần ở nền bằng chính getAttendance để dữ liệu vẫn mới.
       const first = await window.__srankApi("scoreLeaderboard", {month}, TIMEOUT.SLOW);
       if(!first.ok) throw new Error(first.error || "Không tải được BXH điểm");
       if(token !== topRenderToken) return;
@@ -5270,8 +4784,6 @@ body #homeStack #questionWrap{
     checklistBody.innerHTML = "";
     const frag = document.createDocumentFragment();
 
-    // Chỉ sắp xếp thứ tự HIỂN THỊ trên HTML.
-    // Không thay đổi names/checked/times gốc nên không ảnh hưởng Google Sheet.
     const rows = names.map((name,i) => ({
       name,
       index: i,
@@ -5280,18 +4792,13 @@ body #homeStack #questionWrap{
     }));
 
     rows.sort((a,b) => {
-      // Người đã check luôn ở trên người chưa check.
       if(a.checked !== b.checked) return a.checked ? -1 : 1;
-
-      // Trong nhóm đã check: giờ sớm hơn ở trên.
       if(a.checked && b.checked){
         const ta = a.time || "99:99";
         const tb = b.time || "99:99";
         const cmp = ta.localeCompare(tb);
         if(cmp !== 0) return cmp;
       }
-
-      // Nếu cùng giờ / chưa check: giữ nguyên thứ tự trong Sheet.
       return a.index - b.index;
     });
 
@@ -5308,10 +4815,6 @@ body #homeStack #questionWrap{
     checklistBody.appendChild(frag);
   }
 
-  /**
-   * Smooth update checklist — chỉ update rows thay đổi.
-   * Không xóa DOM → không giật UI.
-   */
   function smoothUpdateChecklist(newData){
     if(!names.length) return false;
 
@@ -5319,7 +4822,6 @@ body #homeStack #questionWrap{
     const oldChecked = checked.slice();
     const oldTimes = times.slice();
 
-    // Detect người mới check (#8)
     const newlyChecked = [];
     for(let i = 0; i < names.length; i++){
       if(!oldChecked[i] && newData.checked[i]){
@@ -5330,14 +4832,11 @@ body #homeStack #questionWrap{
       }
     }
 
-    // Số người đổi → không smooth được
     if(oldNames.length !== newData.names.length) return false;
 
-    // Tên đổi (thêm/xóa) → không smooth được
     const namesChanged = oldNames.some((n, i) => n !== newData.names[i]);
     if(namesChanged) return false;
 
-    // Tìm các row thay đổi
     const changedIndexes = [];
     for(let i = 0; i < names.length; i++){
       const checkedChanged = oldChecked[i] !== newData.checked[i];
@@ -5347,18 +4846,15 @@ body #homeStack #questionWrap{
       }
     }
 
-    // Không có gì đổi
     if(changedIndexes.length === 0){
       return true;
     }
 
-    // Update state
     checked = newData.checked;
     times = newData.times;
     points = newData.points;
     ranks = newData.ranks;
 
-    // Update từng row đổi (flash tối đa 3 rows để tránh rối)
     changedIndexes.forEach((idx, i) => {
       const tr = checklistBody.querySelector(`tr[data-index="${idx}"]`);
       if(!tr) return;
@@ -5369,17 +4865,14 @@ body #homeStack #questionWrap{
       if(timeCell) timeCell.textContent = times[idx] || "—";
       if(box) box.classList.toggle("checked", !!checked[idx]);
 
-      // Flash highlight nhẹ cho tối đa 3 rows
       if(i < 3){
         tr.classList.add("row-updated");
         setTimeout(() => tr.classList.remove("row-updated"), 1200);
       }
     });
 
-    // Reorder DOM nếu cần (không tạo DOM mới, chỉ di chuyển)
     reorderChecklistRows();
 
-    // Notify người mới check
     if(newlyChecked.length > 0){
       notifyNewlyChecked(newlyChecked);
     }
@@ -5387,10 +4880,6 @@ body #homeStack #questionWrap{
     return true;
   }
 
-  /**
-   * Re-order rows trong DOM theo đúng thứ tự sort.
-   * Move row có sẵn → smooth, không giật.
-   */
   function reorderChecklistRows(){
     const scrollEl = document.getElementById("checklistScroll");
     const scrollTop = scrollEl ? scrollEl.scrollTop : 0;
@@ -5413,7 +4902,6 @@ body #homeStack #questionWrap{
       return a.index - b.index;
     });
 
-    // Move rows trong DOM (không tạo mới)
     const frag = document.createDocumentFragment();
     rows.forEach(row => {
       const tr = checklistBody.querySelector(`tr[data-index="${row.index}"]`);
@@ -5421,17 +4909,9 @@ body #homeStack #questionWrap{
     });
     checklistBody.appendChild(frag);
 
-    // Restore scroll position
     if(scrollEl) scrollEl.scrollTop = scrollTop;
   }
 
-  /**
-   * Cập nhật CHỈ 1 dòng trong checklist theo index gốc (trong mảng names).
-   * Nhanh hơn nhiều so với renderChecklist() khi chỉ có 1 người đổi trạng thái.
-   *
-   * Điều kiện dùng: thứ tự hiển thị KHÔNG đổi.
-   * Nếu người vừa check cần nhảy lên đầu bảng → phải dùng renderChecklist().
-   */
   function updateChecklistRow(index){
     const tr = checklistBody.querySelector(`tr[data-index="${index}"]`);
     if(!tr) return false;
@@ -5445,17 +4925,8 @@ body #homeStack #questionWrap{
     return true;
   }
 
-  /**
-   * Kiểm tra xem thứ tự hiển thị có bị thay đổi không,
-   * sau khi 1 người (index) vừa được check/bỏ check.
-   * Nếu CÓ thay đổi → cần renderChecklist() đầy đủ.
-   * Nếu KHÔNG → chỉ cần updateChecklistRow().
-   */
   function checklistOrderChanged(index){
     if(!checked[index]) {
-      // FIX #3: Bỏ check → người đó phải nằm DƯỚI nhóm đã check.
-      // Position đúng phải >= checkedCount (sau nhóm đã check).
-      // Nếu currentPosition < checkedCount → cần render lại.
       const tr = checklistBody.querySelector(`tr[data-index="${index}"]`);
       if(!tr) return true;
       const currentPosition = Array.from(checklistBody.children).indexOf(tr);
@@ -5463,8 +4934,6 @@ body #homeStack #questionWrap{
       for(let i=0; i<names.length; i++){
         if(i !== index && checked[i]) checkedCount++;
       }
-      // SAI cũ: currentPosition <= checkedCount  → render thừa
-      // ĐÚNG: currentPosition < checkedCount   → chỉ render khi thật sự cần
       return currentPosition < checkedCount;
     }
 
@@ -5531,22 +5000,17 @@ body #homeStack #questionWrap{
         renderChecklist();
         buildWheel();
       }else if(!names.length && checklistPanel.classList.contains("show")){
-        // Hiển thị skeleton khi đang tải lần đầu
         renderChecklistSkeleton();
       }
 
-      // Auto-sync chấp nhận chờ lâu hơn (Apps Script cold start ~15-20s).
-      // Ép cache-buster _ts để tránh mọi lớp cache trung gian.
       const r = await window.__srankApi("getData", { _ts: Date.now() }, TIMEOUT.SLOW);
       if(!r.ok) throw new Error(r.error || "getData lỗi");
 
-      // ===== Sanitize input từ server (defensive programming) =====
       const rawNames = Array.isArray(r.data?.names) ? r.data.names : [];
       const serverNames = rawNames
         .map(n => String(n ?? "").trim())
         .filter(n => n.length > 0 && n.length <= 100);
 
-      // Đảm bảo arrays cùng length với serverNames
       const rawPoints = Array.isArray(r.data?.points) ? r.data.points : [];
       const serverPoints = serverNames.map((_, i) => {
         const p = Number(rawPoints[i]);
@@ -5562,11 +5026,9 @@ body #homeStack #questionWrap{
       const rawTimes = Array.isArray(r.data?.times) ? r.data.times : [];
       const serverTimes = serverNames.map((_, i) => {
         const t = String(rawTimes[i] ?? "").trim();
-        // Chỉ chấp nhận format HH:mm
         return /^([01]\d|2[0-3]):[0-5]\d$/.test(t) ? t : "";
       });
 
-      // ===== Smooth update khi checklist mở + không phải lần đầu + không force =====
       const canSmoothUpdate = initialSheetLoaded
         && !force
         && checklistPanel.classList.contains("show")
@@ -5589,15 +5051,12 @@ body #homeStack #questionWrap{
           cacheSave();
           setStatus("Đã cập nhật ✓");
 
-          // Cập nhật Top 3 ngay khi có data mới
           maybeRenderLanding();
 
           return true;
         }
-        // Nếu smooth thất bại (thêm/xóa người) → fallback full render bên dưới
       }
 
-      // ===== Detect người mới check (#8) trước khi ghi đè =====
       let newlyChecked = [];
       if(initialSheetLoaded && names.length > 0){
         const prevNames = names.slice();
@@ -5612,7 +5071,6 @@ body #homeStack #questionWrap{
         }
       }
 
-      // ===== Full render =====
       names = serverNames;
       points = serverPoints;
       ranks = points.map(rankClient);
@@ -5637,7 +5095,6 @@ body #homeStack #questionWrap{
       setStatus(force ? "Đã cập nhật ✓" : "Đã đồng bộ ✓");
       lastSyncSuccessAt = Date.now();
 
-      // Cập nhật Top 3 ngay khi có data mới
       maybeRenderLanding();
 
       if(newlyChecked.length > 0){
@@ -5651,7 +5108,6 @@ body #homeStack #questionWrap{
     }finally{
       syncInFlight = false;
 
-      // Signal cho các tác vụ đang chờ (getSettings) biết loadData đã xong
       if(!_dataLoadResolved){
         _dataLoadResolved = true;
         _dataLoadResolve();
@@ -5660,7 +5116,6 @@ body #homeStack #questionWrap{
   }
 
   function startAutoSync(){
-    // Đảm bảo không có timer cũ trước khi start
     if(autoSyncTimer){
       clearTimeout(autoSyncTimer);
       autoSyncTimer = null;
@@ -5668,13 +5123,7 @@ body #homeStack #questionWrap{
     restartAutoSync();
   }
 
-  /**
-   * Restart auto-sync với interval phù hợp:
-   * - 30s khi checklist panel đang mở (user cần data mới)
-   * - 120s khi checklist đóng (tiết kiệm quota)
-   */
   function restartAutoSync(){
-    // Clear mọi timer cũ
     if(autoSyncTimer){
       clearTimeout(autoSyncTimer);
       autoSyncTimer = null;
@@ -5684,11 +5133,7 @@ body #homeStack #questionWrap{
       ? CHECKLIST_SYNC_MS
       : AUTO_SYNC_MS;
 
-    // Dùng setTimeout đệ quy thay setInterval:
-    // - Không bị Chrome/Safari throttle khi tab không focus
-    // - Timer reset sau mỗi lần chạy → không bị dồn request
     autoSyncTimer = setTimeout(async function tick(){
-      // Điều kiện skip (nhưng KHÔNG skip vòng lặp — vẫn schedule next)
       let skip = false;
       if(document.hidden) skip = true;
       else if(wheelArea.classList.contains("show")) skip = true;
@@ -5705,7 +5150,6 @@ body #homeStack #questionWrap{
         }catch(_){}
       }
 
-      // Schedule next — luôn chạy dù skip hay không
       if(autoSyncTimer !== null){
         autoSyncTimer = setTimeout(tick, interval);
       }
@@ -5713,41 +5157,30 @@ body #homeStack #questionWrap{
   }
 
   async function checkin(name, index){
-    // ===== GUARD: đã check rồi thì không gọi API lại =====
     if(checked[index] === true && times[index]){
       setStatus(`Đã ghi ${times[index]} ✓`);
       return;
     }
 
-    // ===== Track user action → pause auto-sync 5s =====
     _lastUserActionAt = Date.now();
 
-    // Track self-check để không tự thông báo chính mình (#8)
     _recentSelfChecks.set(name, Date.now());
 
-    // Ghi vào Live Feed
     LiveFeed.push({ type:"check", name });
 
-    // Chốt thời điểm CHECK ngay trên thiết bị của người thao tác.
     const clientTime = new Intl.DateTimeFormat("vi-VN",{
       timeZone:"Asia/Ho_Chi_Minh",
       hour:"2-digit",minute:"2-digit",hour12:false
     }).format(new Date());
 
-    // Optimistic UI: tick ngay, không chờ server.
     times[index] = clientTime;
     checked[index] = true;
     cacheSave();
 
-    // ===== Tối ưu: chỉ update 1 row thay vì full render =====
-    // Nếu thứ tự KHÔNG đổi → updateChecklistRow (siêu nhanh)
-    // Nếu thứ tự CÓ đổi → renderChecklist đầy đủ.
     if(!updateChecklistRow(index) || checklistOrderChanged(index)){
       renderChecklist();
     }
 
-    // ===== Cập nhật meta info ngay khi check xong =====
-    // (chỉ khi user đang ở Home)
     if(!q1Opened && !checklistPanel.classList.contains("show")){
       renderLandingState();
     }
@@ -5771,21 +5204,18 @@ body #homeStack #questionWrap{
       }
       cacheSave();
 
-      // Chỉ cần update time cell (points/rank chưa hiển thị ở checklist)
       if(!updateChecklistRow(index)){
         renderChecklist();
       }
 
       setStatus(`Đã ghi ${clientTime} ✓`);
 
-      // ===== Phát tín hiệu checkin xong → Chấm công tự render lại =====
       try{
         window.dispatchEvent(new CustomEvent("checkinDone", {
           detail: { name, time: clientTime }
         }));
       }catch(_){}
 
-      // Đồng thời ghi vào localStorage để trang Chấm công đọc được
       try{
         localStorage.setItem("srank_last_checkin", JSON.stringify({
           name, time: clientTime, date: todayKey()
@@ -5823,7 +5253,6 @@ body #homeStack #questionWrap{
   }
 
   function snap(){
-    // Tính số bậc dựa trên toàn bộ quãng vuốt, không chỉ ±1 bậc.
     const steps=Math.round(-dragOffset/ITEM_H);
     if(steps!==0){
       current=Math.max(0,Math.min(names.length-1,current+steps));
@@ -5850,7 +5279,6 @@ body #homeStack #questionWrap{
   wheelArea.addEventListener("pointermove",e=>{
     if(!dragging)return;
     dragOffset=e.clientY-startY;
-    // Không giới hạn về ±1. Có thể kéo qua nhiều tên trong một lần vuốt.
     if((current===0&&dragOffset>0)||(current===names.length-1&&dragOffset<0)) dragOffset*=.25;
     renderWheel();
   });
@@ -5869,7 +5297,6 @@ body #homeStack #questionWrap{
     }
   });
 
-  // Lăn chuột: mỗi lần lăn chỉ di chuyển đúng 1 bậc.
   wheelArea.addEventListener("wheel",e=>{
     if(!wheelArea.classList.contains("show") || !names.length) return;
     e.preventDefault();
@@ -5881,7 +5308,6 @@ body #homeStack #questionWrap{
     confirm.classList.add("show");
   },{passive:false});
 
-  // Điều khiển bằng bàn phím trên máy tính.
   addEventListener("keydown",e=>{
     if(!wheelArea.classList.contains("show")) return;
     if(e.key==="ArrowDown"){
@@ -5912,9 +5338,6 @@ body #homeStack #questionWrap{
     return checklistLockInfo().locked;
   }
 
-  // ===== Render landing nếu đang ở Home =====
-  // Điều kiện: không có wheel/message/panel nào đang mở.
-  // Dùng để kích hoạt update Top 3 ngay sau khi loadData xong.
   function maybeRenderLanding(){
     if(q1Opened) return;
     if(checklistPanel.classList.contains("show")) return;
@@ -5925,17 +5348,14 @@ body #homeStack #questionWrap{
 
     renderLandingState();
 
-    // Đánh dấu vừa render → ticker không render lại ngay lập tức
     _lastLockCheck = Date.now();
     _cachedLocked = isChecklistLocked();
   }
 
-  // ===== Cache DOM Top 3 — chỉ render lại khi thật sự cần =====
   let _lastTop3Signature = "";
-  let _top3Nodes = null;   // { label, wrap, slots: [...] }
+  let _top3Nodes = null;
 
   function top3Signature(list){
-    // So sánh: tên + giờ + URL avatar. Nếu y hệt → giữ nguyên DOM.
     return list.map(p => `${p.name}|${p.time}|${getAvatarUrl(p.name)}`).join("::");
   }
 
@@ -6083,14 +5503,12 @@ body #homeStack #questionWrap{
     question.style.pointerEvents="none";
     question.style.opacity="0";
     question.style.transform="scale(.8)";
-    // Ẩn card TOP LEO RANK TUẦN khi vào wheel chọn tên
         burst();
     setTimeout(()=>{
       wheelArea.style.opacity = "1";
       wheelArea.style.pointerEvents = "auto";
       wheelArea.classList.add("show");
 
-      // Nhảy về tên đã chọn lần trước (nếu còn trong danh sách)
       try{
         const lastPicked = localStorage.getItem(LAST_PICKED_NAME_KEY);
         if(lastPicked){
@@ -6107,8 +5525,6 @@ body #homeStack #questionWrap{
   question.addEventListener("pointerup",openQuestion1,{passive:false});
   question.addEventListener("click",openQuestion1);
 
-  // ===== Patch C: Enter/Space kích hoạt CTA Hero =====
-  // Chỉ khi focus đang nằm ở .landing-cta (không phải các element khác)
   question.addEventListener("keydown", (e) => {
     const cta = e.target.closest(".landing-cta");
     if(!cta) return;
@@ -6119,7 +5535,6 @@ body #homeStack #questionWrap{
     }
   });
 
-  // Sau khi chọn tên và xác nhận: vào thẳng CÂU 2, không hiện màn Ký chủ/Rank/Điểm.
   confirm.addEventListener("click",()=>{
     if(isChecklistLocked()){
       resetHome();
@@ -6128,15 +5543,12 @@ body #homeStack #questionWrap{
     const selected = names[current];
     if(!selected) return;
 
-    // Nhớ tên vừa chọn cho lần sau
     try{ localStorage.setItem(LAST_PICKED_NAME_KEY, selected); }catch(_){}
 
     showQuestion2();
   });
 
   function showQuestion2(){
-    // Đã sang Câu 2 thì ẩn hoàn toàn vòng chọn tên, không còn mờ phía sau
-    // và không thể chạm/chọn lại tên.
     wheelArea.classList.remove("show");
     wheelArea.style.opacity = "0";
     wheelArea.style.pointerEvents = "none";
@@ -6164,17 +5576,13 @@ body #homeStack #questionWrap{
       const completedIndex=current, selected=names[current];
       box.remove();
 
-      // Ẩn hoàn toàn màn hình câu hỏi và đi thẳng tới Checklist.
       question.style.opacity = "0";
       question.style.pointerEvents = "none";
       hint.textContent = "";
       message.classList.remove("show");
 
-      // Ghi nhận hoàn thành vào Sheet; UI đã được cập nhật optimistic.
-      // checkin() tự xử lý việc update row vs full render.
       checkin(selected, completedIndex);
 
-      // Mở Checklist ngay lập tức
       checklistPanel.classList.add("show");
       checklistPanel.style.visibility = "visible";
       checklistPanel.style.opacity = "1";
@@ -6193,8 +5601,6 @@ body #homeStack #questionWrap{
   }
 
 
-  // ---------- Chụp checklist ----------
-  // ---------- Chụp checklist: Chrome + Cốc Cốc mobile ----------
   let html2canvasPromise = null;
   function ensureHtml2Canvas(){
     if(typeof html2canvas === "function") return Promise.resolve();
@@ -6293,12 +5699,6 @@ body #homeStack #questionWrap{
 
       imageUrl = URL.createObjectURL(blob);
 
-      /*
-       * Không cố tải file ngay lập tức.
-       * Chrome/Cốc Cốc mobile có thể chặn download/blob sau
-       * một chuỗi await. Thay vào đó mở cửa sổ ảnh ngay trong
-       * trang, để người dùng có nút Chia sẻ / Lưu ảnh.
-       */
       showCapturePreview(imageUrl, blob);
 
       setStatus("Đã tạo ảnh checklist ✓");
@@ -6475,11 +5875,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
     overlay.querySelector("#captureDownloadBtn")
       .addEventListener("click",()=>{
-        /*
-         * Giữ anchor download cho Chrome Android.
-         * Nếu Cốc Cốc không tải trực tiếp, ảnh vẫn đang hiển thị:
-         * người dùng có thể nhấn giữ ảnh -> Lưu hình ảnh.
-         */
         setStatus("Đang lưu ảnh…");
       });
 
@@ -6546,7 +5941,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   document.getElementById("topCaptureBtn")?.addEventListener("click",captureTop);
 
 
-  // ---------- Navigation ----------
   function resetHome(){
     document.getElementById("q2answers")?.remove();
     closeTop();
@@ -6555,7 +5949,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     checklistPanel.style.opacity = "0";
     checklistPanel.style.pointerEvents = "none";
 
-    // ===== Restart auto-sync với interval 120s khi đóng checklist =====
     if(typeof restartAutoSync === "function") restartAutoSync();
 
     message.classList.remove("show");
@@ -6575,13 +5968,11 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     counter.textContent = "CÂU 1";
         _lastTop3Signature = "";
     renderLandingState(true);
-    
+
     hint.textContent = isChecklistLocked() ? "" : (names.length ? "Chạm vào câu hỏi" : "Đang tải dữ liệu…");
     renderWheel();
-    // (không trigger animation ở đây — animation đã chạy 1 lần lúc init)
   }
 
-  // ===== Animation trigger =====
   let _heroAnimationPlayed = false;
   let _top3Revealed = false;
 
@@ -6609,7 +6000,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     const q = document.getElementById("question");
     if(!q) return;
 
-    // Đợi 2 frame để CSS kịp apply opacity 0 ban đầu
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         q.classList.add("top3-in");
@@ -6621,9 +6011,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     resetHome();
     if(typeof syncQuickTools === "function") syncQuickTools();
 
-    // ===== Sync ngay khi quay lại Home (#7+#8) =====
-    // Tránh trường hợp user vừa ở tab khác (Checklist/Chấm công) quay về Home
-    // mà phải chờ tới kỳ auto-sync tiếp theo mới thấy toast.
     if(syncInFlight) return;
     if(!initialSheetLoaded) return;
     if(Date.now() - _lastUserActionAt < USER_ACTION_PAUSE_MS) return;
@@ -6641,24 +6028,21 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
     if (willShow) {
       closeTop();
-      // HIỆN bảng
       checklistPanel.classList.add("show");
       checklistPanel.style.visibility = "visible";
       checklistPanel.style.opacity = "1";
       checklistPanel.style.pointerEvents = "auto";
       renderChecklist();
       if(!initialSheetLoaded) loadData(false);
-      checklistBtn.setAttribute("aria-expanded", "true");   // ← THÊM
+      checklistBtn.setAttribute("aria-expanded", "true");
     } else {
-      // ẨN bảng — xoá cả class lẫn inline style để chắc chắn ẩn
       checklistPanel.classList.remove("show");
       checklistPanel.style.visibility = "hidden";
       checklistPanel.style.opacity = "0";
       checklistPanel.style.pointerEvents = "none";
-      checklistBtn.setAttribute("aria-expanded", "false");  // ← THÊM
+      checklistBtn.setAttribute("aria-expanded", "false");
     }
 
-    // ===== Restart auto-sync: 30s khi mở, 120s khi đóng =====
     restartAutoSync();
 
     syncQuickTools();
@@ -6672,7 +6056,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     checklistPanel.style.opacity = "0";
     checklistPanel.style.pointerEvents = "none";
 
-    // Mỗi lần mở BXH luôn quay về tháng hiện tại.
     resetTopToCurrentMonth();
     topPanel.classList.add("show");
     topPanel.setAttribute("aria-hidden","false");
@@ -6694,12 +6077,9 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     loadData(true, true);
   });
 
-  // Hiển thị trạng thái ngay lập tức
   loadChecklistLockTime();
   checklistLockTimeInput.value = checklistLockTime;
 
-  // ===== Gọi loadData TRƯỚC (không await) =====
-  // getSettings sẽ chờ loadData xong mới gọi → tránh 2 request song song
   let _loadDataPromise = null;
   if(cacheLoad()){
     initialSheetLoaded = true;
@@ -6713,18 +6093,12 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     _loadDataPromise = loadData(true);
   }
 
-  // ===== Render landing SAU khi cache đã load xong =====
-  // Đặt ở đây để Top3 từ cache hiện ra ngay lập tức,
-  // thay vì render rỗng trước rồi mới render lại.
   renderLandingState();
 
-  // ===== Chờ loadData xong rồi mới gọi getSettings =====
   (async()=>{
     try{
-      // Chờ loadData hoàn tất (thành công hoặc thất bại đều signal)
       await _dataLoadPromise;
 
-      // Bây giờ connection đã rảnh → gọi getSettings
       const s = await getSettingsCached(false);
       if(isValid24hTime(s.resetTime)) resetTime = s.resetTime;
       if(isValid24hTime(s.checklistLockTime)){
@@ -6738,28 +6112,19 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
 
   scheduleNextReset();
 
-  // ===== Tối ưu: chỉ render khi thực sự cần =====
-  // Trước: mỗi 1s gọi renderLandingState() + isChecklistLocked() → tốn CPU
-  // Sau:  - Tab ẩn → bỏ qua hoàn toàn (không tốn pin)
-  //       - Chỉ tính lại lock state mỗi 30s (đủ chính xác cho mốc giờ khoá)
-  //       - Chỉ render lại khi trạng thái lock THỰC SỰ thay đổi
   _cachedLocked = isChecklistLocked();
 
   setInterval(()=>{
-    // Tab đang ẩn → không làm gì
     if(document.hidden) return;
 
     const now = Date.now();
 
-    // Mỗi 30s mới tính lại trạng thái khoá (không phải mỗi 1s)
     if(now - _lastLockCheck > 30000){
       _lastLockCheck = now;
       const nextLocked = isChecklistLocked();
       const lockChanged = nextLocked !== _cachedLocked;
       _cachedLocked = nextLocked;
 
-      // Chỉ render khi lock state THỰC SỰ đổi (ví dụ qua giờ khoá).
-      // Không render định kỳ nữa — vì loadData đã tự render khi có data mới.
       if(lockChanged){
         if(!q1Opened && !checklistPanel.classList.contains("show") && !topPanel.classList.contains("show")){
           renderLandingState();
@@ -6767,7 +6132,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       }
     }
 
-    // Cập nhật hint (rất nhẹ, chỉ set textContent)
     if(!q1Opened && !checklistPanel.classList.contains("show") && !topPanel.classList.contains("show")){
       if(_cachedLocked){
         if(hint.textContent !== "") hint.textContent = "";
@@ -6777,7 +6141,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     }
   }, 1000);
 
-  // ===== Keep-warm endpoint Hòm thư — chống cold start =====
   (function warmSecretMail(){
     const ping = () => {
       try {
@@ -6790,10 +6153,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   })();
 
   startAutoSync();
-  // ===== Patch B: ESC đóng panel =====
-  // Chỉ chạy khi user bấm phím Escape.
-  // Thứ tự ưu tiên: đóng panel trên cùng trước.
-  // KHÔNG gọi API, KHÔNG ảnh hưởng Google Sheet.
   document.addEventListener("keydown", (e) => {
     if(e.key !== "Escape") return;
 
@@ -6804,23 +6163,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       LiveFeed.close(); e.preventDefault(); return;
     }
 
-    if(quizBuilderOverlay.classList.contains("show")){ closeQuizBuilder(); e.preventDefault(); return; }
-    if(quizResultOverlay.classList.contains("show")){ closeQuizResult(); e.preventDefault(); return; }
-    if(quizTakeOverlay.classList.contains("show")){
-      // FIX #9: dùng chung logic với nút X
-      if(confirm("Bạn đang làm bài kiểm tra. Thoát sẽ mất toàn bộ câu trả lời. Tiếp tục thoát?")){
-        quizTakeOverlay.classList.remove("show");
-        quizTakeOverlay.setAttribute("aria-hidden", "true");
-        quizCurrentIndex = 0;
-        quizCurrentScore = 0;
-        quizSelectedAnswer = -1;
-        syncQuickTools();
-      }
-      e.preventDefault();
-      return;
-    }
-    if(quizNameOverlay.classList.contains("show")){ closeQuizNamePicker(); e.preventDefault(); return; }
-    if(quizOverlay.classList.contains("show")){ closeQuiz(); e.preventDefault(); return; }
     const lunchPageEl = document.getElementById("lunchPage");
     if(lunchPageEl && lunchPageEl.classList.contains("show")){ closeLunchChoice(); e.preventDefault(); return; }
     if(lunchManageOverlay.classList.contains("show")){ closeLunchManage(); e.preventDefault(); return; }
@@ -6856,12 +6198,8 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   });
   document.addEventListener("visibilitychange", () => {
     if(document.hidden) return;
-    // Tab vừa hiện lại → reset timer để check ngay ở tick kế tiếp
     _lastLockCheck = 0;
 
-    // ===== Trigger sync ngay khi quay lại tab (#7+#8) =====
-    // Browser throttle setInterval khi tab ẩn → auto-sync có thể trễ.
-    // Quay lại tab → đồng bộ luôn để toast "ai vừa check" hiện kịp.
     if(syncInFlight) return;
     if(!initialSheetLoaded) return;
     if(wheelArea.classList.contains("show")) return;
@@ -6873,7 +6211,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     loadData(false, true);
   });
 
-  // Khi app được focus lại (từ task switcher, notification, v.v.)
   window.addEventListener("focus", () => {
     if(document.hidden) return;
     if(syncInFlight) return;
@@ -6887,58 +6224,10 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     loadData(false, true);
   });
 
-  const QUIZ_DATA_KEY="srank_quiz_questions_v1";
-  const QUIZ_SCORE_KEY="srank_quiz_scores_v1";
-  let quizQuestions=[];
-  let quizScores={};
-  let quizCurrentName="";
-  let quizCurrentIndex=0;
-  let quizCurrentScore=0;
-  let quizSelectedAnswer=-1;
-
-  function loadQuizStore(){
-    try{
-      const q=JSON.parse(localStorage.getItem(QUIZ_DATA_KEY)||"[]");
-      const s=JSON.parse(localStorage.getItem(QUIZ_SCORE_KEY)||"{}");
-      quizQuestions=Array.isArray(q)?q:[];
-      quizScores=s&&typeof s==="object"?s:{};
-    }catch(_){quizQuestions=[];quizScores={};}
-  }
-  function saveQuizStore(){
-    try{
-      localStorage.setItem(QUIZ_DATA_KEY,JSON.stringify(quizQuestions));
-      localStorage.setItem(QUIZ_SCORE_KEY,JSON.stringify(quizScores));
-    }catch(_){}
-  }
-  function normalizeQuizQuestion(q){
-    return {
-      question:String(q.question||"").trim(),
-      answers:Array.isArray(q.answers)?q.answers.map(a=>({text:String(a.text||"").trim(),correct:!!a.correct})).filter(a=>a.text):[]
-    };
-  }
-  function validQuizQuestions(){
-    return quizQuestions.map(normalizeQuizQuestion).filter(q=>q.question&&q.answers.length>=2&&q.answers.some(a=>a.correct));
-  }
-  function renderQuizLeaderboard(){
-    quizLeaderboardBody.innerHTML="";
-    const rows=Object.entries(quizScores)
-      .filter(([n,s])=>Number.isFinite(Number(s)))
-      .sort((a,b)=>Number(b[1])-Number(a[1])||a[0].localeCompare(b[0],"vi"));
-    quizEmpty.style.display=rows.length?"none":"block";
-    rows.forEach(([name,score],i)=>{
-      const tr=document.createElement("tr");
-      const a=document.createElement("td");a.textContent=String(i+1);
-      const b=document.createElement("td");b.textContent=name;
-      const c=document.createElement("td");c.textContent=`${Number(score)} điểm`;
-      tr.append(a,b,c);quizLeaderboardBody.appendChild(tr);
-    });
-  }
   function syncQuickTools(){
-  window.syncQuickTools = syncQuickTools;
-    renderQuizAdminButton();
+    window.syncQuickTools = syncQuickTools;
+    renderAdminVisibleState();
 
-    // Thanh 2 (Luật KDV / Bài kiểm tra / Tạo Ktra) chỉ xuất hiện ở HOME.
-    // Bất kỳ bảng/tab/màn hình con nào mở ra -> ẩn hoàn toàn.
     const otherViewOpen =
       kdvRulesOverlay.classList.contains("show") ||
       monitorOverlay.classList.contains("show") ||
@@ -6947,11 +6236,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
       adminPage.classList.contains("show") ||
       adminPasswordOverlay.style.display === "flex" ||
       linkEditorOverlay.classList.contains("show") ||
-      quizOverlay.classList.contains("show") ||
-      quizNameOverlay.classList.contains("show") ||
-      quizTakeOverlay.classList.contains("show") ||
-      quizResultOverlay.classList.contains("show") ||
-      quizBuilderOverlay.classList.contains("show") ||
       wheelArea.classList.contains("show") ||
       message.classList.contains("show") ||
       confirm.classList.contains("show") ||
@@ -6966,181 +6250,15 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     lunchResult.classList.toggle("show", !otherViewOpen && lunchResult.dataset.hasResult === "1");
     lunchResult.setAttribute("aria-hidden", otherViewOpen ? "true" : "false");
 
-    // Ẩn/hiện nút Hòm thư
     const smFab = document.getElementById("secretMailBtn");
     if(smFab){
       smFab.classList.toggle("hidden", otherViewOpen);
       smFab.setAttribute("aria-hidden", otherViewOpen ? "true" : "false");
     }
   }
-  function renderQuizAdminButton(){
-    quizAdminBtn.hidden=!adminUnlocked;
+  function renderAdminVisibleState(){
     secondaryNav.classList.toggle("admin-visible", !!adminUnlocked);
   }
-
-  function openQuiz(){
-    closeTop();
-    closeMonitor();
-    closeAdmin();
-    checklistPanel.classList.remove("show");
-    checklistPanel.style.visibility="hidden";
-    checklistPanel.style.opacity="0";
-    checklistPanel.style.pointerEvents="none";
-    loadQuizStore();
-    renderQuizLeaderboard();
-    quizOverlay.classList.add("show");
-    quizOverlay.setAttribute("aria-hidden","false");
-    syncQuickTools();
-  }
-  function closeQuiz(){
-    quizOverlay.classList.remove("show");
-    quizOverlay.setAttribute("aria-hidden","true");
-    syncQuickTools();
-  }
-  function renderQuizNameList(){
-    quizNameList.innerHTML = "";
-    if(!names.length){
-      const e = document.createElement("div");
-      e.className = "quizNoNames";
-      e.textContent = "Chưa có danh sách kiểm duyệt viên.";
-      quizNameList.appendChild(e);
-      return;
-    }
-    names.forEach(name => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "quizNameItem";
-      // XSS-safe
-      b.textContent = `👤 ${String(name).slice(0, 60)}`;
-      b.addEventListener("click", () => startQuizForName(name));
-      quizNameList.appendChild(b);
-    });
-  }
-  function openQuizNamePicker(){
-    const qs=validQuizQuestions();
-    if(!qs.length){alert("Chưa có câu hỏi. Admin cần tạo bài kiểm tra trước.");return;}
-    renderQuizNameList();
-    quizNameOverlay.classList.add("show");
-    quizNameOverlay.setAttribute("aria-hidden","false");
-    syncQuickTools();
-  }
-  function closeQuizNamePicker(){
-    quizNameOverlay.classList.remove("show");
-    quizNameOverlay.setAttribute("aria-hidden","true");
-    syncQuickTools();
-  }
-  function startQuizForName(name){
-    quizQuestions=validQuizQuestions();
-    quizCurrentName=String(name);
-    quizCurrentIndex=0;quizCurrentScore=0;quizSelectedAnswer=-1;
-    closeQuizNamePicker();
-    quizTakeOverlay.classList.add("show");
-    quizTakeOverlay.setAttribute("aria-hidden","false");
-    renderQuizQuestion();syncQuickTools();
-  }
-  function renderQuizQuestion(){
-    const q = quizQuestions[quizCurrentIndex];
-    if(!q){ finishQuiz(); return; }
-    
-    quizProgress.textContent = `Câu ${quizCurrentIndex+1}/${quizQuestions.length}`;
-    
-    // ===== XSS-safe: dùng textContent thay innerHTML =====
-    quizQuestion.textContent = String(q.question || "").slice(0, 500);
-    
-    quizAnswers.innerHTML = "";
-    quizSelectedAnswer = -1;
-    quizNextBtn.disabled = true;
-    quizNextBtn.textContent = quizCurrentIndex === quizQuestions.length - 1 ? "Hoàn thành" : "Tiếp tục";
-    
-    q.answers.forEach((a, i) => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "quizAnswer";
-      
-      const l = document.createElement("span");
-      l.className = "quizAnswerLetter";
-      l.textContent = String.fromCharCode(65 + i);
-      
-      const t = document.createElement("span");
-      // textContent tự escape HTML → an toàn
-      t.textContent = String(a.text || "").slice(0, 300);
-      
-      b.append(l, t);
-      b.addEventListener("click", () => {
-        quizSelectedAnswer = i;
-        [...quizAnswers.children].forEach(x => x.classList.remove("selected"));
-        b.classList.add("selected");
-        quizNextBtn.disabled = false;
-      });
-      quizAnswers.appendChild(b);
-    });
-  }
-  function submitQuizAnswer(){
-    if(quizSelectedAnswer<0)return;
-    const q=quizQuestions[quizCurrentIndex];
-    if(q.answers[quizSelectedAnswer]?.correct)quizCurrentScore+=10;
-    quizCurrentIndex++;
-    if(quizCurrentIndex>=quizQuestions.length)finishQuiz();else renderQuizQuestion();
-  }
-  function finishQuiz(){
-    quizScores[quizCurrentName]=quizCurrentScore;saveQuizStore();
-    LiveFeed.push({ type:"quiz", name:quizCurrentName || "Ai đó", meta:{ score: quizCurrentScore } });
-    quizTakeOverlay.classList.remove("show");quizTakeOverlay.setAttribute("aria-hidden","true");
-    quizResultName.textContent=quizCurrentName;
-    quizResultScore.textContent=`${quizCurrentScore} điểm`;
-    quizResultDetail.textContent=`Đúng ${Math.round(quizCurrentScore/10)}/${quizQuestions.length} câu • Mỗi câu đúng +10 điểm`;
-    quizResultOverlay.classList.add("show");quizResultOverlay.setAttribute("aria-hidden","false");syncQuickTools();
-  }
-  function closeQuizResult(){
-    quizResultOverlay.classList.remove("show");quizResultOverlay.setAttribute("aria-hidden","true");
-    renderQuizLeaderboard();quizOverlay.classList.add("show");quizOverlay.setAttribute("aria-hidden","false");syncQuickTools();
-  }
-
-  function defaultQuizQuestion(){return {question:"",answers:[{text:"",correct:true},{text:"",correct:false}]}}
-  function renderQuizBuilder(){
-    quizBuilderList.innerHTML="";
-    quizQuestions.forEach((q,qi)=>{
-      const card=document.createElement("article");card.className="quizQuestionCard";
-      const head=document.createElement("div");head.className="quizQuestionHead";
-      const no=document.createElement("span");no.className="quizQuestionNo";no.textContent=`Câu ${qi+1}`;
-      const remove=document.createElement("button");remove.type="button";remove.className="quizQuestionRemove";remove.textContent="Xoá câu";
-      remove.addEventListener("click",()=>{quizQuestions.splice(qi,1);if(!quizQuestions.length)quizQuestions.push(defaultQuizQuestion());renderQuizBuilder()});
-      head.append(no,remove);card.appendChild(head);
-      const qin=document.createElement("textarea");qin.className="quizQuestionInput";qin.placeholder="Nhập nội dung câu hỏi…";qin.value=q.question||"";
-      qin.addEventListener("input",e=>quizQuestions[qi].question=e.target.value);card.appendChild(qin);
-      q.answers.forEach((a,ai)=>{
-        const row=document.createElement("div");row.className="quizAnswerEdit";
-        const letter=document.createElement("span");letter.className="letter";letter.textContent=String.fromCharCode(65+ai);
-        const ain=document.createElement("input");ain.type="text";ain.className="quizAnswerInput";ain.placeholder=`Đáp án ${String.fromCharCode(65+ai)}`;ain.value=a.text||"";
-        ain.addEventListener("input",e=>quizQuestions[qi].answers[ai].text=e.target.value);
-        const radio=document.createElement("input");radio.type="radio";radio.className="quizCorrectRadio";radio.name=`quizCorrect_${qi}`;radio.checked=!!a.correct;radio.title="Đáp án đúng";
-        radio.addEventListener("change",()=>quizQuestions[qi].answers.forEach((x,idx)=>x.correct=idx===ai));
-        row.append(letter,ain,radio);card.appendChild(row);
-      });
-      const add=document.createElement("button");add.type="button";add.className="quizAddAnswer";add.textContent="＋ Thêm đáp án";
-      add.addEventListener("click",()=>{quizQuestions[qi].answers.push({text:"",correct:false});renderQuizBuilder()});
-      card.appendChild(add);quizBuilderList.appendChild(card);
-    });
-  }
-  function openQuizBuilder(){
-    if(!adminUnlocked){openAdminPassword();return}
-    loadQuizStore();if(!quizQuestions.length)quizQuestions=[defaultQuizQuestion()];
-    renderQuizBuilder();quizBuilderStatus.textContent="";
-    quizBuilderOverlay.classList.add("show");quizBuilderOverlay.setAttribute("aria-hidden","false");syncQuickTools();
-  }
-  function closeQuizBuilder(){quizBuilderOverlay.classList.remove("show");quizBuilderOverlay.setAttribute("aria-hidden","true");syncQuickTools()}
-  function saveQuizBuilder(){
-    const clean=quizQuestions.map(normalizeQuizQuestion);let error="";
-    clean.forEach((q,i)=>{
-      if(!error&&!q.question)error=`Câu ${i+1} chưa có nội dung.`;
-      else if(!error&&q.answers.length<2)error=`Câu ${i+1} phải có ít nhất 2 đáp án.`;
-      else if(!error&&!q.answers.some(a=>a.correct))error=`Câu ${i+1} chưa chọn đáp án đúng.`;
-    });
-    if(error){quizBuilderStatus.textContent=error;return}
-    quizQuestions=clean;saveQuizStore();quizBuilderStatus.textContent=`Đã lưu ${quizQuestions.length} câu hỏi ✓`;
-    setTimeout(closeQuizBuilder,500);
-  }
-
 
   const LUNCH_SAVORY = [
     "Thịt kho trứng","Thịt rang cháy cạnh","Thịt xào hành tây","Thịt xào sả ớt","Thịt xào rau củ","Thịt xào lá khế","Sườn xào chua ngọt","Sườn ram mặn","Sườn nướng","Sườn kho tiêu",
@@ -7165,13 +6283,11 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     const saved=JSON.parse(localStorage.getItem(LUNCH_CUSTOM_KEY)||"null");
     if(saved && Array.isArray(saved.savory) && Array.isArray(saved.soup) && Array.isArray(saved.out)){
       LUNCH_DATA={savory:saved.savory.filter(Boolean),soup:saved.soup.filter(Boolean),out:saved.out.filter(Boolean)};
-      // Nếu dữ liệu cũ bị rỗng do phiên bản trước, khôi phục danh sách mặc định tương ứng.
       if(!LUNCH_DATA.savory.length) LUNCH_DATA.savory=[...LUNCH_SAVORY];
       if(!LUNCH_DATA.soup.length) LUNCH_DATA.soup=[...LUNCH_SOUP];
       if(!LUNCH_DATA.out.length) LUNCH_DATA.out=[...LUNCH_OUT];
       saveLunchData();
     }else{
-      // Migrate danh sách món tự thêm từ phiên bản cũ: món ăn tại nhà được xếp vào nhóm món mặn.
       const old=JSON.parse(localStorage.getItem("DAOMEo_LUNCH_CUSTOM_V1")||"null");
       if(old && Array.isArray(old.home)) LUNCH_DATA.savory.push(...old.home.filter(Boolean));
       if(old && Array.isArray(old.out)) LUNCH_DATA.out.push(...old.out.filter(Boolean));
@@ -7217,7 +6333,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
     }
   }
   function updateLunchAddStatus(msg){lunchAddStatus.textContent=msg;clearTimeout(updateLunchAddStatus.t);if(msg) updateLunchAddStatus.t=setTimeout(()=>lunchAddStatus.textContent="",2200);}
-  // ===== Mở/đóng trang Bữa trưa full-screen =====
   function openLunchChoice(){
     updateLunchCounts();
     const page = document.getElementById("lunchPage");
@@ -7306,7 +6421,6 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   lunchChoiceOverlay.addEventListener("click",e=>{if(e.target===lunchChoiceOverlay)closeLunchChoice()});
   lunchModeButtons.forEach(btn=>btn.addEventListener("click",()=>chooseLunchMode(btn.dataset.mode)));
 
-  // ===== Trang Bữa trưa mới — sự kiện =====
   document.getElementById("lunchBack")?.addEventListener("click", closeLunchChoice);
   document.querySelectorAll(".lunch-mode-card").forEach(btn => {
     btn.addEventListener("click", () => chooseLunchMode(btn.dataset.mode));
@@ -7382,51 +6496,15 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   lunchManageClose.addEventListener("click",closeLunchManage);
   lunchManageOverlay.addEventListener("click",e=>{if(e.target===lunchManageOverlay)closeLunchManage()});
   document.querySelectorAll('.lunchManageTab').forEach(tab=>tab.addEventListener('click',()=>{lunchManageCategory=tab.dataset.manageCategory;renderLunchManage();}));
-  quizBtn.addEventListener("click",openQuiz);
-  quizClose.addEventListener("click",closeQuiz);
-  quizOverlay.addEventListener("click",e=>{if(e.target===quizOverlay)closeQuiz()});
-  startQuizBtn.addEventListener("click",openQuizNamePicker);
-  quizNameClose.addEventListener("click",closeQuizNamePicker);
-  quizNameOverlay.addEventListener("click",e=>{if(e.target===quizNameOverlay)closeQuizNamePicker()});
-  quizNextBtn.addEventListener("click",submitQuizAnswer);
-  quizResultClose.addEventListener("click",closeQuizResult);
+  loadQuizStore && null; renderAdminVisibleState(); syncQuickTools();
 
-  // FIX #9: nút X thoát Quiz Take với confirm
-  const quizTakeClose = document.getElementById("quizTakeClose");
-  if(quizTakeClose){
-    quizTakeClose.addEventListener("click", () => {
-      if(confirm("Bạn đang làm bài kiểm tra. Thoát sẽ mất toàn bộ câu trả lời. Tiếp tục thoát?")){
-        quizTakeOverlay.classList.remove("show");
-        quizTakeOverlay.setAttribute("aria-hidden", "true");
-        quizCurrentIndex = 0;
-        quizCurrentScore = 0;
-        quizSelectedAnswer = -1;
-        syncQuickTools();
-      }
-    });
-  }
-  quizResultOverlay.addEventListener("click",e=>{if(e.target===quizResultOverlay)closeQuizResult()});
-  quizAdminBtn.addEventListener("click",openQuizBuilder);
-  quizBuilderClose.addEventListener("click",closeQuizBuilder);
-  quizBuilderOverlay.addEventListener("click",e=>{if(e.target===quizBuilderOverlay)closeQuizBuilder()});
-  addQuizQuestionBtn.addEventListener("click",()=>{
-    quizQuestions.push(defaultQuizQuestion());renderQuizBuilder();
-    setTimeout(()=>quizBuilderList.lastElementChild?.scrollIntoView({behavior:"smooth",block:"center"}),30);
-  });
-  saveQuizBtn.addEventListener("click",saveQuizBuilder);
-  loadQuizStore();renderQuizAdminButton();syncQuickTools();
-
-  // Cầu nối an toàn để Page 2 đọc đúng danh sách names của checklist.
   window.__getChecklistNames = () => Array.isArray(names) ? names.slice() : [];
-// Cầu nối cho Page 2 đọc trạng thái checkin
-window.__getChecklistState = () => ({
-  names: Array.isArray(names) ? names.slice() : [],
-  checked: Array.isArray(checked) ? checked.slice() : [],
-  times: Array.isArray(times) ? times.slice() : []
-});
+  window.__getChecklistState = () => ({
+    names: Array.isArray(names) ? names.slice() : [],
+    checked: Array.isArray(checked) ? checked.slice() : [],
+    times: Array.isArray(times) ? times.slice() : []
+  });
 
-  // Cầu nối cho Page 2 yêu cầu xoá checkin của 1 người
-  // → set checked=false, times="" + đồng bộ lên server + render lại
   window.__clearCheckinForName = async function(name){
     const cleanName = String(name || "").trim();
     if(!cleanName) return false;
@@ -7434,25 +6512,20 @@ window.__getChecklistState = () => ({
     const idx = names.indexOf(cleanName);
     if(idx < 0) return false;
 
-    // Nếu chưa checkin → không cần xoá
     if(!checked[idx] && !times[idx]) return true;
 
-    // Snapshot để rollback nếu server fail
     const prevChecked = checked[idx];
     const prevTime = times[idx];
 
-    // Optimistic: xoá ngay trên UI
     checked[idx] = false;
     times[idx] = "";
     cacheSave();
     renderChecklist();
 
-    // Cập nhật Top 3 nếu đang ở Home
     if(!q1Opened && !checklistPanel.classList.contains("show")){
       renderLandingState();
     }
 
-    // Gọi server xoá
     try{
       const token = AdminSession.get();
       if(!token){
@@ -7484,9 +6557,6 @@ window.__getChecklistState = () => ({
     }
   };
 
-  // ===== Khởi động Live Feed =====
-  // Dùng requestAnimationFrame để chắc chắn DOM ready,
-  // tránh trường hợp init() chạy trước khi button được render.
   requestAnimationFrame(() => {
     try{
       LiveFeed.init();
@@ -7501,16 +6571,13 @@ window.__getChecklistState = () => ({
 /* ===== ĐIỀU HƯỚNG TRANG 2 + LỊCH CHẤM CÔNG ===== */
 (function(){
   "use strict";
-  const AUTO_REFRESH_SEC_V3 = 60;
-  const REFRESH_PAUSE_AFTER_SAVE_MS_V3 = 8000;
-  const PRELOAD_OFFSETS_V3 = [-2,-1,1,2];
   const page = document.getElementById('attendancePage');
   const back = document.getElementById('attendanceBack');
   const employee = document.getElementById('attendanceEmployee');
   const grid = document.getElementById('attendanceGrid');
   const monthLabel = document.getElementById('attendanceMonthLabel');
   const yearLabel = document.getElementById('attendanceYearLabel');
-  
+
   const workCount = document.getElementById('attendanceWorkCount');
   const offCount = document.getElementById('attendanceOffCount');
   const leaveCount = document.getElementById('attendanceLeaveCount');
@@ -7523,7 +6590,6 @@ window.__getChecklistState = () => ({
 
   let ATTENDANCE_EMPLOYEES = [];
 
-  // ===== Auto-refresh =====
   let attendanceAutoRefreshTimer = null;
   let attendanceAutoRefreshCountdown = 60;
   let attendanceLastSaveAt = 0;
@@ -7568,7 +6634,6 @@ window.__getChecklistState = () => ({
     if(el) el.textContent = String(Math.max(0, attendanceAutoRefreshCountdown));
   }
 
-  // ===== Footer state =====
   function setAttendanceFooterState(state, message){
     const bar = document.getElementById('attendanceSyncStatus');
     if(!bar) return;
@@ -7588,19 +6653,12 @@ window.__getChecklistState = () => ({
     }
   }
 
-  // ===== Preload tháng ±1 =====
   let attendancePreloadedKeys = new Set();
 
   async function preloadAdjacentMonths(){
     const y = viewDate.getFullYear();
     const m = viewDate.getMonth();
 
-    let pm = m - 1, py = y;
-    if(pm < 0){ pm = 11; py = y - 1; }
-    let nm = m + 1, ny = y;
-    if(nm > 11){ nm = 0; ny = y + 1; }
-
-    // Preload ±2 tháng để khi user bấm liên tiếp không phải chờ
     const tasks = [];
     for(let offset = -2; offset <= 2; offset++){
       if(offset === 0) continue;
@@ -7630,7 +6688,6 @@ window.__getChecklistState = () => ({
     }
   }
 
-  // ===== Employee avatar =====
   function updateEmployeeAvatar(){
     const el = document.getElementById('attendanceEmployeeAvatar');
     if(!el) return;
@@ -7649,9 +6706,6 @@ window.__getChecklistState = () => ({
     }
   }
 
-  // Chấm công đọc trực tiếp từ Check!C19:C32 và dải ngày D:AH (31 cột).
-  // D = ngày 1, E = ngày 2, ... AH = ngày 31.
-  // Mã compact: [ngày][P/O/T][tháng]. Ví dụ 26P9 = ngày 26, phép, tháng 9.
   const ATTENDANCE_DATA = {};
   const ATTENDANCE_CACHE_PREFIX = 'srank_attendance_check_v2_';
   const ATTENDANCE_RAW_MEMORY = new Map();
@@ -7663,7 +6717,7 @@ window.__getChecklistState = () => ({
   let attendanceEditingDay = 0;
   let attendanceMultiMode = false;
   const attendanceMultiDays = new Set();
-  let attendanceLockUntil = 0; // Khóa auto-sync trong 3s sau khi save thành công
+  let attendanceLockUntil = 0;
 
   const attendanceStatusOverlay = document.getElementById('attendanceStatusOverlay');
   const attendanceMultiBtn = document.getElementById('attendanceMultiBtn');
@@ -7739,19 +6793,16 @@ window.__getChecklistState = () => ({
       });
     });
 
-    // ===== MERGE: chỉ ghi đè user có trong response, không xoá user khác =====
     Object.keys(map).forEach(name => {
       ATTENDANCE_DATA[name] = map[name];
     });
 
-    // Merge danh sách kiểm duyệt viên: giữ thứ tự cũ, thêm người mới vào cuối
     const seen = new Set();
     const merged = [];
     (payload?.employees || []).forEach(x => {
       const name = String(x?.name || '').trim();
       if(name && !seen.has(name)){ seen.add(name); merged.push(name); }
     });
-    // Giữ người cũ không có trong response (tránh mất tạm thời)
     ATTENDANCE_EMPLOYEES.forEach(n => {
       if(!seen.has(n)){ seen.add(n); merged.push(n); }
     });
@@ -7781,7 +6832,6 @@ window.__getChecklistState = () => ({
       if(!name) return;
       if(!ATTENDANCE_DATA[name]) ATTENDANCE_DATA[name] = {};
 
-      // Xoá data THÁNG NÀY của user (để ghi lại đúng) nhưng không xoá user khác / tháng khác
       Object.keys(ATTENDANCE_DATA[name]).forEach(k => {
         if(k.startsWith(prefix)) delete ATTENDANCE_DATA[name][k];
       });
@@ -7795,7 +6845,6 @@ window.__getChecklistState = () => ({
       });
     });
 
-    // Merge danh sách kiểm duyệt viên — không xoá người cũ
     const seen = new Set(ATTENDANCE_EMPLOYEES);
     cache.employees.forEach(p => {
       const name = String(p?.name || '').trim();
@@ -7862,7 +6911,6 @@ window.__getChecklistState = () => ({
   }
 
   async function loadAttendanceMonth(force = false){
-    // Nếu đang trong thời gian khóa (vừa save xong), bỏ qua request không force
     if(!force && Date.now() < attendanceLockUntil){
       return Promise.resolve({ok:true, locked:true});
     }
@@ -7871,8 +6919,6 @@ window.__getChecklistState = () => ({
     const m = viewDate.getMonth();
     const requestKey = y + '-' + (m + 1);
 
-    // Nếu đã có request cùng tháng đang chạy, chờ chính request đó.
-    // Tránh tình trạng lần đồng bộ đầu bị request sau làm vô hiệu hóa.
     if(attendanceLoadPromise && attendanceLoadPromiseKey === requestKey){
       if(force){
         setAttendanceSyncStatus('warn','Đang chờ đồng bộ từ Google Sheet…');
@@ -7884,20 +6930,15 @@ window.__getChecklistState = () => ({
 
     const token = ++attendanceLoadToken;
 
-    // Đã đồng bộ đúng tháng thì dùng state hiện có, không gọi lại API.
     if(!force && attendanceServerLoaded && attendanceServerLoadedKey === requestKey){
       return Promise.resolve({ok:true, cached:true});
     }
 
     if(force){
-      // Chỉ sync button mới hiện "đang đồng bộ" rõ ràng
       attendanceSyncBtn?.classList.add('busy');
       setAttendanceFooterState?.('syncing', 'Đang đồng bộ…') ||
         setAttendanceSyncStatus('warn', 'Đang đồng bộ…');
     }else{
-      // Non-force: goToMonth đã render rồi → chỉ fetch nền,
-      // không báo "đang tải" gây cảm giác chờ đợi.
-      // Nếu chưa có cache nào, mới cần apply cache (lần đầu vào page).
       if(!ATTENDANCE_EMPLOYEES.length){
         applyAttendanceCache(y, m);
         render();
@@ -7910,8 +6951,6 @@ window.__getChecklistState = () => ({
         if(!r || r.ok !== true) throw new Error(r?.error || 'Google Sheet trả về dữ liệu không hợp lệ');
         if(!r.data || !Array.isArray(r.data.employees)) throw new Error('Phản hồi getAttendance thiếu danh sách employees');
 
-        // Không bỏ qua response thành công chỉ vì có request khác chạy sau.
-        // Nếu response thuộc đúng tháng hiện tại thì luôn áp dụng dữ liệu server.
         if(viewDate.getFullYear() === y && viewDate.getMonth() === m){
           applyAttendanceData(r.data, y, m);
           attendanceServerLoaded = true;
@@ -7978,9 +7017,6 @@ window.__getChecklistState = () => ({
     return {score, rank:attendanceRankClient(score), tCount, pCount, qCount, xCount, off:daysInMonth - tCount - pCount - qCount - xCount, year, month};
   };
 
-  // Preload tháng hiện tại nếu chưa có cache/RAM để kích hoạt và BXH mở gần như tức thời.
-  // Cầu nối duy nhất cho BXH: giữ toàn bộ state chấm công trong IIFE này,
-  // không đưa viewDate / ATTENDANCE_DATA ra global.
   window.__getAttendanceTopData = async function(){
     await loadAttendanceMonth(false).catch(()=>{});
     const y = viewDate.getFullYear();
@@ -8043,7 +7079,6 @@ window.__getChecklistState = () => ({
     return {year, month, employees, cached};
   };
 
-  // Preload tháng hiện tại nếu chưa có cache/RAM để kích hoạt và BXH mở gần như tức thời.
   window.__attendanceCurrentMonthReady = window.__getAttendanceTopDataForMonth((new Date()).getMonth() + 1, false).catch(()=>null);
 
   function updateAttendanceMultiUI(){
@@ -8085,14 +7120,12 @@ window.__getChecklistState = () => ({
     const cleanStatus = String(status || '').trim().toUpperCase();
     if(cleanStatus && !['P','O','T','Q','X'].includes(cleanStatus)) return;
 
-    // Snapshot
     const snapshots = days.map(day => ({
       day,
       key: key(y,m,day),
       prev: ATTENDANCE_DATA[nameAtRequest]?.[key(y,m,day)] || ''
     }));
 
-    // ===== XOÁ: cần xoá cả checkin nếu có =====
     if(!cleanStatus){
       try{
         if(typeof window.__clearCheckinForName === "function"){
@@ -8103,7 +7136,6 @@ window.__getChecklistState = () => ({
       }
     }
 
-    // ===== Optimistic =====
     if(!ATTENDANCE_DATA[nameAtRequest]) ATTENDANCE_DATA[nameAtRequest] = {};
     days.forEach(day => {
       const k = key(y,m,day);
@@ -8120,7 +7152,6 @@ window.__getChecklistState = () => ({
     setAttendanceFooterState('syncing', `Đang lưu ${days.length} ngày…`);
     attendanceLastSaveAt = Date.now();
 
-    // ===== API nền =====
     try{
       const r = await window.__srankApi('setAttendanceBatch', {
         month: monthAtRequest, days, name: nameAtRequest, status: cleanStatus
@@ -8134,7 +7165,6 @@ window.__getChecklistState = () => ({
       setAttendanceFooterState('ok', `Đã lưu ${days.length} ngày ✓`);
 
     }catch(e){
-      // ===== Rollback =====
       snapshots.forEach(s => {
         if(s.prev) ATTENDANCE_DATA[nameAtRequest][s.key] = s.prev;
         else delete ATTENDANCE_DATA[nameAtRequest][s.key];
@@ -8184,23 +7214,18 @@ window.__getChecklistState = () => ({
     const dayAtRequest = day;
     const k = key(y, m, day);
 
-    // Snapshot để rollback nếu API fail
     const prevValue = ATTENDANCE_DATA[nameAtRequest]?.[k] || '';
 
-    // ===== XOÁ: cần xoá cả checkin nếu có =====
     if(!cleanStatus){
-      // Xoá checkin trước (nếu có)
       try{
         if(typeof window.__clearCheckinForName === "function"){
           await window.__clearCheckinForName(nameAtRequest);
         }
       }catch(e){
-        // Không xoá được checkin → báo lỗi, không tiếp tục
         console.warn("[attendance] Không xoá được checkin (có thể chưa đăng nhập admin):", e?.message || e);
       }
     }
 
-    // ===== Optimistic update =====
     if(!ATTENDANCE_DATA[nameAtRequest]) ATTENDANCE_DATA[nameAtRequest] = {};
     if(cleanStatus){
       ATTENDANCE_DATA[nameAtRequest][k] = cleanStatus;
@@ -8212,14 +7237,11 @@ window.__getChecklistState = () => ({
       render();
     }
 
-    // Đóng bottom sheet ngay
     closeAttendanceStatus();
 
-    // Hiện trạng thái đang lưu
     setAttendanceFooterState('syncing', 'Đang lưu…');
     attendanceLastSaveAt = Date.now();
 
-    // ===== Gọi API nền =====
     try{
       const r = await window.__srankApi('setAttendance', {
         month: monthAtRequest,
@@ -8238,7 +7260,6 @@ window.__getChecklistState = () => ({
       setAttendanceFooterState('ok', 'Đã lưu ✓');
 
     }catch(e){
-      // ===== Rollback nếu lỗi =====
       if(prevValue){
         ATTENDANCE_DATA[nameAtRequest][k] = prevValue;
       }else{
@@ -8267,9 +7288,6 @@ window.__getChecklistState = () => ({
   const wheelStep = 58;
 
   function syncAttendanceEmployees(){
-    // KHÔNG lấy danh sách từ checklist C4:C17.
-    // Danh sách chấm công bắt buộc lấy từ API getAttendance(),
-    // tức Check!C19:C32.
     if(!ATTENDANCE_EMPLOYEES.length){
       loadAttendanceMonth(true);
       return;
@@ -8301,9 +7319,6 @@ window.__getChecklistState = () => ({
   function renderNameWheel(){
     if(!wheelItems) return;
 
-    // Dùng cùng cơ chế với vòng quay chọn tên ở Page 1:
-    // vị trí của mọi tên được tính theo current + toàn bộ quãng vuốt,
-    // nên có thể vuốt qua nhiều tên trong một lần kéo.
     const mid = (wheelViewport?.clientHeight || 292) / 2;
     const children = wheelItems.children;
     for(let i=0;i<children.length;i++){
@@ -8311,7 +7326,7 @@ window.__getChecklistState = () => ({
       const y = (i-wheelIndex)*wheelStep + mid + wheelOffset;
       const d = Math.abs(y-mid);
       const n = Math.min(1,d/(wheelStep*2.3));
-      el.style.top = (y-wheelStep/2) + 'px';
+      el.style.top = (y-wheelStep/2) + "px";
       el.style.transform = `scale(${1-n*.28})`;
       el.style.opacity = .20 + (1-n)*.80;
       el.style.filter = `blur(${n*2.5}px)`;
@@ -8321,7 +7336,6 @@ window.__getChecklistState = () => ({
   function settleNameWheel(){
     if(!ATTENDANCE_EMPLOYEES.length) return;
 
-    // Giống Page 1: số bậc di chuyển = toàn bộ quãng vuốt / chiều cao 1 tên.
     const steps = Math.round(-wheelOffset / wheelStep);
     if(steps!==0){
       wheelIndex = Math.max(0, Math.min(ATTENDANCE_EMPLOYEES.length-1, wheelIndex + steps));
@@ -8330,7 +7344,6 @@ window.__getChecklistState = () => ({
     renderNameWheel();
   }
   function openNameWheel(){
-    // Chưa có danh sách → tải trước rồi mới mở, tránh màn trống
     if(!ATTENDANCE_EMPLOYEES.length){
       setAttendanceFooterState('syncing','Đang tải danh sách…');
       loadAttendanceMonth(true).then(() => {
@@ -8344,7 +7357,6 @@ window.__getChecklistState = () => ({
     wheelOverlay.classList.add('show');
     wheelOverlay.setAttribute('aria-hidden','false');
     renderNameWheel();
-    // Render lại sau 1 frame: lúc này viewport đã có kích thước thật
     requestAnimationFrame(() => {
       renderNameWheel();
       requestAnimationFrame(() => renderNameWheel());
@@ -8366,13 +7378,11 @@ window.__getChecklistState = () => ({
   const m = date.getMonth();
   const d = date.getDate();
 
-  // 1) Sheet chấm công có P/O/T/Q/X → hiện đúng
   const raw = String(ATTENDANCE_DATA[selectedName]?.[key(y,m,d)] || '').trim().toUpperCase();
   if(raw === 'P' || raw === 'O' || raw === 'T' || raw === 'Q' || raw === 'X'){
     return { status: raw };
   }
 
-  // 2) Hôm nay đã checkin → tự đánh ✓ (hoặc T nếu CN)
   const state = (typeof window.__getChecklistState === "function")
     ? window.__getChecklistState()
     : null;
@@ -8391,7 +7401,6 @@ window.__getChecklistState = () => ({
     }
   }
 
-  // 3) Không có gì → trống
   return null;
 }
 
@@ -8509,7 +7518,6 @@ window.__getChecklistState = () => ({
     page.classList.add('show');
     if(typeof syncQuickTools==='function') syncQuickTools();
 
-    // ===== Cache-first: render ngay, không chờ API =====
     const y = viewDate.getFullYear();
     const m = viewDate.getMonth();
     const hasCache = applyAttendanceCache(y, m);
@@ -8517,15 +7525,11 @@ window.__getChecklistState = () => ({
 
     updateEmployeeAvatar();
 
-    // Bắt đầu auto-refresh + đếm ngược
     startAttendanceAutoRefresh();
 
-    // ===== Fetch nền, không chặn UI =====
     loadAttendanceMonth(false).then(() => {
-      // Preload tháng ±1 sau khi load xong
       preloadAdjacentMonths();
     }).catch(() => {
-      // Không có cache, chờ fetch
     });
   }
   function closePage(){
@@ -8538,7 +7542,6 @@ window.__getChecklistState = () => ({
     e.preventDefault();
     e.stopPropagation();
 
-    // Visual: xoay nút
     attendanceSyncBtn.classList.add('spinning');
 
     setAttendanceFooterState('syncing', 'Đang đồng bộ…');
@@ -8570,15 +7573,9 @@ window.__getChecklistState = () => ({
     closeNameWheel();
     render();
   });
-  // ===== Patch A: Phím mũi tên cho wheel Chấm công =====
-  // Đồng bộ trải nghiệm với wheel Home (Page 1).
-  // Chỉ chạy khi overlay wheel đang mở. Không gọi API.
   document.addEventListener('keydown', (e) => {
-    // Chỉ hoạt động khi wheel chọn NV đang mở
     if(!wheelOverlay.classList.contains('show')) return;
     if(!ATTENDANCE_EMPLOYEES.length) return;
-
-    // ESC đã được Patch B xử lý ở IIFE 1 → không xử lý ở đây nữa
 
     if(e.key === 'ArrowDown'){
       e.preventDefault();
@@ -8592,7 +7589,6 @@ window.__getChecklistState = () => ({
       renderNameWheel();
     }else if(e.key === 'Enter'){
       e.preventDefault();
-      // Confirm chọn kiểm duyệt viên — giống bấm nút "Xác nhận"
       selectedName = ATTENDANCE_EMPLOYEES[wheelIndex] || '';
       employee.value = selectedName;
       updateWheelButton();
@@ -8608,8 +7604,6 @@ window.__getChecklistState = () => ({
   });
   wheelViewport.addEventListener('pointermove',e=>{
     if(!wheelDragging) return;
-    // Giống Page 1: lấy trực tiếp khoảng cách từ điểm bắt đầu vuốt,
-    // không giới hạn ở ±1 bậc.
     wheelOffset=e.clientY-wheelStartY;
     if((wheelIndex===0 && wheelOffset>0) || (wheelIndex===ATTENDANCE_EMPLOYEES.length-1 && wheelOffset<0)){
       wheelOffset*=.25;
@@ -8629,7 +7623,6 @@ window.__getChecklistState = () => ({
     if(e.pointerId!=null) wheelViewport.releasePointerCapture?.(e.pointerId);
   });
 
-  // Cuộn chuột trên máy tính cũng dùng cùng kiểu chọn từng bậc như Page 1.
   wheelViewport.addEventListener('wheel',e=>{
     if(!wheelOverlay.classList.contains('show') || !ATTENDANCE_EMPLOYEES.length) return;
     e.preventDefault();
@@ -8639,8 +7632,6 @@ window.__getChecklistState = () => ({
     wheelOffset=0;
     renderNameWheel();
   },{passive:false});
-  // FIX #5: reset promise key khi đổi tháng để tránh dữ liệu tháng cũ
-  // ghi đè lên tháng mới khi user bấm prev/next nhanh.
   function goToMonth(delta){
     viewDate.setMonth(viewDate.getMonth() + delta);
     attendanceLoadPromise = null;
@@ -8649,16 +7640,12 @@ window.__getChecklistState = () => ({
     const y = viewDate.getFullYear();
     const m = viewDate.getMonth();
 
-    // ===== Bước 1: áp cache + render NGAY (0ms) =====
     const hasCache = applyAttendanceCache(y, m);
     if(!hasCache){
-      // Không có cache → xoá data cũ để grid hiện trống
-      // (nếu giữ data cũ sẽ hiện sai trạng thái của tháng khác)
       Object.keys(ATTENDANCE_DATA).forEach(k => delete ATTENDANCE_DATA[k]);
     }
     render();
 
-    // ===== Bước 2: fetch nền, không chặn UI =====
     loadAttendanceMonth(false).catch(() => {});
   }
 
@@ -8673,7 +7660,6 @@ window.__getChecklistState = () => ({
   attendanceTodayBtn?.addEventListener('click', () => {
     const now = new Date();
     if(viewDate.getFullYear() === now.getFullYear() && viewDate.getMonth() === now.getMonth()){
-      // Đã ở tháng hiện tại → chỉ refresh
       loadAttendanceMonth(true).catch(()=>{});
       return;
     }
@@ -8682,7 +7668,6 @@ window.__getChecklistState = () => ({
     attendanceLoadPromise = null;
     attendanceLoadPromiseKey = '';
 
-    // Cache-first: render ngay nếu có cache
     const hasCache = applyAttendanceCache(now.getFullYear(), now.getMonth());
     if(hasCache) render();
 
@@ -8694,16 +7679,10 @@ window.__getChecklistState = () => ({
   updateWheelButton();
   buildNameWheel();
   render();
-  // Tên và dữ liệu chấm công chỉ lấy từ Check!C19:C32 + toàn bộ hàng tương ứng.
-
-/* =========================================================
-   LẮNG NGHE CHECKIN → TỰ ĐÁNH ✓ NGAY TRÊN LỊCH CHẤM CÔNG
-========================================================= */
 
 function renderAttendanceIfCheckinMatches(){
   if(!page.classList.contains('show')) return;
 
-  // Kiểm tra event từ localStorage
   let ev = null;
   try{
     const raw = localStorage.getItem("srank_last_checkin");
@@ -8711,30 +7690,23 @@ function renderAttendanceIfCheckinMatches(){
   }catch(_){}
   if(!ev || !ev.name || !ev.date) return;
 
-  // Chỉ áp dụng cho hôm nay
   if(ev.date !== todayKeyAttendance()) return;
 
-  // Chỉ áp dụng nếu người vừa check là người đang chọn
   if(ev.name !== selectedName) return;
 
-  // Đang xem tháng hiện tại không?
   const now = new Date();
   if(viewDate.getFullYear() !== now.getFullYear() || viewDate.getMonth() !== now.getMonth()) return;
 
-  // Nếu sheet chưa có gì cho hôm nay → render lại để dataFor tự hiện ✓
   const day = now.getDate();
   const k = key(now.getFullYear(), now.getMonth(), day);
   const existing = ATTENDANCE_DATA[selectedName]?.[k];
 
-  // Nếu đã có P/O/T/Q/X thì không cần (đã hiển thị)
   if(existing === 'P' || existing === 'O' || existing === 'T' ||
      existing === 'Q' || existing === 'X') return;
 
-  // Render lại → dataFor sẽ đọc từ checked[]/times[] (IIFE 1) → hiện ✓
   render();
 }
 
-// Helper: todayKey giống IIFE 1
 function todayKeyAttendance(){
   const d = new Date();
   const parts = new Intl.DateTimeFormat("en-CA",{
@@ -8745,27 +7717,22 @@ function todayKeyAttendance(){
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
-// Lắng nghe event từ IIFE 1
 window.addEventListener("checkinDone", (e) => {
-  // Đợi 1 frame để checked[]/times[] đã update
   requestAnimationFrame(() => {
     renderAttendanceIfCheckinMatches();
   });
 });
 
-// Lắng nghe cả khi tab visible lại (trường hợp browser suspend)
 document.addEventListener("visibilitychange", () => {
   if(document.hidden) return;
   if(!page.classList.contains('show')) return;
   renderAttendanceIfCheckinMatches();
 });
 
-// Xoá localStorage khi render xong (tránh apply lặp lại)
 function clearLastCheckin(){
   try{ localStorage.removeItem("srank_last_checkin"); }catch(_){}
 }
 window.addEventListener("checkinDone", () => {
-  // Xoá sau 5s — đủ thời gian cho IIFE 2 đọc
   setTimeout(clearLastCheckin, 5000);
 });
 })();
@@ -8774,11 +7741,6 @@ window.addEventListener("checkinDone", () => {
 <button id="liveFeedBtn" type="button" aria-label="Mở Live Feed"><span aria-hidden="true">🔔</span><span id="liveFeedBadge" hidden></span></button>
 <div id="liveFeedOverlay" aria-hidden="true"><section id="liveFeedPanel" role="dialog" aria-modal="true" aria-labelledby="liveFeedTitle"><div id="liveFeedHead"><div id="liveFeedTitle"><span class="live-pulse"></span>Live Feed</div><button id="liveFeedClose" type="button" aria-label="Đóng">×</button></div><div id="liveFeedList"></div><div id="liveFeedFoot"><span id="liveFeedCount"></span> · <button id="liveFeedClear" type="button">Xoá lịch sử</button></div></section></div>
 <style id="avatarTop3Fix">
-/* =========================================================
-   FIX AVATAR TOP 3 — hiển thị đúng kiểu avatar Facebook
-   ========================================================= */
-
-/* Ảnh bên trong khung tròn: crop vuông ở giữa, không méo, không tràn */
 #question div.landing-top3 .podium-avatar img{
   width:100% !important;
   height:100% !important;
@@ -8789,7 +7751,6 @@ window.addEventListener("checkinDone", () => {
   background:#fff !important;
 }
 
-/* Đảm bảo khung avatar luôn bo tròn và cắt phần thừa */
 #question div.landing-top3 .podium-avatar{
   position:relative !important;
   overflow:hidden !important;
@@ -8797,7 +7758,6 @@ window.addEventListener("checkinDone", () => {
   background:#fff !important;
 }
 
-/* Fallback (chữ cái "?") phủ đúng khung khi ảnh lỗi */
 #question div.landing-top3 .podium-avatar-fallback{
   position:absolute !important;
   inset:0 !important;
@@ -8806,13 +7766,11 @@ window.addEventListener("checkinDone", () => {
   border-radius:50% !important;
 }
 
-/* Nếu ảnh không load được, ẩn img và hiện fallback */
 #question div.landing-top3 .podium-avatar img[style*="display: none"] + .podium-avatar-fallback,
 #question div.landing-top3 .podium-avatar img[style*="display:none"] + .podium-avatar-fallback{
   display:flex !important;
 }
 
-/* PATCH: Admin Avatar — 3 columns, no header */
 #adminAvatarRows{display:flex;flex-direction:column;gap:6px;padding:0;background:transparent;border:0;border-radius:0}
 .admin-avatar-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.78);border:1px solid rgba(62,112,79,.10);border-radius:12px;min-height:56px;transition:border-color .15s ease,background .15s ease}
 .admin-avatar-row:hover{background:rgba(255,255,255,.92);border-color:rgba(62,112,79,.18)}
@@ -8834,7 +7792,7 @@ window.addEventListener("checkinDone", () => {
 
 <script>
 /* =========================================================
-   HÒM THƯ BÍ MẬT — v4: ấn nút là ra danh sách ngay
+   HÒM THƯ BÍ MẬT — v4
 ========================================================= */
 (function(){
 "use strict";
@@ -8872,16 +7830,13 @@ let wheelOffset = 0;
 let wheelDrag = false;
 let wheelStartY = 0;
 
-// ===== Auto-refresh cho Hòm thư =====
 let mailAutoTimer = null;
 let lastRenderedRowsKey = "";
 const AUTO_REFRESH_MS = 5000;
 
-// ===== State cho smart render =====
-let _mailCurrentRows = [];       // danh sách đang hiển thị
-let _mailHasLoadedOnce = false;  // đã load thành công lần đầu chưa
+let _mailCurrentRows = [];
+let _mailHasLoadedOnce = false;
 
-// ===== Cache =====
 function loadMailCache(){
   try{
     const raw = localStorage.getItem(CACHE_KEY);
@@ -8899,7 +7854,6 @@ function clearMailCache(){
   try{ localStorage.removeItem(CACHE_KEY); }catch(_){}
 }
 
-// ===== So sánh dữ liệu — chỉ render khi có thay đổi =====
 function rowsSignature(rows){
   return (rows || []).map(r => `${r.name}|${r.message}|${r.time}`).join("::");
 }
@@ -8908,7 +7862,6 @@ function rowKey(r){
   return `${r.name}|${r.message}|${r.time}`;
 }
 
-// Sắp xếp mới nhất lên trên. time là "HH:mm" nên so string là đủ.
 function sortMailRows(rows){
   return (rows || []).slice().sort((a, b) => {
     const ta = String(a.time || "");
@@ -8919,13 +7872,11 @@ function sortMailRows(rows){
 }
 
 function renderListIfChanged(rows){
-  // Fetch lỗi (null) → không làm gì, giữ nguyên list cũ
   if(rows === null || typeof rows === "undefined") return false;
 
   const sorted = sortMailRows(rows);
   const sig = rowsSignature(sorted);
 
-  // Lần đầu load → render full
   if(!_mailHasLoadedOnce){
     _mailHasLoadedOnce = true;
     lastRenderedRowsKey = sig;
@@ -8934,15 +7885,12 @@ function renderListIfChanged(rows){
     return true;
   }
 
-  // Không có gì đổi → bỏ qua
   if(sig === lastRenderedRowsKey) return false;
 
-  // Tìm tin mới (có trong list mới nhưng không có trong list cũ)
   const oldKeys = new Set(_mailCurrentRows.map(rowKey));
   const newOnes = sorted.filter(r => !oldKeys.has(rowKey(r)));
   const removedAny = _mailCurrentRows.some(r => !sorted.some(s => rowKey(s) === rowKey(r)));
 
-  // Chỉ có thêm tin mới → prepend mượt
   if(newOnes.length > 0 && !removedAny){
     const list = stage.querySelector(".sm-wall-list");
 
@@ -8951,7 +7899,6 @@ function renderListIfChanged(rows){
       const oldHeight = list.offsetHeight;
       const scrollBefore = stage.scrollTop;
 
-      // Chèn từ cuối newOnes lên để thứ tự đúng (mới nhất ở trên cùng)
       for(let i = newOnes.length - 1; i >= 0; i--){
         const m = newOnes[i];
         const card = wallCard(m, 0);
@@ -8962,7 +7909,6 @@ function renderListIfChanged(rows){
         list.insertBefore(card, list.firstChild);
       }
 
-      // Nếu user đang scroll giữa list → giữ nguyên vị trí đọc
       const addedHeight = list.offsetHeight - oldHeight;
       if(scrollBefore > 2 && addedHeight > 0){
         stage.scrollTop = scrollBefore + addedHeight;
@@ -8975,7 +7921,6 @@ function renderListIfChanged(rows){
     }
   }
 
-  // Fallback: có tin bị xoá hoặc cấu trúc đổi → render full
   const scrollTop = stage.scrollTop;
   const wasAtTop = scrollTop < 40;
   _mailCurrentRows = sorted;
@@ -8985,7 +7930,6 @@ function renderListIfChanged(rows){
   return true;
 }
 
-// ===== Bật/tắt tự động cập nhật =====
 function startMailAutoRefresh(){
   stopMailAutoRefresh();
   if(!open) return;
@@ -8996,7 +7940,7 @@ function startMailAutoRefresh(){
     try{
       const rows = await fetchMessages(true);
       if(!open) return;
-      if(rows === null) return;   // ← fetch lỗi → giữ nguyên list
+      if(rows === null) return;
       renderListIfChanged(rows);
     }catch(_){}
   }, AUTO_REFRESH_MS);
@@ -9009,7 +7953,6 @@ function stopMailAutoRefresh(){
   }
 }
 
-// ===== Names =====
 function getNames(){
   try{
     return typeof window.__getChecklistNames === "function"
@@ -9018,7 +7961,6 @@ function getNames(){
   }catch(_){ return []; }
 }
 
-// ===== Sender =====
 function saveSender(x){ try{ x ? localStorage.setItem(K, x) : localStorage.removeItem(K); }catch(_){} }
 try{ sender = String(localStorage.getItem(K) || "").trim(); }catch(_){}
 function renderSender(){
@@ -9033,7 +7975,6 @@ function setStatus(x, t){
   status.className = "sm-status" + (t ? " " + t : "");
 }
 
-// ===== Wheel chọn tên =====
 function buildWheel(){
   if(wheel) return wheel;
   wheel = document.createElement("div");
@@ -9130,7 +8071,6 @@ check.addEventListener("change", () => {
 });
 senderBtn.onclick = e => { e.preventDefault(); e.stopPropagation(); check.checked = true; openWheel(); };
 
-// ===== Composer =====
 function updateCounter(){
   counter.textContent = `${input.value.length}/${MAX}`;
   counter.classList.toggle("warn", input.value.length > MAX * .9);
@@ -9203,7 +8143,6 @@ input.addEventListener("keydown", e => {
   if((e.ctrlKey || e.metaKey) && e.key === "Enter"){ e.preventDefault(); sendMessage(); }
 });
 
-// ===== Fetch =====
 function fetchMessages(force = false){
   if(!force){
     const cached = loadMailCache();
@@ -9215,7 +8154,6 @@ function fetchMessages(force = false){
     }
   }
   return window.__srankApi("getSecretMessages", { _ts: Date.now() }, 10000).then(r => {
-    // Lỗi server / data hỏng → trả null để KHÔNG wipe list
     if(!r?.ok || !Array.isArray(r.data?.rows)) return null;
     const rows = r.data.rows.map(x => ({
       name: String(x?.name || "").trim() || ANON,
@@ -9227,7 +8165,6 @@ function fetchMessages(force = false){
   }).catch(() => null);
 }
 
-// ===== Render list =====
 function wallCard(m, i){
   const el = document.createElement("article");
   const cs = ["color-pink", "color-mint", "color-yellow", "color-lilac"];
@@ -9299,7 +8236,6 @@ async function loadAndRender(force = false){
   renderListIfChanged(rows || []);
 }
 
-// ===== Lifecycle =====
 async function openPage(){
   if(open) return;
   open = true;
@@ -9307,19 +8243,15 @@ async function openPage(){
   document.body.style.overflow = "hidden";
   if (typeof window.syncQuickTools === "function") window.syncQuickTools();
 
-  // Nếu có cache → render NGAY, không hiện loading
-  // Chỉ hiện loading khi thực sự chưa có gì để hiện
   const cached = loadMailCache();
   const hasList = stage.querySelector(".sm-wall-list");
   if(hasList){
-    // Đang có list rồi → giữ nguyên, không xoá
   } else if(cached && cached.length){
     renderListIfChanged(cached);
   } else {
     renderLoading();
   }
 
-  // Fetch nền — khi có kết quả thì update mượt
   fetchMessages(true).then(rows => {
     if(!open) return;
     if(rows) renderListIfChanged(rows);
@@ -9340,7 +8272,6 @@ function closePage(){
 navBtn?.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); openPage(); });
 back?.addEventListener("click", closePage);
 refresh?.addEventListener("click", async () => {
-  // Không xoá list cũ — chỉ fetch nền
   const icon = refresh.querySelector("span") || refresh;
   const oldIcon = icon.textContent;
   icon.textContent = "↻";
@@ -9368,7 +8299,6 @@ document.addEventListener("keydown", e => {
   if(open) closePage();
 });
 
-// Khi tab được focus lại → fetch ngay (không chờ 12s)
 document.addEventListener("visibilitychange", () => {
   if(document.hidden) return;
   if(!open) return;
