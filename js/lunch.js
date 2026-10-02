@@ -1,10 +1,5 @@
 /* =========================================================
-   LUNCH v2 — Bữa trưa ăn gì? (Bản lột xác)
-   - Danh sách món cập nhật từ web → lưu về sheet LunchDishes
-   - 3 danh mục: Cơm nhà / Món nước / Đi ngoài
-   - Quay slot machine chọn món
-   - Search, thêm, sửa, xoá món inline
-   - CSS inject động (không cần sửa main.css)
+   LUNCH v2 — Bữa trưa ăn gì? (Bản lột xác + polling)
    ========================================================= */
 (function(){
   "use strict";
@@ -12,14 +7,12 @@
   if (window.__lunchV2Loaded) return;
   window.__lunchV2Loaded = true;
 
-  // =========================================================
-  // CONFIG
-  // =========================================================
   const API_TIMEOUT = 12000;
   const SPIN_DURATION_MS = 1800;
   const SPIN_TICK_START_MS = 60;
   const SPIN_TICK_END_MS = 260;
   const MAX_NAME_LEN = 80;
+  const POLL_INTERVAL = 5000;
 
   const CATEGORIES = [
     { key: "home", label: "Cơm nhà",  icon: "🏠", desc: "Món cơm, mì, bún khô" },
@@ -37,9 +30,6 @@
     { key: "out",  label: "Đi ngoài",   icon: "🛵" }
   ];
 
-  // =========================================================
-  // STATE
-  // =========================================================
   const state = {
     dishes: [],
     loading: false,
@@ -52,9 +42,8 @@
     pendingAddCategory: "home"
   };
 
-  // =========================================================
-  // UTILITIES
-  // =========================================================
+  var _pollTimer = null;
+
   const $ = function(id){ return document.getElementById(id); };
 
   const escapeHtml = function(s){
@@ -156,6 +145,7 @@
         });
         renderDishGrid();
       }
+      loadDishes(false);
       return { ok: true, dish: r.data };
     } catch(e){
       return { ok: false, error: (e && e.message) || "Lỗi thêm món" };
@@ -179,6 +169,7 @@
       const idx = state.dishes.findIndex(function(d){ return d.id === id; });
       if (idx >= 0) state.dishes[idx].name = clean;
       renderDishGrid();
+      loadDishes(false);
       return { ok: true };
     } catch(e){
       return { ok: false, error: (e && e.message) || "Lỗi sửa món" };
@@ -196,9 +187,32 @@
       }
       state.dishes = state.dishes.filter(function(d){ return d.id !== id; });
       renderDishGrid();
+      loadDishes(false);
       return { ok: true };
     } catch(e){
       return { ok: false, error: (e && e.message) || "Lỗi xoá món" };
+    }
+  }
+
+  // =========================================================
+  // POLLING
+  // =========================================================
+  function startPolling(){
+    stopPolling();
+    _pollTimer = setInterval(function(){
+      if (!state.pageOpen) return;
+      if (document.hidden) return;
+      if (state.spinning) return;
+      var ov = $("lcSheetOverlay");
+      if (ov && ov.classList.contains("show")) return;
+      loadDishes(false);
+    }, POLL_INTERVAL);
+  }
+
+  function stopPolling(){
+    if (_pollTimer){
+      clearInterval(_pollTimer);
+      _pollTimer = null;
     }
   }
 
@@ -373,7 +387,7 @@
     ].join("");
     document.body.appendChild(page);
   }
-   // =========================================================
+  // =========================================================
   // RENDER
   // =========================================================
   function getFilteredDishes(){
@@ -511,7 +525,7 @@
   }
 
   // =========================================================
-  // SPIN ANIMATION
+  // SPIN
   // =========================================================
   function spin(){
     if (state.spinning) return;
@@ -591,7 +605,7 @@
   }
 
   // =========================================================
-  // SHEET — ADD DISH
+  // SHEET — ADD
   // =========================================================
   function openAddSheet(){
     if (state.spinning) return;
@@ -684,7 +698,7 @@
   }
 
   // =========================================================
-  // SHEET — EDIT DISH
+  // SHEET — EDIT
   // =========================================================
   function openEditSheet(dish){
     if (state.spinning) return;
@@ -761,7 +775,7 @@
   }
 
   // =========================================================
-  // SHEET — CONFIRM DELETE
+  // SHEET — DELETE
   // =========================================================
   function buildDeleteConfirm(dish){
     return [
@@ -859,21 +873,15 @@
     state.pageOpen = true;
     document.body.style.overflow = "hidden";
 
-    // Hiện FAB khi mở page
     var fab = $("lcAddFab");
     if (fab) fab.classList.add("show");
 
-    // Highlight nút lunchBtn ở nav
     var openBtn = $("lunchBtn");
     if (openBtn) openBtn.classList.add("running");
 
     render();
-
-    if (state.dishes.length === 0){
-      loadDishes(true);
-    } else {
-      loadDishes(false);
-    }
+    loadDishes(true);
+    startPolling();
 
     if (typeof window.syncQuickTools === "function") window.syncQuickTools();
   }
@@ -886,12 +894,11 @@
     state.pageOpen = false;
     document.body.style.overflow = "";
     closeSheet();
+    stopPolling();
 
-    // Ẩn FAB khi đóng page
     var fab = $("lcAddFab");
     if (fab) fab.classList.remove("show");
 
-    // Bỏ highlight nút lunchBtn
     var openBtn = $("lunchBtn");
     if (openBtn) openBtn.classList.remove("running");
 
@@ -902,7 +909,6 @@
   // BIND EVENTS
   // =========================================================
   function bindEvents(){
-    // === NÚT MỞ PAGE TỪ SECONDARY NAV ===
     var openBtn = $("lunchBtn");
     if (openBtn){
       openBtn.addEventListener("click", function(e){
@@ -956,6 +962,12 @@
       });
     }
 
+    document.addEventListener("visibilitychange", function(){
+      if (!document.hidden && state.pageOpen){
+        loadDishes(false);
+      }
+    });
+
     document.addEventListener("keydown", function(e){
       if (e.key !== "Escape") return;
       var ov = $("lcSheetOverlay");
@@ -981,10 +993,6 @@
     buildPage();
     bindEvents();
     render();
-
-    setTimeout(function(){
-      loadDishes(false);
-    }, 1200);
   }
 
   if (document.readyState === "loading"){
@@ -993,4 +1001,3 @@
     init();
   }
 })();
-   
