@@ -1,16 +1,3 @@
-Tách Hòm thư bí mật ra js/secret-mail.js
-
-Module này dễ tách tiếp theo — đã là IIFE độc lập, chỉ cần createWheel (đã expose qua window.createWheel) và __getChecklistNames.
-
-⚠️ Nhớ tạo đúng tên file .js — lần trước bạn gõ nhầm .ks.
-
----
-
-📁 Bước 1: Tạo file js/secret-mail.js
-
-Copy nguyên đoạn dưới vào file:
-
-```js
 (function(){
 "use strict";
 
