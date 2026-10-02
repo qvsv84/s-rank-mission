@@ -1,6 +1,6 @@
 /* =========================================================
    SERVICE WORKER — Đảo Mèo / S Rank
-   Version: v1.2.0 — Minify CSS + main.js
+   Version: v1.2.1 — Minify CSS + main.js
    ========================================================= */
 "use strict";
 
