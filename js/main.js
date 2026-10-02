@@ -5,7 +5,7 @@
   "use strict";
 
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJ1ebyNNe7fxlNR6TObBYebp7zRORGZTO0kTzlFl-S39I2vIJjDx9h0quV84od9JAfeg/exec";
-  const CACHE_SCHEMA_VERSION = 5;
+  const CACHE_SCHEMA_VERSION = 6; // bump version vì đổi format state
   const CACHE_KEY = `srank_check_v${CACHE_SCHEMA_VERSION}`;
   const ADMIN_TOKEN_KEY = "srank_admin_token_v1";
   const ADMIN_SESSION_TTL = 8 * 60 * 60 * 1000;
@@ -208,7 +208,7 @@
     return {show, dismiss};
   })();
 
-  function createWheel({viewport, itemsBox, itemHeight = 58, itemClass = "", onChange}){
+  function createWheel({viewport, itemsBox, itemHeight = ITEM_H, itemClass = "", onChange}){
     let index = 0, offset = 0, dragging = false, startY = 0, items = [];
     const raf = {id: 0};
     function render(){
@@ -291,6 +291,8 @@
   let current = 0, q1Opened = false;
   let _lastUserActionAt = 0;
   const _recentSelfChecks = new Map();
+  // FIX #3: theo dõi checkin đang chờ server xác nhận → không bị auto-sync overwrite
+  const _pendingChecks = new Set();
   let _lastLockCheck = 0, _cachedLocked = false;
   let _dataLoadResolve;
   const _dataLoadPromise = new Promise(r => { _dataLoadResolve = r; });
@@ -301,7 +303,8 @@
   let resetTime = "00:00", resetTimer = null;
   let checklistLockTime = "21:00";
   let initialSheetLoaded = false;
-  let adminUnlocked = false;
+  // FIX #2: adminUnlocked sync với AdminSession
+  let adminUnlocked = AdminSession.isValid();
   let monitorLinks = {}, editingMonitorName = "";
 
   let _cacheSaveTimer = null, _cacheDirty = false;
@@ -331,7 +334,7 @@
       names = x.names.filter(n => typeof n === "string" && n.trim());
       checked = x.checked.slice(0, names.length).map(c => c === true);
       times = Array.isArray(x.times) ? x.times.slice(0, names.length).map(t => typeof t === "string" ? t : "") : names.map(() => "");
-      points = Array.isArray(x.points) ? x.points.slice(0, names.length).map(p => Number.isFinite(Number(p)) ? Number(p) : 100) : names.map(() => 100);
+      points = Array.isArray(x.points) ? x.points.slice(0, names.length).map(p => Number.isFinite(Number(p)) ? Number(p) : 0) : names.map(() => 0);
       ranks = points.map(rankClient);
       return names.length > 0;
     }catch(_){ try{ localStorage.removeItem(CACHE_KEY); }catch(_){} }
@@ -589,6 +592,15 @@
       return full;
     }
 
+    // FIX: cho phép rollback khi server fail
+    function removeLocal(localId){
+      const idx = events.findIndex(e => e.id === localId);
+      if(idx < 0) return;
+      events.splice(idx, 1);
+      if(unreadCount > 0) unreadCount--;
+      save(); render(); updateBadge();
+    }
+
     async function syncFromServer(){
       if(_syncInFlight) return;
       const api = window.__srankApi || (window.SRank && window.SRank.api);
@@ -737,7 +749,7 @@
         if(!document.hidden) syncFromServer();
       });
     }
-    return {push, init, open, close, clear, markAllSeen, updateBadge, syncFromServer};
+    return {push, removeLocal, init, open, close, clear, markAllSeen, updateBadge, syncFromServer};
   })();
 
   window.SRank = window.SRank || {};
@@ -801,23 +813,35 @@
     els.checklistBody.innerHTML = "";
     els.checklistBody.appendChild(frag);
   }
+
+  // FIX #3: không overwrite pending checks
   function smoothUpdateChecklist(newData){
     if(!names.length) return false;
     if(names.length !== newData.names.length) return false;
     if(names.some((n, i) => n !== newData.names[i])) return false;
     const oldChecked = checked.slice(), oldTimes = times.slice();
+    const oldPoints = points.slice(), oldRanks = ranks.slice();
     const newlyChecked = [];
     const changedIdx = [];
+    const mergedChecked = newData.checked.slice();
+    const mergedTimes = newData.times.slice();
     for(let i = 0; i < names.length; i++){
-      const checkedChanged = oldChecked[i] !== newData.checked[i];
-      const timeChanged = String(oldTimes[i] || "") !== String(newData.times[i] || "");
-      if(checkedChanged || timeChanged){
+      // FIX: nếu index đang chờ server xác nhận (pending), KHÔNG ghi đè
+      if(_pendingChecks.has(names[i])){
+        mergedChecked[i] = oldChecked[i];
+        mergedTimes[i] = oldTimes[i];
+      }
+      const checkedChanged = oldChecked[i] !== mergedChecked[i];
+      const timeChanged = String(oldTimes[i] || "") !== String(mergedTimes[i] || "");
+      const pointsChanged = oldPoints[i] !== newData.points[i];
+      const rankChanged = oldRanks[i] !== newData.ranks[i];
+      if(checkedChanged || timeChanged || pointsChanged || rankChanged){
         changedIdx.push(i);
-        if(!oldChecked[i] && newData.checked[i]) newlyChecked.push({name:names[i], time:newData.times[i] || ""});
+        if(!oldChecked[i] && mergedChecked[i]) newlyChecked.push({name:names[i], time:mergedTimes[i] || ""});
       }
     }
     if(!changedIdx.length) return true;
-    checked = newData.checked; times = newData.times; points = newData.points; ranks = newData.ranks;
+    checked = mergedChecked; times = mergedTimes; points = newData.points; ranks = newData.ranks;
     renderChecklist(true);
     changedIdx.slice(0, 5).forEach((idx, k) => {
       const tr = els.checklistBody.querySelector(`tr[data-index="${idx}"]`);
@@ -851,7 +875,12 @@
   const buildWheel = () => mainWheel.setItems(names);
 
   async function loadData(showError = true, force = false){
-    if(syncInFlight) return false;
+    // FIX #6: nếu đang sync, chờ promise hiện tại thay vì return false im lặng
+    if(syncInFlight){
+      // Nếu user bấm sync thủ công (force=true), báo cho họ biết
+      if(force) setStatus("Đang đồng bộ, vui lòng chờ...");
+      return false;
+    }
     if(initialSheetLoaded && !force){ renderChecklist(); buildWheel(); renderAdminChecklistEditor(); return true; }
     syncInFlight = true;
     try{
@@ -901,10 +930,23 @@
         }
       }
 
+      // Merge: giữ pending checks local, không để server null/empty ghi đè
+      const mergedChecks = serverChecks.slice();
+      const mergedTimes = serverTimes.slice();
+      if(initialSheetLoaded && names.length === serverNames.length){
+        for(let i = 0; i < names.length; i++){
+          if(names[i] === serverNames[i] && _pendingChecks.has(names[i])){
+            mergedChecks[i] = checked[i] === true;
+            mergedTimes[i] = times[i] || "";
+          }
+        }
+      }
+
       names = serverNames;
       points = serverPoints;
-      ranks = points.map(rankClient);
-      if(!initialSheetLoaded || force){ checked = serverChecks; times = serverTimes; }
+      ranks = serverRanks;
+      if(!initialSheetLoaded || force){ checked = mergedChecks; times = mergedTimes; }
+      else { checked = mergedChecks; times = mergedTimes; }
       initialSheetLoaded = true;
       lastAutoSyncAt = Date.now();
       window.syncAttendanceEmployees?.();
@@ -953,27 +995,54 @@
       const now = Date.now();
       for(const [k,v] of _recentSelfChecks){ if(now-v > SELF_CHECK_IGNORE_MS*2) _recentSelfChecks.delete(k); }
     }
-    LiveFeed.push({type:"check", name});
+
+    // FIX #3: đánh dấu pending trước khi push
+    _pendingChecks.add(name);
+
+    // LiveFeed: push local trước, nhưng giữ ref để có thể rollback
+    const liveEvent = LiveFeed.push({type:"check", name});
+
     const clientTime = hhmm();
+    const prevChecked = checked[index], prevTime = times[index];
     times[index] = clientTime;
     checked[index] = true;
     cacheSave();
     if(!updateChecklistRow(index)) renderChecklist(true);
     if(!q1Opened && !els.checklistPanel.classList.contains("show")) renderLandingState();
     setStatus(`Đã ghi ${clientTime} ✓`);
+
     try{
       const r = await window.__srankApi("checkin", {name, clientTime, clientEpoch:String(Date.now())}, TIMEOUT.NORMAL);
-      if(!r.ok) throw new Error(r.error);
-      if(r.data && Number.isFinite(Number(r.data.points))){ points[index] = Number(r.data.points); ranks[index] = normalizeServerRank(r.data.rank, points[index]); }
-      if(r.data && /^([01]\d|2[0-3]):[0-5]\d$/.test(String(r.data.time || ""))) times[index] = String(r.data.time);
+      if(!r.ok) throw new Error(r.error || "Checkin thất bại");
+
+      // Success → cập nhật state từ server
+      if(r.data && Number.isFinite(Number(r.data.points))){
+        points[index] = Number(r.data.points);
+        ranks[index] = normalizeServerRank(r.data.rank, points[index]);
+      }
+      if(r.data && /^([01]\d|2[0-3]):[0-5]\d$/.test(String(r.data.time || ""))){
+        times[index] = String(r.data.time);
+      }
+      // Gỡ pending khi server đã xác nhận
+      _pendingChecks.delete(name);
       cacheSave();
       updateChecklistRow(index);
-      setStatus(`Đã ghi ${clientTime} ✓`);
-      try{ window.dispatchEvent(new CustomEvent("checkinDone", {detail:{name, time:clientTime}})); }catch(_){}
-      try{ localStorage.setItem("srank_last_checkin", JSON.stringify({name, time:clientTime, date:todayKey()})); }catch(_){}
-    }catch(_){
-      setStatus("Máy chủ chưa xác nhận — trạng thái HTML vẫn giữ nguyên");
+      setStatus(`Đã ghi ${times[index] || clientTime} ✓`);
+      try{ window.dispatchEvent(new CustomEvent("checkinDone", {detail:{name, time:times[index] || clientTime}})); }catch(_){}
+      try{ localStorage.setItem("srank_last_checkin", JSON.stringify({name, time:times[index] || clientTime, date:todayKey()})); }catch(_){}
+    }catch(err){
+      // FIX #1: ROLLBACK khi server fail
+      _pendingChecks.delete(name);
+      checked[index] = prevChecked;
+      times[index] = prevTime;
+      _recentSelfChecks.delete(name);
       cacheSave();
+      if(!updateChecklistRow(index)) renderChecklist(true);
+      if(!q1Opened && !els.checklistPanel.classList.contains("show")) renderLandingState();
+      // Rollback LiveFeed nếu event còn pending (server chưa ack)
+      if(liveEvent && liveEvent._pending){ try{ LiveFeed.removeLocal(liveEvent.id); }catch(_){} }
+      const msg = String(err?.message || "").trim();
+      setStatus(msg ? `Không ghi được: ${msg}` : "Không ghi được — kiểm tra mạng");
     }
   }
 
@@ -1134,6 +1203,7 @@
     if(isChecklistLocked()){ renderLandingState(); return; }
     if(q1Opened || !names.length) return;
     q1Opened = true;
+    _lastUserActionAt = Date.now();
     els.question.classList.add("hero-wheel-open");
     els.question.style.pointerEvents = "none";
     els.question.style.opacity = "0";
@@ -1339,6 +1409,8 @@
     if(els.adminChecklistStats) els.adminChecklistStats.innerHTML = `<span>👥 ${names.length} người</span><span>✓ ${checkedCount} đã check</span><span>○ ${names.length-checkedCount} chưa check</span>`;
     applyChecklistFilter();
   }
+
+  // FIX #4: update points từ server sau adminSetCheck
   async function adminToggleCheck(i, btn){
     const next = !checked[i];
     btn.disabled = true; btn.textContent = "...";
@@ -1349,7 +1421,13 @@
       if(!r.ok) throw new Error(r.error || "Không cập nhật được");
       checked[i] = next;
       times[i] = next ? ((r.data && r.data.time) || hhmm()) : "";
+      // FIX: update points/ranks nếu server trả về
+      if(r.data && Number.isFinite(Number(r.data.points))){
+        points[i] = Number(r.data.points);
+        ranks[i] = normalizeServerRank(r.data.rank, points[i]);
+      }
       cacheSave(); renderChecklist(true); renderAdminChecklistEditor(); renderAdminStats();
+      if(!q1Opened && !els.checklistPanel.classList.contains("show")) renderLandingState();
       setStatus(next ? "Đã check ✓" : "Đã bỏ check ✓");
     }catch(e){
       els.adminStatus.textContent = e.message || "Không cập nhật được";
@@ -1387,8 +1465,14 @@
     else if(tabName === "stats") renderAdminStats();
   }
 
-  async function openAdminSettings(){
-    if(!AdminSession.isValid()){ closeAdminPassword(); adminUnlocked = false; openAdminPassword(); return; }
+  function openAdminSettings(){
+    if(!AdminSession.isValid()){
+      // FIX: sync adminUnlocked với session thực tế
+      closeAdminPassword();
+      adminUnlocked = false;
+      openAdminPassword();
+      return;
+    }
     closeAdminPassword();
     adminUnlocked = true;
     renderMonitor();
@@ -1435,6 +1519,8 @@
     els.adminPasswordOverlay.setAttribute("aria-hidden","true");
   }
   let _adminVerifying = false;
+
+  // FIX #5: verifyAdmin chờ server token trước khi mở admin page
   async function verifyAdmin(){
     if(_adminVerifying) return;
     const rl = AdminSession.checkRateLimit();
@@ -1445,29 +1531,11 @@
     els.adminPasswordOk.disabled = true;
     els.adminPasswordOk.textContent = "⏳ Đang mở…";
     try{
+      // 1. Kiểm tra local hash trước (nếu có) → quyết định có gửi lên server không
       const localOk = await AdminSession.checkPasswordLocal(password);
-      if(localOk === true){
-        els.adminPasswordInput.value = "";
-        els.adminPasswordMsg.textContent = "";
-        closeAdminPassword();
-        adminUnlocked = true;
-        renderMonitor();
-        syncQuickTools();
-        els.adminPage.classList.add("show");
-        els.adminPage.setAttribute("aria-hidden","false");
-        document.body.style.overflow = "hidden";
-        if(settingsCache){
-          els.resetTimeInput.value = settingsCache.resetTime || resetTime;
-          els.checklistLockTimeInput.value = settingsCache.checklistLockTime || checklistLockTime;
-        } else {
-          els.resetTimeInput.value = resetTime;
-          els.checklistLockTimeInput.value = checklistLockTime;
-        }
-        renderLandingState();
-        renderAdminChecklistEditor();
-        verifyAdminServer(password).catch(() => {});
-        return;
-      }
+
+      // Nếu local hash khớp → vẫn PHẢI verify với server để lấy token
+      // (không mở admin page khi chưa có token server, tránh trạng thái nửa vời)
       if(localOk === false){
         AdminSession.recordFailure();
         els.adminPasswordMsg.textContent = "Mật khẩu không đúng.";
@@ -1475,10 +1543,16 @@
         els.adminPasswordInput.focus();
         return;
       }
-      els.adminPasswordMsg.textContent = "Đang kết nối server (lần đầu có thể mất 10-15s)…";
+
+      els.adminPasswordMsg.textContent = localOk === true
+        ? "Đang xác thực với server…"
+        : "Đang kết nối server (lần đầu có thể mất 10-15s)…";
+
       await verifyAdminServer(password);
+      // Nếu tới đây verifyAdminServer đã gọi openAdminSettings
     }catch(_){
-      els.adminPasswordMsg.textContent = "Không kết nối được server. Kiểm tra mạng rồi thử lại.";
+      // verifyAdminServer đã set message
+      if(!els.adminPasswordMsg.textContent) els.adminPasswordMsg.textContent = "Không kết nối được server. Kiểm tra mạng rồi thử lại.";
     }finally{
       _adminVerifying = false;
       els.adminPasswordOk.disabled = false;
@@ -1500,8 +1574,10 @@
       AdminSession.save(token, expiresAt);
       AdminSession.recordSuccess();
       await AdminSession.rememberPassword(password);
-      if(!els.adminPage.classList.contains("show")) await openAdminSettings();
-      else els.adminStatus.textContent = `Giờ reset: ${resetTime} • Giờ khoá Checklist: ${checklistLockTime}`;
+      els.adminPasswordInput.value = "";
+      els.adminPasswordMsg.textContent = "";
+      // Bây giờ mới mở admin page
+      openAdminSettings();
     }catch(e){
       if(els.adminPage.classList.contains("show") && !AdminSession.isValid()){
         closeAdmin(); adminUnlocked = false; openAdminPassword();
@@ -1626,6 +1702,7 @@
   });
   els.checklistBtn.addEventListener("click", e => {
     e.preventDefault(); e.stopPropagation();
+    _lastUserActionAt = Date.now();
     const willShow = !els.checklistPanel.classList.contains("show");
     if(willShow){
       window.BXH?.close?.();
@@ -1651,7 +1728,7 @@
   els.linkEditorOverlay.addEventListener("click", e => { if(e.target === els.linkEditorOverlay) closeLinkEditor(); });
   els.linkEditorInput.addEventListener("keydown", e => { if(e.key === "Enter") saveEditedMonitorLink(); });
 
-  els.adminBtn.addEventListener("click", () => { if(adminUnlocked) openAdminSettings(); else openAdminPassword(); });
+  els.adminBtn.addEventListener("click", () => { if(AdminSession.isValid()) openAdminSettings(); else openAdminPassword(); });
   els.adminPasswordOk.addEventListener("click", verifyAdmin);
   els.adminPasswordCancel.addEventListener("click", closeAdminPassword);
   els.adminPasswordOverlay.addEventListener("click", e => { if(e.target === els.adminPasswordOverlay) closeAdminPassword(); });
@@ -1791,6 +1868,10 @@
       if(!token) throw new Error("Phiên admin đã hết hạn — không xoá được checkin");
       const r = await window.__srankApi("adminSetCheck", {token, name:cleanName, checked:"false"}, TIMEOUT.FAST);
       if(!r.ok) throw new Error(r.error || "Không xoá được checkin");
+      if(r.data && Number.isFinite(Number(r.data.points))){
+        points[idx] = Number(r.data.points);
+        ranks[idx] = normalizeServerRank(r.data.rank, points[idx]);
+      }
       return true;
     }catch(e){
       checked[idx] = prevChecked; times[idx] = prevTime;
