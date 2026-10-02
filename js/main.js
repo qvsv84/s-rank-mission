@@ -1,7 +1,7 @@
 /* =========================================================
    MAIN — Core app (IIFE #1)
    Phụ thuộc DOM đã có trong index.html
-   Export qua window.SRank cho các module khác (attendance, lunch, secret-mail, bxh-top)
+   Export qua window.SRank cho các module khác
    ========================================================= */
 (function(){
   "use strict";
@@ -78,7 +78,7 @@
   const throttleRAF = fn => { let s = false, arg; return (...a) => { arg = a; if(s) return; s = true; requestAnimationFrame(() => { s = false; fn(...arg); }); }; };
 
   // =========================================================
-  // REQUEST LAYER — JSONP via script tag
+  // REQUEST LAYER — JSONP
   // =========================================================
   let requestSeq = 0;
   window.__srankApi = function(action, data = {}, timeout = TIMEOUT.DEFAULT){
@@ -229,7 +229,7 @@
   })();
 
   // =========================================================
-  // REUSABLE WHEEL FACTORY
+  // WHEEL FACTORY
   // =========================================================
   function createWheel({viewport, itemsBox, itemHeight = 58, itemClass = "", onChange}){
     let index = 0, offset = 0, dragging = false, startY = 0, items = [];
@@ -547,34 +547,74 @@
     const MAX_EVENTS = 60, DEDUP_MS = 60000;
     let events = [], unreadCount = 0;
     const isValid = e => e && typeof e === "object" && typeof e.type === "string" && typeof e.name === "string" && typeof e.ts === "number";
+
     function load(){
       try{ const arr = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); events = Array.isArray(arr) ? arr.filter(isValid) : []; }catch(_){ events = []; }
       try{ unreadCount = Math.max(0, Number(localStorage.getItem(UNREAD_KEY) || 0) || 0); }catch(_){ unreadCount = 0; }
     }
-    function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(events.slice(0, MAX_EVENTS))); localStorage.setItem(UNREAD_KEY, String(unreadCount)); }catch(_){} }
+    function save(){
+      try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(events.slice(0, MAX_EVENTS)));
+        localStorage.setItem(UNREAD_KEY, String(unreadCount));
+      }catch(_){}
+    }
+
     function push(ev){
       if(!ev || !ev.type || !ev.name) return null;
       const now = Date.now();
       const time = ev.time || hhmm();
-      const dup = events.find(e => e.type === ev.type && e.name === ev.name && (now - e.ts) < DEDUP_MS);
-      if(dup){ dup.ts = now; dup.time = time; if(ev.meta) dup.meta = ev.meta; save(); render(); return dup; }
-      const full = {id:"ev_"+now+"_"+Math.random().toString(36).slice(2,8), type:ev.type, name:String(ev.name).slice(0,60), time, meta:ev.meta||{}, ts:now};
+
+      // skipDedup: true → bỏ qua check trùng (lunch: ai quay cũng hiện)
+      if (!ev.skipDedup){
+        const dup = events.find(e => e.type === ev.type && e.name === ev.name && (now - e.ts) < DEDUP_MS);
+        if(dup){ dup.ts = now; dup.time = time; if(ev.meta) dup.meta = ev.meta; save(); render(); return dup; }
+      }
+
+      const full = {
+        id: "ev_" + now + "_" + Math.random().toString(36).slice(2, 8),
+        type: ev.type,
+        name: String(ev.name).slice(0, 60),
+        time,
+        meta: ev.meta || {},
+        ts: now
+      };
       events.unshift(full);
       if(events.length > MAX_EVENTS) events.length = MAX_EVENTS;
       unreadCount++;
       save(); render(); updateBadge();
       return full;
     }
+
     function clear(){ events = []; unreadCount = 0; save(); render(); updateBadge(); }
     function markAllSeen(){ if(unreadCount === 0) return; unreadCount = 0; save(); updateBadge(); }
+
     function updateBadge(){
       const badge = document.getElementById("liveFeedBadge");
       if(!badge) return;
       if(unreadCount <= 0){ badge.hidden = true; badge.textContent = ""; }
       else { badge.hidden = false; badge.textContent = unreadCount > 99 ? "99+" : String(unreadCount); }
     }
-    const typeLabel = ev => ev.type === "check" ? "vừa check" : ev.type === "lunch" ? (ev.meta.dish ? `quay bữa trưa: ${ev.meta.dish}` : "quay bữa trưa") : "vừa hoạt động";
-    const typeIcon = ev => ev.type === "check" ? "🌸" : ev.type === "lunch" ? "🍜" : "•";
+
+    const typeLabel = function(ev){
+      if (ev.type === "check") return "vừa check";
+      if (ev.type === "lunch"){
+        const meta = ev.meta || {};
+        const dish = meta.dish || "";
+        const icon = meta.icon || "🍜";
+        return dish ? "vừa quay: " + icon + " " + dish : "vừa quay bữa trưa";
+      }
+      return "vừa hoạt động";
+    };
+
+    const typeIcon = function(ev){
+      if (ev.type === "check") return "🌸";
+      if (ev.type === "lunch"){
+        const meta = ev.meta || {};
+        return meta.icon || "🍜";
+      }
+      return "•";
+    };
+
     function dayLabel(ts){
       const d = new Date(ts), now = new Date();
       const day = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -584,6 +624,7 @@
       if(diff === 1) return "Hôm qua";
       return new Intl.DateTimeFormat("vi-VN",{day:"2-digit",month:"2-digit"}).format(d);
     }
+
     function render(){
       const list = document.getElementById("liveFeedList");
       if(!list) return;
@@ -616,6 +657,7 @@
       const count = document.getElementById("liveFeedCount");
       if(count) count.textContent = events.length ? `${events.length} hoạt động` : "Không có hoạt động";
     }
+
     const open = () => {
       const overlay = document.getElementById("liveFeedOverlay");
       if(!overlay) return;
@@ -659,7 +701,6 @@
     }
     filtered.forEach(p => LiveFeed.push({type:"check", name:p.name, time:p.time || ""}));
   }
-
   // =========================================================
   // CHECKLIST RENDER
   // =========================================================
@@ -1132,7 +1173,7 @@
   }
 
   // =========================================================
-  // CAPTURE HELPERS (dùng chung cho checklist + bxh)
+  // CAPTURE
   // =========================================================
   let html2canvasPromise = null;
   function ensureHtml2Canvas(){
@@ -1527,7 +1568,7 @@
   }
 
   // =========================================================
-  // QUICK TOOLS VISIBILITY (throttled)
+  // QUICK TOOLS VISIBILITY
   // =========================================================
   function _syncQuickTools(){
     const otherOpen =
@@ -1749,7 +1790,7 @@
   };
 
   // =========================================================
-  // EXPORTS cho các module con (attendance, bxh-top, lunch, secret-mail)
+  // EXPORTS cho các module con
   // =========================================================
   window.SRank = window.SRank || {};
   Object.assign(window.SRank, {
