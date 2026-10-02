@@ -958,32 +958,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px soli
   </div>
 </section>
 
-
-
-<div id="kdvRulesOverlay" aria-hidden="true">
-  <section id="kdvRulesPanel" role="dialog" aria-modal="true">
-    <button id="kdvRulesClose" type="button" aria-label="Đóng Luật KDV">×</button>
-    <div class="kdvSparkle">✦　♡　✦</div>
-    <div id="kdvRulesTitle">📜 LUẬT KDV</div>
-    <div id="kdvRulesSub">Quy định duyệt bài • Đọc kỹ trước khi kiểm duyệt</div>
-    <div id="kdvRulesList">
-      <article class="kdvRule"><span class="kdvNum">01</span><div>Cấm đăng video có logo <b>(TIKTOK, DOUYIN,...)</b></div></article>
-      <article class="kdvRule"><span class="kdvNum">02</span><div>Cấm đăng video có <b>NHẠC NƯỚC NGOÀI</b></div></article>
-      <article class="kdvRule"><span class="kdvNum">03</span><div>Cấm các hình ảnh chứa <b>BỘ PHẬN NHẠY CẢM</b> của người, động vật</div></article>
-      <article class="kdvRule"><span class="kdvNum">04</span><div>Cấm <b>MUA - BÁN - CHO - TẶNG</b> dưới mọi hình thức</div></article>
-      <article class="kdvRule"><span class="kdvNum">05</span><div>Cấm các hình ảnh <b>NUÔI NHỐT - HÀNH HẠ - NGƯỢC ĐÃI ĐỘNG VẬT</b></div></article>
-      <article class="kdvRule"><span class="kdvNum">06</span><div>Cấm các hình ảnh <b>THUỐC SÚNG, MA TUÝ, THUỐC PHIỆN, CẦN SA</b></div></article>
-      <article class="kdvRule"><span class="kdvNum">07</span><div>Cấm các bài viết về <b>TÔN GIÁO, CHÍNH TRỊ, THÙ HẰN</b></div></article>
-      <article class="kdvRule"><span class="kdvNum">08</span><div>Các bài <b>PHỐT</b> đều phải thông qua <b>ADMIN</b> kiểm duyệt mới được đăng</div></article>
-      <article class="kdvRule"><span class="kdvNum">09</span><div><b>KHÔNG LIVE STREAM</b> khi chưa được <b>ADMIN</b> cho phép</div></article>
-      <article class="kdvRule"><span class="kdvNum">10</span><div><b>KHÔNG XOÁ BÀI</b> khi bài không vi phạm các quy định trên</div></article>
-      <article class="kdvRule"><span class="kdvNum">11</span><div><b>KHÔNG BÁN HÀNG</b> dưới mọi hình thức, phải đăng ký qua <b>ADMIN</b></div></article>
-      <article class="kdvRule"><span class="kdvNum">12</span><div><b>KHÔNG BẬT TÍNH NĂNG PHÊ DUYỆT TRƯỚC</b> cho người khác</div></article>
-    </div>
-    <div class="kdvFooter">♡ Kiểm duyệt đúng luật • Công bằng • Rõ ràng ♡</div>
-  </section>
-</div>
-
 <div id="monitorOverlay" aria-hidden="true">
   <section id="monitorPanel" role="dialog" aria-modal="true">
     <div id="monitorTitle">👁 Giám sát</div>
@@ -1207,7 +1181,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px soli
     monitorBody: document.querySelector("#monitorTable tbody"),
     monitorCloseBtn: $("monitorCloseBtn"),
     secondaryNav: $("secondaryNav"),
-    kdvRulesBtn: $("kdvRulesBtn"), kdvRulesOverlay: $("kdvRulesOverlay"), kdvRulesClose: $("kdvRulesClose"),
     lunchBtn: $("lunchBtn"),
     lunchAddBtn2: $("lunchAddBtn2"), lunchAddForm2: $("lunchAddForm2"),
     lunchAddInput2: $("lunchAddInput2"), lunchAddStatus2: $("lunchAddStatus2"),
@@ -2824,7 +2797,7 @@ AdminSession.load();
   // =========================================================
   function _syncQuickTools(){
     const otherOpen =
-      els.kdvRulesOverlay.classList.contains("show") ||
+      document.getElementById("kdvRulesOverlay")?.classList.contains("show") ||
       els.monitorOverlay.classList.contains("show") ||
       els.topPanel.classList.contains("show") ||
       els.checklistPanel.classList.contains("show") ||
@@ -2898,11 +2871,7 @@ AdminSession.load();
   els.topPanel.addEventListener("click", e => { if(e.target === els.topPanel) closeTop(); });
   els.syncBtn.addEventListener("click", () => { lastAutoSyncAt = Date.now(); loadData(true, true); });
 
-  els.kdvRulesBtn.addEventListener("click", () => { els.kdvRulesOverlay.classList.add("show"); els.kdvRulesOverlay.setAttribute("aria-hidden","false"); document.body.style.overflow = "hidden"; syncQuickTools(); });
-  els.kdvRulesClose.addEventListener("click", () => { els.kdvRulesOverlay.classList.remove("show"); els.kdvRulesOverlay.setAttribute("aria-hidden","true"); document.body.style.overflow = ""; syncQuickTools(); });
-  els.kdvRulesOverlay.addEventListener("click", e => { if(e.target === els.kdvRulesOverlay){ els.kdvRulesOverlay.classList.remove("show"); document.body.style.overflow = ""; syncQuickTools(); } });
-
-  els.monitorBtn.addEventListener("click", openMonitor);
+els.monitorBtn.addEventListener("click", openMonitor);
   els.monitorCloseBtn.addEventListener("click", closeMonitor);
   els.monitorOverlay.addEventListener("click", e => { if(e.target === els.monitorOverlay) closeMonitor(); });
   els.linkEditorCancel.addEventListener("click", closeLinkEditor);
@@ -2997,7 +2966,6 @@ AdminSession.load();
     if(els.monitorOverlay.classList.contains("show")){ closeMonitor(); e.preventDefault(); return; }
     if(els.topPanel.classList.contains("show")){ closeTop(); syncQuickTools(); e.preventDefault(); return; }
     if(els.checklistPanel.classList.contains("show")){ els.checklistPanel.classList.remove("show"); syncQuickTools(); e.preventDefault(); return; }
-    if(els.kdvRulesOverlay.classList.contains("show")){ els.kdvRulesOverlay.classList.remove("show"); document.body.style.overflow = ""; syncQuickTools(); e.preventDefault(); return; }
     if(els.adminPage.classList.contains("show")){ closeAdmin(); e.preventDefault(); return; }
     if(els.adminPasswordOverlay.style.display === "flex"){ closeAdminPassword(); e.preventDefault(); return; }
     const attendanceNameWheel = document.getElementById("attendanceNameWheel");
@@ -4123,4 +4091,6 @@ if("serviceWorker" in navigator){
   });
 }
 </script>
-<script src="js/lunch.js" defer></script>
+  <script src="js/lunch.js" defer></script>
+  <script src="js/kdv-rules.js" defer></script>
+</body>
