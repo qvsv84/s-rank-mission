@@ -6496,7 +6496,8 @@ function showCapturePreview(imageUrl, blob, previewTitle="📸 Checklist đã ch
   lunchManageClose.addEventListener("click",closeLunchManage);
   lunchManageOverlay.addEventListener("click",e=>{if(e.target===lunchManageOverlay)closeLunchManage()});
   document.querySelectorAll('.lunchManageTab').forEach(tab=>tab.addEventListener('click',()=>{lunchManageCategory=tab.dataset.manageCategory;renderLunchManage();}));
-  loadQuizStore && null; renderAdminVisibleState(); syncQuickTools();
+  renderAdminVisibleState();
+  syncQuickTools();
 
   window.__getChecklistNames = () => Array.isArray(names) ? names.slice() : [];
   window.__getChecklistState = () => ({
