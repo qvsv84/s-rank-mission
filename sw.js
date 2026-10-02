@@ -4,7 +4,7 @@
    ========================================================= */
 "use strict";
 
-const SW_VERSION = "v1.2.0";
+const SW_VERSION = "v1.2.2";
 const CACHE_NAME = `srank-cache-${SW_VERSION}`;
 const RUNTIME_CACHE = `srank-runtime-${SW_VERSION}`;
 
