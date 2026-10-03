@@ -163,7 +163,7 @@
       document.body.appendChild(container);
       return container;
     }
-    const iconFor = t => t==="success"?"✓":t==="error"?"⚠":t==="warning"?"!":t==="person"?"🌸":"i";
+    const iconFor = t => t==="success"?"✓":t==="error"?"⚠":t==="warning"?"!" :t==="person"?"🌸":"i";
     function dismiss(el){
       if(!el || !el.parentNode) return;
       clearTimeout(el._toastTimer);
@@ -505,10 +505,15 @@
     const STORAGE_KEY = "srank_live_feed_v1";
     const UNREAD_KEY = "srank_live_feed_unread_v1";
     const LAST_SYNC_KEY = "srank_live_feed_last_sync_v1";
-    const MAX_EVENTS = 60, DEDUP_MS = 60000;
+    const MAX_EVENTS = 60;
     const POLL_INTERVAL = 8000;
+    const RECENT_THRESHOLD_MS = 5 * 60 * 1000;
+    const INITIAL_PULL_MS = 6 * 60 * 60 * 1000;
     let events = [], unreadCount = 0;
     let _pollTimer = null, _lastServerTs = 0, _syncInFlight = false;
+
+    const _dayFmt = new Intl.DateTimeFormat("en-CA", {timeZone:"Asia/Ho_Chi_Minh", year:"numeric", month:"2-digit", day:"2-digit"});
+    const isSameDayVN = (a, b) => _dayFmt.format(new Date(a)) === _dayFmt.format(new Date(b));
 
     const isValid = e => e && typeof e === "object" && typeof e.type === "string" && typeof e.name === "string" && typeof e.ts === "number";
 
@@ -516,6 +521,7 @@
       try{ const arr = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); events = Array.isArray(arr) ? arr.filter(isValid) : []; }catch(_){ events = []; }
       try{ unreadCount = Math.max(0, Number(localStorage.getItem(UNREAD_KEY) || 0) || 0); }catch(_){ unreadCount = 0; }
       try{ _lastServerTs = Number(localStorage.getItem(LAST_SYNC_KEY) || 0) || 0; }catch(_){ _lastServerTs = 0; }
+      if(_lastServerTs === 0) _lastServerTs = Date.now() - INITIAL_PULL_MS;
     }
     function save(){
       try{
@@ -551,7 +557,7 @@
       const time = ev.time || hhmm();
 
       if (!ev.skipDedup){
-        const dup = events.find(e => e.type === ev.type && e.name === ev.name && (now - e.ts) < DEDUP_MS);
+        const dup = events.find(e => e.type === ev.type && e.name === ev.name && isSameDayVN(e.ts, now));
         if(dup){
           dup.ts = now; dup.time = time;
           if(ev.meta) dup.meta = ev.meta;
@@ -608,28 +614,41 @@
         const r = await api("getLiveEvents", { since, _ts: Date.now() }, 12000);
         if(!r || !r.ok) return;
         const arr = Array.isArray(r.data && r.data.events) ? r.data.events : [];
-        let added = 0;
-        let newest = 0;
+        const nowMs = Date.now();
+        let added = 0, addedRecent = 0, newest = 0;
         arr.forEach(function(raw){
           if(!raw || !raw.id) return;
-          if(events.some(e => e.id === String(raw.id))) return;
-          const ts = Number(raw.ts) || Date.now();
+          const rawId = String(raw.id);
+          if(events.some(e => e.id === rawId)) return;
+          const ts = Number(raw.ts) || nowMs;
+          const type = String(raw.type || "check");
+          const name = String(raw.name || "Ẩn danh");
+          const dup = events.find(e => e.type === type && e.name === name && isSameDayVN(e.ts, ts));
+          if(dup){
+            dup.id = rawId;
+            dup.ts = ts;
+            dup.time = formatTsToTime(ts);
+            dup._pending = false;
+            if(ts > newest) newest = ts;
+            return;
+          }
           events.push({
-            id: String(raw.id),
-            type: String(raw.type || "check"),
-            name: String(raw.name || "Ẩn danh"),
+            id: rawId,
+            type,
+            name,
             time: formatTsToTime(ts),
             meta: raw.meta || {},
-            ts: ts
+            ts
           });
           added++;
+          if(nowMs - ts < RECENT_THRESHOLD_MS) addedRecent++;
           if(ts > newest) newest = ts;
         });
         if(newest > _lastServerTs) _lastServerTs = newest;
         if(added > 0){
           events.sort((a, b) => b.ts - a.ts);
           if(events.length > MAX_EVENTS) events.length = MAX_EVENTS;
-          unreadCount += added;
+          if(addedRecent > 0) unreadCount += addedRecent;
           save(); render(); updateBadge();
         }
       }catch(_){}
@@ -658,12 +677,12 @@
     }
 
     const typeLabel = function(ev){
-      if (ev.type === "check") return "vừa check";
+      if (ev.type === "check") return "check lúc " + (ev.time || "—");
       if (ev.type === "lunch"){
         const meta = ev.meta || {};
         const dish = meta.dish || "";
         const icon = meta.icon || "🍜";
-        return dish ? "vừa quay: " + icon + " " + dish : "vừa quay bữa trưa";
+        return dish ? "quay được: " + icon + " " + dish : "vừa quay bữa trưa";
       }
       return "vừa hoạt động";
     };
@@ -726,7 +745,6 @@
       overlay.setAttribute("aria-hidden","false");
       render(); markAllSeen();
       syncFromServer();
-      // FIX: ẩn nút chat + FAB khác khi mở Live Feed
       if (typeof window.syncQuickTools === "function") window.syncQuickTools();
     };
     const close = () => {
@@ -734,7 +752,6 @@
       if(!overlay) return;
       overlay.classList.remove("show");
       overlay.setAttribute("aria-hidden","true");
-      // FIX: hiện lại nút chat + FAB khác khi đóng Live Feed
       if (typeof window.syncQuickTools === "function") window.syncQuickTools();
     };
 
@@ -756,12 +773,25 @@
   window.SRank = window.SRank || {};
   window.SRank.LiveFeed = LiveFeed;
 
+  function isRecentCheckMinute(hhmmStr, maxMin){
+    const m = String(hhmmStr || "").match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+    if(!m) return false;
+    const h = +m[1], mi = +m[2];
+    const parts = new Intl.DateTimeFormat("en-US", {timeZone:"Asia/Ho_Chi_Minh", hour:"2-digit", minute:"2-digit", hour12:false}).formatToParts(new Date());
+    const nowH = +(parts.find(p => p.type === "hour")?.value || 0);
+    const nowM = +(parts.find(p => p.type === "minute")?.value || 0);
+    let diff = (nowH*60 + nowM) - (h*60 + mi);
+    if(diff < 0) diff += 1440;
+    return diff <= maxMin;
+  }
+
   function notifyNewlyChecked(list){
     if(!Array.isArray(list) || !list.length) return;
     const now = Date.now();
     const filtered = list.filter(item => {
       const last = _recentSelfChecks.get(item.name);
-      return !last || (now - last) >= SELF_CHECK_IGNORE_MS;
+      if(last && (now - last) < SELF_CHECK_IGNORE_MS) return false;
+      return isRecentCheckMinute(item.time, 5);
     });
     if(!filtered.length) return;
     filtered.sort((a,b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
@@ -771,7 +801,7 @@
     } else {
       Toast.show(`${filtered[0].name} và ${filtered.length - 1} người khác vừa check`, {type:"person", icon:"🌸", duration:3200});
     }
-    filtered.forEach(p => LiveFeed.push({type:"check", name:p.name, time:p.time || ""}));
+    // KHÔNG push LiveFeed — server đã nhận event từ client gốc trong checkin()
   }
 
   let _checklistSignature = "";
