@@ -78,7 +78,6 @@
   const isValid24hTime = v => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(v||"").trim());
   const throttleRAF = fn => { let s = false, arg; return (...a) => { arg = a; if(s) return; s = true; requestAnimationFrame(() => { s = false; fn(...arg); }); }; };
 
-  // UUID generator có fallback cho browser cũ
   const uuid = () => {
     try{
       if(typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
@@ -523,7 +522,7 @@
   }
 
   // =========================================================
-  // LIVE FEED — derive check + event lunch (v2.13: idempotency)
+  // LIVE FEED — derive check + event lunch (v2.13)
   // =========================================================
   const LiveFeed = (() => {
     const EVENTS_KEY = "srank_live_feed_events_v3";
@@ -600,17 +599,7 @@
     }
 
     function getAllEntries(){
-      const all = [...getCheckEntries(), ...getLunchEntries()].sort((a, b) => b.ts - a.ts);
-      const out = [];
-      for(const cur of all){
-        const prev = out[out.length - 1];
-        if(prev && prev.type === "lunch" && cur.type === "lunch"
-           && prev.name === cur.name && Math.abs(prev.ts - cur.ts) < 90000){
-          continue;
-        }
-        out.push(cur);
-      }
-      return out;
+      return [...getCheckEntries(), ...getLunchEntries()].sort((a, b) => b.ts - a.ts);
     }
 
     function countUnread(){
@@ -724,7 +713,6 @@
       }catch(_){ return null; }
     }
 
-    // Push lunch — dùng clientKey làm idempotency key + local id
     function push(ev){
       if(!ev || ev.type !== "lunch" || !ev.name) return null;
       const now = Date.now();
@@ -762,7 +750,6 @@
       return full;
     }
 
-    // Rollback theo id (clientKey hoặc server id)
     function removeLocal(localId){
       const idx = events.findIndex(e => e.id === localId || e._clientKey === localId);
       if(idx < 0) return;
@@ -770,7 +757,6 @@
       saveEvents(); refresh();
     }
 
-    // Đợi push hoàn tất — dùng cho UX lock ở lunch.js
     function waitForPush(clientKey, timeoutMs){
       const start = Date.now();
       const t = Math.max(1000, Number(timeoutMs) || 12000);
@@ -813,25 +799,10 @@
           const rawId = String(raw.id);
           if(events.some(e => e.id === rawId)) return;
           const ts = Number(raw.ts) || Date.now();
-          const name = String(raw.name || "Ẩn danh");
-          // Local đã có entry cùng name + ts gần → merge
-          const recentDup = events.find(e =>
-            e.type === "lunch" && e.name === name && Math.abs(e.ts - ts) < 90000
-          );
-          if(recentDup){
-            if(recentDup.ts < ts){
-              recentDup.id = rawId;
-              recentDup.ts = ts;
-              recentDup.time = formatTsToTime(ts);
-              recentDup._pending = false;
-            }
-            if(ts > newest) newest = ts;
-            return;
-          }
           events.push({
             id: rawId,
             type: "lunch",
-            name,
+            name: String(raw.name || "Ẩn danh"),
             time: formatTsToTime(ts),
             meta: raw.meta || {},
             ts
@@ -896,6 +867,7 @@
 
   window.SRank = window.SRank || {};
   window.SRank.LiveFeed = LiveFeed;
+
   function isRecentCheckMinute(hhmmStr, maxMin){
     const m = String(hhmmStr || "").match(/^([01]\d|2[0-3]):([0-5]\d)$/);
     if(!m) return false;
