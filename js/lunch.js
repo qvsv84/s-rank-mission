@@ -1,5 +1,6 @@
 /* =========================================================
    LUNCH v2 — Bữa trưa ăn gì? (Bản lột xác + polling + LiveFeed)
+   v2.13: UX lock + idempotency key (clientKey)
    ========================================================= */
 (function(){
   "use strict";
@@ -8,6 +9,7 @@
   window.__lunchV2Loaded = true;
 
   const API_TIMEOUT = 12000;
+  const PUSH_TIMEOUT = 15000;
   const SPIN_DURATION_MS = 1800;
   const SPIN_TICK_START_MS = 60;
   const SPIN_TICK_END_MS = 260;
@@ -35,6 +37,7 @@
     dishes: [],
     loading: false,
     spinning: false,
+    sending: false,
     currentMode: "all",
     searchTerm: "",
     lastResult: null,
@@ -60,6 +63,12 @@
     if (window.__srankApi) return window.__srankApi;
     if (window.SRank && window.SRank.api) return window.SRank.api;
     return null;
+  };
+
+  const uuid = function(){
+    if (window.SRank && typeof window.SRank.uuid === "function") return window.SRank.uuid();
+    try{ if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID(); }catch(_){}
+    return "ck_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 12);
   };
 
   const notify = function(msg, type){
@@ -94,23 +103,38 @@
     }catch(_){ return "Ẩn danh"; }
   }
 
-  function pushLunchToFeed(dish){
-    if (!dish || !dish.name) return;
+  // Push lunch với clientKey (idempotency) + chờ server ack
+  async function pushLunchToFeed(dish){
+    if (!dish || !dish.name) return { ok: false, reason: "invalid_dish" };
     try{
       var lf = window.SRank && window.SRank.LiveFeed;
-      if (!lf || typeof lf.push !== "function") return;
-      var cat = CATEGORY_MAP[dish.category] || CATEGORY_MAP.home;
-      lf.push({
+      if (!lf || typeof lf.push !== "function") return { ok: false, reason: "no_livefeed" };
+
+      const cat = CATEGORY_MAP[dish.category] || CATEGORY_MAP.home;
+      const clientKey = uuid();
+
+      const pushed = lf.push({
         type: "lunch",
         name: getMyName(),
-        skipDedup: true,
+        clientKey: clientKey,
         meta: {
           dish: dish.name,
           category: dish.category,
           icon: cat.icon
         }
       });
-    }catch(e){ console.log("[lunch] push feed error", e); }
+      if (!pushed) return { ok: false, reason: "push_failed", clientKey };
+
+      // Chờ server ack (hoặc timeout)
+      if (typeof lf.waitForPush === "function"){
+        const res = await lf.waitForPush(clientKey, PUSH_TIMEOUT);
+        return { ok: !!res.ok, clientKey: clientKey, event: res.event, reason: res.reason };
+      }
+      return { ok: true, clientKey: clientKey, event: pushed };
+    }catch(e){
+      console.log("[lunch] push feed error", e);
+      return { ok: false, reason: "exception" };
+    }
   }
 
   // =========================================================
@@ -230,7 +254,7 @@
     _pollTimer = setInterval(function(){
       if (!state.pageOpen) return;
       if (document.hidden) return;
-      if (state.spinning) return;
+      if (state.spinning || state.sending) return;
       var ov = $("lcSheetOverlay");
       if (ov && ov.classList.contains("show")) return;
       loadDishes(false);
@@ -278,6 +302,9 @@
       ".lc-spin-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:180px;min-height:50px;padding:12px 28px;border:1px solid rgba(200,140,80,.45);border-radius:999px;background:linear-gradient(180deg,#f0a860 0%,#e08840 100%);color:#fff;font-family:inherit;font-size:clamp(13px,3.4vw,15px);font-weight:950;letter-spacing:.14em;text-shadow:0 1px 2px rgba(120,80,40,.28);box-shadow:0 12px 28px -8px rgba(224,136,64,.55),0 4px 10px -2px rgba(120,80,40,.16),inset 0 1px 0 rgba(255,255,255,.32);cursor:pointer;transition:transform .22s ease,box-shadow .22s ease}",
       ".lc-spin-btn:active{transform:scale(.97)}",
       ".lc-spin-btn:disabled{opacity:.6;pointer-events:none}",
+      ".lc-spin-btn.sending{background:linear-gradient(180deg,#d0b090 0%,#b08858 100%);box-shadow:none}",
+      ".lc-spin-btn.success{background:linear-gradient(180deg,#6fbf7a 0%,#4ea25b 100%);box-shadow:0 8px 18px -6px rgba(78,162,91,.5)}",
+      ".lc-spin-btn.error{background:linear-gradient(180deg,#ef5b5b 0%,#d84040 100%);box-shadow:0 8px 18px -6px rgba(216,64,64,.5)}",
       ".lc-spin-btn-icon{font-size:18px;line-height:1;display:inline-block}",
       ".lc-modes{display:flex;gap:6px;margin-bottom:16px;padding:4px;background:rgba(255,255,255,.7);border:1px solid rgba(200,140,80,.16);border-radius:16px;overflow-x:auto;scrollbar-width:none}",
       ".lc-modes::-webkit-scrollbar{display:none}",
@@ -378,7 +405,7 @@
             '</div>',
             '<div class="lc-hero-actions">',
               '<button type="button" class="lc-spin-btn" id="lcSpinBtn">',
-                '<span class="lc-spin-btn-icon">🎲</span>',
+                '<span class="lc-spin-btn-icon" id="lcSpinBtnIcon">🎲</span>',
                 '<span id="lcSpinBtnText">QUAY NGAY</span>',
               '</button>',
             '</div>',
@@ -406,6 +433,7 @@
     ].join("");
     document.body.appendChild(page);
   }
+
   // =========================================================
   // RENDER
   // =========================================================
@@ -434,7 +462,7 @@
       btn.dataset.mode = m.key;
       btn.innerHTML = '<span class="lc-mode-icon">' + m.icon + '</span><span>' + m.label + '</span>';
       btn.addEventListener("click", function(){
-        if (state.spinning) return;
+        if (state.spinning || state.sending) return;
         state.currentMode = m.key;
         renderModes();
         renderDishGrid();
@@ -509,7 +537,6 @@
 
       var card = document.createElement("div");
       card.className = "lc-dish cat-" + d.category + (isHighlight ? " highlight" : "");
-      card.dataset.id = d.id;
 
       card.innerHTML =
         '<div class="lc-dish-top">' +
@@ -520,7 +547,7 @@
 
       card.addEventListener("click", function(e){
         if (e.target.closest(".lc-dish-menu")) return;
-        if (state.spinning) return;
+        if (state.spinning || state.sending) return;
         state.lastResult = { id: d.id, name: d.name, category: d.category };
         renderHero();
         renderDishGrid();
@@ -543,10 +570,50 @@
   }
 
   // =========================================================
-  // SPIN  (push LiveFeed khi quay xong)
+  // SPIN — có UX lock
   // =========================================================
+  function setSpinButtonState(kind, text){
+    const btn = $("lcSpinBtn");
+    const icon = $("lcSpinBtnIcon");
+    const label = $("lcSpinBtnText");
+    if(!btn || !label) return;
+    btn.classList.remove("sending", "success", "error");
+    if(kind === "spin"){
+      btn.disabled = true;
+      btn.classList.add("sending");
+      if(icon) icon.textContent = "🎲";
+      label.textContent = text || "ĐANG QUAY…";
+      return;
+    }
+    if(kind === "send"){
+      btn.disabled = true;
+      btn.classList.add("sending");
+      if(icon) icon.textContent = "⏳";
+      label.textContent = text || "ĐANG GỬI…";
+      return;
+    }
+    if(kind === "ok"){
+      btn.disabled = true;
+      btn.classList.add("success");
+      if(icon) icon.textContent = "✓";
+      label.textContent = text || "ĐÃ GỬI";
+      return;
+    }
+    if(kind === "err"){
+      btn.disabled = false;
+      btn.classList.add("error");
+      if(icon) icon.textContent = "⚠";
+      label.textContent = text || "LỖI — THỬ LẠI";
+      return;
+    }
+    // idle
+    btn.disabled = false;
+    if(icon) icon.textContent = "🎲";
+    label.textContent = text || "QUAY NGAY";
+  }
+
   function spin(){
-    if (state.spinning) return;
+    if (state.spinning || state.sending) return;
 
     var pool = getDishPool();
     if (pool.length === 0){
@@ -559,7 +626,7 @@
       renderHero();
       renderDishGrid();
       notify("Chỉ có 1 món — chọn luôn: " + pool[0].name, "success");
-      pushLunchToFeed(pool[0]);
+      finalizeSpin(pool[0]);
       return;
     }
 
@@ -569,12 +636,9 @@
     var hero = $("lcHero");
     var heroBody = $("lcHeroBody");
     var heroIcon = $("lcHeroIcon");
-    var spinBtn = $("lcSpinBtn");
-    var spinBtnText = $("lcSpinBtnText");
 
     if (hero) hero.classList.add("rolling");
-    if (spinBtn) spinBtn.disabled = true;
-    if (spinBtnText) spinBtnText.textContent = "ĐANG QUAY…";
+    setSpinButtonState("spin", "ĐANG QUAY…");
 
     var shuffled = shuffleArray(pool);
     var totalSteps = Math.max(12, Math.min(24, pool.length * 2));
@@ -613,23 +677,46 @@
         state.spinning = false;
         state.lastResult = { id: finalDish.id, name: finalDish.name, category: finalDish.category };
         if (hero) hero.classList.remove("rolling");
-        if (spinBtn) spinBtn.disabled = false;
-        if (spinBtnText) spinBtnText.textContent = "QUAY LẠI";
         renderHero();
         renderDishGrid();
         notify("Chọn: " + finalDish.name, "success");
-        // ✅ PUSH VÀO LIVE FEED
-        pushLunchToFeed(finalDish);
+        finalizeSpin(finalDish);
       }
     }
     tick();
+  }
+
+  // Gửi kết quả lên server + UX lock
+  async function finalizeSpin(dish){
+    if (state.sending) return;
+    state.sending = true;
+    setSpinButtonState("send", "ĐANG GỬI…");
+
+    let ok = false;
+    try{
+      const res = await pushLunchToFeed(dish);
+      ok = !!(res && res.ok);
+    }catch(_){
+      ok = false;
+    }
+    state.sending = false;
+
+    if (ok){
+      setSpinButtonState("ok", "ĐÃ GỬI ✓");
+      setTimeout(() => {
+        setSpinButtonState("idle", "QUAY LẠI");
+      }, 800);
+    } else {
+      setSpinButtonState("err", "LỖI — THỬ LẠI");
+      notify("Không gửi được bữa trưa — bấm thử lại", "error");
+    }
   }
 
   // =========================================================
   // SHEET — ADD
   // =========================================================
   function openAddSheet(){
-    if (state.spinning) return;
+    if (state.spinning || state.sending) return;
     state.pendingAddCategory = state.currentMode === "all" ? "home" : state.currentMode;
     showSheet(buildAddContent(), "add");
     setTimeout(function(){
@@ -722,7 +809,7 @@
   // SHEET — EDIT
   // =========================================================
   function openEditSheet(dish){
-    if (state.spinning) return;
+    if (state.spinning || state.sending) return;
     state.editingDish = dish;
     showSheet(buildEditContent(dish), "edit");
     setTimeout(function(){
@@ -945,7 +1032,7 @@
     var refreshBtn = $("lcRefreshBtn");
     if (refreshBtn){
       refreshBtn.addEventListener("click", async function(){
-        if (state.spinning) return;
+        if (state.spinning || state.sending) return;
         refreshBtn.classList.add("spinning");
         await loadDishes(true);
         setTimeout(function(){ refreshBtn.classList.remove("spinning"); }, 400);
