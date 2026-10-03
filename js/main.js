@@ -383,6 +383,7 @@
         times = names.map(() => "");
         cacheSave();
         renderChecklist();
+        LiveFeed.reconcileChecklist(names, checked, times);
         if(els.adminPage.classList.contains("show")) renderAdminChecklistEditor();
         setStatus("Checklist đã làm mới ✓");
       }catch(_){ setStatus("Reset chưa thành công — sẽ thử lại ✓"); }
@@ -499,12 +500,12 @@
   }
 
   // =========================================================
-  // LIVE FEED — Sync realtime qua server
+  // LIVE FEED — view của checklist (type check) + event riêng (type lunch)
   // =========================================================
   const LiveFeed = (() => {
-    const STORAGE_KEY = "srank_live_feed_v1";
-    const UNREAD_KEY = "srank_live_feed_unread_v1";
-    const LAST_SYNC_KEY = "srank_live_feed_last_sync_v1";
+    const STORAGE_KEY = "srank_live_feed_v2";
+    const UNREAD_KEY = "srank_live_feed_unread_v2";
+    const LAST_SYNC_KEY = "srank_live_feed_last_sync_v2";
     const MAX_EVENTS = 60;
     const POLL_INTERVAL = 8000;
     const RECENT_THRESHOLD_MS = 5 * 60 * 1000;
@@ -551,21 +552,11 @@
       }catch(_){ return null; }
     }
 
+    // Dùng cho lunch — check không dùng nữa
     function push(ev){
       if(!ev || !ev.type || !ev.name) return null;
       const now = Date.now();
       const time = ev.time || hhmm();
-
-      if (!ev.skipDedup){
-        const dup = events.find(e => e.type === ev.type && e.name === ev.name && isSameDayVN(e.ts, now));
-        if(dup){
-          dup.ts = now; dup.time = time;
-          if(ev.meta) dup.meta = ev.meta;
-          save(); render();
-          return dup;
-        }
-      }
-
       const localId = "local_" + now + "_" + Math.random().toString(36).slice(2, 8);
       const full = {
         id: localId,
@@ -604,6 +595,79 @@
       save(); render(); updateBadge();
     }
 
+    // Reconcile: coi LiveFeed là view của checklist cho type check.
+    // - Ai checked=true hôm nay → có entry với time = times[i]
+    // - Ai checked=false → soft-delete entry hôm nay
+    // - Entry > hôm qua → xoá hẳn
+    function reconcileChecklist(nameArr, checkedArr, timesArr){
+      if(!Array.isArray(nameArr) || !Array.isArray(checkedArr) || !Array.isArray(timesArr)) return;
+      const now = Date.now();
+      const todayStr = _dayFmt.format(new Date(now));
+      const yesterdayStr = _dayFmt.format(new Date(now - 86400000));
+
+      const targetByName = new Map();
+      for(let i = 0; i < nameArr.length; i++){
+        if(checkedArr[i] !== true) continue;
+        const t = String(timesArr[i] || "").trim();
+        if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(t)) continue;
+        const [hh, mm] = t.split(":").map(Number);
+        const d = new Date();
+        d.setHours(hh, mm, 0, 0);
+        targetByName.set(nameArr[i], {time: t, ts: d.getTime()});
+      }
+
+      // Update / soft-delete check events hôm nay
+      events.forEach(e => {
+        if(e.type !== "check") return;
+        if(!isSameDayVN(e.ts, now)) return;
+        const target = targetByName.get(e.name);
+        if(!target){
+          e._deleted = true;
+          return;
+        }
+        e.time = target.time;
+        e.ts = target.ts;
+        e._deleted = false;
+        e._pending = false;
+      });
+
+      // Thêm entry cho người checked chưa có
+      let addedRecent = 0;
+      targetByName.forEach((target, name) => {
+        const exists = events.find(e => e.type === "check" && e.name === name && isSameDayVN(e.ts, now));
+        if(exists){
+          if(exists._deleted){
+            exists._deleted = false;
+            exists.time = target.time;
+            exists.ts = target.ts;
+          }
+          return;
+        }
+        events.push({
+          id: "recon_" + name + "_" + now + "_" + Math.random().toString(36).slice(2,6),
+          type: "check",
+          name,
+          time: target.time,
+          meta: {},
+          ts: target.ts,
+          _deleted: false
+        });
+        if(now - target.ts < RECENT_THRESHOLD_MS) addedRecent++;
+      });
+
+      if(addedRecent > 0) unreadCount += addedRecent;
+
+      // Chỉ giữ hôm nay + hôm qua
+      events = events.filter(e => {
+        const dayStr = _dayFmt.format(new Date(e.ts));
+        return dayStr === todayStr || dayStr === yesterdayStr;
+      });
+
+      events.sort((a,b) => b.ts - a.ts);
+      if(events.length > MAX_EVENTS) events.length = MAX_EVENTS;
+      save(); render(); updateBadge();
+    }
+
     async function syncFromServer(){
       if(_syncInFlight) return;
       const api = window.__srankApi || (window.SRank && window.SRank.api);
@@ -625,6 +689,7 @@
           const name = String(raw.name || "Ẩn danh");
           const dup = events.find(e => e.type === type && e.name === name && isSameDayVN(e.ts, ts));
           if(dup){
+            if(dup._deleted) return; // entry đã bị reconcile xoá → bỏ qua
             dup.id = rawId;
             dup.ts = ts;
             dup.time = formatTsToTime(ts);
@@ -632,6 +697,9 @@
             if(ts > newest) newest = ts;
             return;
           }
+          // Không nhận check từ server nữa — reconcile sẽ tự add từ checklist
+          if(type === "check") return;
+
           events.push({
             id: rawId,
             type,
@@ -708,12 +776,13 @@
     function render(){
       const list = document.getElementById("liveFeedList");
       if(!list) return;
-      if(!events.length){
+      const visible = events.filter(e => !e._deleted);
+      if(!visible.length){
         list.innerHTML = '<div class="live-empty"><div class="live-empty-icon">📭</div>Chưa có hoạt động nào.<br>Mọi người check đi nào!</div>';
       } else {
         const frag = document.createDocumentFragment();
         let lastDay = "";
-        events.forEach(ev => {
+        visible.forEach(ev => {
           const dl = dayLabel(ev.ts);
           if(dl !== lastDay){
             const label = document.createElement("div");
@@ -735,7 +804,7 @@
         list.appendChild(frag);
       }
       const count = document.getElementById("liveFeedCount");
-      if(count) count.textContent = events.length ? (events.length + " hoạt động") : "Không có hoạt động";
+      if(count) count.textContent = visible.length ? (visible.length + " hoạt động") : "Không có hoạt động";
     }
 
     const open = () => {
@@ -767,7 +836,7 @@
         if(!document.hidden) syncFromServer();
       });
     }
-    return {push, removeLocal, init, open, close, clear, markAllSeen, updateBadge, syncFromServer};
+    return {push, removeLocal, reconcileChecklist, init, open, close, clear, markAllSeen, updateBadge, syncFromServer};
   })();
 
   window.SRank = window.SRank || {};
@@ -801,7 +870,6 @@
     } else {
       Toast.show(`${filtered[0].name} và ${filtered.length - 1} người khác vừa check`, {type:"person", icon:"🌸", duration:3200});
     }
-    // KHÔNG push LiveFeed — server đã nhận event từ client gốc trong checkin()
   }
 
   let _checklistSignature = "";
@@ -941,6 +1009,7 @@
           lastAutoSyncAt = Date.now();
           window.syncAttendanceEmployees?.();
           cacheSave();
+          LiveFeed.reconcileChecklist(names, checked, times);
           setStatus("Đã cập nhật ✓");
           maybeRenderLanding();
           return true;
@@ -978,6 +1047,7 @@
       cacheSave();
       renderChecklist(true);
       buildWheel();
+      LiveFeed.reconcileChecklist(names, checked, times);
       if(els.adminPage.classList.contains("show")) renderAdminChecklistEditor();
       els.hint.textContent = "Chạm vào câu hỏi";
       setStatus(force ? "Đã cập nhật ✓" : "Đã đồng bộ ✓");
@@ -1022,7 +1092,6 @@
     }
 
     _pendingChecks.add(name);
-    const liveEvent = LiveFeed.push({type:"check", name});
 
     const clientTime = hhmm();
     const prevChecked = checked[index], prevTime = times[index];
@@ -1030,6 +1099,7 @@
     checked[index] = true;
     cacheSave();
     if(!updateChecklistRow(index)) renderChecklist(true);
+    LiveFeed.reconcileChecklist(names, checked, times);
     if(!q1Opened && !els.checklistPanel.classList.contains("show")) renderLandingState();
     setStatus(`Đã ghi ${clientTime} ✓`);
 
@@ -1047,6 +1117,7 @@
       _pendingChecks.delete(name);
       cacheSave();
       updateChecklistRow(index);
+      LiveFeed.reconcileChecklist(names, checked, times);
       setStatus(`Đã ghi ${times[index] || clientTime} ✓`);
       try{ window.dispatchEvent(new CustomEvent("checkinDone", {detail:{name, time:times[index] || clientTime}})); }catch(_){}
       try{ localStorage.setItem("srank_last_checkin", JSON.stringify({name, time:times[index] || clientTime, date:todayKey()})); }catch(_){}
@@ -1057,8 +1128,8 @@
       _recentSelfChecks.delete(name);
       cacheSave();
       if(!updateChecklistRow(index)) renderChecklist(true);
+      LiveFeed.reconcileChecklist(names, checked, times);
       if(!q1Opened && !els.checklistPanel.classList.contains("show")) renderLandingState();
-      if(liveEvent && liveEvent._pending){ try{ LiveFeed.removeLocal(liveEvent.id); }catch(_){} }
       const msg = String(err?.message || "").trim();
       setStatus(msg ? `Không ghi được: ${msg}` : "Không ghi được — kiểm tra mạng");
     }
@@ -1443,6 +1514,7 @@
         ranks[i] = normalizeServerRank(r.data.rank, points[i]);
       }
       cacheSave(); renderChecklist(true); renderAdminChecklistEditor(); renderAdminStats();
+      LiveFeed.reconcileChecklist(names, checked, times);
       if(!q1Opened && !els.checklistPanel.classList.contains("show")) renderLandingState();
       setStatus(next ? "Đã check ✓" : "Đã bỏ check ✓");
     }catch(e){
@@ -1870,6 +1942,7 @@
     const prevChecked = checked[idx], prevTime = times[idx];
     checked[idx] = false; times[idx] = "";
     cacheSave(); renderChecklist(true);
+    LiveFeed.reconcileChecklist(names, checked, times);
     if(!q1Opened && !els.checklistPanel.classList.contains("show")) renderLandingState();
     try{
       const token = AdminSession.get();
@@ -1884,6 +1957,7 @@
     }catch(e){
       checked[idx] = prevChecked; times[idx] = prevTime;
       cacheSave(); renderChecklist(true);
+      LiveFeed.reconcileChecklist(names, checked, times);
       if(!q1Opened && !els.checklistPanel.classList.contains("show")) renderLandingState();
       throw e;
     }
@@ -1975,6 +2049,10 @@
 
 if("serviceWorker" in navigator){
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js", {scope:"/"}).catch(err => console.warn("[PWA] SW failed:", err));
+    navigator.serviceWorker.register("/sw.js", {scope:"/"}).then(reg => {
+      // Force update SW ngay khi có bản mới
+      reg.update().catch(()=>{});
+      if(reg.waiting) reg.waiting.postMessage({type:"SKIP_WAITING"});
+    }).catch(err => console.warn("[PWA] SW failed:", err));
   });
 }
