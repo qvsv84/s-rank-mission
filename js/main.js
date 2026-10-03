@@ -1,5 +1,6 @@
 /* =========================================================
    MAIN — Core app (IIFE #1)
+   v2.13: idempotency key cho pushLunch
    ========================================================= */
 (function(){
   "use strict";
@@ -76,6 +77,14 @@
   const escapeHtml = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   const isValid24hTime = v => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(v||"").trim());
   const throttleRAF = fn => { let s = false, arg; return (...a) => { arg = a; if(s) return; s = true; requestAnimationFrame(() => { s = false; fn(...arg); }); }; };
+
+  // UUID generator có fallback cho browser cũ
+  const uuid = () => {
+    try{
+      if(typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+    }catch(_){}
+    return "ck_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 12);
+  };
 
   let requestSeq = 0;
   window.__srankApi = function(action, data = {}, timeout = TIMEOUT.DEFAULT){
@@ -299,7 +308,7 @@
   window.createWheel = createWheel;
 
   let names = [], checked = [], times = [], points = [], ranks = [];
-  let stateDay = ""; // ngày mà names/checked/times thuộc về
+  let stateDay = "";
   let current = 0, q1Opened = false;
   let _lastUserActionAt = 0;
   const _recentSelfChecks = new Map();
@@ -514,9 +523,7 @@
   }
 
   // =========================================================
-  // LIVE FEED — derive check từ checklist + event lunch riêng
-  //   • check  → view thuần của names/checked/times (0 push, 0 dedup)
-  //   • lunch  → event thật, push server, sync 8s
+  // LIVE FEED — derive check + event lunch (v2.13: idempotency)
   // =========================================================
   const LiveFeed = (() => {
     const EVENTS_KEY = "srank_live_feed_events_v3";
@@ -527,7 +534,7 @@
     const RECENT_THRESHOLD_MS = 5 * 60 * 1000;
     const INITIAL_PULL_MS = 6 * 60 * 60 * 1000;
 
-    let events = [];        // chỉ chứa type "lunch"
+    let events = [];
     let lastSeen = { checks: {}, lunchTs: 0 };
     let _pollTimer = null, _lastServerTs = 0, _syncInFlight = false;
 
@@ -558,7 +565,6 @@
       return String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
     }
 
-    // ---- Derive check entries từ state ngoài ----
     function getCheckEntries(){
       const day = stateDay || todayKey();
       const today = todayKey();
@@ -594,10 +600,19 @@
     }
 
     function getAllEntries(){
-      return [...getCheckEntries(), ...getLunchEntries()].sort((a, b) => b.ts - a.ts);
+      const all = [...getCheckEntries(), ...getLunchEntries()].sort((a, b) => b.ts - a.ts);
+      const out = [];
+      for(const cur of all){
+        const prev = out[out.length - 1];
+        if(prev && prev.type === "lunch" && cur.type === "lunch"
+           && prev.name === cur.name && Math.abs(prev.ts - cur.ts) < 90000){
+          continue;
+        }
+        out.push(cur);
+      }
+      return out;
     }
 
-    // ---- Badge ----
     function countUnread(){
       let n = 0;
       for(let i = 0; i < names.length; i++){
@@ -630,7 +645,6 @@
       updateBadge();
     }
 
-    // ---- Render ----
     const typeLabel = function(ev){
       if (ev.type === "check") return "check lúc " + (ev.time || "—");
       if (ev.type === "lunch"){
@@ -694,7 +708,6 @@
 
     function refresh(){ render(); updateBadge(); }
 
-    // ---- Push (chỉ lunch) ----
     async function pushToServer(ev){
       const api = window.__srankApi || (window.SRank && window.SRank.api);
       if(!api) return null;
@@ -703,54 +716,85 @@
           type: ev.type,
           name: ev.name,
           meta: JSON.stringify(ev.meta || {}),
-          clientTs: String(Date.now())
+          clientTs: String(Date.now()),
+          clientKey: ev.clientKey || ""
         }, 12000);
         if(!r || !r.ok) return null;
         return r.data || null;
       }catch(_){ return null; }
     }
 
+    // Push lunch — dùng clientKey làm idempotency key + local id
     function push(ev){
       if(!ev || ev.type !== "lunch" || !ev.name) return null;
       const now = Date.now();
       const time = ev.time || hhmm();
-      const localId = "local_" + now + "_" + Math.random().toString(36).slice(2, 8);
+      const clientKey = ev.clientKey || uuid();
+
       const full = {
-        id: localId,
+        id: clientKey,
         type: "lunch",
         name: String(ev.name).slice(0, 60),
         time,
         meta: ev.meta || {},
-        ts: now
+        ts: now,
+        _clientKey: clientKey,
+        _pending: true
       };
       events.unshift(full);
       if(events.length > MAX_EVENTS) events.length = MAX_EVENTS;
       saveEvents(); refresh();
 
-      pushToServer(ev).then(function(serverEv){
+      pushToServer({ ...ev, clientKey }).then(function(serverEv){
         if(!serverEv || !serverEv.id) return;
-        const idx = events.findIndex(e => e.id === localId);
+        const idx = events.findIndex(e => e.id === clientKey);
         if(idx >= 0){
-          events[idx].id = serverEv.id;
+          events[idx].id = String(serverEv.id);
+          events[idx]._pending = false;
           const sTs = Number(serverEv.ts);
           if(Number.isFinite(sTs) && sTs > 0) events[idx].ts = sTs;
+          if(serverEv.time) events[idx].time = String(serverEv.time);
           if(events[idx].ts > _lastServerTs) _lastServerTs = events[idx].ts;
-          saveEvents();
+          saveEvents(); refresh();
         }
       }).catch(function(){});
 
       return full;
     }
 
-    // Rollback khi server fail (lunch)
+    // Rollback theo id (clientKey hoặc server id)
     function removeLocal(localId){
-      const idx = events.findIndex(e => e.id === localId);
+      const idx = events.findIndex(e => e.id === localId || e._clientKey === localId);
       if(idx < 0) return;
       events.splice(idx, 1);
       saveEvents(); refresh();
     }
 
-    // ---- Sync chỉ lunch ----
+    // Đợi push hoàn tất — dùng cho UX lock ở lunch.js
+    function waitForPush(clientKey, timeoutMs){
+      const start = Date.now();
+      const t = Math.max(1000, Number(timeoutMs) || 12000);
+      return new Promise(resolve => {
+        function check(){
+          const e = events.find(x => x.id === clientKey || x._clientKey === clientKey);
+          if(e && e._pending === false){
+            resolve({ ok: true, event: e });
+            return;
+          }
+          if(!e){
+            resolve({ ok: false, reason: "removed" });
+            return;
+          }
+          if(Date.now() - start > t){
+            resolve({ ok: false, reason: "timeout", event: e });
+            return;
+          }
+          setTimeout(check, 200);
+        }
+        check();
+      });
+    }
+
     async function syncFromServer(){
       if(_syncInFlight) return;
       const api = window.__srankApi || (window.SRank && window.SRank.api);
@@ -765,14 +809,29 @@
         arr.forEach(function(raw){
           if(!raw || !raw.id) return;
           const type = String(raw.type || "").trim();
-          if(type !== "lunch") return;           // bỏ qua check events cũ trên server
+          if(type !== "lunch") return;
           const rawId = String(raw.id);
           if(events.some(e => e.id === rawId)) return;
           const ts = Number(raw.ts) || Date.now();
+          const name = String(raw.name || "Ẩn danh");
+          // Local đã có entry cùng name + ts gần → merge
+          const recentDup = events.find(e =>
+            e.type === "lunch" && e.name === name && Math.abs(e.ts - ts) < 90000
+          );
+          if(recentDup){
+            if(recentDup.ts < ts){
+              recentDup.id = rawId;
+              recentDup.ts = ts;
+              recentDup.time = formatTsToTime(ts);
+              recentDup._pending = false;
+            }
+            if(ts > newest) newest = ts;
+            return;
+          }
           events.push({
             id: rawId,
             type: "lunch",
-            name: String(raw.name || "Ẩn danh"),
+            name,
             time: formatTsToTime(ts),
             meta: raw.meta || {},
             ts
@@ -832,12 +891,11 @@
         if(!document.hidden) syncFromServer();
       });
     }
-    return {push, removeLocal, refresh, init, open, close, clear, markAllSeen, updateBadge, syncFromServer};
+    return {push, removeLocal, waitForPush, refresh, init, open, close, clear, markAllSeen, updateBadge, syncFromServer};
   })();
 
   window.SRank = window.SRank || {};
   window.SRank.LiveFeed = LiveFeed;
-
   function isRecentCheckMinute(hhmmStr, maxMin){
     const m = String(hhmmStr || "").match(/^([01]\d|2[0-3]):([0-5]\d)$/);
     if(!m) return false;
@@ -1968,6 +2026,7 @@
   window.SRank = window.SRank || {};
   Object.assign(window.SRank, {
     api: window.__srankApi,
+    uuid,
     rankClient,
     normalizeServerRank,
     setStatus,
