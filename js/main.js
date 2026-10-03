@@ -61,6 +61,17 @@
     const p = dtParts(); const g = k => p.find(x=>x.type===k)?.value || "";
     return `${g("year")}-${g("month")}-${g("day")}`;
   };
+  const dayKeyOf = (ts) => {
+    const p = new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Ho_Chi_Minh",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date(ts));
+    const g = k => p.find(x=>x.type===k)?.value || "";
+    return `${g("year")}-${g("month")}-${g("day")}`;
+  };
+  const yesterdayKey = () => {
+    const d = new Date(Date.now() - 86400000);
+    const p = new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Ho_Chi_Minh",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(d);
+    const g = k => p.find(x=>x.type===k)?.value || "";
+    return `${g("year")}-${g("month")}-${g("day")}`;
+  };
   const hhmm = () => new Intl.DateTimeFormat("vi-VN",{timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date());
   const escapeHtml = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   const isValid24hTime = v => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(v||"").trim());
@@ -288,6 +299,7 @@
   window.createWheel = createWheel;
 
   let names = [], checked = [], times = [], points = [], ranks = [];
+  let stateDay = ""; // ngày mà names/checked/times thuộc về
   let current = 0, q1Opened = false;
   let _lastUserActionAt = 0;
   const _recentSelfChecks = new Map();
@@ -334,6 +346,7 @@
       times = Array.isArray(x.times) ? x.times.slice(0, names.length).map(t => typeof t === "string" ? t : "") : names.map(() => "");
       points = Array.isArray(x.points) ? x.points.slice(0, names.length).map(p => Number.isFinite(Number(p)) ? Number(p) : 0) : names.map(() => 0);
       ranks = points.map(rankClient);
+      stateDay = x.day || todayKey();
       return names.length > 0;
     }catch(_){ try{ localStorage.removeItem(CACHE_KEY); }catch(_){} }
     return false;
@@ -381,9 +394,10 @@
         if(!r.ok) throw new Error(r.error);
         checked = names.map(() => false);
         times = names.map(() => "");
+        stateDay = todayKey();
         cacheSave();
         renderChecklist();
-        LiveFeed.reconcileChecklist(names, checked, times);
+        LiveFeed.refresh();
         if(els.adminPage.classList.contains("show")) renderAdminChecklistEditor();
         setStatus("Checklist đã làm mới ✓");
       }catch(_){ setStatus("Reset chưa thành công — sẽ thử lại ✓"); }
@@ -500,36 +514,43 @@
   }
 
   // =========================================================
-  // LIVE FEED — view của checklist (type check) + event riêng (type lunch)
+  // LIVE FEED — derive check từ checklist + event lunch riêng
+  //   • check  → view thuần của names/checked/times (0 push, 0 dedup)
+  //   • lunch  → event thật, push server, sync 8s
   // =========================================================
   const LiveFeed = (() => {
-    const STORAGE_KEY = "srank_live_feed_v2";
-    const UNREAD_KEY = "srank_live_feed_unread_v2";
-    const LAST_SYNC_KEY = "srank_live_feed_last_sync_v2";
+    const EVENTS_KEY = "srank_live_feed_events_v3";
+    const SEEN_KEY = "srank_live_feed_seen_v3";
+    const LAST_SYNC_KEY = "srank_live_feed_last_sync_v3";
     const MAX_EVENTS = 60;
     const POLL_INTERVAL = 8000;
     const RECENT_THRESHOLD_MS = 5 * 60 * 1000;
     const INITIAL_PULL_MS = 6 * 60 * 60 * 1000;
-    let events = [], unreadCount = 0;
+
+    let events = [];        // chỉ chứa type "lunch"
+    let lastSeen = { checks: {}, lunchTs: 0 };
     let _pollTimer = null, _lastServerTs = 0, _syncInFlight = false;
 
-    const _dayFmt = new Intl.DateTimeFormat("en-CA", {timeZone:"Asia/Ho_Chi_Minh", year:"numeric", month:"2-digit", day:"2-digit"});
-    const isSameDayVN = (a, b) => _dayFmt.format(new Date(a)) === _dayFmt.format(new Date(b));
-
-    const isValid = e => e && typeof e === "object" && typeof e.type === "string" && typeof e.name === "string" && typeof e.ts === "number";
-
     function load(){
-      try{ const arr = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); events = Array.isArray(arr) ? arr.filter(isValid) : []; }catch(_){ events = []; }
-      try{ unreadCount = Math.max(0, Number(localStorage.getItem(UNREAD_KEY) || 0) || 0); }catch(_){ unreadCount = 0; }
+      try{
+        const arr = JSON.parse(localStorage.getItem(EVENTS_KEY) || "[]");
+        events = Array.isArray(arr)
+          ? arr.filter(e => e && e.type === "lunch" && typeof e.name === "string" && typeof e.ts === "number")
+          : [];
+      }catch(_){ events = []; }
+      try{
+        const s = JSON.parse(localStorage.getItem(SEEN_KEY) || "{}");
+        lastSeen = (s && typeof s === "object") ? { checks: s.checks || {}, lunchTs: Number(s.lunchTs) || 0 } : { checks: {}, lunchTs: 0 };
+      }catch(_){ lastSeen = { checks: {}, lunchTs: 0 }; }
       try{ _lastServerTs = Number(localStorage.getItem(LAST_SYNC_KEY) || 0) || 0; }catch(_){ _lastServerTs = 0; }
       if(_lastServerTs === 0) _lastServerTs = Date.now() - INITIAL_PULL_MS;
     }
-    function save(){
-      try{
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(events.slice(0, MAX_EVENTS)));
-        localStorage.setItem(UNREAD_KEY, String(unreadCount));
-        localStorage.setItem(LAST_SYNC_KEY, String(_lastServerTs));
-      }catch(_){}
+    function saveEvents(){
+      try{ localStorage.setItem(EVENTS_KEY, JSON.stringify(events.slice(0, MAX_EVENTS))); }catch(_){}
+      try{ localStorage.setItem(LAST_SYNC_KEY, String(_lastServerTs)); }catch(_){}
+    }
+    function saveSeen(){
+      try{ localStorage.setItem(SEEN_KEY, JSON.stringify(lastSeen)); }catch(_){}
     }
 
     function formatTsToTime(ts){
@@ -537,213 +558,79 @@
       return String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
     }
 
-    async function pushToServer(ev){
-      const api = window.__srankApi || (window.SRank && window.SRank.api);
-      if(!api) return null;
-      try{
-        const r = await api("pushLiveEvent", {
-          type: ev.type,
-          name: ev.name,
-          meta: JSON.stringify(ev.meta || {}),
-          clientTs: String(Date.now())
-        }, 12000);
-        if(!r || !r.ok) return null;
-        return r.data || null;
-      }catch(_){ return null; }
-    }
-
-    // Dùng cho lunch — check không dùng nữa
-    function push(ev){
-      if(!ev || !ev.type || !ev.name) return null;
-      const now = Date.now();
-      const time = ev.time || hhmm();
-      const localId = "local_" + now + "_" + Math.random().toString(36).slice(2, 8);
-      const full = {
-        id: localId,
-        type: ev.type,
-        name: String(ev.name).slice(0, 60),
-        time,
-        meta: ev.meta || {},
-        ts: now,
-        _pending: true
-      };
-      events.unshift(full);
-      if(events.length > MAX_EVENTS) events.length = MAX_EVENTS;
-      unreadCount++;
-      save(); render(); updateBadge();
-
-      pushToServer(ev).then(function(serverEv){
-        if(!serverEv || !serverEv.id) return;
-        const idx = events.findIndex(e => e.id === localId);
-        if(idx >= 0){
-          events[idx].id = serverEv.id;
-          events[idx].ts = Number(serverEv.ts) || now;
-          events[idx]._pending = false;
-          if(events[idx].ts > _lastServerTs) _lastServerTs = events[idx].ts;
-          save();
-        }
-      }).catch(function(){});
-
-      return full;
-    }
-
-    function removeLocal(localId){
-      const idx = events.findIndex(e => e.id === localId);
-      if(idx < 0) return;
-      events.splice(idx, 1);
-      if(unreadCount > 0) unreadCount--;
-      save(); render(); updateBadge();
-    }
-
-    // Reconcile: coi LiveFeed là view của checklist cho type check.
-    // - Ai checked=true hôm nay → có entry với time = times[i]
-    // - Ai checked=false → soft-delete entry hôm nay
-    // - Entry > hôm qua → xoá hẳn
-    function reconcileChecklist(nameArr, checkedArr, timesArr){
-      if(!Array.isArray(nameArr) || !Array.isArray(checkedArr) || !Array.isArray(timesArr)) return;
-      const now = Date.now();
-      const todayStr = _dayFmt.format(new Date(now));
-      const yesterdayStr = _dayFmt.format(new Date(now - 86400000));
-
-      const targetByName = new Map();
-      for(let i = 0; i < nameArr.length; i++){
-        if(checkedArr[i] !== true) continue;
-        const t = String(timesArr[i] || "").trim();
+    // ---- Derive check entries từ state ngoài ----
+    function getCheckEntries(){
+      const day = stateDay || todayKey();
+      const today = todayKey();
+      const yest = yesterdayKey();
+      if(day !== today && day !== yest) return [];
+      const [y, mo, da] = day.split("-").map(Number);
+      const out = [];
+      for(let i = 0; i < names.length; i++){
+        if(checked[i] !== true) continue;
+        const t = String(times[i] || "").trim();
         if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(t)) continue;
         const [hh, mm] = t.split(":").map(Number);
-        const d = new Date();
-        d.setHours(hh, mm, 0, 0);
-        targetByName.set(nameArr[i], {time: t, ts: d.getTime()});
-      }
-
-      // Update / soft-delete check events hôm nay
-      events.forEach(e => {
-        if(e.type !== "check") return;
-        if(!isSameDayVN(e.ts, now)) return;
-        const target = targetByName.get(e.name);
-        if(!target){
-          e._deleted = true;
-          return;
-        }
-        e.time = target.time;
-        e.ts = target.ts;
-        e._deleted = false;
-        e._pending = false;
-      });
-
-      // Thêm entry cho người checked chưa có
-      let addedRecent = 0;
-      targetByName.forEach((target, name) => {
-        const exists = events.find(e => e.type === "check" && e.name === name && isSameDayVN(e.ts, now));
-        if(exists){
-          if(exists._deleted){
-            exists._deleted = false;
-            exists.time = target.time;
-            exists.ts = target.ts;
-          }
-          return;
-        }
-        events.push({
-          id: "recon_" + name + "_" + now + "_" + Math.random().toString(36).slice(2,6),
+        const d = new Date(y, mo - 1, da, hh, mm, 0, 0);
+        out.push({
+          id: "chk_" + day + "_" + names[i],
           type: "check",
-          name,
-          time: target.time,
-          meta: {},
-          ts: target.ts,
-          _deleted: false
+          name: names[i],
+          time: t,
+          ts: d.getTime(),
+          meta: {}
         });
-        if(now - target.ts < RECENT_THRESHOLD_MS) addedRecent++;
+      }
+      return out;
+    }
+
+    function getLunchEntries(){
+      const today = todayKey();
+      const yest = yesterdayKey();
+      return events.filter(e => {
+        const dk = dayKeyOf(e.ts);
+        return dk === today || dk === yest;
       });
-
-      if(addedRecent > 0) unreadCount += addedRecent;
-
-      // Chỉ giữ hôm nay + hôm qua
-      events = events.filter(e => {
-        const dayStr = _dayFmt.format(new Date(e.ts));
-        return dayStr === todayStr || dayStr === yesterdayStr;
-      });
-
-      events.sort((a,b) => b.ts - a.ts);
-      if(events.length > MAX_EVENTS) events.length = MAX_EVENTS;
-      save(); render(); updateBadge();
     }
 
-    async function syncFromServer(){
-      if(_syncInFlight) return;
-      const api = window.__srankApi || (window.SRank && window.SRank.api);
-      if(!api) return;
-      _syncInFlight = true;
-      try{
-        const since = _lastServerTs > 0 ? _lastServerTs - 1000 : 0;
-        const r = await api("getLiveEvents", { since, _ts: Date.now() }, 12000);
-        if(!r || !r.ok) return;
-        const arr = Array.isArray(r.data && r.data.events) ? r.data.events : [];
-        const nowMs = Date.now();
-        let added = 0, addedRecent = 0, newest = 0;
-        arr.forEach(function(raw){
-          if(!raw || !raw.id) return;
-          const rawId = String(raw.id);
-          if(events.some(e => e.id === rawId)) return;
-          const ts = Number(raw.ts) || nowMs;
-          const type = String(raw.type || "check");
-          const name = String(raw.name || "Ẩn danh");
-          const dup = events.find(e => e.type === type && e.name === name && isSameDayVN(e.ts, ts));
-          if(dup){
-            if(dup._deleted) return; // entry đã bị reconcile xoá → bỏ qua
-            dup.id = rawId;
-            dup.ts = ts;
-            dup.time = formatTsToTime(ts);
-            dup._pending = false;
-            if(ts > newest) newest = ts;
-            return;
-          }
-          // Không nhận check từ server nữa — reconcile sẽ tự add từ checklist
-          if(type === "check") return;
-
-          events.push({
-            id: rawId,
-            type,
-            name,
-            time: formatTsToTime(ts),
-            meta: raw.meta || {},
-            ts
-          });
-          added++;
-          if(nowMs - ts < RECENT_THRESHOLD_MS) addedRecent++;
-          if(ts > newest) newest = ts;
-        });
-        if(newest > _lastServerTs) _lastServerTs = newest;
-        if(added > 0){
-          events.sort((a, b) => b.ts - a.ts);
-          if(events.length > MAX_EVENTS) events.length = MAX_EVENTS;
-          if(addedRecent > 0) unreadCount += addedRecent;
-          save(); render(); updateBadge();
-        }
-      }catch(_){}
-      finally{ _syncInFlight = false; }
+    function getAllEntries(){
+      return [...getCheckEntries(), ...getLunchEntries()].sort((a, b) => b.ts - a.ts);
     }
 
-    function startPolling(){
-      stopPolling();
-      _pollTimer = setInterval(function(){
-        if(document.hidden) return;
-        syncFromServer();
-      }, POLL_INTERVAL);
+    // ---- Badge ----
+    function countUnread(){
+      let n = 0;
+      for(let i = 0; i < names.length; i++){
+        if(checked[i] !== true) continue;
+        const t = times[i];
+        if(!t) continue;
+        if(lastSeen.checks[names[i]] !== t) n++;
+      }
+      const lunchTs = lastSeen.lunchTs || 0;
+      events.forEach(e => { if(e.ts > lunchTs) n++; });
+      return n;
     }
-    function stopPolling(){
-      if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
-    }
-
-    function clear(){ events = []; unreadCount = 0; _lastServerTs = 0; save(); render(); updateBadge(); }
-    function markAllSeen(){ if(unreadCount === 0) return; unreadCount = 0; save(); updateBadge(); }
 
     function updateBadge(){
       const badge = document.getElementById("liveFeedBadge");
       if(!badge) return;
-      if(unreadCount <= 0){ badge.hidden = true; badge.textContent = ""; }
-      else { badge.hidden = false; badge.textContent = unreadCount > 99 ? "99+" : String(unreadCount); }
+      const n = countUnread();
+      if(n <= 0){ badge.hidden = true; badge.textContent = ""; }
+      else { badge.hidden = false; badge.textContent = n > 99 ? "99+" : String(n); }
     }
 
+    function markAllSeen(){
+      const seen = { checks: {}, lunchTs: 0 };
+      for(let i = 0; i < names.length; i++){
+        if(checked[i] === true && times[i]) seen.checks[names[i]] = times[i];
+      }
+      events.forEach(e => { if(e.ts > seen.lunchTs) seen.lunchTs = e.ts; });
+      lastSeen = seen;
+      saveSeen();
+      updateBadge();
+    }
+
+    // ---- Render ----
     const typeLabel = function(ev){
       if (ev.type === "check") return "check lúc " + (ev.time || "—");
       if (ev.type === "lunch"){
@@ -764,25 +651,23 @@
     };
 
     function dayLabel(ts){
-      const d = new Date(ts), now = new Date();
-      const day = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-      const diff = Math.round((today - day) / 86400000);
-      if(diff === 0) return "Hôm nay";
-      if(diff === 1) return "Hôm qua";
+      const dk = dayKeyOf(ts);
+      if(dk === todayKey()) return "Hôm nay";
+      if(dk === yesterdayKey()) return "Hôm qua";
+      const d = new Date(ts);
       return new Intl.DateTimeFormat("vi-VN",{day:"2-digit",month:"2-digit"}).format(d);
     }
 
     function render(){
       const list = document.getElementById("liveFeedList");
       if(!list) return;
-      const visible = events.filter(e => !e._deleted);
-      if(!visible.length){
+      const all = getAllEntries();
+      if(!all.length){
         list.innerHTML = '<div class="live-empty"><div class="live-empty-icon">📭</div>Chưa có hoạt động nào.<br>Mọi người check đi nào!</div>';
       } else {
         const frag = document.createDocumentFragment();
         let lastDay = "";
-        visible.forEach(ev => {
+        all.forEach(ev => {
           const dl = dayLabel(ev.ts);
           if(dl !== lastDay){
             const label = document.createElement("div");
@@ -792,7 +677,7 @@
             lastDay = dl;
           }
           const row = document.createElement("div");
-          row.className = "live-event type-" + ev.type + (ev._pending ? " pending" : "");
+          row.className = "live-event type-" + ev.type;
           row.innerHTML = '<div class="ev-icon"></div><div class="ev-body"><div class="ev-name"></div><div class="ev-meta"></div></div><div class="ev-time"></div>';
           row.querySelector(".ev-icon").textContent = typeIcon(ev);
           row.querySelector(".ev-name").textContent = ev.name;
@@ -804,8 +689,119 @@
         list.appendChild(frag);
       }
       const count = document.getElementById("liveFeedCount");
-      if(count) count.textContent = visible.length ? (visible.length + " hoạt động") : "Không có hoạt động";
+      if(count) count.textContent = all.length ? (all.length + " hoạt động") : "Không có hoạt động";
     }
+
+    function refresh(){ render(); updateBadge(); }
+
+    // ---- Push (chỉ lunch) ----
+    async function pushToServer(ev){
+      const api = window.__srankApi || (window.SRank && window.SRank.api);
+      if(!api) return null;
+      try{
+        const r = await api("pushLiveEvent", {
+          type: ev.type,
+          name: ev.name,
+          meta: JSON.stringify(ev.meta || {}),
+          clientTs: String(Date.now())
+        }, 12000);
+        if(!r || !r.ok) return null;
+        return r.data || null;
+      }catch(_){ return null; }
+    }
+
+    function push(ev){
+      if(!ev || ev.type !== "lunch" || !ev.name) return null;
+      const now = Date.now();
+      const time = ev.time || hhmm();
+      const localId = "local_" + now + "_" + Math.random().toString(36).slice(2, 8);
+      const full = {
+        id: localId,
+        type: "lunch",
+        name: String(ev.name).slice(0, 60),
+        time,
+        meta: ev.meta || {},
+        ts: now
+      };
+      events.unshift(full);
+      if(events.length > MAX_EVENTS) events.length = MAX_EVENTS;
+      saveEvents(); refresh();
+
+      pushToServer(ev).then(function(serverEv){
+        if(!serverEv || !serverEv.id) return;
+        const idx = events.findIndex(e => e.id === localId);
+        if(idx >= 0){
+          events[idx].id = serverEv.id;
+          const sTs = Number(serverEv.ts);
+          if(Number.isFinite(sTs) && sTs > 0) events[idx].ts = sTs;
+          if(events[idx].ts > _lastServerTs) _lastServerTs = events[idx].ts;
+          saveEvents();
+        }
+      }).catch(function(){});
+
+      return full;
+    }
+
+    // Rollback khi server fail (lunch)
+    function removeLocal(localId){
+      const idx = events.findIndex(e => e.id === localId);
+      if(idx < 0) return;
+      events.splice(idx, 1);
+      saveEvents(); refresh();
+    }
+
+    // ---- Sync chỉ lunch ----
+    async function syncFromServer(){
+      if(_syncInFlight) return;
+      const api = window.__srankApi || (window.SRank && window.SRank.api);
+      if(!api) return;
+      _syncInFlight = true;
+      try{
+        const since = _lastServerTs > 0 ? _lastServerTs - 1000 : 0;
+        const r = await api("getLiveEvents", { since, _ts: Date.now() }, 12000);
+        if(!r || !r.ok) return;
+        const arr = Array.isArray(r.data && r.data.events) ? r.data.events : [];
+        let added = false, newest = 0;
+        arr.forEach(function(raw){
+          if(!raw || !raw.id) return;
+          const type = String(raw.type || "").trim();
+          if(type !== "lunch") return;           // bỏ qua check events cũ trên server
+          const rawId = String(raw.id);
+          if(events.some(e => e.id === rawId)) return;
+          const ts = Number(raw.ts) || Date.now();
+          events.push({
+            id: rawId,
+            type: "lunch",
+            name: String(raw.name || "Ẩn danh"),
+            time: formatTsToTime(ts),
+            meta: raw.meta || {},
+            ts
+          });
+          added = true;
+          if(ts > newest) newest = ts;
+        });
+        if(newest > _lastServerTs) _lastServerTs = newest;
+        if(added){
+          events.sort((a, b) => b.ts - a.ts);
+          if(events.length > MAX_EVENTS) events.length = MAX_EVENTS;
+          saveEvents(); refresh();
+        }
+      }catch(_){}
+      finally{ _syncInFlight = false; }
+    }
+
+    function startPolling(){
+      stopPolling();
+      _pollTimer = setInterval(function(){
+        if(document.hidden) return;
+        syncFromServer();
+      }, POLL_INTERVAL);
+    }
+    function stopPolling(){
+      if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
+    }
+
+    function clear(){ events = []; lastSeen = { checks: {}, lunchTs: 0 }; _lastServerTs = 0; saveEvents(); saveSeen(); refresh(); }
 
     const open = () => {
       const overlay = document.getElementById("liveFeedOverlay");
@@ -836,7 +832,7 @@
         if(!document.hidden) syncFromServer();
       });
     }
-    return {push, removeLocal, reconcileChecklist, init, open, close, clear, markAllSeen, updateBadge, syncFromServer};
+    return {push, removeLocal, refresh, init, open, close, clear, markAllSeen, updateBadge, syncFromServer};
   })();
 
   window.SRank = window.SRank || {};
@@ -939,6 +935,7 @@
     }
     if(!changedIdx.length) return true;
     checked = mergedChecked; times = mergedTimes; points = newData.points; ranks = newData.ranks;
+    stateDay = todayKey();
     renderChecklist(true);
     changedIdx.slice(0, 5).forEach((idx, k) => {
       const tr = els.checklistBody.querySelector(`tr[data-index="${idx}"]`);
@@ -1009,7 +1006,7 @@
           lastAutoSyncAt = Date.now();
           window.syncAttendanceEmployees?.();
           cacheSave();
-          LiveFeed.reconcileChecklist(names, checked, times);
+          LiveFeed.refresh();
           setStatus("Đã cập nhật ✓");
           maybeRenderLanding();
           return true;
@@ -1041,13 +1038,14 @@
       points = serverPoints;
       ranks = serverRanks;
       checked = mergedChecks; times = mergedTimes;
+      stateDay = todayKey();
       initialSheetLoaded = true;
       lastAutoSyncAt = Date.now();
       window.syncAttendanceEmployees?.();
       cacheSave();
       renderChecklist(true);
       buildWheel();
-      LiveFeed.reconcileChecklist(names, checked, times);
+      LiveFeed.refresh();
       if(els.adminPage.classList.contains("show")) renderAdminChecklistEditor();
       els.hint.textContent = "Chạm vào câu hỏi";
       setStatus(force ? "Đã cập nhật ✓" : "Đã đồng bộ ✓");
@@ -1097,9 +1095,10 @@
     const prevChecked = checked[index], prevTime = times[index];
     times[index] = clientTime;
     checked[index] = true;
+    stateDay = todayKey();
     cacheSave();
     if(!updateChecklistRow(index)) renderChecklist(true);
-    LiveFeed.reconcileChecklist(names, checked, times);
+    LiveFeed.refresh();
     if(!q1Opened && !els.checklistPanel.classList.contains("show")) renderLandingState();
     setStatus(`Đã ghi ${clientTime} ✓`);
 
@@ -1115,9 +1114,10 @@
         times[index] = String(r.data.time);
       }
       _pendingChecks.delete(name);
+      stateDay = todayKey();
       cacheSave();
       updateChecklistRow(index);
-      LiveFeed.reconcileChecklist(names, checked, times);
+      LiveFeed.refresh();
       setStatus(`Đã ghi ${times[index] || clientTime} ✓`);
       try{ window.dispatchEvent(new CustomEvent("checkinDone", {detail:{name, time:times[index] || clientTime}})); }catch(_){}
       try{ localStorage.setItem("srank_last_checkin", JSON.stringify({name, time:times[index] || clientTime, date:todayKey()})); }catch(_){}
@@ -1128,7 +1128,7 @@
       _recentSelfChecks.delete(name);
       cacheSave();
       if(!updateChecklistRow(index)) renderChecklist(true);
-      LiveFeed.reconcileChecklist(names, checked, times);
+      LiveFeed.refresh();
       if(!q1Opened && !els.checklistPanel.classList.contains("show")) renderLandingState();
       const msg = String(err?.message || "").trim();
       setStatus(msg ? `Không ghi được: ${msg}` : "Không ghi được — kiểm tra mạng");
@@ -1513,8 +1513,9 @@
         points[i] = Number(r.data.points);
         ranks[i] = normalizeServerRank(r.data.rank, points[i]);
       }
+      stateDay = todayKey();
       cacheSave(); renderChecklist(true); renderAdminChecklistEditor(); renderAdminStats();
-      LiveFeed.reconcileChecklist(names, checked, times);
+      LiveFeed.refresh();
       if(!q1Opened && !els.checklistPanel.classList.contains("show")) renderLandingState();
       setStatus(next ? "Đã check ✓" : "Đã bỏ check ✓");
     }catch(e){
@@ -1941,8 +1942,9 @@
     if(!checked[idx] && !times[idx]) return true;
     const prevChecked = checked[idx], prevTime = times[idx];
     checked[idx] = false; times[idx] = "";
+    stateDay = todayKey();
     cacheSave(); renderChecklist(true);
-    LiveFeed.reconcileChecklist(names, checked, times);
+    LiveFeed.refresh();
     if(!q1Opened && !els.checklistPanel.classList.contains("show")) renderLandingState();
     try{
       const token = AdminSession.get();
@@ -1957,7 +1959,7 @@
     }catch(e){
       checked[idx] = prevChecked; times[idx] = prevTime;
       cacheSave(); renderChecklist(true);
-      LiveFeed.reconcileChecklist(names, checked, times);
+      LiveFeed.refresh();
       if(!q1Opened && !els.checklistPanel.classList.contains("show")) renderLandingState();
       throw e;
     }
@@ -2050,7 +2052,6 @@
 if("serviceWorker" in navigator){
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js", {scope:"/"}).then(reg => {
-      // Force update SW ngay khi có bản mới
       reg.update().catch(()=>{});
       if(reg.waiting) reg.waiting.postMessage({type:"SKIP_WAITING"});
     }).catch(err => console.warn("[PWA] SW failed:", err));
