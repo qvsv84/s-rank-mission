@@ -529,7 +529,7 @@
     const SEEN_KEY = "srank_live_feed_seen_v3";
     const LAST_SYNC_KEY = "srank_live_feed_last_sync_v3";
     const MAX_EVENTS = 60;
-    const POLL_INTERVAL = 8000;
+    const POLL_INTERVAL = 3000;
     const RECENT_THRESHOLD_MS = 5 * 60 * 1000;
     const INITIAL_PULL_MS = 6 * 60 * 60 * 1000;
 
@@ -745,6 +745,7 @@
           if(events[idx].ts > _lastServerTs) _lastServerTs = events[idx].ts;
           saveEvents(); refresh();
         }
+        syncFromServer();
       }).catch(function(){});
 
       return full;
@@ -787,7 +788,7 @@
       if(!api) return;
       _syncInFlight = true;
       try{
-        const since = _lastServerTs > 0 ? _lastServerTs - 1000 : 0;
+        const since = _lastServerTs > 0 ? _lastServerTs - 60000 : 0;
         const r = await api("getLiveEvents", { since, _ts: Date.now() }, 12000);
         if(!r || !r.ok) return;
         const arr = Array.isArray(r.data && r.data.events) ? r.data.events : [];
