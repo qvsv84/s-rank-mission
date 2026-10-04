@@ -20,7 +20,7 @@
   const CATEGORIES = [
     { key: "home", label: "Cơm nhà",  icon: "🏠", desc: "Món cơm, mì, bún khô" },
     { key: "soup", label: "Món nước", icon: "🍲", desc: "Phở, bún nước, canh" },
-    { key: "out",  label: "Đi ngoài", icon: "🛵", desc: "Quán ăn, đồ ngoài" }
+    { key: "out",  label: "Ăn ngoài", icon: "🛵", desc: "Quán ăn, đồ ngoài" }
   ];
 
   const CATEGORY_MAP = {};
@@ -30,7 +30,7 @@
     { key: "all",  label: "Cả 3",       icon: "🎲" },
     { key: "home", label: "Cơm nhà",    icon: "🏠" },
     { key: "soup", label: "Món nước",   icon: "🍲" },
-    { key: "out",  label: "Đi ngoài",   icon: "🛵" }
+    { key: "out",  label: "Ăn ngoài",   icon: "🛵" }
   ];
 
   const state = {
