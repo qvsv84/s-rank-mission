@@ -72,6 +72,7 @@
   <button id="kdvRulesBtn" type="button" aria-label="Mở Luật KDV">📜 Luật KDV</button>
   <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?">🍜 Bữa trưa ăn gì?</button>
   <button id="attendanceBtn" type="button" aria-label="Mở Chấm công">🗓 Chấm công</button>
+  <button id="quizBtn" type="button" aria-label="Bài kiểm tra">📝 Bài KT</button>
 </nav>
 
 <div id="monitorOverlay" aria-hidden="true">
@@ -240,6 +241,87 @@
   <button class="att-multi-action clear" data-multi-status="" type="button">Xóa</button>
 </div>
 
+<div id="quizOverlay" aria-hidden="true">
+  <section id="quizPanel" role="dialog" aria-modal="true">
+    <div id="quizHead">
+      <div id="quizTitle"><span class="quiz-kicker">ĐẢO MÈO</span><span class="quiz-name">📝 Bài kiểm tra</span></div>
+      <button id="quizClose" type="button" aria-label="Đóng">×</button>
+    </div>
+
+    <nav id="quizModeTabs" hidden>
+      <button class="quiz-mode-tab active" data-quiz-mode="user" type="button">📝 Làm bài</button>
+      <button class="quiz-mode-tab" data-quiz-mode="create" type="button">➕ Tạo câu hỏi</button>
+      <button class="quiz-mode-tab" data-quiz-mode="results" type="button">📊 Kết quả</button>
+    </nav>
+
+    <div id="quizBody">
+      <div class="quiz-view active" data-quiz-view="user">
+        <div id="quizUserStart">
+          <div class="quiz-hero-emoji">📝</div>
+          <div class="quiz-hero-title">Bài kiểm tra nội bộ</div>
+          <div class="quiz-hero-sub">Nhập tên để bắt đầu</div>
+          <input id="quizUserNameInput" type="text" placeholder="Tên của bạn" autocomplete="off" maxlength="60">
+          <button id="quizStartBtn" type="button">Bắt đầu làm bài</button>
+          <div id="quizUserStartMsg"></div>
+        </div>
+
+        <div id="quizUserRun" hidden>
+          <div id="quizRunHeader">
+            <div id="quizGreeting"></div>
+            <div id="quizProgress">
+              <span id="quizProgressText">Câu 1/1</span>
+              <div id="quizProgressBar"><div id="quizProgressFill"></div></div>
+            </div>
+          </div>
+          <div id="quizQuestionCard"></div>
+          <div id="quizNavBar">
+            <button id="quizPrevBtn" type="button">‹ Câu trước</button>
+            <button id="quizNextBtn" type="button">Câu tiếp ›</button>
+          </div>
+        </div>
+
+        <div id="quizUserResult" hidden>
+          <div class="quiz-result-card">
+            <div id="quizResultEmoji" class="quiz-result-emoji">🎉</div>
+            <div id="quizResultScore" class="quiz-result-score">0/0</div>
+            <div id="quizResultLabel" class="quiz-result-label"></div>
+            <div id="quizResultDetail" class="quiz-result-detail"></div>
+          </div>
+          <div class="quiz-result-actions">
+            <button id="quizRetryBtn" type="button">Làm lại</button>
+            <button id="quizExitBtn" type="button">Đóng</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz-view" data-quiz-view="create">
+        <div class="quiz-section-title">✏️ Tạo / sửa câu hỏi</div>
+        <div class="quiz-create-form">
+          <label class="quiz-field-label">Câu hỏi</label>
+          <textarea id="quizQuestionInput" rows="2" maxlength="500" placeholder="Nhập nội dung câu hỏi…"></textarea>
+
+          <label class="quiz-field-label">Đáp án <span class="quiz-hint">(chọn ô tròn để đánh dấu đáp án đúng)</span></label>
+          <div id="quizAnswersList"></div>
+          <button id="quizAddAnswerBtn" type="button">＋ Thêm đáp án</button>
+
+          <div id="quizFormMsg"></div>
+          <div class="quiz-create-actions">
+            <button id="quizSaveBtn" type="button">Thêm câu hỏi</button>
+            <button id="quizCancelEditBtn" type="button" hidden>Huỷ</button>
+          </div>
+        </div>
+        <div class="quiz-section-title" style="margin-top:22px">📚 Danh sách câu hỏi (<span id="quizCountLabel">0</span>)</div>
+        <div id="quizQuestionList"></div>
+      </div>
+
+      <div class="quiz-view" data-quiz-view="results">
+        <div class="quiz-section-title">📊 Kết quả bài kiểm tra</div>
+        <div id="quizResultsList"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
 <button id="liveFeedBtn" type="button" aria-label="Mở Live Feed"><span aria-hidden="true">🔔</span><span id="liveFeedBadge" hidden></span></button>
 <div id="liveFeedOverlay" aria-hidden="true">
   <section id="liveFeedPanel" role="dialog" aria-modal="true">
@@ -255,5 +337,6 @@
 <script src="js/kdv-rules.js" defer></script>
 <script src="js/secret-mail.js" defer></script>
 <script src="js/bxh-top.js" defer></script>
+<script src="js/quiz.js" defer></script>
 </body>
 </html>
