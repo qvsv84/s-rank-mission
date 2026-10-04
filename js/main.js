@@ -1,6 +1,6 @@
 /* =========================================================
    MAIN — Core app (IIFE #1)
-   v2.13: idempotency key cho pushLunch
+   v6.1: thêm quizOverlay vào _syncQuickTools cho module Quiz
    ========================================================= */
 (function(){
   "use strict";
@@ -521,9 +521,9 @@
     if(text && !isRoutineMessage(text)) Toast.show(text, {type: inferToastType(text)});
   }
 
-  // =========================================================
-  // LIVE FEED — derive check + event lunch (v2.13)
-  // =========================================================
+  /* =========================================================
+     LIVE FEED — derive check + event lunch
+     ========================================================= */
   const LiveFeed = (() => {
     const EVENTS_KEY = "srank_live_feed_events_v3";
     const SEEN_KEY = "srank_live_feed_seen_v3";
@@ -1790,6 +1790,7 @@
       document.getElementById("attendanceNameWheel")?.classList.contains("show") ||
       document.getElementById("attendancePage")?.classList.contains("show") ||
       document.getElementById("lunchPage")?.classList.contains("show") ||
+      document.getElementById("quizOverlay")?.classList.contains("show") ||
       document.getElementById("liveFeedOverlay")?.classList.contains("show") ||
       document.getElementById("secretMailPage")?.classList.contains("show");
     els.secondaryNav.classList.toggle("nav-hidden", otherOpen);
@@ -1913,6 +1914,11 @@
     if(e.key !== "Escape") return;
     const capturePreview = document.getElementById("capturePreview");
     if(capturePreview){ capturePreview.remove(); e.preventDefault(); return; }
+    const quizOverlay = document.getElementById("quizOverlay");
+    if(quizOverlay && quizOverlay.classList.contains("show")){
+      if(typeof window.Quiz?.close === "function") window.Quiz.close();
+      e.preventDefault(); return;
+    }
     const liveFeed = document.getElementById("liveFeedOverlay");
     if(liveFeed && liveFeed.classList.contains("show")){ LiveFeed.close(); e.preventDefault(); return; }
     if(els.linkEditorOverlay.classList.contains("show")){ closeLinkEditor(); e.preventDefault(); return; }
