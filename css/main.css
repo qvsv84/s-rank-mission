@@ -184,8 +184,9 @@ button{font:inherit}
 #bottomNav>button:active,#secondaryNav>button:active{transform:translateY(1px) scale(.975)!important}
 #homeBtn{background:linear-gradient(135deg,#5aad7f,#4a9a6c)!important;color:#fff!important}
 #topBtn,#checklistBtn,#adminBtn,#monitorBtn{color:rgba(225,246,248,.82)}
-#kdvRulesBtn,#lunchBtn,#attendanceBtn{color:#5c7165!important;background:transparent!important;border-color:transparent!important}
+#kdvRulesBtn,#lunchBtn,#attendanceBtn,#quizBtn{color:#5c7165!important;background:transparent!important;border-color:transparent!important}
 #lunchBtn.running{color:#fff!important;background:var(--green)!important;box-shadow:0 5px 14px rgba(75,154,107,.16)!important}
+#quizBtn.active{background:linear-gradient(180deg,#f2faf2,#e5f3e7)!important;color:var(--p-forest)!important;border-color:rgba(79,155,112,.20)!important}
 
 #status{position:absolute;right:12px;top:10px;z-index:100;color:#708278;font-size:10px;opacity:0;transition:opacity .2s}
 #status.show{opacity:1}
@@ -672,7 +673,7 @@ button{font:inherit}
 }
 
 /* =========================================================
-   13. SECRET MAIL (CSS giữ lại — dùng cho js/secret-mail.js)
+   13. SECRET MAIL
    ========================================================= */
 .sm-fab{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 84px);transform:translateX(-50%);z-index:19000;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 22px;border:1.5px solid rgba(255,158,199,.5);border-radius:999px;background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(255,247,252,.98) 50%,rgba(255,240,250,.98));font-family:inherit;font-size:12.5px;font-weight:900;letter-spacing:.06em;cursor:pointer;overflow:hidden;box-shadow:0 12px 28px -10px rgba(255,120,180,.4),0 4px 12px -4px rgba(95,140,120,.15),inset 0 1px 0 rgba(255,255,255,.95);transition:transform .25s cubic-bezier(.16,.9,.25,1),box-shadow .25s ease,border-color .25s ease,opacity .25s ease}
 .sm-fab.hidden{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(10px)}
@@ -837,13 +838,20 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px soli
 #capturePreviewImage{display:block;width:100%;height:auto;max-width:100%;border-radius:16px;user-select:none;-webkit-user-select:none}
 .capturePreviewHint{color:#6e8277;text-align:center;font-size:12px;line-height:1.45;margin:11px 5px 12px;opacity:.9}
 .capturePreviewActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.capturePreviewActions button,.capturePreviewActions a{min-height:44px;display:flex;align-items:center;justify-content:center;box-sizing:border-box
+.capturePreviewActions button,.capturePreviewActions a{min-height:44px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;font:inherit;font-weight:850;font-size:13px;color:#557164;background:#f7faf6;text-decoration:none;cursor:pointer;padding:0 10px}
+.capturePreviewActions button:active,.capturePreviewActions a:active{transform:scale(.97)}
+.capturePreviewActions #captureShareBtn{background:#e8f4ea!important;color:#2f6b4f!important;border-color:#c2dcc6!important}
+.capturePreviewActions #captureDownloadBtn{background:#4e9d6b!important;color:#fff!important;border-color:#4e9d6b!important}
+.capturePreviewActions #captureCloseBtn{color:#7a8a80}
+@media(max-width:520px){
+  .capturePreviewBox{padding:12px;border-radius:20px}
+  .capturePreviewActions{grid-template-columns:1fr 1fr;gap:6px}
+  .capturePreviewActions #captureCloseBtn{grid-column:span 2}
+}
+
 /* =========================================================
    17. QUIZ
    ========================================================= */
-#quizBtn{color:#5c7165!important;background:transparent!important;border-color:transparent!important}
-#quizBtn.active{background:linear-gradient(180deg,#f2faf2,#e5f3e7)!important;color:var(--p-forest)!important;border-color:rgba(79,155,112,.20)!important}
-
 #quizOverlay{position:fixed;inset:0;z-index:22000;display:none;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));background:rgba(232,241,229,.74);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 #quizOverlay.show{display:flex}
 #quizPanel{position:relative;width:min(640px,calc(100vw - 24px));max-height:calc(100dvh - 32px);display:flex;flex-direction:column;min-height:0;overflow:hidden;border:1px solid rgba(62,112,79,.16);border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.985),rgba(249,252,248,.985));box-shadow:0 22px 60px -20px rgba(42,78,57,.22),0 12px 32px -12px rgba(42,78,57,.14);color:var(--ink);font-family:var(--font)}
@@ -864,7 +872,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px soli
 .quiz-view.active{display:block;animation:quizViewIn .25s ease-out}
 @keyframes quizViewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-/* --- User start --- */
 #quizUserStart{display:flex;flex-direction:column;align-items:center;gap:12px;padding:22px 6px 8px;text-align:center}
 .quiz-hero-emoji{font-size:56px;line-height:1;filter:drop-shadow(0 6px 14px rgba(255,140,80,.28))}
 .quiz-hero-title{font-size:22px;font-weight:950;color:#245943;letter-spacing:-.02em}
@@ -875,7 +882,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px soli
 #quizStartBtn:disabled{opacity:.5;cursor:default;box-shadow:none}
 #quizUserStartMsg{min-height:16px;font-size:11px;font-weight:800;color:#b84b4b}
 
-/* --- User run --- */
 #quizRunHeader{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
 #quizGreeting{font-size:13px;font-weight:800;color:#4e8c62}
 #quizGreeting b{color:#245943;font-weight:950}
@@ -905,7 +911,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px soli
 #quizNextBtn{background:linear-gradient(180deg,#5aad7f 0%,#4a9a6c 100%)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 10px 22px -6px rgba(74,154,108,.5)!important}
 #quizNextBtn.submit{background:linear-gradient(180deg,#e8825f 0%,#d96c47 100%)!important;box-shadow:0 10px 22px -6px rgba(217,108,71,.5)!important}
 
-/* --- Result --- */
 .quiz-result-card{padding:28px 20px 22px;border:1px solid rgba(62,112,79,.14);border-radius:24px;background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(255,255,255,.98) 0%,rgba(248,252,246,.72) 45%,transparent 75%),linear-gradient(180deg,#fff,#f6fbf5);box-shadow:0 16px 36px -12px rgba(42,78,57,.16),inset 0 1px 0 rgba(255,255,255,.95);text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
 .quiz-result-emoji{font-size:60px;line-height:1;filter:drop-shadow(0 8px 16px rgba(239,212,138,.4))}
 .quiz-result-score{font-size:44px;font-weight:950;color:#245943;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
@@ -920,7 +925,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px soli
 #quizRetryBtn{background:linear-gradient(180deg,#5aad7f 0%,#4a9a6c 100%)!important;color:#fff!important;border-color:transparent!important}
 #quizRetryBtn:disabled{cursor:default!important}
 
-/* --- Admin create --- */
 .quiz-section-title{font-size:14px;font-weight:950;color:#245943;margin-bottom:12px;letter-spacing:-.01em}
 .quiz-create-form{display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid rgba(62,112,79,.14);border-radius:18px;background:#fff;box-shadow:0 6px 18px rgba(47,78,59,.05)}
 .quiz-field-label{font-size:11px;font-weight:900;letter-spacing:.14em;color:#8ca598;text-transform:uppercase}
