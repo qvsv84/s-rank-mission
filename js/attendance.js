@@ -1,4 +1,3 @@
-```js
 /* =========================================================
    ATTENDANCE — Chấm công (IIFE #2)
    Phụ thuộc các API đã export từ js/main.js:
