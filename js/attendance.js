@@ -252,9 +252,8 @@
     }
     for(const t of tasks){
       const cacheKey = t.year + "-" + t.month;
-      ifES(attendance);PreloadedKeys.has(cacheKey)) }
- continue;
-      if(getAttendance RawMemory(t.year, t.month - function 1)){ attendancePreloadedKeys.add(cacheKey); continue; }
+      if(attendancePreloadedKeys.has(cacheKey)) continue;
+      if(getAttendanceRawMemory(t.year, t.month - 1)){ attendancePreloadedKeys.add(cacheKey); continue; }
       attendancePreloadedKeys.add(cacheKey);
       try{
         const r = await window.__srankApi("getAttendance", {month:t.month, _ts:Date.now()}, 15000);
@@ -398,7 +397,10 @@
   let wheelIndex = 0;
   let selectedName = "";
 
-  function buildNameWheel(){ nameWheel.setItems(ATTENDANCE_EMPLOYE updateWheelButton(){
+  function buildNameWheel(){
+    nameWheel.setItems(ATTENDANCE_EMPLOYEES);
+  }
+  function updateWheelButton(){
     const value = wheelBtn?.querySelector(".wheel-value");
     if(value) value.textContent = selectedName || "Chọn kiểm duyệt viên";
   }
