@@ -673,20 +673,3 @@
     render();
   };
 })();
-```
-
-Đã thay đúng 2 chỗ:
-
-1. statusInfo() — thêm dòng:
-   ```js
-   if(s === "U") return {className:"empty", label:"", icon:"🥥", shortLabel:""};
-   ```
-2. dataFor() — thêm 4 dòng trước return null:
-   ```js
-   const now = new Date();
-   const isPast = date < new Date(now.getFullYear(), now.getMonth(), now.getDate());
-   const isSunday = date.getDay() === 0;
-   if(isPast && !isSunday) return {status:"U"};
-   ```
-
-Toàn bộ phần còn lại giữ nguyên. Paste đè file cũ, lưu, reload app là xong.
