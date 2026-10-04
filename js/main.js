@@ -169,6 +169,7 @@
     return {load, save, clear, isValid, get, checkRateLimit, recordFailure, recordSuccess, sha256Hex, checkPasswordLocal, rememberPassword, forgetPassword};
   })();
   AdminSession.load();
+  window.AdminSession = AdminSession;
 
   const Toast = (() => {
     let container = null;
