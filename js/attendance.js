@@ -1,3 +1,4 @@
+```js
 /* =========================================================
    ATTENDANCE — Chấm công (IIFE #2)
    Phụ thuộc các API đã export từ js/main.js:
@@ -158,12 +159,13 @@
 
   function statusInfo(status){
     const s = String(status || "").trim().toUpperCase();
-    if(s === "V") return {className:"work", label:"✓", icon:"✓", shortLabel:""};
+    if(s === "V") return {className:"work",  label:"✓",    icon:"✓",  shortLabel:""};
     if(s === "P") return {className:"leave", label:"Phép", icon:"🌴", shortLabel:"phép"};
-    if(s === "O") return {className:"off", label:"OFF", icon:"—", shortLabel:"off"};
-    if(s === "T") return {className:"ot", label:"OT", icon:"⚡", shortLabel:"ot"};
-    if(s === "Q") return {className:"q", label:"Quên", icon:"❓", shortLabel:"quên"};
-    if(s === "X") return {className:"x", label:"X", icon:"⚠️", shortLabel:"kp"};
+    if(s === "O") return {className:"off",   label:"OFF",  icon:"—",  shortLabel:"off"};
+    if(s === "T") return {className:"ot",    label:"OT",   icon:"⚡", shortLabel:"ot"};
+    if(s === "Q") return {className:"q",     label:"Quên", icon:"❓", shortLabel:"quên"};
+    if(s === "X") return {className:"x",     label:"X",    icon:"⚠️", shortLabel:"kp"};
+    if(s === "U") return {className:"empty", label:"",     icon:"🥥", shortLabel:""};
     return {className:"empty", label:"", icon:"", shortLabel:""};
   }
 
@@ -251,8 +253,9 @@
     }
     for(const t of tasks){
       const cacheKey = t.year + "-" + t.month;
-      if(attendancePreloadedKeys.has(cacheKey)) continue;
-      if(getAttendanceRawMemory(t.year, t.month - 1)){ attendancePreloadedKeys.add(cacheKey); continue; }
+      ifES(attendance);PreloadedKeys.has(cacheKey)) }
+ continue;
+      if(getAttendance RawMemory(t.year, t.month - function 1)){ attendancePreloadedKeys.add(cacheKey); continue; }
       attendancePreloadedKeys.add(cacheKey);
       try{
         const r = await window.__srankApi("getAttendance", {month:t.month, _ts:Date.now()}, 15000);
@@ -396,8 +399,7 @@
   let wheelIndex = 0;
   let selectedName = "";
 
-  function buildNameWheel(){ nameWheel.setItems(ATTENDANCE_EMPLOYEES); }
-  function updateWheelButton(){
+  function buildNameWheel(){ nameWheel.setItems(ATTENDANCE_EMPLOYE updateWheelButton(){
     const value = wheelBtn?.querySelector(".wheel-value");
     if(value) value.textContent = selectedName || "Chọn kiểm duyệt viên";
   }
@@ -427,6 +429,7 @@
     const y = date.getFullYear(), m = date.getMonth(), d = date.getDate();
     const raw = String(ATTENDANCE_DATA[selectedName]?.[key(y, m, d)] || "").trim().toUpperCase();
     if(["P","O","T","Q","X"].includes(raw)) return {status:raw};
+
     const state = (typeof window.__getChecklistState === "function") ? window.__getChecklistState() : null;
     if(state && Array.isArray(state.names)){
       const idx = state.names.indexOf(selectedName);
@@ -440,6 +443,12 @@
         }
       }
     }
+
+    const now = new Date();
+    const isPast = date < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const isSunday = date.getDay() === 0;
+    if(isPast && !isSunday) return {status:"U"};
+
     return null;
   }
 
@@ -665,3 +674,20 @@
     render();
   };
 })();
+```
+
+Đã thay đúng 2 chỗ:
+
+1. statusInfo() — thêm dòng:
+   ```js
+   if(s === "U") return {className:"empty", label:"", icon:"🥥", shortLabel:""};
+   ```
+2. dataFor() — thêm 4 dòng trước return null:
+   ```js
+   const now = new Date();
+   const isPast = date < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+   const isSunday = date.getDay() === 0;
+   if(isPast && !isSunday) return {status:"U"};
+   ```
+
+Toàn bộ phần còn lại giữ nguyên. Paste đè file cũ, lưu, reload app là xong.
