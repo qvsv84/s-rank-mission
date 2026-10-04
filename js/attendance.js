@@ -500,7 +500,7 @@
         statusClass = info.className;
         statusIcon = info.icon || info.label;
         statusLabel = info.shortLabel || "";
-        if(item.status === "V" || item.status === "T") work++;
+        if(item.status === "V" || item.status === "T" || item.status === "U") work++;
         else if(item.status === "O") off++;
         else if(item.status === "P") leave++;
       }
