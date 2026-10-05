@@ -1,6 +1,7 @@
 /* =========================================================
    LUNCH v2 — Bữa trưa ăn gì? (Bản lột xác + polling + LiveFeed)
    v2.13: UX lock + idempotency key (clientKey)
+   v2.14: Thêm roll món đặc biệt (special) + giới hạn slot/ngày
    ========================================================= */
 (function(){
   "use strict";
@@ -20,7 +21,8 @@
   const CATEGORIES = [
     { key: "home", label: "Cơm nhà",  icon: "🏠", desc: "Món cơm, mì, bún khô" },
     { key: "soup", label: "Món nước", icon: "🍲", desc: "Phở, bún nước, canh" },
-    { key: "out",  label: "Ăn ngoài", icon: "🛵", desc: "Quán ăn, đồ ngoài" }
+    { key: "out",  label: "Ăn ngoài", icon: "🛵", desc: "Quán ăn, đồ ngoài" },
+    { key: "special", label: "Đặc biệt", icon: "👑", desc: "Món đặc biệt" }
   ];
 
   const CATEGORY_MAP = {};
@@ -32,6 +34,13 @@
     { key: "soup", label: "Món nước",   icon: "🍲" },
     { key: "out",  label: "Ăn ngoài",   icon: "🛵" }
   ];
+
+  /* ===== CẤU HÌNH ROLL ĐẶC BIỆT ===== */
+  const SPECIAL_PROB = 0.05;             // 0 - 0.05
+  const SPECIAL_MAX_PER_DAY = 3;         // 3 người/ngày
+  const SPECIAL_ONCE_PER_DAY = true;     // 1 lần/người/ngày
+  const SPECIAL_API_TIMEOUT = 8000;
+  /* =================================== */
 
   const state = {
     dishes: [],
@@ -120,7 +129,8 @@
         meta: {
           dish: dish.name,
           category: dish.category,
-          icon: cat.icon
+          icon: cat.icon,
+          special: dish.category === "special"
         }
       });
       if (!pushed) return { ok: false, reason: "push_failed", clientKey };
@@ -136,6 +146,98 @@
       return { ok: false, reason: "exception" };
     }
   }
+
+  // ============ SPECIAL ROLL: ĐẾM SLOT TỪ LIVEFEED ============
+  function getTodayKey(){
+    const d = new Date();
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  async function countSpecialToday(){
+    const api = getApi();
+    if (!api) return { total: 0, wonByMe: false };
+    try{
+      const r = await api("getLiveEvents", { since: 0, _ts: Date.now() }, SPECIAL_API_TIMEOUT);
+      if (!r || !r.ok || !r.data || !Array.isArray(r.data.events)){
+        return { total: 0, wonByMe: false };
+      }
+      const todayKey = getTodayKey();
+      const myName = getMyName();
+      let total = 0;
+      let wonByMe = false;
+      r.data.events.forEach(function(e){
+        if (e.type !== "lunch") return;
+        if (!e.meta || e.meta.special !== true) return;
+        const ts = Number(e.ts) || 0;
+        if (!ts) return;
+        const d = new Date(ts);
+        const dk = d.getFullYear() + "-" +
+          String(d.getMonth() + 1).padStart(2, "0") + "-" +
+          String(d.getDate()).padStart(2, "0");
+        if (dk !== todayKey) return;
+        total++;
+        if (String(e.name || "").trim() === myName) wonByMe = true;
+      });
+      return { total: total, wonByMe: wonByMe };
+    }catch(e){
+      console.log("[lunch] count special error", e);
+      return { total: 0, wonByMe: false };
+    }
+  }
+
+  function getSpecialPool(){
+    return state.dishes.filter(function(d){ return d.category === "special"; });
+  }
+
+  async function trySpecialRoll(){
+    if (SPECIAL_PROB <= 0) return { hit: false, reason: "disabled" };
+    const specialPool = getSpecialPool();
+    if (!specialPool.length) return { hit: false, reason: "no_special_dish" };
+
+    const stat = await countSpecialToday();
+    if (stat.total >= SPECIAL_MAX_PER_DAY) return { hit: false, reason: "out_of_slots", slotsLeft: 0 };
+    if (SPECIAL_ONCE_PER_DAY && stat.wonByMe) return { hit: false, reason: "already_won", slotsLeft: SPECIAL_MAX_PER_DAY - stat.total };
+
+    const roll = Math.random();
+    if (roll >= SPECIAL_PROB) return { hit: false, reason: "miss", slotsLeft: SPECIAL_MAX_PER_DAY - stat.total };
+
+    const dish = specialPool[Math.floor(Math.random() * specialPool.length)];
+    return { hit: true, dish: dish, slotsLeft: SPECIAL_MAX_PER_DAY - stat.total - 1 };
+  }
+
+  function showSpecialCelebration(dish, slotsLeft){
+    try{
+      notify("👑 TRÚNG MÓN ĐẶC BIỆT: " + dish.name, "success");
+
+      const root = document.getElementById("lunchPage") || document.body;
+      for (let i = 0; i < 24; i++){
+        const h = document.createElement("div");
+        h.textContent = i % 3 === 0 ? "👑" : (i % 3 === 1 ? "✨" : "💖");
+        h.style.cssText = "position:fixed;left:50%;top:50%;z-index:99999;font-size:26px;pointer-events:none;";
+        const angle = Math.PI * 2 * i / 24;
+        const dist = 100 + Math.random() * 260;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist;
+        h.animate(
+          [
+            { opacity: 0, transform: "translate(-50%,-50%) scale(.3)" },
+            { opacity: 1, transform: "translate(-50%,-50%) scale(1.2)", offset: .15 },
+            { opacity: 0, transform: "translate(calc(-50% + " + dx + "px),calc(-50% + " + dy + "px)) scale(.6)" }
+          ],
+          { duration: 1400, easing: "cubic-bezier(.16,.9,.25,1)", fill: "forwards" }
+        );
+        root.appendChild(h);
+        setTimeout(function(){ h.remove(); }, 1500);
+      }
+
+      if (typeof slotsLeft === "number" && slotsLeft >= 0){
+        setTimeout(function(){ notify("Còn " + slotsLeft + " suất đặc biệt hôm nay", "info"); }, 1200);
+      }
+    }catch(_){}
+  }
+  // =========================================================
 
   // =========================================================
   // API
@@ -329,6 +431,11 @@
       ".lc-dish.cat-home{border-left:4px solid #7ab896}",
       ".lc-dish.cat-soup{border-left:4px solid #7aa8d8}",
       ".lc-dish.cat-out{border-left:4px solid #d8a878}",
+      ".lc-dish.cat-special{border-left:4px solid #e0a870}",
+      ".lc-dish-special{border-color:#e0a870;background:linear-gradient(160deg,#fff9e6 0%,#fff2cc 100%);box-shadow:0 8px 20px -6px rgba(224,168,112,.32),inset 0 1px 0 rgba(255,255,255,.95);position:relative}",
+      ".lc-dish-special::before{content:'👑';position:absolute;top:6px;right:6px;font-size:14px;line-height:1;filter:drop-shadow(0 2px 3px rgba(180,120,40,.3))}",
+      ".lc-dish-special .lc-dish-name{color:#8a5a28;font-weight:950}",
+      ".lc-dish-special .lc-dish-cat{background:rgba(224,168,112,.24);color:#7a4a10}",
       ".lc-dish-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}",
       ".lc-dish-cat{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:999px;background:rgba(200,140,80,.12);color:#8a5a28;font-size:9px;font-weight:900;letter-spacing:.03em}",
       ".lc-dish-menu{width:28px;height:28px;padding:0;flex:0 0 auto;display:flex;align-items:center;justify-content:center;border:0;border-radius:9px;background:transparent;color:#b98860;font-size:16px;font-weight:900;cursor:pointer;line-height:1;transition:background .15s ease}",
@@ -447,8 +554,10 @@
   }
 
   function getDishPool(){
-    if (state.currentMode === "all") return state.dishes.slice();
-    return state.dishes.filter(function(d){ return d.category === state.currentMode; });
+    var base = state.dishes.filter(function(d){ return d.category !== "special"; });
+    if (state.currentMode === "all") return base;
+    if (state.currentMode === "special") return getSpecialPool();
+    return base.filter(function(d){ return d.category === state.currentMode; });
   }
 
   function renderModes(){
@@ -534,9 +643,12 @@
     filtered.forEach(function(d){
       var cat = CATEGORY_MAP[d.category] || CATEGORY_MAP.home;
       var isHighlight = state.lastResult && state.lastResult.id === d.id;
+      var isSpecial = d.category === "special";
 
       var card = document.createElement("div");
-      card.className = "lc-dish cat-" + d.category + (isHighlight ? " highlight" : "");
+      card.className = "lc-dish cat-" + d.category +
+        (isHighlight ? " highlight" : "") +
+        (isSpecial ? " lc-dish-special" : "");
 
       card.innerHTML =
         '<div class="lc-dish-top">' +
@@ -606,22 +718,39 @@
       label.textContent = text || "LỖI — THỬ LẠI";
       return;
     }
-    // idle
     btn.disabled = false;
     if(icon) icon.textContent = "🎲";
     label.textContent = text || "QUAY NGAY";
   }
 
-  function spin(){
+  async function spin(){
     if (state.spinning || state.sending) return;
+    state.spinning = true;
 
     var pool = getDishPool();
     if (pool.length === 0){
+      state.spinning = false;
       notify("Chưa có món nào để quay", "error");
       return;
     }
 
+    // ===== THỬ ROLL ĐẶC BIỆT TRƯỚC =====
+    var special = await trySpecialRoll();
+    if (special.hit && special.dish){
+      state.spinning = false;
+      state.lastResult = { id: special.dish.id, name: special.dish.name, category: special.dish.category };
+      renderHero();
+      renderDishGrid();
+      showSpecialCelebration(special.dish, special.slotsLeft);
+      finalizeSpin(special.dish);
+      return;
+    }
+    if (special.reason === "out_of_slots") notify("Hôm nay đã hết suất đặc biệt rồi 👑", "info");
+    else if (special.reason === "already_won") notify("Bạn đã trúng suất đặc biệt hôm nay rồi 👑", "info");
+    // ====================================
+
     if (pool.length === 1){
+      state.spinning = false;
       state.lastResult = { id: pool[0].id, name: pool[0].name, category: pool[0].category };
       renderHero();
       renderDishGrid();
@@ -630,7 +759,6 @@
       return;
     }
 
-    state.spinning = true;
     state.lastResult = null;
 
     var hero = $("lcHero");
@@ -728,6 +856,7 @@
   function buildAddContent(){
     var catHtml = '<div class="lc-cat-picker" id="lcAddCatPicker">';
     CATEGORIES.forEach(function(c){
+      if (c.key === "special") return; // không cho thêm special qua UI
       var active = state.pendingAddCategory === c.key;
       catHtml +=
         '<button type="button" class="lc-cat-opt' + (active ? " active" : "") + '" data-cat="' + c.key + '">' +
