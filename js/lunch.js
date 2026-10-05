@@ -2,6 +2,7 @@
    LUNCH v2 — Bữa trưa ăn gì? (Bản lột xác + polling + LiveFeed)
    v2.13: UX lock + idempotency key (clientKey)
    v2.14: Thêm roll món đặc biệt (special) + giới hạn slot/ngày
+   v2.15: Tab Đặc biệt + badge slot + cache stat + spin special có animation
    ========================================================= */
 (function(){
   "use strict";
@@ -28,11 +29,13 @@
   const CATEGORY_MAP = {};
   CATEGORIES.forEach(function(c){ CATEGORY_MAP[c.key] = c; });
 
+  // v2.15: thêm tab special
   const MODES = [
-    { key: "all",  label: "Cả 3",       icon: "🎲" },
-    { key: "home", label: "Cơm nhà",    icon: "🏠" },
-    { key: "soup", label: "Món nước",   icon: "🍲" },
-    { key: "out",  label: "Ăn ngoài",   icon: "🛵" }
+    { key: "all",  label: "Cả 3",     icon: "🎲" },
+    { key: "home", label: "Cơm nhà",  icon: "🏠" },
+    { key: "soup", label: "Món nước", icon: "🍲" },
+    { key: "out",  label: "Ăn ngoài", icon: "🛵" },
+    { key: "special", label: "Đặc biệt", icon: "👑" }
   ];
 
   /* ===== CẤU HÌNH ROLL ĐẶC BIỆT ===== */
@@ -40,6 +43,7 @@
   const SPECIAL_MAX_PER_DAY = 3;         // 3 người/ngày
   const SPECIAL_ONCE_PER_DAY = true;     // 1 lần/người/ngày
   const SPECIAL_API_TIMEOUT = 8000;
+  const SPECIAL_CACHE_TTL = 15000;       // v2.15: cache 15s
   /* =================================== */
 
   const state = {
@@ -52,10 +56,14 @@
     lastResult: null,
     pageOpen: false,
     editingDish: null,
-    pendingAddCategory: "home"
+    pendingAddCategory: "home",
+    // v2.15: stat suất đặc biệt
+    specialStat: { total: 0, wonByMe: false, loaded: false }
   };
 
   var _pollTimer = null;
+  // v2.15: cache
+  var _specialStatCache = { ts: 0, data: null };
 
   const $ = function(id){ return document.getElementById(id); };
 
@@ -112,7 +120,6 @@
     }catch(_){ return "Ẩn danh"; }
   }
 
-  // Push lunch với clientKey (idempotency) + chờ server ack
   async function pushLunchToFeed(dish){
     if (!dish || !dish.name) return { ok: false, reason: "invalid_dish" };
     try{
@@ -135,7 +142,6 @@
       });
       if (!pushed) return { ok: false, reason: "push_failed", clientKey };
 
-      // Chờ server ack (hoặc timeout)
       if (typeof lf.waitForPush === "function"){
         const res = await lf.waitForPush(clientKey, PUSH_TIMEOUT);
         return { ok: !!res.ok, clientKey: clientKey, event: res.event, reason: res.reason };
@@ -155,13 +161,25 @@
       String(d.getDate()).padStart(2, "0");
   }
 
-  async function countSpecialToday(){
+  // v2.15: thêm cache
+  async function countSpecialToday(force){
+    const now = Date.now();
+    if (!force && _specialStatCache.data && (now - _specialStatCache.ts) < SPECIAL_CACHE_TTL){
+      return _specialStatCache.data;
+    }
+
     const api = getApi();
-    if (!api) return { total: 0, wonByMe: false };
+    if (!api){
+      const empty = { total: 0, wonByMe: false };
+      _specialStatCache = { ts: now, data: empty };
+      return empty;
+    }
     try{
       const r = await api("getLiveEvents", { since: 0, _ts: Date.now() }, SPECIAL_API_TIMEOUT);
       if (!r || !r.ok || !r.data || !Array.isArray(r.data.events)){
-        return { total: 0, wonByMe: false };
+        const empty = { total: 0, wonByMe: false };
+        _specialStatCache = { ts: now, data: empty };
+        return empty;
       }
       const todayKey = getTodayKey();
       const myName = getMyName();
@@ -180,31 +198,40 @@
         total++;
         if (String(e.name || "").trim() === myName) wonByMe = true;
       });
-      return { total: total, wonByMe: wonByMe };
+      const result = { total: total, wonByMe: wonByMe };
+      _specialStatCache = { ts: now, data: result };
+      return result;
     }catch(e){
       console.log("[lunch] count special error", e);
-      return { total: 0, wonByMe: false };
+      const empty = { total: 0, wonByMe: false };
+      _specialStatCache = { ts: now, data: empty };
+      return empty;
     }
+  }
+
+  // v2.15: tính eligible + roll (tách riêng khỏi UI để refactor spin)
+  async function decideSpecialRoll(){
+    if (SPECIAL_PROB <= 0) return { hit: false, reason: "disabled", slotsLeft: 0 };
+    const specialPool = getSpecialPool();
+    if (!specialPool.length) return { hit: false, reason: "no_special_dish", slotsLeft: 0 };
+
+    const stat = await countSpecialToday(false);
+    // cập nhật state để render badge
+    state.specialStat = { total: stat.total, wonByMe: stat.wonByMe, loaded: true };
+
+    const slotsLeft = Math.max(0, SPECIAL_MAX_PER_DAY - stat.total);
+    if (stat.total >= SPECIAL_MAX_PER_DAY) return { hit: false, reason: "out_of_slots", slotsLeft: 0 };
+    if (SPECIAL_ONCE_PER_DAY && stat.wonByMe) return { hit: false, reason: "already_won", slotsLeft: slotsLeft };
+
+    const roll = Math.random();
+    if (roll >= SPECIAL_PROB) return { hit: false, reason: "miss", slotsLeft: slotsLeft };
+
+    const dish = specialPool[Math.floor(Math.random() * specialPool.length)];
+    return { hit: true, dish: dish, slotsLeft: Math.max(0, slotsLeft - 1) };
   }
 
   function getSpecialPool(){
     return state.dishes.filter(function(d){ return d.category === "special"; });
-  }
-
-  async function trySpecialRoll(){
-    if (SPECIAL_PROB <= 0) return { hit: false, reason: "disabled" };
-    const specialPool = getSpecialPool();
-    if (!specialPool.length) return { hit: false, reason: "no_special_dish" };
-
-    const stat = await countSpecialToday();
-    if (stat.total >= SPECIAL_MAX_PER_DAY) return { hit: false, reason: "out_of_slots", slotsLeft: 0 };
-    if (SPECIAL_ONCE_PER_DAY && stat.wonByMe) return { hit: false, reason: "already_won", slotsLeft: SPECIAL_MAX_PER_DAY - stat.total };
-
-    const roll = Math.random();
-    if (roll >= SPECIAL_PROB) return { hit: false, reason: "miss", slotsLeft: SPECIAL_MAX_PER_DAY - stat.total };
-
-    const dish = specialPool[Math.floor(Math.random() * specialPool.length)];
-    return { hit: true, dish: dish, slotsLeft: SPECIAL_MAX_PER_DAY - stat.total - 1 };
   }
 
   function showSpecialCelebration(dish, slotsLeft){
@@ -391,7 +418,7 @@
       ".lc-icon-btn:active{transform:scale(.92);background:#fff}",
       ".lc-icon-btn.spinning{animation:lcSpin .8s linear infinite;pointer-events:none}",
       "@keyframes lcSpin{to{transform:rotate(360deg)}}",
-      ".lc-hero{position:relative;padding:26px 22px 24px;margin-bottom:18px;border-radius:28px;text-align:center;overflow:hidden;background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(255,255,255,.98) 0%,rgba(255,250,240,.72) 45%,transparent 75%),linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(255,250,240,.94) 55%,rgba(255,245,225,.92) 100%);border:1px solid rgba(200,140,80,.22);box-shadow:0 24px 60px -20px rgba(120,80,40,.18),0 12px 32px -12px rgba(120,80,40,.12),inset 0 1px 0 rgba(255,255,255,.95);min-height:200px;display:flex;flex-direction:column;justify-content:center;align-items:center}",
+      ".lc-hero{position:relative;padding:26px 22px 24px;margin-bottom:14px;border-radius:28px;text-align:center;overflow:hidden;background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(255,255,255,.98) 0%,rgba(255,250,240,.72) 45%,transparent 75%),linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(255,250,240,.94) 55%,rgba(255,245,225,.92) 100%);border:1px solid rgba(200,140,80,.22);box-shadow:0 24px 60px -20px rgba(120,80,40,.18),0 12px 32px -12px rgba(120,80,40,.12),inset 0 1px 0 rgba(255,255,255,.95);min-height:200px;display:flex;flex-direction:column;justify-content:center;align-items:center}",
       ".lc-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.6) 0%,transparent 45%);pointer-events:none}",
       ".lc-hero.rolling{animation:lcHeroRoll .18s ease-in-out infinite alternate}",
       "@keyframes lcHeroRoll{from{transform:rotate(-.25deg) scale(.998)}to{transform:rotate(.25deg) scale(1.002)}}",
@@ -407,12 +434,15 @@
       ".lc-spin-btn.sending{background:linear-gradient(180deg,#d0b090 0%,#b08858 100%);box-shadow:none}",
       ".lc-spin-btn.success{background:linear-gradient(180deg,#6fbf7a 0%,#4ea25b 100%);box-shadow:0 8px 18px -6px rgba(78,162,91,.5)}",
       ".lc-spin-btn.error{background:linear-gradient(180deg,#ef5b5b 0%,#d84040 100%);box-shadow:0 8px 18px -6px rgba(216,64,64,.5)}",
+      ".lc-spin-btn.special{background:linear-gradient(180deg,#f0c060 0%,#d89020 100%);box-shadow:0 12px 28px -8px rgba(216,144,32,.6),inset 0 1px 0 rgba(255,255,255,.4)}",
       ".lc-spin-btn-icon{font-size:18px;line-height:1;display:inline-block}",
       ".lc-modes{display:flex;gap:6px;margin-bottom:16px;padding:4px;background:rgba(255,255,255,.7);border:1px solid rgba(200,140,80,.16);border-radius:16px;overflow-x:auto;scrollbar-width:none}",
       ".lc-modes::-webkit-scrollbar{display:none}",
-      ".lc-mode{flex:1 1 auto;min-height:42px;padding:6px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1.5px solid transparent;border-radius:12px;background:transparent;color:#a97848;font-family:inherit;font-size:10.5px;font-weight:900;letter-spacing:.02em;cursor:pointer;white-space:nowrap;transition:background .18s ease,color .18s ease,border-color .18s ease}",
+      ".lc-mode{flex:1 1 auto;min-height:42px;padding:6px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1.5px solid transparent;border-radius:12px;background:transparent;color:#a97848;font-family:inherit;font-size:10.5px;font-weight:900;letter-spacing:.02em;cursor:pointer;white-space:nowrap;transition:background .18s ease,color .18s ease,border-color .18s ease;position:relative}",
       ".lc-mode-icon{font-size:15px;line-height:1}",
       ".lc-mode.active{background:linear-gradient(180deg,#fff5e6,#ffe6cc);border-color:#e0a870;color:#5a3a18}",
+      ".lc-mode.mode-special.active{background:linear-gradient(180deg,#fffbe6,#ffe9b8);border-color:#d89020;color:#7a4a10}",
+      ".lc-mode-slot{position:absolute;top:2px;right:6px;font-size:8.5px;font-weight:950;padding:1px 5px;border-radius:999px;background:#d89020;color:#fff;letter-spacing:.02em}",
       ".lc-search{position:relative;margin-bottom:14px}",
       ".lc-search-input{width:100%;height:46px;padding:0 44px 0 44px;border:1.5px solid rgba(200,140,80,.24);border-radius:14px;background:rgba(255,255,255,.95);color:#4a2410;font-family:inherit;font-size:15px;font-weight:700;outline:none;transition:border-color .2s ease,box-shadow .2s ease;box-sizing:border-box}",
       ".lc-search-input::placeholder{color:#c9a888}",
@@ -480,6 +510,13 @@
       ".lc-confirm{padding:16px;border-radius:16px;background:linear-gradient(160deg,#fff5f5,#ffe8e8);border:1.5px solid rgba(216,64,64,.24);margin-top:4px}",
       ".lc-confirm-text{font-size:13px;font-weight:800;color:#a04040;text-align:center;margin-bottom:14px;line-height:1.45}",
       ".lc-confirm-dish{display:block;margin-top:6px;font-size:15px;font-weight:950;color:#7a2a2a}",
+      ".lc-special-bar{display:flex;align-items:center;justify-content:center;gap:6px;margin:0 0 14px;padding:8px 14px;border-radius:999px;background:linear-gradient(180deg,#fffbe6,#ffe9b8);border:1.5px solid rgba(216,144,32,.32);color:#7a4a10;font-size:11.5px;font-weight:900;letter-spacing:.02em;box-shadow:0 4px 12px -4px rgba(216,144,32,.25)}",
+      ".lc-special-bar .lc-special-dot{width:7px;height:7px;border-radius:50%;background:#d89020;box-shadow:0 0 0 4px rgba(216,144,32,.18);animation:lcPulse 1.6s ease-in-out infinite}",
+      "@keyframes lcPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.25);opacity:.7}}",
+      ".lc-special-bar.mine{background:linear-gradient(180deg,#e8f8ea,#d6f0db);border-color:rgba(78,162,91,.35);color:#2f6a3a}",
+      ".lc-special-bar.mine .lc-special-dot{background:#4ea25b;box-shadow:0 0 0 4px rgba(78,162,91,.18)}",
+      ".lc-special-bar.out{background:linear-gradient(180deg,#f5f5f5,#e8e8e8);border-color:rgba(150,150,150,.3);color:#7a7a7a}",
+      ".lc-special-bar.out .lc-special-dot{background:#999;box-shadow:0 0 0 4px rgba(150,150,150,.15);animation:none}",
       "@media(max-width:420px){.lc-grid{gap:8px}.lc-dish{padding:12px 10px;min-height:90px}.lc-dish-name{font-size:13px}.lc-hero{padding:22px 18px 20px}.lc-hero-dish{font-size:clamp(20px,5.5vw,26px)}.lc-title{font-size:18px}.lc-fab{width:52px;height:52px;font-size:24px}}"
     ].join("");
     document.head.appendChild(style);
@@ -517,6 +554,7 @@
               '</button>',
             '</div>',
           '</section>',
+          '<div id="lcSpecialBar"></div>',
           '<div class="lc-modes" id="lcModes"></div>',
           '<div class="lc-search">',
             '<span class="lc-search-icon">🔍</span>',
@@ -560,16 +598,26 @@
     return base.filter(function(d){ return d.category === state.currentMode; });
   }
 
+  // v2.15: render modes với badge slot cho tab đặc biệt
   function renderModes(){
     var box = $("lcModes");
     if (!box) return;
     box.innerHTML = "";
+    var slotsLeft = Math.max(0, SPECIAL_MAX_PER_DAY - (state.specialStat.total || 0));
+
     MODES.forEach(function(m){
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "lc-mode" + (state.currentMode === m.key ? " active" : "");
+      if (m.key === "special") btn.classList.add("mode-special");
       btn.dataset.mode = m.key;
-      btn.innerHTML = '<span class="lc-mode-icon">' + m.icon + '</span><span>' + m.label + '</span>';
+
+      var inner = '<span class="lc-mode-icon">' + m.icon + '</span><span>' + m.label + '</span>';
+      if (m.key === "special" && state.specialStat.loaded && slotsLeft > 0){
+        inner += '<span class="lc-mode-slot">' + slotsLeft + '</span>';
+      }
+      btn.innerHTML = inner;
+
       btn.addEventListener("click", function(){
         if (state.spinning || state.sending) return;
         state.currentMode = m.key;
@@ -578,6 +626,36 @@
       });
       box.appendChild(btn);
     });
+  }
+
+  // v2.15: thanh trạng thái suất đặc biệt
+  function renderSpecialBar(){
+    var bar = $("lcSpecialBar");
+    if (!bar) return;
+
+    // ẩn khi đang ở mode special
+    if (state.currentMode === "special"){
+      bar.innerHTML = "";
+      return;
+    }
+
+    if (!state.specialStat.loaded){
+      bar.innerHTML = "";
+      return;
+    }
+
+    var total = state.specialStat.total || 0;
+    var slotsLeft = Math.max(0, SPECIAL_MAX_PER_DAY - total);
+
+    if (slotsLeft <= 0){
+      bar.innerHTML = '<div class="lc-special-bar out"><span class="lc-special-dot"></span><span>Hết suất đặc biệt hôm nay · Mai quay lại nhé</span></div>';
+      return;
+    }
+    if (SPECIAL_ONCE_PER_DAY && state.specialStat.wonByMe){
+      bar.innerHTML = '<div class="lc-special-bar mine"><span class="lc-special-dot"></span><span>Bạn đã trúng đặc biệt hôm nay rồi 👑</span></div>';
+      return;
+    }
+    bar.innerHTML = '<div class="lc-special-bar"><span class="lc-special-dot"></span><span>Còn ' + slotsLeft + '/' + SPECIAL_MAX_PER_DAY + ' suất đặc biệt hôm nay · Cơ hội ' + Math.round(SPECIAL_PROB * 100) + '%</span></div>';
   }
 
   function renderHero(){
@@ -623,7 +701,10 @@
       var isFiltered = state.currentMode !== "all";
       var title = "Chưa có món nào";
       var sub = "Bấm nút + để thêm món đầu tiên";
-      if (isEmptySearch){
+      if (state.currentMode === "special" && !isEmptySearch){
+        title = "Chưa có món đặc biệt";
+        sub = "Món đặc biệt được thêm từ phía server/admin 👑";
+      } else if (isEmptySearch){
         title = "Không tìm thấy";
         sub = 'Không có món nào khớp "' + escapeHtml(state.searchTerm) + '"';
       } else if (isFiltered){
@@ -677,19 +758,30 @@
 
   function render(){
     renderModes();
+    renderSpecialBar();
     renderHero();
     renderDishGrid();
   }
 
+  // v2.15: refresh riêng cho special stat (dùng khi mở page / sau khi trúng)
+  async function refreshSpecialStat(force){
+    try{
+      const stat = await countSpecialToday(!!force);
+      state.specialStat = { total: stat.total, wonByMe: stat.wonByMe, loaded: true };
+      renderModes();
+      renderSpecialBar();
+    }catch(_){}
+  }
+
   // =========================================================
-  // SPIN — có UX lock
+  // SPIN
   // =========================================================
   function setSpinButtonState(kind, text){
     const btn = $("lcSpinBtn");
     const icon = $("lcSpinBtnIcon");
     const label = $("lcSpinBtnText");
     if(!btn || !label) return;
-    btn.classList.remove("sending", "success", "error");
+    btn.classList.remove("sending", "success", "error", "special");
     if(kind === "spin"){
       btn.disabled = true;
       btn.classList.add("sending");
@@ -711,6 +803,13 @@
       label.textContent = text || "ĐÃ GỬI";
       return;
     }
+    if(kind === "special-ok"){
+      btn.disabled = true;
+      btn.classList.add("special");
+      if(icon) icon.textContent = "👑";
+      label.textContent = text || "ĐẶC BIỆT!";
+      return;
+    }
     if(kind === "err"){
       btn.disabled = false;
       btn.classList.add("error");
@@ -723,6 +822,59 @@
     label.textContent = text || "QUAY NGAY";
   }
 
+  // v2.15: chạy animation quay tới 1 dish (dùng chung cho cả thường & đặc biệt)
+  function runSpinAnimation(pool, finalDish){
+    return new Promise(function(resolve){
+      var hero = $("lcHero");
+      var heroBody = $("lcHeroBody");
+      var heroIcon = $("lcHeroIcon");
+
+      if (hero) hero.classList.add("rolling");
+      setSpinButtonState("spin", "ĐANG QUAY…");
+
+      // pool hiển thị khi quay: nếu finalDish là special thì trộn special vào sequence
+      var animPool = pool && pool.length ? pool : [finalDish];
+      var shuffled = shuffleArray(animPool);
+      var totalSteps = Math.max(12, Math.min(24, animPool.length * 2));
+      var sequence = [];
+      for (var i = 0; i < totalSteps; i++){
+        sequence.push(shuffled[i % shuffled.length]);
+      }
+      sequence.push(finalDish);
+
+      var startTime = Date.now();
+      var totalDuration = SPIN_DURATION_MS;
+      var step = 0;
+
+      function tick(){
+        var elapsed = Date.now() - startTime;
+        var progress = Math.min(1, elapsed / totalDuration);
+        var easeOut = 1 - Math.pow(1 - progress, 3);
+        var targetIndex = Math.floor(easeOut * (sequence.length - 1));
+
+        step = Math.max(step, targetIndex);
+        var dish = sequence[Math.min(step, sequence.length - 1)];
+        var cat = CATEGORY_MAP[dish.category] || CATEGORY_MAP.home;
+
+        if (heroIcon) heroIcon.textContent = cat.icon;
+        if (heroBody){
+          heroBody.innerHTML =
+            '<span class="lc-hero-dish">' + escapeHtml(dish.name) + '</span>' +
+            '<span class="lc-hero-cat">' + escapeHtml(cat.label) + '</span>';
+        }
+
+        if (progress < 1){
+          var delay = SPIN_TICK_START_MS + (SPIN_TICK_END_MS - SPIN_TICK_START_MS) * easeOut;
+          setTimeout(tick, delay);
+        } else {
+          if (hero) hero.classList.remove("rolling");
+          resolve();
+        }
+      }
+      tick();
+    });
+  }
+
   async function spin(){
     if (state.spinning || state.sending) return;
     state.spinning = true;
@@ -730,92 +882,68 @@
     var pool = getDishPool();
     if (pool.length === 0){
       state.spinning = false;
-      notify("Chưa có món nào để quay", "error");
-      return;
-    }
-
-    // ===== THỬ ROLL ĐẶC BIỆT TRƯỚC =====
-    var special = await trySpecialRoll();
-    if (special.hit && special.dish){
-      state.spinning = false;
-      state.lastResult = { id: special.dish.id, name: special.dish.name, category: special.dish.category };
-      renderHero();
-      renderDishGrid();
-      showSpecialCelebration(special.dish, special.slotsLeft);
-      finalizeSpin(special.dish);
-      return;
-    }
-    if (special.reason === "out_of_slots") notify("Hôm nay đã hết suất đặc biệt rồi 👑", "info");
-    else if (special.reason === "already_won") notify("Bạn đã trúng suất đặc biệt hôm nay rồi 👑", "info");
-    // ====================================
-
-    if (pool.length === 1){
-      state.spinning = false;
-      state.lastResult = { id: pool[0].id, name: pool[0].name, category: pool[0].category };
-      renderHero();
-      renderDishGrid();
-      notify("Chỉ có 1 món — chọn luôn: " + pool[0].name, "success");
-      finalizeSpin(pool[0]);
-      return;
-    }
-
-    state.lastResult = null;
-
-    var hero = $("lcHero");
-    var heroBody = $("lcHeroBody");
-    var heroIcon = $("lcHeroIcon");
-
-    if (hero) hero.classList.add("rolling");
-    setSpinButtonState("spin", "ĐANG QUAY…");
-
-    var shuffled = shuffleArray(pool);
-    var totalSteps = Math.max(12, Math.min(24, pool.length * 2));
-    var sequence = [];
-    for (var i = 0; i < totalSteps; i++){
-      sequence.push(shuffled[i % shuffled.length]);
-    }
-    var finalDish = pickRandom(pool);
-    sequence.push(finalDish);
-
-    var startTime = Date.now();
-    var totalDuration = SPIN_DURATION_MS;
-    var step = 0;
-
-    function tick(){
-      var elapsed = Date.now() - startTime;
-      var progress = Math.min(1, elapsed / totalDuration);
-      var easeOut = 1 - Math.pow(1 - progress, 3);
-      var targetIndex = Math.floor(easeOut * (sequence.length - 1));
-
-      step = Math.max(step, targetIndex);
-      var dish = sequence[Math.min(step, sequence.length - 1)];
-      var cat = CATEGORY_MAP[dish.category] || CATEGORY_MAP.home;
-
-      if (heroIcon) heroIcon.textContent = cat.icon;
-      if (heroBody){
-        heroBody.innerHTML =
-          '<span class="lc-hero-dish">' + escapeHtml(dish.name) + '</span>' +
-          '<span class="lc-hero-cat">' + escapeHtml(cat.label) + '</span>';
-      }
-
-      if (progress < 1){
-        var delay = SPIN_TICK_START_MS + (SPIN_TICK_END_MS - SPIN_TICK_START_MS) * easeOut;
-        setTimeout(tick, delay);
+      if (state.currentMode === "special"){
+        notify("Chưa có món đặc biệt nào", "error");
       } else {
-        state.spinning = false;
-        state.lastResult = { id: finalDish.id, name: finalDish.name, category: finalDish.category };
-        if (hero) hero.classList.remove("rolling");
-        renderHero();
-        renderDishGrid();
-        notify("Chọn: " + finalDish.name, "success");
-        finalizeSpin(finalDish);
+        notify("Chưa có món nào để quay", "error");
       }
+      return;
     }
-    tick();
+
+    // v2.15: nếu đang ở mode "special" thì quay thẳng, không roll lottery
+    var specialDecision = null;
+    if (state.currentMode !== "special"){
+      specialDecision = await decideSpecialRoll();
+      // cập nhật badge sau khi có stat
+      renderModes();
+      renderSpecialBar();
+
+      if (specialDecision.reason === "out_of_slots") notify("Hôm nay đã hết suất đặc biệt rồi 👑", "info");
+      else if (specialDecision.reason === "already_won") notify("Bạn đã trúng suất đặc biệt hôm nay rồi 👑", "info");
+    }
+
+    var finalDish;
+    var isSpecialHit = false;
+
+    if (specialDecision && specialDecision.hit && specialDecision.dish){
+      finalDish = specialDecision.dish;
+      isSpecialHit = true;
+    } else if (pool.length === 1){
+      finalDish = pool[0];
+    } else {
+      finalDish = pickRandom(pool);
+    }
+
+    // Nếu là special hit thì animation pool trộn cả món thường để giấu kết quả
+    var animPool = pool;
+    if (isSpecialHit){
+      var regular = state.dishes.filter(function(d){ return d.category !== "special"; });
+      animPool = regular.length ? regular : pool;
+    }
+
+    await runSpinAnimation(animPool, finalDish);
+
+    state.spinning = false;
+    state.lastResult = { id: finalDish.id, name: finalDish.name, category: finalDish.category };
+    renderHero();
+    renderDishGrid();
+
+    if (isSpecialHit){
+      setSpinButtonState("special-ok", "ĐẶC BIỆT 👑");
+      showSpecialCelebration(finalDish, specialDecision.slotsLeft);
+      // cập nhật lại cache/stat vì vừa trúng
+      refreshSpecialStat(true);
+    } else if (pool.length === 1){
+      notify("Chỉ có 1 món — chọn luôn: " + finalDish.name, "success");
+    } else {
+      notify("Chọn: " + finalDish.name, "success");
+    }
+
+    finalizeSpin(finalDish, isSpecialHit);
   }
 
   // Gửi kết quả lên server + UX lock
-  async function finalizeSpin(dish){
+  async function finalizeSpin(dish, isSpecial){
     if (state.sending) return;
     state.sending = true;
     setSpinButtonState("send", "ĐANG GỬI…");
@@ -830,10 +958,14 @@
     state.sending = false;
 
     if (ok){
-      setSpinButtonState("ok", "ĐÃ GỬI ✓");
+      if (isSpecial){
+        setSpinButtonState("special-ok", "ĐÃ GỬI 👑");
+      } else {
+        setSpinButtonState("ok", "ĐÃ GỬI ✓");
+      }
       setTimeout(() => {
         setSpinButtonState("idle", "QUAY LẠI");
-      }, 800);
+      }, 900);
     } else {
       setSpinButtonState("err", "LỖI — THỬ LẠI");
       notify("Không gửi được bữa trưa — bấm thử lại", "error");
@@ -845,7 +977,9 @@
   // =========================================================
   function openAddSheet(){
     if (state.spinning || state.sending) return;
-    state.pendingAddCategory = state.currentMode === "all" ? "home" : state.currentMode;
+    state.pendingAddCategory = state.currentMode === "all" || state.currentMode === "special"
+      ? "home"
+      : state.currentMode;
     showSheet(buildAddContent(), "add");
     setTimeout(function(){
       var inp = $("lcAddInput");
@@ -1118,6 +1252,7 @@
 
     render();
     loadDishes(true);
+    refreshSpecialStat(true); // v2.15: load suất đặc biệt
     startPolling();
 
     if (typeof window.syncQuickTools === "function") window.syncQuickTools();
@@ -1163,7 +1298,8 @@
       refreshBtn.addEventListener("click", async function(){
         if (state.spinning || state.sending) return;
         refreshBtn.classList.add("spinning");
-        await loadDishes(true);
+        // v2.15: refresh cả special stat
+        await Promise.all([loadDishes(true), refreshSpecialStat(true)]);
         setTimeout(function(){ refreshBtn.classList.remove("spinning"); }, 400);
       });
     }
@@ -1202,6 +1338,7 @@
     document.addEventListener("visibilitychange", function(){
       if (!document.hidden && state.pageOpen){
         loadDishes(false);
+        refreshSpecialStat(false);
       }
     });
 
