@@ -1,6 +1,6 @@
 /* =========================================================
    SECRET CHAT — Chat nhóm real-time (thay thế Secret Mail)
-   - Polling 3s để lấy tin mới
+   - Polling 3s để lấy tin mới (qua SRankScheduler)
    - Optimistic UI khi gửi
    - Auto-scroll + scroll-lock khi user kéo lên đọc
    - Grouping tin nhắn liên tiếp cùng người
@@ -81,6 +81,16 @@
   }
   function getApi(){
     return window.__srankApi || (window.SRank && window.SRank.api) || null;
+  }
+  /** Route poll qua SRankScheduler nếu có (tránh burst request) */
+  function pollApi(action, data, timeout){
+    const api = getApi();
+    if (!api) return Promise.reject(new Error("API chưa sẵn sàng"));
+    const runner = () => api(action, data, timeout);
+    if (window.SRankScheduler && typeof window.SRankScheduler.enqueuePoll === "function"){
+      return window.SRankScheduler.enqueuePoll(runner);
+    }
+    return runner();
   }
 
   // =========================================================
@@ -319,7 +329,7 @@
   flex:0 0 auto;display:flex;gap:8px;align-items:flex-end;
   padding:10px 12px calc(10px + env(safe-area-inset-bottom));
   background:rgba(255,255,255,.96);backdrop-filter:blur(20px) saturate(120%);
-  -webkit-backdrop-filter:blur(20pxurate) sat(120%);
+  -webkit-backdrop-filter:blur(20px) saturate(120%);
   border-top:1px solid rgba(255,158,199,.2);
   box-shadow:0 -4px 24px rgba(255,120,180,.06);
   z-index:10;
@@ -551,9 +561,19 @@
 
       const av = document.createElement("div");
       av.className = "sc-avatar";
+      // ⚡ Dùng DOM API thay vì innerHTML + onerror inline (fix XSS edge case)
       const avUrl = getAvatar(m.name);
       if (avUrl){
-        av.innerHTML = `<img src="${escapeHtml(avUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none';this.parentNode.textContent='${escapeHtml(getInitial(m.name))}'">`;
+        const img = document.createElement("img");
+        img.src = avUrl;
+        img.alt = "";
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.onerror = () => {
+          img.remove();
+          av.textContent = getInitial(m.name);
+        };
+        av.appendChild(img);
       } else {
         av.textContent = getInitial(m.name);
       }
@@ -621,12 +641,12 @@
   }
 
   async function fetchMessages(){
-    const api = getApi();
-    if (!api) return;
+    if (state.pollInFlight) return;
     state.pollInFlight = true;
     try{
       const since = state.lastTs > 0 ? state.lastTs - 1000 : 0;
-      const r = await api("getSecretMessages", { since, _ts: Date.now() }, 12000);
+      // ⚡ Route qua SRankScheduler để tránh burst request
+      const r = await pollApi("getSecretMessages", { since, _ts: Date.now() }, 12000);
       if (!r || !r.ok) return;
       const arr = Array.isArray(r.data && r.data.messages) ? r.data.messages : [];
       let added = 0;
@@ -707,6 +727,7 @@
       return;
     }
     try{
+      // ⚡ Gửi là USER ACTION → không enqueue, đi thẳng
       const r = await api("sendSecretMessage", {
         text,
         name,
@@ -758,7 +779,8 @@
     renderMessages();
     doSend(localId, text, name);
   }
-// =========================================================
+
+  // =========================================================
   // IDENTITY PICKER
   // =========================================================
   function openPicker(){
@@ -774,14 +796,38 @@
         const item = document.createElement("button");
         item.type = "button";
         item.className = "sc-picker-item" + (n === state.myName ? " active" : "");
+        // ⚡ Dùng DOM API cho avatar — tránh lỗi escape + XSS
+        const avBox = document.createElement("span");
+        avBox.className = "sc-picker-avatar";
         const avUrl = getAvatar(n);
-        const av = avUrl
-          ? `<img src="${escapeHtml(avUrl)}" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.textContent='${escapeHtml(getInitial(n))}'">`
-          : escapeHtml(getInitial(n));
-        item.innerHTML = `
-          <span class="sc-picker-avatar">${av}</span>
-          <span class="sc-picker-name">${escapeHtml(n)}</span>
-          ${n === state.myName ? '<span class="sc-picker-check">✓</span>' : ""}`;
+        if (avUrl){
+          const img = document.createElement("img");
+          img.src = avUrl;
+          img.alt = "";
+          img.loading = "lazy";
+          img.onerror = () => {
+            img.remove();
+            avBox.textContent = getInitial(n);
+          };
+          avBox.appendChild(img);
+        } else {
+          avBox.textContent = getInitial(n);
+        }
+
+        const nameEl = document.createElement("span");
+        nameEl.className = "sc-picker-name";
+        nameEl.textContent = n;
+
+        item.appendChild(avBox);
+        item.appendChild(nameEl);
+
+        if (n === state.myName){
+          const check = document.createElement("span");
+          check.className = "sc-picker-check";
+          check.textContent = "✓";
+          item.appendChild(check);
+        }
+
         item.addEventListener("click", () => {
           saveMyName(n);
           closePicker();
