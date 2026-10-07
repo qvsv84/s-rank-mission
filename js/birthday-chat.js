@@ -1,9 +1,7 @@
 /* =========================================================
-   BIRTHDAY CHAT — v1.5
-   - FIX lỗi giao diện wish .me:
-     + Đảo padding trái/phải cho message + foot
-     + Đảo thứ tự head (icon-name-avatar)
-     + Đảo decoration ::before sang trái
+   BIRTHDAY CHAT — v1.6
+   - FIX card bị cắt cụt: bỏ overflow:hidden + transform, thêm flex-shrink:0
+   - Decoration góc dùng background layer thay vì ::before
    ========================================================= */
 (function(){
   "use strict";
@@ -36,7 +34,6 @@
     { group: '💪 Ý nghĩa', text: 'Tuổi mới, chúc Mỹ Dung gặp nhiều may mắn và niềm vui bất ngờ 🍀' }
   ];
 
-  /* ============ STATE ============ */
   const S = {
     wishes: [],
     lastTs: 0,
@@ -51,7 +48,6 @@
     replyTo: null,
   };
 
-  /* ============ HELPERS ============ */
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const log = (...a) => console.log('[BD]', ...a);
@@ -92,7 +88,6 @@
     try { localStorage.setItem(LAST_PICKED_KEY, S.myName); } catch(_){}
   };
 
-  /* ============ RPC ============ */
   async function rpc(name, params, timeout) {
     const url = `${SUPABASE_URL}/rest/v1/rpc/${name}`;
     const ctrl = new AbortController();
@@ -243,13 +238,17 @@
 
 .bd-body {
   flex: 1 1 auto;
-  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   padding: 14px 12px 120px;
   display: flex; flex-direction: column; gap: 8px;
 }
 .bd-body::-webkit-scrollbar { width: 4px; }
 .bd-body::-webkit-scrollbar-thumb { background: rgba(255,158,199,.4); border-radius: 2px; }
+
+/* ⚡ Chống shrink mọi item trong flex column */
+.bd-body > * { flex-shrink: 0; }
 
 .bd-day-divider {
   align-self: center; margin: 12px 0 6px;
@@ -274,46 +273,33 @@
   max-width: 88%;
   padding: 14px 16px 12px;
   border-radius: 18px 18px 18px 4px;
-  background: linear-gradient(140deg, #fff8fc 0%, #fff0e0 100%);
+  /* ⚡ Decoration góc dùng background layer — KHÔNG dùng ::before + overflow:hidden */
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255,180,210,.55), transparent 30%),
+    linear-gradient(140deg, #fff8fc 0%, #fff0e0 100%);
   border: 1.5px solid rgba(255,158,199,.45);
   box-shadow: 0 6px 18px -10px rgba(216,91,158,.35);
-  animation: bdWishIn .5s cubic-bezier(.16,.9,.25,1) both;
-  overflow: hidden;
+  animation: bdWishIn .4s ease-out both;
 }
 
-/* Decoration top-RIGHT cho wish bên trái */
-.bd-wish::before {
-  content: ''; position: absolute;
-  top: 0; right: 0; width: 60px; height: 60px;
-  background: radial-gradient(circle at 100% 0%, rgba(255,180,210,.55), transparent 70%);
-  pointer-events: none;
-}
-
-/* ===== WISH CỦA MỸ DUNG — BÊN PHẢI ===== */
 .bd-wish.me {
   align-self: flex-end;
   border-radius: 18px 18px 4px 18px;
-  background: linear-gradient(140deg, #ffe4f5 0%, #ffd0e5 100%);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255,180,210,.55), transparent 30%),
+    linear-gradient(140deg, #ffe4f5 0%, #ffd0e5 100%);
   border-color: rgba(216,91,158,.65);
   box-shadow: 0 8px 24px -10px rgba(216,91,158,.55), 0 0 20px rgba(255,180,210,.35);
 }
 
-/* Decoration top-LEFT cho wish bên phải */
-.bd-wish.me::before {
-  content: ''; position: absolute;
-  top: 0; left: 0; right: auto; width: 60px; height: 60px;
-  background: radial-gradient(circle at 0% 0%, rgba(255,180,210,.55), transparent 70%);
-}
-
+/* ⚡ Animation đơn giản — không scale, chỉ opacity + translateY */
 @keyframes bdWishIn {
-  0% { opacity: 0; transform: translateY(14px) scale(.96); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 /* ===== HEAD ===== */
 .bd-wish-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-
-/* Đảo thứ tự: icon-name-avatar khi wish của Mỹ Dung */
 .bd-wish.me .bd-wish-head { flex-direction: row-reverse; }
 
 .bd-wish-avatar {
@@ -334,8 +320,6 @@
   color: #c04a90;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-
-/* Đảo text-align khi wish của Mỹ Dung */
 .bd-wish.me .bd-wish-name { text-align: right; }
 
 .bd-wish-icon {
@@ -343,22 +327,22 @@
   filter: drop-shadow(0 2px 3px rgba(216,91,158,.3));
 }
 
-/* ===== MESSAGE — đổi padding theo bên ===== */
+/* ===== MESSAGE ===== */
 .bd-wish-message {
   font-size: 14.5px; font-weight: 650;
   line-height: 1.5; color: #4a2a3a;
   white-space: pre-wrap; word-break: break-word;
-  padding-left: 46px;   /* né avatar bên TRÁI */
+  padding-left: 46px;
   padding-right: 0;
   text-align: left;
 }
 .bd-wish.me .bd-wish-message {
   padding-left: 0;
-  padding-right: 46px;  /* né avatar bên PHẢI */
+  padding-right: 46px;
   text-align: right;
 }
 
-/* ===== FOOT — đổi padding theo bên ===== */
+/* ===== FOOT ===== */
 .bd-wish-foot {
   margin-top: 8px;
   padding-left: 46px;
@@ -371,7 +355,7 @@
 .bd-wish.me .bd-wish-foot {
   padding-left: 0;
   padding-right: 46px;
-  justify-content: flex-end;   /* đẩy content sang phải */
+  justify-content: flex-end;
 }
 
 .bd-wish-tag {
@@ -385,11 +369,11 @@
   color: #fff;
 }
 
-/* ===== CHAT BUBBLE (cho trường hợp không phải wish) ===== */
+/* ===== CHAT ROW ===== */
 .bd-chat-row {
   display: flex; gap: 8px; align-items: flex-end;
   margin-top: 4px;
-  animation: bdWishIn .35s cubic-bezier(.16,.9,.25,1) both;
+  animation: bdWishIn .3s ease-out both;
 }
 .bd-chat-row.me { flex-direction: row-reverse; }
 .bd-chat-avatar {
@@ -782,7 +766,6 @@
     }
   }
 
-  /* ============ OWNER ============ */
   function updateOwnerBtn() {
     const btn = $('bdOwnerBtn');
     if (!btn) return;
@@ -999,7 +982,6 @@
     requestAnimationFrame(() => body.scrollTop = body.scrollHeight);
   }
 
-  /* ============ DATA ============ */
   async function fetchWishes(force) {
     if (S.pollInFlight && !force) return;
     S.pollInFlight = true;
@@ -1097,7 +1079,6 @@
     }
   }
 
-  /* ============ CONFETTI ============ */
   function fireConfetti(count) {
     const emojis = ['🎊','🎉','🌸','💖','✨','🎂','🎁','🌟'];
     for (let i = 0; i < count; i++) {
@@ -1138,7 +1119,6 @@
     fireConfetti(100);
   }
 
-  /* ============ MODAL ============ */
   function buildModal() {
     let modal = $('bdModal');
     if (modal) modal.remove();
@@ -1267,7 +1247,6 @@
     modal.setAttribute('aria-hidden', 'false');
   }
 
-  /* ============ OPEN / CLOSE ============ */
   function openPage() {
     const page = $('bdPage');
     if (!page) return;
@@ -1298,7 +1277,6 @@
     syncFabVisibility();
   }
 
-  /* ============ POLLING ============ */
   function startPolling() {
     stopPolling();
     const tick = () => {
@@ -1314,7 +1292,6 @@
     if (S.pollTimer) { clearTimeout(S.pollTimer); S.pollTimer = null; }
   }
 
-  /* ============ BOOT ============ */
   function boot() {
     if (S.booted) return;
     S.booted = true;
@@ -1363,7 +1340,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v1.5 ready ✓');
+    log('v1.6 ready ✓');
   }
 
   if (document.readyState === 'loading') {
