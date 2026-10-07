@@ -1,10 +1,8 @@
 /* =========================================================
-   BIRTHDAY CHAT — v2.3 (Minimal Modern)
-   - UI phẳng, sạch, chuyên nghiệp
-   - Bỏ gradient/decoration thừa
-   - Nút reply dạng text link
-   - Reply có đường kẻ trái mỏng
-   - Header 2 nút: ← và 👑
+   BIRTHDAY CHAT — v3.0
+   - Messenger-style: bubble tròn, avatar cuối chuỗi
+   - Reply là bubble riêng bên phải, có quote nhỏ
+   - UI gọn, hồng cute
    ========================================================= */
 (function(){
   "use strict";
@@ -90,6 +88,10 @@
     S.myName = String(n || '').trim();
     try { localStorage.setItem(LAST_PICKED_KEY, S.myName); } catch(_){}
   };
+  const shortName = n => {
+    const arr = String(n || '').trim().split(/\s+/);
+    return arr[arr.length - 1] || 'bạn';
+  };
 
   async function rpc(name, params, timeout) {
     const url = `${SUPABASE_URL}/rest/v1/rpc/${name}`;
@@ -118,7 +120,7 @@
     }
   }
 
-  /* ============ CSS — Minimal Modern ============ */
+  /* ============ CSS ============ */
   function injectStyles() {
     if ($('bdStyles')) return;
 
@@ -130,668 +132,438 @@
     const style = document.createElement('style');
     style.id = 'bdStyles';
     style.textContent = `
-/* ============================================================
-   FAB
-============================================================ */
+/* ===== FAB ===== */
 #bdFab {
-  position: fixed;
-  right: 18px;
+  position: fixed; right: 18px;
   bottom: max(24px, calc(18px + env(safe-area-inset-bottom)));
   z-index: 20600;
-  min-width: 116px;
-  height: 52px;
+  min-width: 116px; height: 52px;
   padding: 0 18px 0 14px;
-  border: 0;
-  border-radius: 26px;
-  background: #d63384;
+  border: 0; border-radius: 26px;
+  background: linear-gradient(135deg, #ffa5d0 0%, #e91e63 100%);
   color: #fff;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-family: inherit; font-size: 13px; font-weight: 700;
   letter-spacing: .01em;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: flex; align-items: center; gap: 8px;
   cursor: pointer;
-  box-shadow: 0 8px 22px -8px rgba(214,51,132,.45);
-  transition: transform .15s ease, box-shadow .25s ease;
+  box-shadow: 0 8px 24px -8px rgba(233,30,99,.5);
+  transition: transform .15s ease;
 }
 #bdFab:active { transform: scale(.96); }
 #bdFab.hidden { display: none !important; }
 #bdFab .bd-fab-icon { font-size: 20px; line-height: 1; }
 #bdFab .bd-fab-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
+  position: absolute; top: -4px; right: -4px;
+  min-width: 20px; height: 20px; padding: 0 6px;
   border-radius: 10px;
-  background: #fff;
-  color: #d63384;
-  font-size: 11px;
-  font-weight: 700;
-  display: none;
-  align-items: center;
-  justify-content: center;
+  background: #fff; color: #e91e63;
+  font-size: 11px; font-weight: 800;
+  display: none; align-items: center; justify-content: center;
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
 }
 #bdFab .bd-fab-badge.show { display: flex; }
 
-/* ============================================================
-   PAGE
-============================================================ */
+/* ===== PAGE ===== */
 #bdPage {
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0;
   z-index: 20900;
-  display: none;
-  flex-direction: column;
-  background: #fdfafb;
-  color: #2d2a2c;
+  display: none; flex-direction: column;
+  background: #fff0f5;
+  color: #4a1f33;
   font-family: var(--font, ui-rounded, system-ui);
   overflow: hidden;
 }
 #bdPage.show { display: flex; }
 
-/* ============================================================
-   HEADER
-============================================================ */
+/* ===== HEADER ===== */
 .bd-head {
   flex: 0 0 auto;
-  display: grid;
-  grid-template-columns: 40px 1fr auto;
-  align-items: center;
-  gap: 12px;
-  padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+  display: grid; grid-template-columns: 40px 1fr auto;
+  align-items: center; gap: 10px;
+  padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
   background: #fff;
-  border-bottom: 1px solid #f0e8ec;
+  border-bottom: 1px solid #ffe0ec;
   z-index: 10;
 }
 .bd-head-btn {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #ebe3e7;
-  border-radius: 10px;
-  background: #fff;
-  color: #2d2a2c;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 50%;
+  background: #fff0f5;
+  color: #e91e63;
   font-size: 18px;
-  font-weight: 500;
   cursor: pointer;
-  transition: background .15s ease, border-color .15s ease;
+  transition: background .15s ease, transform .15s ease;
 }
-.bd-head-btn:active { background: #f8f2f5; border-color: #e5d8e0; }
-.bd-head-center {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.bd-head-btn:active { transform: scale(.92); background: #ffe0ec; }
+.bd-head-center { min-width: 0; display: flex; align-items: center; gap: 10px; }
 .bd-head-avatar {
   position: relative;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
+  width: 36px; height: 36px; border-radius: 50%;
   flex: 0 0 auto;
-  background: #f8f2f5;
-  color: #d63384;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  border: 1px solid #ebe3e7;
+  background: linear-gradient(135deg, #ffd6e8, #ffa5d0);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800;
   overflow: hidden;
 }
-.bd-head-avatar img {
-  width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%;
-}
-.bd-head-cake { display: none; }
-.bd-head-info {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
+.bd-head-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; }
+.bd-head-info { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .bd-head-title {
-  font-size: 14.5px;
-  font-weight: 650;
-  color: #2d2a2c;
+  font-size: 14.5px; font-weight: 700;
+  color: #4a1f33;
   letter-spacing: -.005em;
   line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .bd-head-sub {
-  font-size: 11.5px;
-  font-weight: 500;
-  color: #a899a3;
+  font-size: 11.5px; font-weight: 500;
+  color: #c98ba6;
   line-height: 1.3;
 }
-.bd-head-sub .dot { display: none; }
 
-/* ============================================================
-   BODY
-============================================================ */
+/* ===== BODY ===== */
 .bd-body {
   flex: 1 1 auto;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 16px 16px 120px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  padding: 12px 12px 120px;
+  display: flex; flex-direction: column; gap: 2px;
 }
 .bd-body::-webkit-scrollbar { width: 3px; }
-.bd-body::-webkit-scrollbar-thumb { background: #e5d8e0; border-radius: 2px; }
+.bd-body::-webkit-scrollbar-thumb { background: #ffc7dd; border-radius: 2px; }
 .bd-body > * { flex-shrink: 0; }
 
 .bd-day-divider {
-  align-self: center;
-  margin: 6px 0 2px;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  color: #b8a8b0;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .1em;
+  align-self: center; margin: 16px 0 10px;
+  padding: 4px 14px;
+  background: rgba(255,255,255,.85);
+  border-radius: 999px;
+  color: #c98ba6;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .06em;
   text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-.bd-day-divider::before,
-.bd-day-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #f0e8ec;
 }
 
 .bd-empty {
   padding: 80px 24px;
   text-align: center;
-  color: #b8a8b0;
+  color: #c98ba6;
 }
-.bd-empty-emoji { font-size: 48px; margin-bottom: 12px; opacity: .6; }
-.bd-empty-title {
-  font-size: 15px; font-weight: 600; color: #6b5a62; margin-bottom: 6px;
-}
-.bd-empty-sub {
-  font-size: 13px; font-weight: 400; line-height: 1.5; color: #a899a3;
-}
+.bd-empty-emoji { font-size: 52px; margin-bottom: 12px; opacity: .65; }
+.bd-empty-title { font-size: 15px; font-weight: 700; color: #8a4a68; margin-bottom: 6px; }
+.bd-empty-sub { font-size: 13px; font-weight: 500; line-height: 1.55; }
 
-/* ============================================================
-   WISH CARD
-============================================================ */
-.bd-wish {
-  position: relative;
-  align-self: flex-start;
-  max-width: 92%;
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: #fff;
-  border: 1px solid #f0e8ec;
-  box-shadow: 0 1px 2px rgba(45,42,44,.03);
-  animation: bdWishIn .35s ease-out both;
+/* ===== MESSAGE ROW ===== */
+.bd-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+  animation: bdMsgIn .28s cubic-bezier(.16,.9,.25,1) both;
 }
-.bd-wish.me {
-  align-self: flex-end;
-  background: #fff9fc;
-  border-color: #f5dce8;
-}
-@keyframes bdWishIn {
+.bd-row.compact { margin-top: 2px; }
+.bd-row.me { flex-direction: row-reverse; }
+@keyframes bdMsgIn {
   0% { opacity: 0; transform: translateY(6px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
-.bd-wish-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-.bd-wish.me .bd-wish-head { flex-direction: row-reverse; }
-
-.bd-wish-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+.bd-row-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
   flex: 0 0 auto;
-  background: #f8f2f5;
-  color: #d63384;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  border: 1px solid #ebe3e7;
+  background: linear-gradient(135deg, #ffd6e8, #ffa5d0);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800;
   overflow: hidden;
+  align-self: flex-end;
 }
-.bd-wish-avatar img {
-  width: 100%; height: 100%; object-fit: cover; display: block;
+.bd-row-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bd-row-avatar.hidden { visibility: hidden; }
+.bd-row.me .bd-row-avatar { display: none; }
+
+.bd-bubble-wrap {
+  display: flex; flex-direction: column;
+  max-width: 76%;
+  min-width: 0;
+}
+.bd-row.me .bd-bubble-wrap { align-items: flex-end; }
+
+.bd-sender {
+  font-size: 11px;
+  font-weight: 700;
+  color: #c98ba6;
+  padding: 0 4px 3px 4px;
+  letter-spacing: .01em;
+}
+.bd-row.compact .bd-sender { display: none; }
+
+/* ===== BUBBLE ===== */
+.bd-bubble {
+  position: relative;
+  padding: 9px 14px;
+  border-radius: 20px 20px 20px 6px;
+  background: #fff;
+  color: #3a1f30;
+  font-size: 14.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  box-shadow: 0 1px 3px rgba(233,30,99,.06);
+}
+.bd-row.me .bd-bubble {
+  background: linear-gradient(135deg, #ffb8d1 0%, #ff9cc0 100%);
+  color: #4a1f33;
+  border-radius: 20px 20px 6px 20px;
+  box-shadow: 0 2px 8px rgba(255,120,170,.25);
 }
 
-.bd-wish-name {
-  flex: 1;
-  min-width: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #2d2a2c;
-  letter-spacing: -.005em;
+/* Quote trong reply */
+.bd-bubble-quote {
+  margin: -2px 0 6px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.55);
+  border-left: 3px solid #ff80b0;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #8a4a68;
+  max-width: 100%;
+}
+.bd-bubble-quote-sender {
+  display: block;
+  font-weight: 700;
+  font-size: 11.5px;
+  color: #e91e63;
+  margin-bottom: 1px;
+}
+.bd-bubble-quote-text {
+  display: block;
+  opacity: .85;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.bd-wish.me .bd-wish-name { text-align: right; }
 
-.bd-wish-icon {
-  font-size: 14px;
-  flex: 0 0 auto;
-  opacity: .55;
-  filter: none;
-}
-
-.bd-wish-message {
-  font-size: 15px;
-  font-weight: 400;
-  line-height: 1.6;
-  color: #3a3538;
-  white-space: pre-wrap;
-  word-break: break-word;
-  padding-left: 42px;
-  padding-right: 0;
-  text-align: left;
-}
-.bd-wish.me .bd-wish-message {
-  padding-left: 0;
-  padding-right: 42px;
-  text-align: right;
-}
-
-.bd-wish-foot {
-  margin-top: 10px;
-  padding-left: 42px;
-  padding-right: 0;
-  font-size: 12px;
-  font-weight: 500;
-  color: #b8a8b0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.bd-wish.me .bd-wish-foot {
-  padding-left: 0;
-  padding-right: 42px;
-  justify-content: flex-end;
-}
-
-.bd-wish-tag {
-  padding: 0;
-  border-radius: 0;
+/* Time */
+.bd-time {
   font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: .04em;
-}
-.bd-wish-tag.special {
-  color: #d63384;
-  background: transparent;
-  padding: 2px 6px;
-  border: 1px solid #f5dce8;
-  border-radius: 4px;
-  font-size: 9.5px;
-}
-
-/* ============================================================
-   REPLIES — nằm trong card
-============================================================ */
-.bd-wish-replies {
-  margin-top: 12px;
-  padding-left: 42px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  position: relative;
-}
-.bd-wish-replies::before {
-  content: '';
-  position: absolute;
-  left: 20px;
-  top: 4px;
-  bottom: 4px;
-  width: 1.5px;
-  background: #f0e0e8;
-  border-radius: 2px;
-}
-
-.bd-reply-nested {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  animation: bdWishIn .3s ease-out both;
-}
-.bd-reply-nested-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 3px;
-}
-.bd-reply-nested-avatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  flex: 0 0 auto;
-  background: #f8f2f5;
-  color: #d63384;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  font-weight: 700;
-  border: 1px solid #ebe3e7;
-  overflow: hidden;
-}
-.bd-reply-nested-avatar img {
-  width: 100%; height: 100%; object-fit: cover; display: block;
-}
-.bd-reply-nested-arrow {
-  font-size: 10px;
-  color: #b8a8b0;
-}
-.bd-reply-nested-name {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #2d2a2c;
-  white-space: nowrap;
-}
-.bd-reply-nested-time {
-  margin-left: auto;
-  font-size: 11.5px;
   font-weight: 500;
-  color: #b8a8b0;
-}
-.bd-reply-nested-message {
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.55;
-  color: #3a3538;
-  white-space: pre-wrap;
-  word-break: break-word;
-  padding-left: 26px;
+  color: #c98ba6;
+  padding: 3px 6px 0 6px;
+  letter-spacing: .01em;
 }
 
-/* ============================================================
-   ACTION — text link
-============================================================ */
-.bd-wish-actions {
-  margin-top: 10px;
-  padding-left: 42px;
-}
-.bd-wish.me .bd-wish-actions {
-  padding-left: 0;
-  padding-right: 42px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.bd-reply-btn {
+/* ===== NÚT REPLY (text link nhỏ) ===== */
+.bd-reply-link {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 0;
+  margin-top: 3px;
+  padding: 2px 6px;
   border: 0;
   background: transparent;
-  color: #d63384;
+  color: #e91e63;
   font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 600;
-  letter-spacing: .005em;
+  font-size: 11.5px;
+  font-weight: 700;
   cursor: pointer;
-  transition: opacity .15s ease;
-  box-shadow: none;
+  border-radius: 8px;
+  transition: background .15s ease;
 }
-.bd-reply-btn:active { opacity: .6; }
-.bd-reply-btn:hover { text-decoration: underline; text-underline-offset: 2px; }
-.bd-reply-btn .bd-reply-icon { font-size: 12px; line-height: 1; }
+.bd-reply-link:active { background: rgba(233,30,99,.08); }
+.bd-reply-link .bd-rl-icon { font-size: 11px; }
 
-/* ============================================================
-   INLINE REPLY INPUT
-============================================================ */
-.bd-inline-reply {
-  margin-top: 4px;
-  padding-left: 42px;
-  animation: bdWishIn .25s ease-out both;
-}
-.bd-wish.me .bd-inline-reply {
-  padding-left: 0;
-  padding-right: 42px;
-}
-.bd-inline-reply-wrap {
+/* ===== INLINE REPLY INPUT ===== */
+.bd-reply-input-wrap {
   display: flex;
   align-items: flex-end;
   gap: 6px;
-  padding: 6px 6px 6px 12px;
-  border-radius: 10px;
+  margin-top: 6px;
+  padding: 6px 6px 6px 10px;
+  border-radius: 20px;
   background: #fff;
-  border: 1.5px solid #f5dce8;
-  transition: border-color .15s ease;
+  border: 2px solid #ffb8d1;
+  box-shadow: 0 4px 16px -6px rgba(233,30,99,.2);
+  max-width: 82%;
+  animation: bdMsgIn .25s cubic-bezier(.16,.9,.25,1) both;
 }
-.bd-inline-reply-wrap:focus-within {
-  border-color: #d63384;
+.bd-row.me .bd-reply-input-wrap { margin-left: auto; }
+.bd-reply-input-quote {
+  position: absolute;
 }
-.bd-inline-input {
+
+.bd-reply-input {
   flex: 1;
   min-height: 24px;
   max-height: 80px;
   padding: 4px 0;
   border: 0;
   background: transparent;
-  color: #2d2a2c;
+  color: #3a1f30;
   font-family: inherit;
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 500;
   line-height: 1.4;
   outline: none;
   resize: none;
   overflow-y: auto;
 }
-.bd-inline-input::placeholder {
-  color: #c8b8c0;
-}
-.bd-inline-send {
-  width: 30px;
-  height: 30px;
+.bd-reply-input::placeholder { color: #d4a8bd; }
+
+.bd-reply-send {
+  width: 30px; height: 30px;
   flex: 0 0 auto;
-  border: 0;
-  border-radius: 8px;
-  background: #d63384;
+  border: 0; border-radius: 50%;
+  background: linear-gradient(135deg, #ff80b0, #e91e63);
   color: #fff;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   transition: transform .15s ease, opacity .15s ease;
 }
-.bd-inline-send:active { transform: scale(.94); }
-.bd-inline-send:disabled { opacity: .35; pointer-events: none; }
-.bd-inline-cancel {
-  width: 28px;
-  height: 28px;
+.bd-reply-send:active { transform: scale(.9); }
+.bd-reply-send:disabled { opacity: .35; pointer-events: none; }
+
+.bd-reply-cancel {
+  width: 26px; height: 26px;
   flex: 0 0 auto;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: #a899a3;
-  font-size: 15px;
-  font-weight: 500;
+  border: 0; border-radius: 50%;
+  background: #fff0f5;
+  color: #c98ba6;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   transition: background .15s ease;
 }
-.bd-inline-cancel:active { background: #f8f2f5; }
+.bd-reply-cancel:active { background: #ffe0ec; }
 
-.bd-inline-error {
-  margin-top: 6px;
-  padding-left: 42px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #e05b5b;
+.bd-reply-error {
+  margin-top: 4px;
+  padding: 0 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #e0425b;
 }
 
-/* ============================================================
-   COMPOSER
-============================================================ */
+/* ===== COMPOSER ===== */
 .bd-composer {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: absolute; left: 0; right: 0; bottom: 0;
   z-index: 20;
-  display: grid;
-  grid-template-columns: 44px 1fr;
+  display: grid; grid-template-columns: 44px 1fr;
   gap: 8px;
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   background: #fff;
-  border-top: 1px solid #f0e8ec;
+  border-top: 1px solid #ffe0ec;
 }
 .bd-gift-btn {
-  width: 44px;
-  height: 44px;
-  border: 1px solid #f0e8ec;
-  border-radius: 10px;
-  background: #fff;
-  color: #d63384;
+  width: 44px; height: 44px;
+  border: 0; border-radius: 50%;
+  background: #fff0f5;
+  color: #e91e63;
   font-size: 20px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background .15s ease, border-color .15s ease;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s ease, transform .15s ease;
 }
-.bd-gift-btn:active { background: #fdf5f9; border-color: #f5dce8; }
-.bd-composer-inner {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-}
+.bd-gift-btn:active { transform: scale(.92); background: #ffe0ec; }
+.bd-composer-inner { display: flex; align-items: flex-end; gap: 8px; }
+
 .bd-input {
   flex: 1;
   min-height: 44px;
   max-height: 100px;
-  padding: 11px 16px;
-  border: 1px solid #ebe3e7;
+  padding: 10px 16px;
+  border: 2px solid #ffe0ec;
   border-radius: 22px;
   background: #fff;
-  color: #2d2a2c;
+  color: #3a1f30;
   font-family: inherit;
-  font-size: 15px;
-  font-weight: 400;
+  font-size: 14.5px;
+  font-weight: 500;
   line-height: 1.4;
   outline: none;
   resize: none;
   overflow-y: auto;
   transition: border-color .15s ease;
 }
-.bd-input:focus { border-color: #d63384; }
-.bd-input::placeholder { color: #c8b8c0; }
+.bd-input:focus { border-color: #ffb8d1; }
+.bd-input::placeholder { color: #d4a8bd; }
+
 .bd-send-btn {
-  width: 44px;
-  height: 44px;
+  width: 44px; height: 44px;
   flex: 0 0 auto;
-  border: 0;
-  border-radius: 50%;
-  background: #d63384;
+  border: 0; border-radius: 50%;
+  background: linear-gradient(135deg, #ff80b0, #e91e63);
   color: #fff;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 16px -6px rgba(233,30,99,.5);
   transition: transform .15s ease, opacity .15s ease;
 }
-.bd-send-btn:active { transform: scale(.94); }
-.bd-send-btn:disabled { opacity: .3; pointer-events: none; }
+.bd-send-btn:active { transform: scale(.92); }
+.bd-send-btn:disabled { opacity: .3; pointer-events: none; box-shadow: none; }
 
-/* ============================================================
-   MODAL
-============================================================ */
+/* ===== MODAL ===== */
 #bdModal {
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0;
   z-index: 21100;
-  display: none;
-  align-items: flex-end;
-  justify-content: center;
-  background: rgba(45,42,44,.4);
+  display: none; align-items: flex-end; justify-content: center;
+  background: rgba(74,31,51,.4);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
 #bdModal.show { display: flex; animation: bdFade .2s ease; }
 @keyframes bdFade { from { opacity: 0 } to { opacity: 1 } }
 .bd-modal-panel {
-  width: 100%;
-  max-width: 560px;
-  max-height: 88vh;
+  width: 100%; max-width: 560px; max-height: 88vh;
   overflow-y: auto;
   padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
   background: #fff;
-  border-radius: 20px 20px 0 0;
+  border-radius: 24px 24px 0 0;
   animation: bdSlideUp .28s cubic-bezier(.16,.9,.25,1) forwards;
   transform: translateY(100%);
 }
 @keyframes bdSlideUp { to { transform: translateY(0); } }
 .bd-modal-handle {
-  width: 36px;
-  height: 4px;
-  border-radius: 99px;
-  background: #ebe3e7;
+  width: 36px; height: 4px; border-radius: 99px;
+  background: #ffd6e8;
   margin: 0 auto 20px;
 }
 .bd-modal-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #2d2a2c;
+  font-size: 18px; font-weight: 800;
+  color: #4a1f33;
   margin-bottom: 4px;
   letter-spacing: -.01em;
 }
 .bd-modal-sub {
-  font-size: 13px;
-  font-weight: 400;
-  color: #a899a3;
+  font-size: 13px; font-weight: 500;
+  color: #c98ba6;
   margin-bottom: 20px;
 }
 .bd-group-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: #a899a3;
+  font-size: 11px; font-weight: 800;
+  color: #c98ba6;
   letter-spacing: .1em;
   text-transform: uppercase;
   margin: 18px 0 8px 0;
 }
 .bd-preset {
-  display: block;
-  width: 100%;
-  text-align: left;
+  display: block; width: 100%; text-align: left;
   padding: 11px 14px;
   margin-bottom: 6px;
-  border: 1px solid #f0e8ec;
-  border-radius: 10px;
+  border: 1.5px solid #ffe0ec;
+  border-radius: 12px;
   background: #fff;
-  color: #3a3538;
+  color: #3a1f30;
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
@@ -799,111 +571,105 @@
   cursor: pointer;
   transition: all .15s ease;
 }
-.bd-preset:active { background: #fdf5f9; }
+.bd-preset:active { transform: scale(.98); }
 .bd-preset.selected {
-  border-color: #d63384;
-  background: #fdf5f9;
-  color: #d63384;
-  font-weight: 600;
+  border-color: #ff80b0;
+  background: #fff0f5;
+  color: #e91e63;
+  font-weight: 700;
 }
 .bd-textarea {
   width: 100%;
   min-height: 80px;
   padding: 12px 14px;
-  border: 1px solid #ebe3e7;
-  border-radius: 10px;
+  border: 1.5px solid #ffe0ec;
+  border-radius: 12px;
   background: #fff;
-  color: #2d2a2c;
+  color: #3a1f30;
   font-family: inherit;
   font-size: 14.5px;
-  font-weight: 400;
+  font-weight: 500;
   line-height: 1.5;
   outline: none;
   resize: vertical;
   transition: border-color .15s ease;
 }
-.bd-textarea:focus { border-color: #d63384; }
-.bd-textarea::placeholder { color: #c8b8c0; }
+.bd-textarea:focus { border-color: #ffb8d1; }
+.bd-textarea::placeholder { color: #d4a8bd; }
 .bd-field-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: flex; align-items: center; gap: 10px;
   margin-top: 16px;
 }
 .bd-field-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #2d2a2c;
+  font-size: 13px; font-weight: 700;
+  color: #4a1f33;
   white-space: nowrap;
 }
 .bd-select {
   flex: 1;
   height: 44px;
   padding: 0 12px;
-  border: 1px solid #ebe3e7;
-  border-radius: 10px;
+  border: 1.5px solid #ffe0ec;
+  border-radius: 12px;
   background: #fff;
-  color: #2d2a2c;
+  color: #3a1f30;
   font-family: inherit;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   outline: none;
   transition: border-color .15s ease;
 }
-.bd-select:focus { border-color: #d63384; }
+.bd-select:focus { border-color: #ffb8d1; }
 .bd-hint {
   margin-top: 10px;
   padding: 10px 12px;
-  border-radius: 8px;
-  background: #fdf5f9;
-  border: 1px solid #f5dce8;
+  border-radius: 10px;
+  background: #fff0f5;
+  border: 1px solid #ffe0ec;
   font-size: 12px;
-  font-weight: 500;
-  color: #d63384;
+  font-weight: 600;
+  color: #e91e63;
   text-align: center;
   line-height: 1.5;
   display: none;
 }
 .bd-hint.show { display: block; }
 .bd-modal-actions {
-  display: grid;
-  grid-template-columns: 1fr 1.4fr;
+  display: grid; grid-template-columns: 1fr 1.4fr;
   gap: 10px;
   margin-top: 20px;
 }
 .bd-btn {
   min-height: 46px;
   padding: 12px 16px;
-  border-radius: 10px;
+  border-radius: 14px;
   font-family: inherit;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  border: 1px solid #ebe3e7;
+  border: 1.5px solid #ffe0ec;
   background: #fff;
-  color: #2d2a2c;
+  color: #4a1f33;
   transition: background .15s ease, transform .15s ease;
 }
 .bd-btn:active { transform: scale(.98); }
 .bd-btn.primary {
-  background: #d63384;
+  background: linear-gradient(135deg, #ff80b0, #e91e63);
   color: #fff;
   border-color: transparent;
+  box-shadow: 0 8px 18px -8px rgba(233,30,99,.5);
 }
-.bd-btn.primary:active { background: #b8246e; }
 .bd-btn:disabled { opacity: .5; pointer-events: none; }
 .bd-modal-msg {
   min-height: 18px;
   margin-top: 12px;
   text-align: center;
   font-size: 13px;
-  font-weight: 500;
-  color: #d63384;
+  font-weight: 600;
+  color: #e91e63;
 }
 
-/* ============================================================
-   CONFETTI + CELEBRATION
-============================================================ */
+/* ===== CONFETTI ===== */
 .bd-confetti {
   position: fixed;
   top: -20px;
@@ -917,14 +683,11 @@
   100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
 }
 
+/* ===== CELEBRATION ===== */
 #bdCelebration {
-  position: fixed;
-  inset: 0;
-  z-index: 21300;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255,250,252,.98);
+  position: fixed; inset: 0; z-index: 21300;
+  display: none; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #fff0f5 0%, #ffe0ec 100%);
   text-align: center;
 }
 #bdCelebration.show { display: flex; animation: bdFade .3s ease; }
@@ -937,46 +700,41 @@
   100% { opacity: 1; transform: scale(1); }
 }
 .bd-cele-cake {
-  font-size: 72px;
-  margin-bottom: 12px;
+  font-size: 72px; margin-bottom: 12px;
   animation: bdCakeBob 1.8s ease-in-out infinite;
 }
 @keyframes bdCakeBob {
-  0%,100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0%,100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-5px) rotate(3deg); }
 }
 .bd-cele-title {
-  font-size: 20px;
-  font-weight: 500;
-  color: #a899a3;
+  font-size: 20px; font-weight: 500;
+  color: #c98ba6;
   letter-spacing: .15em;
   text-transform: uppercase;
   margin-bottom: 10px;
 }
 .bd-cele-name {
-  font-size: 32px;
-  font-weight: 800;
-  color: #d63384;
+  font-size: 34px; font-weight: 800;
+  color: #e91e63;
   letter-spacing: -.02em;
   margin-bottom: 14px;
 }
 .bd-cele-sub {
-  font-size: 14px;
-  font-weight: 400;
-  color: #6b5a62;
+  font-size: 14px; font-weight: 500;
+  color: #8a4a68;
   margin-bottom: 28px;
   line-height: 1.5;
 }
 .bd-cele-btn {
   padding: 12px 28px;
-  border: 0;
-  border-radius: 999px;
-  background: #d63384;
+  border: 0; border-radius: 999px;
+  background: linear-gradient(135deg, #ff80b0, #e91e63);
   color: #fff;
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 14px; font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 10px 24px -8px rgba(233,30,99,.5);
   transition: transform .15s ease;
 }
 .bd-cele-btn:active { transform: scale(.96); }
@@ -1109,15 +867,11 @@
     const btn = $('bdOwnerBtn');
     if (!btn) return;
     if (S.isOwner) {
-      btn.style.background = '#d63384';
+      btn.style.background = 'linear-gradient(135deg, #ff80b0, #e91e63)';
       btn.style.color = '#fff';
-      btn.style.borderColor = 'transparent';
-      btn.title = 'Chính chủ đã đăng nhập — bấm để đăng xuất';
     } else {
-      btn.style.background = '';
-      btn.style.color = '#2d2a2c';
-      btn.style.borderColor = '';
-      btn.title = 'Đăng nhập chính chủ';
+      btn.style.background = '#fff0f5';
+      btn.style.color = '#e91e63';
     }
   }
 
@@ -1140,7 +894,7 @@
       updateOwnerBtn();
       render();
       fireConfetti(30);
-      alert('👑 Đã đăng nhập chính chủ!\n\nBây giờ bạn có thể:\n• Bấm ↩ Trả lời ngay dưới lời chúc\n• Gõ chat → tin nhắn tự động là lời chúc đặc biệt');
+      alert('👑 Đã đăng nhập chính chủ!\n\nBây giờ bạn có thể:\n• Bấm ↩ để trả lời lời chúc\n• Gõ chat → tin nhắn tự động là lời chúc đặc biệt');
     } else {
       alert('❌ Mật khẩu không đúng');
     }
@@ -1158,7 +912,7 @@
 
     if (S.inlineReplyToId) {
       setTimeout(() => {
-        const input = document.querySelector('.bd-inline-input[data-id="' + S.inlineReplyToId + '"]');
+        const input = document.querySelector('.bd-reply-input[data-id="' + S.inlineReplyToId + '"]');
         if (input) {
           input.focus();
           try { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(_){}
@@ -1179,7 +933,7 @@
     if (S.inlineSending) return;
 
     S.inlineSending = true;
-    const sendBtn = document.querySelector('.bd-inline-send[data-id="' + wishId + '"]');
+    const sendBtn = document.querySelector('.bd-reply-send[data-id="' + wishId + '"]');
     if (sendBtn) sendBtn.disabled = true;
 
     try {
@@ -1189,14 +943,14 @@
       render();
     } catch (e) {
       log('Reply error:', e);
-      const inputEl = document.querySelector('.bd-inline-input[data-id="' + wishId + '"]');
+      const inputEl = document.querySelector('.bd-reply-input[data-id="' + wishId + '"]');
       if (inputEl) {
-        let errEl = document.querySelector('.bd-inline-error[data-id="' + wishId + '"]');
+        let errEl = document.querySelector('.bd-reply-error[data-id="' + wishId + '"]');
         if (!errEl) {
           errEl = document.createElement('div');
-          errEl.className = 'bd-inline-error';
+          errEl.className = 'bd-reply-error';
           errEl.dataset.id = wishId;
-          inputEl.closest('.bd-inline-reply')?.appendChild(errEl);
+          inputEl.closest('.bd-reply-input-wrap')?.parentNode?.appendChild(errEl);
         }
         errEl.textContent = 'Lỗi: ' + (e.message || e);
       }
@@ -1206,7 +960,7 @@
     }
   }
 
-  /* ============ BUILD CARD ============ */
+  /* ============ BUILD DATA ============ */
   function buildThreadsMap() {
     const topWishes = [];
     const repliesByParent = {};
@@ -1225,63 +979,115 @@
     return { topWishes, repliesByParent };
   }
 
-  function renderReplyNested(reply) {
-    const box = document.createElement('div');
-    box.className = 'bd-reply-nested';
-    box.dataset.id = reply.id;
-
-    const head = document.createElement('div');
-    head.className = 'bd-reply-nested-head';
-
-    const arrow = document.createElement('span');
-    arrow.className = 'bd-reply-nested-arrow';
-    arrow.textContent = '↩';
-
-    const av = document.createElement('span');
-    av.className = 'bd-reply-nested-avatar';
-    const avUrl = getAvatarUrl(reply.sender);
-    if (avUrl) {
-      const img = document.createElement('img');
-      img.src = avUrl; img.alt = ''; img.loading = 'lazy';
-      img.onerror = () => { img.remove(); av.textContent = getInitial(reply.sender); };
-      av.appendChild(img);
-    } else av.textContent = getInitial(reply.sender);
-
-    const nameEl = document.createElement('span');
-    nameEl.className = 'bd-reply-nested-name';
-    nameEl.textContent = reply.sender || RECIPIENT;
-
-    const timeEl = document.createElement('span');
-    timeEl.className = 'bd-reply-nested-time';
-    timeEl.textContent = formatTime(reply.ts);
-
-    head.append(arrow, av, nameEl, timeEl);
-
-    const msg = document.createElement('div');
-    msg.className = 'bd-reply-nested-message';
-    msg.textContent = reply.message;
-
-    box.append(head, msg);
-    return box;
-  }
-
-  function renderInlineReply(w) {
-    const box = document.createElement('div');
-    box.className = 'bd-inline-reply';
+  /* ============ RENDER MESSAGE ROW ============ */
+  function buildBubbleElement(w, isMe, options) {
+    options = options || {};
+    const parentWish = options.parentWish || null;
 
     const wrap = document.createElement('div');
-    wrap.className = 'bd-inline-reply-wrap';
+    wrap.className = 'bd-bubble-wrap';
+
+    // Sender name (chỉ hiện ở message đầu chuỗi, không phải của mình)
+    if (!isMe && !options.compact) {
+      const senderEl = document.createElement('div');
+      senderEl.className = 'bd-sender';
+      senderEl.textContent = w.sender || 'Ẩn danh';
+      wrap.appendChild(senderEl);
+    }
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bd-bubble';
+
+    // Quote nhỏ nếu là reply
+    if (parentWish) {
+      const quote = document.createElement('div');
+      quote.className = 'bd-bubble-quote';
+      const quoteSender = document.createElement('span');
+      quoteSender.className = 'bd-bubble-quote-sender';
+      quoteSender.textContent = (parentWish.sender || 'Ẩn danh') + ' đã viết:';
+      const quoteText = document.createElement('span');
+      quoteText.className = 'bd-bubble-quote-text';
+      quoteText.textContent = String(parentWish.message || '');
+      quote.appendChild(quoteSender);
+      quote.appendChild(quoteText);
+      bubble.appendChild(quote);
+    }
+
+    const msgText = document.createTextNode(w.message);
+    bubble.appendChild(msgText);
+
+    wrap.appendChild(bubble);
+
+    // Time
+    const timeEl = document.createElement('div');
+    timeEl.className = 'bd-time';
+    timeEl.textContent = formatTime(w.ts);
+    wrap.appendChild(timeEl);
+
+    // Nút reply (chỉ cho owner + không phải wish của Mỹ Dung)
+    if (S.isOwner && !w.isFromRecipient && !options.hideReplyBtn) {
+      const replyLink = document.createElement('button');
+      replyLink.type = 'button';
+      replyLink.className = 'bd-reply-link';
+      replyLink.innerHTML = '<span class="bd-rl-icon">↩</span><span>Trả lời</span>';
+      replyLink.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleInlineReply(w.id);
+      });
+      wrap.appendChild(replyLink);
+    }
+
+    return wrap;
+  }
+
+  function buildMessageRow(w, options) {
+    options = options || {};
+    const isMe = !!w.isFromRecipient;
+
+    const row = document.createElement('div');
+    row.className = 'bd-row' + (isMe ? ' me' : '') + (options.compact ? ' compact' : '');
+    row.dataset.id = w.id;
+
+    // Avatar (chỉ cho tin không phải của mình)
+    if (!isMe) {
+      const av = document.createElement('div');
+      av.className = 'bd-row-avatar' + (options.hideAvatar ? ' hidden' : '');
+      const avUrl = getAvatarUrl(w.sender);
+      if (avUrl) {
+        const img = document.createElement('img');
+        img.src = avUrl; img.alt = ''; img.loading = 'lazy';
+        img.onerror = () => { img.remove(); av.textContent = getInitial(w.sender); };
+        av.appendChild(img);
+      } else {
+        av.textContent = getInitial(w.sender);
+      }
+      row.appendChild(av);
+    }
+
+    const bubbleWrap = buildBubbleElement(w, isMe, {
+      compact: options.compact,
+      parentWish: options.parentWish,
+      hideReplyBtn: options.hideReplyBtn
+    });
+    row.appendChild(bubbleWrap);
+
+    return row;
+  }
+
+  function buildReplyInput(w, parentWish) {
+    const wrap = document.createElement('div');
+    wrap.className = 'bd-reply-input-wrap';
 
     const input = document.createElement('textarea');
-    input.className = 'bd-inline-input';
+    input.className = 'bd-reply-input';
     input.dataset.id = w.id;
     input.rows = 1;
     input.maxLength = 500;
-    input.placeholder = 'Trả lời ' + (String(w.sender || '').split(' ')[0] || 'bạn') + '...';
+    input.placeholder = 'Trả lời ' + shortName(parentWish.sender) + '...';
     input.addEventListener('input', () => {
       input.style.height = 'auto';
       input.style.height = Math.min(input.scrollHeight, 80) + 'px';
-      const btn = document.querySelector('.bd-inline-send[data-id="' + w.id + '"]');
+      const btn = document.querySelector('.bd-reply-send[data-id="' + w.id + '"]');
       if (btn) btn.disabled = input.value.trim().length === 0;
     });
     input.addEventListener('keydown', (e) => {
@@ -1296,7 +1102,7 @@
 
     const sendBtn = document.createElement('button');
     sendBtn.type = 'button';
-    sendBtn.className = 'bd-inline-send';
+    sendBtn.className = 'bd-reply-send';
     sendBtn.dataset.id = w.id;
     sendBtn.disabled = true;
     sendBtn.textContent = '➤';
@@ -1307,7 +1113,7 @@
 
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
-    cancelBtn.className = 'bd-inline-cancel';
+    cancelBtn.className = 'bd-reply-cancel';
     cancelBtn.textContent = '×';
     cancelBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1315,97 +1121,7 @@
     });
 
     wrap.append(input, sendBtn, cancelBtn);
-    box.appendChild(wrap);
-
-    return box;
-  }
-
-  function renderWishCard(w, replies) {
-    const card = document.createElement('div');
-    card.className = 'bd-wish' + (w.isFromRecipient ? ' me' : '');
-    card.dataset.id = w.id;
-
-    const head = document.createElement('div');
-    head.className = 'bd-wish-head';
-
-    const av = document.createElement('div');
-    av.className = 'bd-wish-avatar';
-    const avUrl = getAvatarUrl(w.sender);
-    if (avUrl) {
-      const img = document.createElement('img');
-      img.src = avUrl; img.alt = ''; img.loading = 'lazy';
-      img.onerror = () => { img.remove(); av.textContent = getInitial(w.sender); };
-      av.appendChild(img);
-    } else av.textContent = getInitial(w.sender);
-
-    const nameEl = document.createElement('div');
-    nameEl.className = 'bd-wish-name';
-    nameEl.textContent = w.sender || 'Ẩn danh';
-
-    const iconEl = document.createElement('div');
-    iconEl.className = 'bd-wish-icon';
-    iconEl.textContent = w.isFromRecipient ? '🎉' : '🎁';
-
-    head.append(av, nameEl, iconEl);
-
-    const msg = document.createElement('div');
-    msg.className = 'bd-wish-message';
-    msg.textContent = w.message;
-
-    const foot = document.createElement('div');
-    foot.className = 'bd-wish-foot';
-    const tEl = document.createElement('span');
-    tEl.textContent = formatTime(w.ts);
-    foot.appendChild(tEl);
-    if (w.isFromRecipient) {
-      const tag = document.createElement('span');
-      tag.className = 'bd-wish-tag special';
-      tag.textContent = 'SPECIAL';
-      foot.appendChild(tag);
-    }
-
-    card.append(head, msg, foot);
-
-    // Replies block — nằm trong card
-    const isReplying = S.inlineReplyToId === w.id;
-    const hasReplies = replies && replies.length > 0;
-
-    if (hasReplies || isReplying) {
-      const repliesBox = document.createElement('div');
-      repliesBox.className = 'bd-wish-replies';
-
-      if (hasReplies) {
-        replies.forEach(r => repliesBox.appendChild(renderReplyNested(r)));
-      }
-
-      if (isReplying) {
-        repliesBox.appendChild(renderInlineReply(w));
-      }
-
-      card.appendChild(repliesBox);
-    }
-
-    // Action button
-    if (S.isOwner && !w.isFromRecipient) {
-      const actions = document.createElement('div');
-      actions.className = 'bd-wish-actions';
-
-      if (!isReplying) {
-        const replyBtn = document.createElement('button');
-        replyBtn.type = 'button';
-        replyBtn.className = 'bd-reply-btn';
-        const firstName = String(w.sender || '').split(' ')[0] || 'bạn';
-        replyBtn.innerHTML = '<span class="bd-reply-icon">↩</span><span>Trả lời ' + esc(firstName) + '</span>';
-        replyBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          toggleInlineReply(w.id);
-        });
-        actions.appendChild(replyBtn);
-        card.appendChild(actions);
-      }
-    }
-
-    return card;
+    return wrap;
   }
 
   /* ============ RENDER ============ */
@@ -1437,6 +1153,8 @@
     const { topWishes, repliesByParent } = buildThreadsMap();
     const frag = document.createDocumentFragment();
     let lastTs = 0;
+    let lastSender = '';
+    let lastWish = null;
 
     for (const w of topWishes) {
       if (!lastTs || !sameDay(lastTs, w.ts)) {
@@ -1444,10 +1162,32 @@
         d.className = 'bd-day-divider';
         d.textContent = formatDay(w.ts);
         frag.appendChild(d);
+        lastSender = '';
       }
 
+      // Wish gốc
+      frag.appendChild(buildMessageRow(w, { compact: false }));
+      lastSender = w.sender;
+      lastWish = w;
+
+      // Replies
       const replies = repliesByParent[w.id] || [];
-      frag.appendChild(renderWishCard(w, replies));
+      replies.forEach((r, idx) => {
+        frag.appendChild(buildMessageRow(r, {
+          compact: false,
+          parentWish: w,
+          hideReplyBtn: true
+        }));
+        lastSender = r.sender;
+      });
+
+      // Input inline nếu đang reply
+      if (S.inlineReplyToId === w.id) {
+        const inputRow = document.createElement('div');
+        inputRow.className = 'bd-row me';
+        inputRow.appendChild(buildReplyInput(w, w));
+        frag.appendChild(inputRow);
+      }
 
       lastTs = w.ts;
     }
@@ -1836,7 +1576,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v2.3 ready ✓');
+    log('v3.0 ready ✓');
   }
 
   if (document.readyState === 'loading') {
