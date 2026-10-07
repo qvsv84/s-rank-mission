@@ -13,12 +13,13 @@
 <meta name="apple-mobile-web-app-title" content="Đảo Mèo">
 <meta name="application-name" content="Đảo Mèo">
 
-<!-- Supabase + CDN preconnect (đã bỏ Google Apps Script) -->
+<!-- CDN preconnect -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-<!-- 👇 Thay YOUR-PROJECT-REF bằng project ref Supabase của bạn -->
-<link rel="preconnect" href="https://YOUR-PROJECT-REF.supabase.co" crossorigin>
-<link rel="dns-prefetch" href="https://YOUR-PROJECT-REF.supabase.co">
+
+<!-- Supabase project: yodvujkylnvzjybvgika -->
+<link rel="preconnect" href="https://yodvujkylnvzjybvgika.supabase.co" crossorigin>
+<link rel="dns-prefetch" href="https://yodvujkylnvzjybvgika.supabase.co">
 
 <title>S Rank — Daily Mission</title>
 <link rel="preload" href="css/main.css" as="style">
@@ -335,9 +336,15 @@
   </section>
 </div>
 
+<!-- ✅ CONFIG phải load TRƯỚC, không defer -->
+<script src="js/config.js"></script>
+
+<!-- Scheduler + Supabase core -->
 <script src="js/scheduler.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-adapter.js" defer></script>
+
+<!-- App core -->
 <script src="js/main.js" defer></script>
 <script src="js/checklist-ui.js?v=6.3" defer></script>
 <script src="js/attendance.js" defer></script>
