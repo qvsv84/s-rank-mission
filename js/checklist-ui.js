@@ -1,10 +1,9 @@
 /* =========================================================
-   CHECKLIST UI v3.0 — Robust, isolated, no-conflict
-   - Tạo root riêng, ẩn #checklistPanel cũ
-   - Đọc data TRỰC TIẾP từ __srankApi (không qua cache)
-   - Retry nếu panel chưa có trong DOM
-   - Auto refresh: 15s + khi visible + khi checkinDone
-   - Log rõ từng bước để debug
+   CHECKLIST UI v3.1 — Fix vị trí: root nằm TRONG #checklistPanel
+   - Ẩn nội dung cũ của panel (không xoá)
+   - Chèn root mới vào trong panel → đi theo show/hide
+   - Đọc data trực tiếp từ __srankApi
+   - Auto refresh 15s + khi visible + khi checkinDone
    ========================================================= */
 (function(){
   "use strict";
@@ -70,7 +69,6 @@
     style.id = 'clV3Styles';
     style.textContent = `
 #clV3Root {
-  margin: 12px 0;
   padding: 14px 12px 12px;
   border-radius: 22px;
   background:
@@ -275,17 +273,25 @@
     document.head.appendChild(style);
   }
 
-  /* ============ BUILD ROOT ============ */
+  /* ============ BUILD ROOT — chèn VÀO TRONG #checklistPanel ============ */
   function ensureRoot(){
     let root = $(ROOT_ID);
     if (root) return root;
 
-    // Tìm vị trí panel cũ
-    const oldPanel = $('checklistPanel');
-    if (!oldPanel) return null;
+    const panel = $('checklistPanel');
+    if (!panel){
+      warn('Không tìm thấy #checklistPanel');
+      return null;
+    }
 
-    // Tạo root mới trước panel cũ
-    root = document.createElement('section');
+    // Ẩn nội dung cũ (table + nút cũ) nhưng KHÔNG xoá — main.js có thể cần ID
+    const oldScroll = panel.querySelector('#checklistScroll');
+    const oldActions = panel.querySelector('#checklistActions');
+    if (oldScroll) oldScroll.style.display = 'none';
+    if (oldActions) oldActions.style.display = 'none';
+
+    // Tạo root mới
+    root = document.createElement('div');
     root.id = ROOT_ID;
     root.setAttribute('aria-label', 'Checklist hôm nay');
     root.innerHTML = `
@@ -307,20 +313,14 @@
       <div class="clv3-debug" id="clv3Debug"></div>
     `;
 
-    // Ẩn panel cũ (không xoá, main.js có thể vẫn cần)
-    oldPanel.style.display = 'none';
-    oldPanel.setAttribute('aria-hidden', 'true');
-
-    // Chèn root vào ngay sau panel cũ
-    oldPanel.parentNode.insertBefore(root, oldPanel.nextSibling);
+    // ⚡ Chèn root vào TRONG panel — đi theo show/hide của panel
+    panel.appendChild(root);
 
     // Bind action buttons
     root.querySelector('#clv3Capture').addEventListener('click', onCapture);
-    root.querySelector('#clv3Sync').addEventListener('click', () => {
-      forceRefresh();
-    });
+    root.querySelector('#clv3Sync').addEventListener('click', () => forceRefresh());
 
-    log('Root created ✓');
+    log('Root created inside #checklistPanel ✓');
     return root;
   }
 
@@ -542,18 +542,16 @@
     const data = await fetchData();
     if (!data) return;
 
-    // So sánh: nếu ai vừa chuyển false→true → animate
+    // So sánh để animate nếu ai vừa chuyển false→true
     const newChecks = Array.isArray(data.checks) ? data.checks : [];
     if (oldChecks.length === newChecks.length){
-      // prev = state cũ để detect just-checked
       S.prev = oldChecks.map(c => !!c);
     } else {
       S.prev = null;
     }
 
     applyState(data);
-    // Sau applyState, S.prev đã bị set lại trong render
-    // → Cần gán lại trước render
+    // Sau applyState, S.prev bị set trong render → cần gán lại trước render
     if (oldChecks.length === newChecks.length){
       S.prev = oldChecks.map(c => !!c);
     }
@@ -564,7 +562,6 @@
   async function onCapture(){
     log('Capture clicked');
     try {
-      // Cố gắng dùng html2canvas từ main.js
       const ensure = window.SRank && window.SRank.ensureHtml2Canvas
         ? window.SRank.ensureHtml2Canvas
         : (window.ensureHtml2Canvas || null);
@@ -572,12 +569,9 @@
         ? window.SRank.showCapturePreview
         : (window.showCapturePreview || null);
 
-      if (!ensure || !preview){
-        // Fallback: dùng html2canvas nếu đã có global
-        if (!window.html2canvas){
-          alert('Chưa tải được thư viện chụp ảnh. Thử lại sau.');
-          return;
-        }
+      if (!window.html2canvas && typeof ensure !== 'function'){
+        alert('Chưa tải được thư viện chụp ảnh. Thử lại sau.');
+        return;
       }
 
       if (typeof ensure === 'function') await ensure();
@@ -600,7 +594,6 @@
       if (typeof preview === 'function'){
         preview(url, blob, '📸 Checklist', 'checklist-dao-meo.png', 'Bấm Lưu ảnh hoặc nhấn giữ để lưu.');
       } else {
-        // Fallback download
         const a = document.createElement('a');
         a.href = url;
         a.download = 'checklist-dao-meo.png';
@@ -619,7 +612,7 @@
       log('checkinDone:', name);
       if (name && S.prev && Array.isArray(S.names)){
         const idx = S.names.indexOf(name);
-        if (idx >= 0) S.prev[idx] = false;  // force animate
+        if (idx >= 0) S.prev[idx] = false;
       }
       setTimeout(() => forceRefresh(), 500);
     });
@@ -657,11 +650,10 @@
     bindGlobalEvents();
     startAutoTimer();
 
-    // Load lần đầu — luôn force để có data
     log('Boot lần đầu, fetch data...');
     await refresh();
 
-    // Retry nếu chưa có data sau 3s (main.js có thể chưa ready API)
+    // Retry nếu chưa có data sau 3s
     setTimeout(async () => {
       if (!S.names.length){
         log('Retry fetch sau 3s...');
@@ -676,7 +668,7 @@
       state: S,
       root: () => $(ROOT_ID),
     };
-    log('✓ Checklist UI v3.0 ready');
+    log('✓ Checklist UI v3.1 ready');
   }
 
   if (document.readyState === 'loading'){
