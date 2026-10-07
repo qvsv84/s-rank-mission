@@ -1,8 +1,9 @@
 /* =========================================================
-   BIRTHDAY CHAT — v1.4
-   - Wish người khác: bên TRÁI (bo góc 18-18-18-4)
-   - Wish Mỹ Dung: bên PHẢI (bo góc 18-18-4-18)
-   - Mỹ Dung luôn full celebration (bỏ celebratedOnce)
+   BIRTHDAY CHAT — v1.5
+   - FIX lỗi giao diện wish .me:
+     + Đảo padding trái/phải cho message + foot
+     + Đảo thứ tự head (icon-name-avatar)
+     + Đảo decoration ::before sang trái
    ========================================================= */
 (function(){
   "use strict";
@@ -14,7 +15,6 @@
   const SUPABASE_KEY = 'sb_publishable_7D06m2x8CuBWmsUEQi3jMA_edSimUFg';
   const RECIPIENT = 'Mỹ Dung';
   const OWNER_PASSWORD = '0810';
-  const BIRTHDAY = { day: 7, month: 10 };
   const POLL_MS = 5000;
   const MAX_WISHES = 300;
   const LAST_PICKED_KEY = 'srank_last_picked_name_v1';
@@ -213,9 +213,9 @@
   font-size: 16px; font-weight: 950; color: #fff;
   border: 2px solid #fff;
   box-shadow: 0 3px 10px rgba(216,91,158,.25);
-  overflow: hidden;
+  overflow: visible;
 }
-.bd-head-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bd-head-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; }
 .bd-head-cake {
   position: absolute; bottom: -4px; right: -4px;
   font-size: 18px;
@@ -267,6 +267,7 @@
 .bd-empty-title { font-size: 15px; font-weight: 900; color: #c04a90; margin-bottom: 4px; }
 .bd-empty-sub { font-size: 12px; font-weight: 700; line-height: 1.5; }
 
+/* ===== WISH CARD ===== */
 .bd-wish {
   position: relative;
   align-self: flex-start;
@@ -279,6 +280,16 @@
   animation: bdWishIn .5s cubic-bezier(.16,.9,.25,1) both;
   overflow: hidden;
 }
+
+/* Decoration top-RIGHT cho wish bên trái */
+.bd-wish::before {
+  content: ''; position: absolute;
+  top: 0; right: 0; width: 60px; height: 60px;
+  background: radial-gradient(circle at 100% 0%, rgba(255,180,210,.55), transparent 70%);
+  pointer-events: none;
+}
+
+/* ===== WISH CỦA MỸ DUNG — BÊN PHẢI ===== */
 .bd-wish.me {
   align-self: flex-end;
   border-radius: 18px 18px 4px 18px;
@@ -286,17 +297,25 @@
   border-color: rgba(216,91,158,.65);
   box-shadow: 0 8px 24px -10px rgba(216,91,158,.55), 0 0 20px rgba(255,180,210,.35);
 }
-.bd-wish::before {
+
+/* Decoration top-LEFT cho wish bên phải */
+.bd-wish.me::before {
   content: ''; position: absolute;
-  top: 0; right: 0; width: 60px; height: 60px;
-  background: radial-gradient(circle at 100% 0%, rgba(255,180,210,.6), transparent 70%);
-  pointer-events: none;
+  top: 0; left: 0; right: auto; width: 60px; height: 60px;
+  background: radial-gradient(circle at 0% 0%, rgba(255,180,210,.55), transparent 70%);
 }
+
 @keyframes bdWishIn {
   0% { opacity: 0; transform: translateY(14px) scale(.96); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+/* ===== HEAD ===== */
 .bd-wish-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+
+/* Đảo thứ tự: icon-name-avatar khi wish của Mỹ Dung */
+.bd-wish.me .bd-wish-head { flex-direction: row-reverse; }
+
 .bd-wish-avatar {
   width: 36px; height: 36px; border-radius: 50%;
   flex: 0 0 auto;
@@ -308,29 +327,53 @@
   overflow: hidden;
 }
 .bd-wish-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
 .bd-wish-name {
   flex: 1; min-width: 0;
   font-size: 13.5px; font-weight: 950;
   color: #c04a90;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+
+/* Đảo text-align khi wish của Mỹ Dung */
+.bd-wish.me .bd-wish-name { text-align: right; }
+
 .bd-wish-icon {
   font-size: 22px; flex: 0 0 auto;
   filter: drop-shadow(0 2px 3px rgba(216,91,158,.3));
 }
+
+/* ===== MESSAGE — đổi padding theo bên ===== */
 .bd-wish-message {
   font-size: 14.5px; font-weight: 650;
   line-height: 1.5; color: #4a2a3a;
   white-space: pre-wrap; word-break: break-word;
-  padding-left: 46px;
+  padding-left: 46px;   /* né avatar bên TRÁI */
+  padding-right: 0;
+  text-align: left;
 }
+.bd-wish.me .bd-wish-message {
+  padding-left: 0;
+  padding-right: 46px;  /* né avatar bên PHẢI */
+  text-align: right;
+}
+
+/* ===== FOOT — đổi padding theo bên ===== */
 .bd-wish-foot {
-  margin-top: 8px; padding-left: 46px;
+  margin-top: 8px;
+  padding-left: 46px;
+  padding-right: 0;
   font-size: 10.5px; font-weight: 800;
   color: #c9a0b8;
   display: flex; align-items: center; gap: 6px;
   flex-wrap: wrap;
 }
+.bd-wish.me .bd-wish-foot {
+  padding-left: 0;
+  padding-right: 46px;
+  justify-content: flex-end;   /* đẩy content sang phải */
+}
+
 .bd-wish-tag {
   padding: 1px 7px;
   border-radius: 999px;
@@ -342,6 +385,7 @@
   color: #fff;
 }
 
+/* ===== CHAT BUBBLE (cho trường hợp không phải wish) ===== */
 .bd-chat-row {
   display: flex; gap: 8px; align-items: flex-end;
   margin-top: 4px;
@@ -850,11 +894,9 @@
       }
 
       const isWish = w.type === 'wish' || w.isFromRecipient;
-      const isMe = String(w.sender || '').trim() === S.myName && S.myName;
 
       if (isWish) {
         const card = document.createElement('div');
-        // ⚡ Wish của Mỹ Dung → class .me (căn phải)
         card.className = 'bd-wish' + (w.isFromRecipient ? ' me' : '');
         card.dataset.id = w.id;
 
@@ -911,6 +953,7 @@
         card.append(head, msg, foot);
         frag.appendChild(card);
       } else {
+        const isMe = String(w.sender || '').trim() === S.myName && S.myName;
         const row = document.createElement('div');
         row.className = 'bd-chat-row' + (isMe ? ' me' : '');
 
@@ -1025,7 +1068,6 @@
       S.lastTs = Math.max(S.lastTs, w.ts);
       render();
 
-      // ⚡ Mỹ Dung luôn full celebration
       if (data.isFromRecipient) {
         fireConfetti(60);
         showCelebration();
@@ -1045,7 +1087,6 @@
     if (!S.myName) { S.myName = loadMyName(); }
     if (!S.myName) { alert('Chưa có tên người gửi'); return; }
 
-    // ⚡ Owner login → gửi với vai trò Mỹ Dung + special
     const sender = S.isOwner ? RECIPIENT : S.myName;
     const isFromRecipient = S.isOwner;
 
@@ -1322,7 +1363,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v1.4 ready ✓');
+    log('v1.5 ready ✓');
   }
 
   if (document.readyState === 'loading') {
