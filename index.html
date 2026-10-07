@@ -12,10 +12,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Đảo Mèo">
 <meta name="application-name" content="Đảo Mèo">
-<link rel="preconnect" href="https://script.google.com" crossorigin>
-<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
-<link rel="dns-prefetch" href="https://script.google.com">
-<link rel="dns-prefetch" href="https://script.googleusercontent.com">
+
+<!-- Supabase + CDN preconnect (đã bỏ Google Apps Script) -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<!-- 👇 Thay YOUR-PROJECT-REF bằng project ref Supabase của bạn -->
+<link rel="preconnect" href="https://YOUR-PROJECT-REF.supabase.co" crossorigin>
+<link rel="dns-prefetch" href="https://YOUR-PROJECT-REF.supabase.co">
+
 <title>S Rank — Daily Mission</title>
 <link rel="preload" href="css/main.css" as="style">
 <link rel="preload" href="js/main.js" as="script">
@@ -24,7 +28,7 @@
 <body>
 <main id="space">
 <div id="status"></div>
-<div id="appVersion" aria-label="Phiên bản">v1.06</div>
+<div id="appVersion" aria-label="Phiên bản">v1.07</div>
 
 <div id="homeStack">
   <div id="questionWrap">
