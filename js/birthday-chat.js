@@ -1,8 +1,8 @@
 /* =========================================================
-   BIRTHDAY CHAT — v1.3
-   - Owner chat tự động special (tên Mỹ Dung)
-   - Chống spam celebration (chỉ fullscreen lần đầu)
-   - Modal rebuild mỗi lần mở → dropdown luôn đúng
+   BIRTHDAY CHAT — v1.4
+   - Wish người khác: bên TRÁI (bo góc 18-18-18-4)
+   - Wish Mỹ Dung: bên PHẢI (bo góc 18-18-4-18)
+   - Mỹ Dung luôn full celebration (bỏ celebratedOnce)
    ========================================================= */
 (function(){
   "use strict";
@@ -48,7 +48,6 @@
     sending: false,
     booted: false,
     isOwner: false,
-    celebratedOnce: false,
     replyTo: null,
   };
 
@@ -270,24 +269,28 @@
 
 .bd-wish {
   position: relative;
+  align-self: flex-start;
+  max-width: 88%;
   padding: 14px 16px 12px;
-  border-radius: 18px;
+  border-radius: 18px 18px 18px 4px;
   background: linear-gradient(140deg, #fff8fc 0%, #fff0e0 100%);
   border: 1.5px solid rgba(255,158,199,.45);
   box-shadow: 0 6px 18px -10px rgba(216,91,158,.35);
   animation: bdWishIn .5s cubic-bezier(.16,.9,.25,1) both;
   overflow: hidden;
 }
+.bd-wish.me {
+  align-self: flex-end;
+  border-radius: 18px 18px 4px 18px;
+  background: linear-gradient(140deg, #ffe4f5 0%, #ffd0e5 100%);
+  border-color: rgba(216,91,158,.65);
+  box-shadow: 0 8px 24px -10px rgba(216,91,158,.55), 0 0 20px rgba(255,180,210,.35);
+}
 .bd-wish::before {
   content: ''; position: absolute;
   top: 0; right: 0; width: 60px; height: 60px;
   background: radial-gradient(circle at 100% 0%, rgba(255,180,210,.6), transparent 70%);
   pointer-events: none;
-}
-.bd-wish.from-recipient {
-  background: linear-gradient(140deg, #fff0f8 0%, #ffe4c8 60%, #ffd6e8 100%);
-  border-color: rgba(216,91,158,.65);
-  box-shadow: 0 8px 24px -10px rgba(216,91,158,.55), 0 0 20px rgba(255,180,210,.4);
 }
 @keyframes bdWishIn {
   0% { opacity: 0; transform: translateY(14px) scale(.96); }
@@ -760,7 +763,6 @@
     if (S.isOwner) {
       if (confirm('👑 Bạn đang đăng nhập chính chủ.\n\nĐăng xuất khỏi chế độ này?')) {
         S.isOwner = false;
-        S.celebratedOnce = false;
         try { localStorage.removeItem(OWNER_KEY); } catch(_){}
         updateOwnerBtn();
         render();
@@ -771,7 +773,6 @@
     if (pwd === null) return;
     if (String(pwd).trim() === OWNER_PASSWORD) {
       S.isOwner = true;
-      S.celebratedOnce = false;
       try { localStorage.setItem(OWNER_KEY, '1'); } catch(_){}
       updateOwnerBtn();
       render();
@@ -853,7 +854,8 @@
 
       if (isWish) {
         const card = document.createElement('div');
-        card.className = 'bd-wish' + (w.isFromRecipient ? ' from-recipient' : '');
+        // ⚡ Wish của Mỹ Dung → class .me (căn phải)
+        card.className = 'bd-wish' + (w.isFromRecipient ? ' me' : '');
         card.dataset.id = w.id;
 
         const head = document.createElement('div');
@@ -1023,15 +1025,10 @@
       S.lastTs = Math.max(S.lastTs, w.ts);
       render();
 
-      // ⚡ Special handling
+      // ⚡ Mỹ Dung luôn full celebration
       if (data.isFromRecipient) {
-        if (!S.celebratedOnce) {
-          S.celebratedOnce = true;
-          fireConfetti(60);
-          showCelebration();
-        } else {
-          fireConfetti(15);
-        }
+        fireConfetti(60);
+        showCelebration();
       } else {
         fireConfetti(30);
       }
@@ -1325,7 +1322,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v1.3 ready ✓');
+    log('v1.4 ready ✓');
   }
 
   if (document.readyState === 'loading') {
