@@ -1,9 +1,9 @@
 /* =========================================================
-   CHECKLIST UI v4.0
-   - FIX SCROLL: list có max-height + overflow-y auto
-   - FIX SORT: Top3 (giờ sớm) → checked (giờ) → unchecked (thứ tự gốc)
+   CHECKLIST UI v4.1
+   - FIX nút chụp: tự load html2canvas từ CDN, clone để chụp full
+   - FIX SCROLL: list max-height + overflow-y auto
+   - FIX SORT: Top3 → checked → unchecked
    - Chèn root vào TRONG #checklistPanel
-   - Auto refresh 15s + khi visible + khi checkinDone
    ========================================================= */
 (function(){
   "use strict";
@@ -12,6 +12,7 @@
   const ROOT_ID    = 'clV4Root';
   const REFRESH_MS = 15000;
   const MAX_RETRY  = 20;
+  const H2C_CDN    = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
 
   const S = {
     names: [], checks: [], times: [], points: [], ranks: [],
@@ -20,6 +21,7 @@
     timer: null,
     retryCount: 0,
     booted: false,
+    h2cPromise: null,
   };
 
   /* ============ HELPERS ============ */
@@ -61,6 +63,43 @@
     return hhmm;
   }
 
+  /* ============ LOAD html2canvas from CDN (fallback) ============ */
+  function loadHtml2Canvas(){
+    if (window.html2canvas) return Promise.resolve(window.html2canvas);
+    if (S.h2cPromise) return S.h2cPromise;
+
+    // Thử dùng SRank helper trước (nếu main.js cũ còn)
+    if (window.SRank && typeof window.SRank.ensureHtml2Canvas === 'function'){
+      S.h2cPromise = Promise.resolve()
+        .then(() => window.SRank.ensureHtml2Canvas())
+        .then(() => window.html2canvas || null)
+        .catch(() => null);
+      return S.h2cPromise;
+    }
+
+    // Fallback: tự load CDN
+    S.h2cPromise = new Promise((resolve) => {
+      const s = document.createElement('script');
+      s.src = H2C_CDN;
+      s.async = true;
+      s.onload = () => {
+        if (window.html2canvas){
+          log('html2canvas loaded from CDN ✓');
+          resolve(window.html2canvas);
+        } else {
+          warn('html2canvas load xong nhưng window.html2canvas không có');
+          resolve(null);
+        }
+      };
+      s.onerror = () => {
+        warn('Không tải được html2canvas từ CDN');
+        resolve(null);
+      };
+      document.head.appendChild(s);
+    });
+    return S.h2cPromise;
+  }
+
   /* ============ STYLES ============ */
   function injectStyles(){
     if ($('clV4Styles')) return;
@@ -81,12 +120,9 @@
     0 4px 12px -4px rgba(53,91,61,.08),
     inset 0 1px 0 rgba(255,255,255,.95);
 }
-
-/* ===== HEADER ===== */
 .clv4-head {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 10px; margin-bottom: 10px; padding: 0 2px;
-  flex-shrink: 0;
+  gap: 10px; margin-bottom: 10px; padding: 0 2px; flex-shrink: 0;
 }
 .clv4-title {
   display: flex; align-items: center; gap: 8px;
@@ -105,13 +141,10 @@
   background: linear-gradient(135deg, #7ab896, #4fa370);
   box-shadow: 0 3px 10px -3px rgba(79,163,112,.5);
 }
-
-/* ===== PROGRESS BAR ===== */
 .clv4-bar {
   height: 6px; border-radius: 3px;
   background: rgba(203,220,201,.45);
-  overflow: hidden; margin: 0 2px 12px;
-  flex-shrink: 0;
+  overflow: hidden; margin: 0 2px 12px; flex-shrink: 0;
 }
 .clv4-bar-fill {
   height: 100%; width: 0%;
@@ -128,8 +161,6 @@
   0%,100% { box-shadow: 0 0 10px rgba(79,163,112,.45); }
   50%     { box-shadow: 0 0 18px rgba(79,163,112,.75); }
 }
-
-/* ===== LIST — SCROLLABLE ===== */
 .clv4-list {
   display: flex;
   flex-direction: column;
@@ -143,12 +174,8 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(122,184,150,.5) transparent;
 }
-.clv4-list::-webkit-scrollbar {
-  width: 5px;
-}
-.clv4-list::-webkit-scrollbar-track {
-  background: transparent;
-}
+.clv4-list::-webkit-scrollbar { width: 5px; }
+.clv4-list::-webkit-scrollbar-track { background: transparent; }
 .clv4-list::-webkit-scrollbar-thumb {
   background: rgba(122,184,150,.42);
   border-radius: 3px;
@@ -156,17 +183,11 @@
 .clv4-list::-webkit-scrollbar-thumb:active {
   background: rgba(122,184,150,.7);
 }
-
-/* ===== SECTION DIVIDER ===== */
 .clv4-divider {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: flex; align-items: center; gap: 8px;
   margin: 6px 2px 2px;
-  font-size: 10.5px;
-  font-weight: 900;
-  color: #8fa89a;
-  letter-spacing: .08em;
+  font-size: 10.5px; font-weight: 900;
+  color: #8fa89a; letter-spacing: .08em;
   text-transform: uppercase;
 }
 .clv4-divider::before,
@@ -176,8 +197,6 @@
   height: 1px;
   background: rgba(203,220,201,.55);
 }
-
-/* ===== CARD ===== */
 .clv4-card {
   display: grid;
   grid-template-columns: 26px 38px 1fr auto;
@@ -211,26 +230,18 @@
   border-color: rgba(200,130,70,.5);
   box-shadow: 0 5px 18px -10px rgba(200,130,70,.32);
 }
-
-/* ===== RANK ===== */
 .clv4-rank {
   width: 26px; height: 26px;
   display: flex; align-items: center; justify-content: center;
   font-size: 17px; line-height: 1; flex-shrink: 0;
 }
-.clv4-rank.empty {
-  font-size: 12px; color: #c0d0c4; font-weight: 900;
-}
-.clv4-rank.badge {
-  animation: clv4Badge .5s cubic-bezier(.16,.9,.25,1);
-}
+.clv4-rank.empty { font-size: 12px; color: #c0d0c4; font-weight: 900; }
+.clv4-rank.badge { animation: clv4Badge .5s cubic-bezier(.16,.9,.25,1); }
 @keyframes clv4Badge {
   0%   { transform: scale(0) rotate(-40deg); }
   65%  { transform: scale(1.25) rotate(8deg); }
   100% { transform: scale(1) rotate(0); }
 }
-
-/* ===== AVATAR ===== */
 .clv4-av {
   width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
   background: linear-gradient(135deg, #e8f5ec, #d4ead9);
@@ -249,8 +260,6 @@
 .clv4-card.top1 .clv4-av { box-shadow: 0 0 0 2px #e0b840, 0 3px 12px -4px rgba(216,168,32,.4); }
 .clv4-card.top2 .clv4-av { box-shadow: 0 0 0 2px #a8b0b8, 0 3px 12px -4px rgba(120,130,140,.3); }
 .clv4-card.top3 .clv4-av { box-shadow: 0 0 0 2px #c88246, 0 3px 12px -4px rgba(200,130,70,.32); }
-
-/* ===== INFO ===== */
 .clv4-info {
   min-width: 0;
   display: flex; flex-direction: column; gap: 2px;
@@ -270,22 +279,16 @@
 .clv4-dot { width: 3px; height: 3px; border-radius: 50%; background: #c0d0c4; }
 .clv4-pts { font-variant-numeric: tabular-nums; font-weight: 900; color: #4fa370; }
 .clv4-pts.early { color: #d89020; }
-
-/* ===== STATUS ===== */
 .clv4-status {
   font-size: 19px; line-height: 1; flex-shrink: 0;
   transition: transform .3s cubic-bezier(.16,.9,.25,1);
 }
 .clv4-status.idle { font-size: 15px; color: #c0d0c4; }
-
-/* ===== EMPTY ===== */
 .clv4-empty {
   padding: 40px 20px; text-align: center;
   color: #9ab0a0; font-size: 13px; font-weight: 800;
 }
 .clv4-empty-emoji { font-size: 42px; margin-bottom: 8px; opacity: .7; }
-
-/* ===== ACTIONS ===== */
 .clv4-actions {
   display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
   margin-top: 12px; padding-top: 12px;
@@ -298,12 +301,16 @@
   border-radius: 12px; background: #fff; color: #315744;
   font-family: inherit; font-size: 12.5px; font-weight: 900;
   cursor: pointer;
-  transition: transform .15s ease, background .15s ease, border-color .15s ease;
+  transition: transform .15s ease, background .15s ease, border-color .15s ease, opacity .15s ease;
 }
 .clv4-actions button:active {
   transform: scale(.96);
   background: #f5fbf5;
   border-color: rgba(122,184,150,.6);
+}
+.clv4-actions button:disabled {
+  opacity: .55;
+  pointer-events: none;
 }
 .clv4-debug {
   margin-top: 8px; font-size: 10.5px; font-weight: 800;
@@ -325,13 +332,11 @@
       return null;
     }
 
-    // Ẩn nội dung cũ (table + nút cũ) — KHÔNG xoá
     const oldScroll = panel.querySelector('#checklistScroll');
     const oldActions = panel.querySelector('#checklistActions');
     if (oldScroll) oldScroll.style.display = 'none';
     if (oldActions) oldActions.style.display = 'none';
 
-    // Tạo root
     root = document.createElement('div');
     root.id = ROOT_ID;
     root.setAttribute('aria-label', 'Checklist hôm nay');
@@ -356,19 +361,27 @@
 
     panel.appendChild(root);
 
-    root.querySelector('#clv4Capture').addEventListener('click', onCapture);
-    root.querySelector('#clv4Sync').addEventListener('click', () => forceRefresh());
+    // Bind with capture=true để không bị chặn bởi parent
+    const captureBtn = root.querySelector('#clv4Capture');
+    const syncBtn = root.querySelector('#clv4Sync');
+
+    captureBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onCapture();
+    }, true);
+
+    syncBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      forceRefresh();
+    }, true);
 
     log('Root created inside #checklistPanel ✓');
     return root;
   }
 
-  /* ============ SORT DATA ============ */
-  /* Thứ tự:
-     1. Top3 check sớm nhất (theo giờ check tăng dần)
-     2. Checked còn lại (theo giờ check tăng dần)
-     3. Unchecked (theo thứ tự gốc)
-  */
+  /* ============ SORT ============ */
   function sortData(){
     const items = S.names.map((name, i) => ({
       name,
@@ -379,19 +392,14 @@
       origIdx: i
     }));
 
-    // Nhóm checked có giờ check — sort theo giờ tăng dần
     const checkedWithTime = items
       .filter(x => x.checked && x.time)
       .sort((a, b) => a.time.localeCompare(b.time));
 
-    // Top3 đầu
     const groupTop3 = checkedWithTime.slice(0, 3);
     const top3Names = new Set(groupTop3.map(x => x.name));
-
-    // Checked còn lại
     const groupChecked = checkedWithTime.slice(3);
 
-    // Unchecked — sort theo thứ tự gốc
     const groupUnchecked = items
       .filter(x => !x.checked)
       .sort((a, b) => a.origIdx - b.origIdx);
@@ -438,7 +446,6 @@
     const RANK_ICONS = ['🥇','🥈','🥉'];
     const frag = document.createDocumentFragment();
 
-    // Track vị trí để phát hiện just-checked
     const prevByName = {};
     if (S.prev && S.prev.byName){
       Object.assign(prevByName, S.prev.byName);
@@ -447,7 +454,6 @@
     let lastSection = null;
 
     sorted.items.forEach((item, displayIdx) => {
-      // Chèn divider giữa các section
       let section = null;
       if (displayIdx < sorted.top3.length){
         section = 'top3';
@@ -484,7 +490,6 @@
       }
       if (justChecked) card.classList.add('just-checked');
 
-      // Rank column
       const rankEl = document.createElement('div');
       rankEl.className = 'clv4-rank';
       if (rankIdx !== undefined && rankIdx >= 0 && rankIdx <= 2){
@@ -495,7 +500,6 @@
         rankEl.textContent = String(item.origIdx + 1);
       }
 
-      // Avatar
       const av = document.createElement('div');
       av.className = 'clv4-av';
       const url = avatarUrl(name);
@@ -508,7 +512,6 @@
         av.textContent = getInitial(name);
       }
 
-      // Info
       const info = document.createElement('div');
       info.className = 'clv4-info';
 
@@ -556,7 +559,6 @@
       info.appendChild(nameEl);
       info.appendChild(sub);
 
-      // Status
       const status = document.createElement('div');
       status.className = 'clv4-status';
       if (checked){
@@ -576,12 +578,10 @@
     list.innerHTML = '';
     list.appendChild(frag);
 
-    // Lưu state hiện tại làm prev cho lần sau (byName để sort được)
     const byName = {};
     S.names.forEach((n, i) => { byName[n] = !!S.checks[i]; });
     S.prev = { byName };
 
-    // Debug line
     const dbg = $('clv4Debug');
     if (dbg){
       const now = new Date();
@@ -600,13 +600,11 @@
       return null;
     }
     try {
-      log('Gọi getData...');
       const r = await api('getData', { _ts: Date.now() }, 15000);
       if (!r || !r.ok){
         warn('getData lỗi:', r && r.error);
         return null;
       }
-      log('getData OK. names:', r.data && r.data.names ? r.data.names.length : 0);
       return r.data;
     } catch (e){
       warn('getData exception:', e && e.message);
@@ -624,8 +622,6 @@
     S.times  = Array.isArray(data.times)  ? data.times.slice()  : [];
     S.points = Array.isArray(data.points) ? data.points.slice() : [];
     S.ranks  = Array.isArray(data.ranks)  ? data.ranks.slice()  : [];
-    const checked = S.checks.filter(Boolean).length;
-    log(`Applied: ${checked}/${S.names.length} checked`);
     return true;
   }
 
@@ -641,65 +637,140 @@
   }
 
   async function forceRefresh(){
-    log('Force refresh');
-    // Ghi nhớ state cũ để detect just-checked
     const oldBy = {};
     S.names.forEach((n, i) => { oldBy[n] = !!S.checks[i]; });
 
     const data = await fetchData();
     if (!data) return;
 
-    // Set prev từ state cũ TRƯỚC khi apply state mới
     S.prev = { byName: oldBy };
-
     applyState(data);
     render();
   }
 
-  /* ============ CAPTURE ============ */
+  /* ============ CAPTURE (FIX) ============ */
   async function onCapture(){
     log('Capture clicked');
-    try {
-      const ensure = window.SRank && window.SRank.ensureHtml2Canvas
-        ? window.SRank.ensureHtml2Canvas
-        : (window.ensureHtml2Canvas || null);
-      const preview = window.SRank && window.SRank.showCapturePreview
-        ? window.SRank.showCapturePreview
-        : (window.showCapturePreview || null);
+    const btn = $('clv4Capture');
+    if (btn){
+      btn.disabled = true;
+      btn.textContent = '⏳ Đang tạo ảnh…';
+    }
 
-      if (!window.html2canvas && typeof ensure !== 'function'){
-        alert('Chưa tải được thư viện chụp ảnh. Thử lại sau.');
-        return;
+    let clone = null;
+    try {
+      const h2c = await loadHtml2Canvas();
+      if (typeof h2c !== 'function'){
+        throw new Error('Không tải được thư viện chụp ảnh (html2canvas)');
       }
 
-      if (typeof ensure === 'function') await ensure();
-
       const root = $(ROOT_ID);
-      if (!root) return;
+      if (!root) throw new Error('Không tìm thấy checklist');
 
-      const canvas = await window.html2canvas(root, {
+      // ⚡ Clone root để chụp TOÀN BỘ (không bị cắt bởi max-height)
+      clone = root.cloneNode(true);
+
+      // Xoá hết id trong clone để tránh trùng
+      clone.removeAttribute('id');
+      clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+
+      // Bỏ animation/transition
+      clone.style.animation = 'none';
+      clone.style.transition = 'none';
+      Object.assign(clone.style, {
+        position: 'fixed',
+        left: '-100000px',
+        top: '0',
+        width: root.offsetWidth + 'px',
+        maxHeight: 'none',
+        height: 'auto',
+        transform: 'none',
+        overflow: 'visible',
+        pointerEvents: 'none',
+        zIndex: '-1',
+        opacity: '1',
+        visibility: 'visible',
+      });
+
+      // Bỏ scroll ở list clone
+      const listClone = clone.querySelector('.clv4-list');
+      if (listClone){
+        listClone.style.maxHeight = 'none';
+        listClone.style.overflow = 'visible';
+        listClone.style.padding = '2px';
+        listClone.style.height = 'auto';
+      }
+
+      // Bỏ nút actions + debug khỏi ảnh
+      const actionsClone = clone.querySelector('.clv4-actions');
+      const debugClone = clone.querySelector('.clv4-debug');
+      if (actionsClone) actionsClone.remove();
+      if (debugClone) debugClone.remove();
+
+      // Bỏ animation delay ở card
+      clone.querySelectorAll('.clv4-card').forEach(c => {
+        c.style.animation = 'none';
+        c.style.animationDelay = '0ms';
+        c.style.opacity = '1';
+        c.style.transform = 'none';
+      });
+
+      document.body.appendChild(clone);
+
+      // Đợi 2 frame để layout ổn định
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+      const canvas = await h2c(clone, {
         backgroundColor: null,
         scale: Math.min(3, Math.max(2, window.devicePixelRatio || 2)),
         useCORS: true,
         allowTaint: false,
         logging: false,
+        width: clone.offsetWidth,
+        height: clone.scrollHeight,
+        windowWidth: clone.offsetWidth,
+        windowHeight: clone.scrollHeight,
       });
 
       const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 1));
-      if (!blob) throw new Error('Không tạo được ảnh');
+      if (!blob) throw new Error('Không tạo được blob ảnh');
 
       const url = URL.createObjectURL(blob);
+
+      // Ưu tiên preview của main.js nếu có
+      const preview = (window.SRank && window.SRank.showCapturePreview)
+        || window.showCapturePreview;
+
       if (typeof preview === 'function'){
-        preview(url, blob, '📸 Checklist', 'checklist-dao-meo.png', 'Bấm Lưu ảnh hoặc nhấn giữ để lưu.');
-      } else {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'checklist-dao-meo.png';
-        a.click();
+        try {
+          preview(url, blob, '📸 Checklist', 'checklist-dao-meo.png',
+            'Bấm Lưu ảnh hoặc nhấn giữ để lưu.');
+          log('Preview shown ✓');
+          return;
+        } catch (e){
+          warn('Preview fail, fallback download:', e && e.message);
+        }
       }
+
+      // Fallback: tải file trực tiếp
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'checklist-dao-meo-' + Date.now() + '.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      log('Downloaded ✓');
+
     } catch (e){
       console.error('[CL4] capture lỗi:', e);
       alert('Chụp thất bại: ' + (e && e.message || e));
+    } finally {
+      if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
+      if (btn){
+        btn.disabled = false;
+        btn.textContent = '📸 Chụp checklist';
+      }
     }
   }
 
@@ -707,7 +778,6 @@
   function bindGlobalEvents(){
     window.addEventListener('checkinDone', (e) => {
       const name = e && e.detail && e.detail.name;
-      log('checkinDone:', name);
       if (name && S.prev && S.prev.byName){
         S.prev.byName[name] = false;
       }
@@ -747,15 +817,16 @@
     bindGlobalEvents();
     startAutoTimer();
 
-    log('Boot lần đầu, fetch data...');
+    // Load lần đầu
     await refresh();
 
+    // Retry nếu chưa có data
     setTimeout(async () => {
-      if (!S.names.length){
-        log('Retry fetch sau 3s...');
-        await refresh();
-      }
+      if (!S.names.length) await refresh();
     }, 3000);
+
+    // Preload html2canvas (chạy nền để nút chụp ready sẵn)
+    loadHtml2Canvas().catch(() => {});
 
     window.__clV4 = {
       refresh,
@@ -763,8 +834,10 @@
       render,
       state: S,
       root: () => $(ROOT_ID),
+      capture: onCapture,
+      loadH2C: loadHtml2Canvas,
     };
-    log('✓ Checklist UI v4.0 ready');
+    log('✓ Checklist UI v4.1 ready');
   }
 
   if (document.readyState === 'loading'){
