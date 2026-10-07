@@ -1,9 +1,8 @@
 /* =========================================================
-   BIRTHDAY CHAT — Chúc mừng sinh nhật Mỹ Dung (7/10)
-   - Owner login (mật khẩu 0810) → nút 👑
+   BIRTHDAY CHAT — v1.2
+   - FIX: modal rebuild mỗi lần mở → dropdown tên cập nhật đúng
+   - Owner login (mật khẩu 0810)
    - Reply wish khi owner
-   - Filter Mỹ Dung khỏi dropdown nếu không phải owner
-   - Confetti + celebration khi gửi special
    ========================================================= */
 (function(){
   "use strict";
@@ -125,7 +124,6 @@
   function injectStyles() {
     if ($('bdStyles')) return;
 
-    // Ẩn nút chat cũ
     const oldStyle = document.createElement('style');
     oldStyle.id = 'bdHideOldChat';
     oldStyle.textContent = '#secretMailBtn{display:none !important;visibility:hidden !important;pointer-events:none !important;opacity:0 !important;}';
@@ -691,7 +689,6 @@
     `;
     document.body.appendChild(page);
 
-    // Bind events
     page.querySelector('#bdBack').addEventListener('click', closePage);
     page.querySelector('#bdClose').addEventListener('click', closePage);
     page.querySelector('#bdGiftBtn').addEventListener('click', openModal);
@@ -784,13 +781,14 @@
 
   function replyToWish(wish) {
     S.replyTo = wish;
+    const old = $('bdModal');
+    if (old) old.remove();
     const modal = buildModal();
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
 
     const senderSel = modal.querySelector('#bdSenderSelect');
     if (senderSel) {
-      // Đảm bảo có option Mỹ Dung
       const hasOpt = Array.from(senderSel.options).some(o => o.value === RECIPIENT);
       if (!hasOpt) {
         const opt = document.createElement('option');
@@ -893,7 +891,6 @@
           tag.textContent = 'SPECIAL';
           foot.appendChild(tag);
         }
-        // Reply button cho owner (không hiện trên wish của chính mình)
         if (S.isOwner && !w.isFromRecipient) {
           const replyBtn = document.createElement('button');
           replyBtn.type = 'button';
@@ -1087,14 +1084,14 @@
 
   /* ============ MODAL ============ */
   function buildModal() {
+    // ⚡ Luôn build mới — không dùng cache
     let modal = $('bdModal');
-    if (modal) return modal;
+    if (modal) modal.remove();
 
     modal = document.createElement('div');
     modal.id = 'bdModal';
     modal.setAttribute('aria-hidden', 'true');
 
-    // Nhóm presets
     const groups = {};
     PRESET_WISHES.forEach(w => {
       if (!groups[w.group]) groups[w.group] = [];
@@ -1109,7 +1106,7 @@
       });
     });
 
-    // Danh sách tên (bỏ Mỹ Dung nếu chưa login)
+    // ⚡ Filter Mỹ Dung nếu không phải owner
     const names = getAllNames().filter(n => S.isOwner || n !== RECIPIENT);
     const namesOpts = names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
 
@@ -1148,7 +1145,6 @@
     });
 
     const senderSel = modal.querySelector('#bdSenderSelect');
-    // Nếu owner → default chọn Mỹ Dung, ngược lại chọn tên của user
     if (S.isOwner) {
       senderSel.value = RECIPIENT;
     } else {
@@ -1170,6 +1166,7 @@
       S.replyTo = null;
       modal.querySelectorAll('.bd-preset').forEach(b => b.classList.remove('selected'));
       modal.querySelector('#bdCustomMsg').value = '';
+      setTimeout(() => { if (modal.parentNode) modal.remove(); }, 300);
     };
 
     modal.querySelector('#bdModalCancel').addEventListener('click', close);
@@ -1209,6 +1206,8 @@
   }
 
   function openModal() {
+    const old = $('bdModal');
+    if (old) old.remove();
     const modal = buildModal();
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
@@ -1278,7 +1277,6 @@
     updateFabBadge();
     updateOwnerBtn();
 
-    // Sync ẩn/hiện với các overlay khác
     const origSync = window.syncQuickTools;
     if (typeof origSync === 'function') {
       window.syncQuickTools = function() {
@@ -1311,7 +1309,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v1.1 ready ✓');
+    log('v1.2 ready ✓');
   }
 
   if (document.readyState === 'loading') {
