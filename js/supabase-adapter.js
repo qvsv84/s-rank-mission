@@ -1,14 +1,19 @@
 /* =========================================================
-   SUPABASE ADAPTER — v3.1
+   SUPABASE ADAPTER — v3.2
+   - Dùng __SRANK_CONFIG (load trước từ js/config.js)
    - Override __srankApi NGAY khi load (không chờ DOMContentLoaded)
-   - Chặn main.js ghi đè
    - Cover: checklist, attendance, admin, livefeed, lunch, chat, quiz
    ========================================================= */
 (function(){
   "use strict";
 
-  const SUPABASE_URL = 'https://yodvujkylnvzjybvgika.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_7D06m2x8CuBWmsUEQi3jMA_edSimUFg';
+  const CFG = window.__SRANK_CONFIG;
+  if (!CFG) {
+    console.error('[SB] __SRANK_CONFIG chưa load — thiếu js/config.js?');
+    return;
+  }
+  const SUPABASE_URL = CFG.SUPABASE_URL;
+  const SUPABASE_KEY = CFG.SUPABASE_KEY;
 
   if (!window.supabase || !window.supabase.createClient) {
     console.error('[SB] Supabase JS chưa load — cần load CDN trước adapter');
@@ -191,6 +196,25 @@
           if (error) throw error;
           return { ok: true, data, ts: Date.now() };
         }
+        /* BIRTHDAY CHAT */
+        case 'getBirthdayWishes': {
+          const { data, error } = await withTimeout(sb.rpc('rpc_get_birthday_wishes', {
+            p_since: Number(params.since) || 0
+          }), t, action);
+          if (error) throw error;
+          return { ok: true, data, ts: Date.now() };
+        }
+        case 'sendBirthdayWish': {
+          const rpcParams = {
+            p_sender: params.sender || '',
+            p_message: params.message || '',
+            p_is_from_recipient: !!params.isFromRecipient
+          };
+          if (params.replyToId) rpcParams.p_reply_to_id = params.replyToId;
+          const { data, error } = await withTimeout(sb.rpc('rpc_send_birthday_wish', rpcParams), t, action);
+          if (error) throw error;
+          return wrapRpc_(data);
+        }
         /* QUIZ */
         case 'quizList': {
           const { data, error } = await withTimeout(sb.rpc('rpc_quiz_list', {
@@ -248,13 +272,11 @@
     }
   }
 
-  /* ===== QUAN TRỌNG: Override NGAY, chặn main.js ghi đè ===== */
-
-  // Lock window.__srankApi bằng defineProperty
+  /* ===== Override NGAY, chặn main.js ghi đè ===== */
   try {
     Object.defineProperty(window, '__srankApi', {
       get() { return sbApi; },
-      set(v) { /* ignore: main.js không ghi đè được */ },
+      set(v) { /* ignore */ },
       configurable: false
     });
   } catch (e) {
@@ -262,18 +284,16 @@
     window.__srankApi = sbApi;
   }
 
-  // Set SRank.api khi SRank xuất hiện
   function setSRankApi() {
     if (window.SRank) {
       window.SRank.api = sbApi;
-      console.log('[SB] Adapter v3.1 installed ✓');
+      console.log('[SB] Adapter v3.2 installed ✓');
       return;
     }
     setTimeout(setSRankApi, 20);
   }
   setSRankApi();
 
-  // Poll fallback: nếu ai ghi đè SRank.api → set lại
   const pollId = setInterval(function() {
     if (window.SRank && window.SRank.api !== sbApi) {
       window.SRank.api = sbApi;
