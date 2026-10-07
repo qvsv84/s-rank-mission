@@ -1,16 +1,15 @@
 /* =========================================================
-   CHECKLIST UI v6.1 — Full page + native canvas + share
-   - Full page: mở như 1 trang riêng (không panel nhỏ)
-   - Bỏ tabs, chỉ giữ search
-   - Footer: Lưu ảnh + Chia sẻ (navigator.share)
-   - FIX số thứ tự: theo vị trí hiển thị sau sort
-   - Capture: native Canvas API (không html2canvas)
+   CHECKLIST UI v6.2 — Avatar cache + Canvas có ảnh thật
+   - FIX flicker: cache DOM node theo tên (reuse khi render)
+   - FIX canvas: preload avatar + vẽ vào canvas (clip tròn)
+   - Full page + native canvas + share
+   - Số thứ tự: theo vị trí hiển thị sau sort
    ========================================================= */
 (function(){
   "use strict";
   if (window.__clV6) return;
 
-  // Cleanup các bản cũ
+  // Cleanup bản cũ
   try {
     ['clV3Root','clV4Root','clV5Root','clV3Styles','clV4Styles','clV5Styles',
      'clV3DebugModal','clV4DebugModal','clV5DebugModal','clV4PreviewModal','clV5PreviewModal'].forEach(id => {
@@ -25,6 +24,7 @@
   const PAGE_ID = 'clV6Page';
   const REFRESH_MS = 25000;
   const MAX_RETRY = 20;
+  const AVATAR_TIMEOUT = 5000;
 
   const S = {
     names: [], checks: [], times: [], points: [], ranks: [],
@@ -35,10 +35,14 @@
     booted: false,
     pageOpen: false,
     search: '',
-    lastBlob: null,
-    lastUrl: null,
     busy: false,
+    cardCache: new Map(),   // name → cached DOM node
   };
+
+  // Cache URL avatar (tránh tính lại)
+  const _avatarUrlCache = new Map();
+  // Cache Image object cho canvas (đã load)
+  const _avatarImgCache = new Map();  // url → { status, img, promise }
 
   /* ============ HELPERS ============ */
   const $ = id => document.getElementById(id);
@@ -63,12 +67,18 @@
     const s = String(n || '').trim();
     return s ? s.slice(0,1).toUpperCase() : '?';
   }
-  function avatarUrl(n){
+  // ⚡ Cache URL avatar
+  function avatarUrl(name){
+    if (_avatarUrlCache.has(name)) return _avatarUrlCache.get(name);
+    let url = '';
     try {
-      if (typeof window.getAvatarUrl === 'function') return window.getAvatarUrl(n) || '';
-      if (window.SRank && typeof window.SRank.getAvatarUrl === 'function') return window.SRank.getAvatarUrl(n) || '';
+      if (typeof window.getAvatarUrl === 'function') url = window.getAvatarUrl(name) || '';
+      else if (window.SRank && typeof window.SRank.getAvatarUrl === 'function') {
+        url = window.SRank.getAvatarUrl(name) || '';
+      }
     } catch(_){}
-    return '';
+    _avatarUrlCache.set(name, url);
+    return url;
   }
   function timeAgo(hhmm){
     if (!hhmm) return '';
@@ -85,19 +95,66 @@
     return hhmm;
   }
 
+  /* =========================================================
+     AVATAR LOADER CHO CANVAS
+     ========================================================= */
+  function loadAvatarImage(url){
+    if (!url) return Promise.resolve(null);
+    if (_avatarImgCache.has(url)){
+      const c = _avatarImgCache.get(url);
+      if (c.status === 'ready') return Promise.resolve(c.img);
+      if (c.status === 'failed') return Promise.resolve(null);
+      return c.promise;
+    }
+
+    const entry = { status: 'loading', img: null, promise: null };
+    _avatarImgCache.set(url, entry);
+
+    entry.promise = new Promise(resolve => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const timer = setTimeout(() => {
+        if (entry.status === 'loading'){
+          entry.status = 'failed';
+          resolve(null);
+        }
+      }, AVATAR_TIMEOUT);
+      img.onload = () => {
+        clearTimeout(timer);
+        entry.img = img;
+        entry.status = 'ready';
+        resolve(img);
+      };
+      img.onerror = () => {
+        clearTimeout(timer);
+        entry.status = 'failed';
+        resolve(null);
+      };
+      img.src = url;
+    });
+
+    return entry.promise;
+  }
+
+  // Preload avatar chạy nền (không block UI)
+  function preloadAvatarsInBackground(){
+    S.names.forEach(name => {
+      const url = avatarUrl(name);
+      if (!url) return;
+      if (_avatarImgCache.has(url)) return;
+      loadAvatarImage(url).catch(() => {});
+    });
+  }
+
   /* ============ STYLES ============ */
   function injectStyles(){
     if ($('clV6Styles')) return;
     const style = document.createElement('style');
     style.id = 'clV6Styles';
     style.textContent = `
-/* ===== FULL PAGE ===== */
 #${PAGE_ID} {
-  position: fixed;
-  inset: 0;
-  z-index: 20800;
-  display: none;
-  flex-direction: column;
+  position: fixed; inset: 0; z-index: 20800;
+  display: none; flex-direction: column;
   background:
     radial-gradient(ellipse 100% 40% at 50% 0%, rgba(232,247,238,.9), transparent 60%),
     linear-gradient(180deg, #f8fcf9 0%, #eef7ef 100%);
@@ -109,10 +166,8 @@
 
 .clv6-head {
   flex-shrink: 0;
-  display: grid;
-  grid-template-columns: 44px 1fr 44px;
-  align-items: center;
-  gap: 8px;
+  display: grid; grid-template-columns: 44px 1fr 44px;
+  align-items: center; gap: 8px;
   padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
   background: rgba(255,255,255,.92);
   backdrop-filter: blur(20px) saturate(120%);
@@ -135,43 +190,30 @@
 .clv6-head-btn.spinning svg { animation: clv6Spin .8s linear infinite; }
 @keyframes clv6Spin { to { transform: rotate(360deg); } }
 .clv6-head-title {
-  min-width: 0;
-  text-align: center;
+  min-width: 0; text-align: center;
   display: flex; flex-direction: column; gap: 1px;
 }
 .clv6-kicker {
   font-size: 9px; font-weight: 900;
-  letter-spacing: .26em;
-  color: #8fa89a;
+  letter-spacing: .26em; color: #8fa89a;
   text-transform: uppercase;
 }
 .clv6-title {
   font-size: 18px; font-weight: 950;
-  color: #234a32;
-  letter-spacing: -.01em;
-  line-height: 1.15;
-  margin-top: 2px;
+  color: #234a32; letter-spacing: -.01em;
+  line-height: 1.15; margin-top: 2px;
 }
-
-/* ===== SCROLL BODY ===== */
 .clv6-body {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  flex: 1 1 auto; overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
   padding: 14px 14px 140px;
 }
 .clv6-body::-webkit-scrollbar { width: 5px; }
 .clv6-body::-webkit-scrollbar-thumb {
-  background: rgba(122,184,150,.4);
-  border-radius: 3px;
+  background: rgba(122,184,150,.4); border-radius: 3px;
 }
-
-/* ===== STATS CARD ===== */
 .clv6-stats {
-  padding: 16px 18px;
-  border-radius: 20px;
+  padding: 16px 18px; border-radius: 20px;
   background:
     radial-gradient(ellipse 90% 70% at 50% 0%, rgba(255,255,255,.95), transparent 70%),
     linear-gradient(160deg, #ffffff 0%, #f0f9f3 100%);
@@ -187,33 +229,28 @@
   font-size: 28px; font-weight: 950;
   color: #4fa370;
   font-variant-numeric: tabular-nums;
-  line-height: 1;
-  letter-spacing: -.02em;
+  line-height: 1; letter-spacing: -.02em;
 }
 .clv6-stats-num small {
   font-size: 16px; font-weight: 900;
-  color: #8fa89a;
-  margin-left: 4px;
+  color: #8fa89a; margin-left: 4px;
 }
 .clv6-stats-label {
   font-size: 11px; font-weight: 900;
-  color: #6b8f78;
-  letter-spacing: .1em;
+  color: #6b8f78; letter-spacing: .1em;
   text-transform: uppercase;
 }
 .clv6-stats-date {
   font-size: 11.5px; font-weight: 900;
   color: #8fa89a;
   background: rgba(200,220,205,.35);
-  padding: 5px 11px;
-  border-radius: 999px;
+  padding: 5px 11px; border-radius: 999px;
   font-variant-numeric: tabular-nums;
 }
 .clv6-progress {
   height: 8px; border-radius: 4px;
   background: rgba(200,220,205,.45);
-  overflow: hidden;
-  position: relative;
+  overflow: hidden; position: relative;
 }
 .clv6-progress-fill {
   height: 100%; width: 0%;
@@ -225,20 +262,13 @@
 }
 .clv6-progress-fill::after {
   content: '';
-  position: absolute; top: 0; right: 0; bottom: 0;
-  width: 30px;
+  position: absolute; top: 0; right: 0; bottom: 0; width: 30px;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,.55));
   animation: clv6Shine 2.5s ease-in-out infinite;
 }
-@keyframes clv6Shine {
-  0%,100% { opacity: 0; }
-  50% { opacity: 1; }
-}
-
-/* ===== SEARCH ===== */
+@keyframes clv6Shine { 0%,100% { opacity: 0; } 50% { opacity: 1; } }
 .clv6-search-wrap {
-  position: relative;
-  margin-bottom: 14px;
+  position: relative; margin-bottom: 14px;
 }
 .clv6-search {
   width: 100%; height: 46px;
@@ -247,15 +277,13 @@
   border-radius: 14px;
   background: rgba(255,255,255,.95);
   color: #234a32;
-  font-family: inherit;
-  font-size: 15px; font-weight: 700;
+  font-family: inherit; font-size: 15px; font-weight: 700;
   outline: none;
   transition: border-color .2s, box-shadow .2s;
 }
 .clv6-search::placeholder { color: #a8bdb0; font-weight: 800; }
 .clv6-search:focus {
-  border-color: #7ab896;
-  background: #fff;
+  border-color: #7ab896; background: #fff;
   box-shadow: 0 0 0 4px rgba(122,184,150,.15);
 }
 .clv6-search-icon {
@@ -273,18 +301,14 @@
   color: #4a7a5a;
   font-size: 14px; font-weight: 900;
   cursor: pointer;
-  display: none;
-  align-items: center; justify-content: center;
+  display: none; align-items: center; justify-content: center;
 }
 .clv6-search-clear.show { display: flex; }
-
-/* ===== SECTION DIVIDER ===== */
 .clv6-divider {
   display: flex; align-items: center; gap: 10px;
   margin: 14px 2px 8px;
   font-size: 11px; font-weight: 950;
-  color: #8fa89a;
-  letter-spacing: .12em;
+  color: #8fa89a; letter-spacing: .12em;
   text-transform: uppercase;
 }
 .clv6-divider::before, .clv6-divider::after {
@@ -292,25 +316,18 @@
   background: linear-gradient(90deg, transparent, rgba(200,220,205,.85), transparent);
 }
 .clv6-divider:first-child { margin-top: 4px; }
-
-/* ===== LIST ===== */
 .clv6-list {
   display: flex; flex-direction: column; gap: 8px;
 }
-
-/* ===== CARD ===== */
 .clv6-card {
   display: grid;
   grid-template-columns: 34px 46px 1fr auto;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 16px;
+  align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 16px;
   background: #fff;
   border: 1.5px solid rgba(200,220,205,.55);
   transition: transform .18s ease, box-shadow .25s ease, background .25s ease, border-color .25s ease;
-  position: relative;
-  overflow: hidden;
+  position: relative; overflow: hidden;
 }
 .clv6-card:active { transform: scale(.985); }
 .clv6-card.checked {
@@ -332,13 +349,10 @@
   border-color: rgba(200,130,70,.55);
   box-shadow: 0 6px 20px -12px rgba(200,130,70,.42);
 }
-
-/* ===== RANK ===== */
 .clv6-rank {
   width: 34px; height: 34px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px; line-height: 1;
-  flex-shrink: 0;
+  font-size: 22px; line-height: 1; flex-shrink: 0;
 }
 .clv6-rank-num {
   width: 28px; height: 28px;
@@ -349,11 +363,8 @@
   font-variant-numeric: tabular-nums;
 }
 .clv6-card.checked .clv6-rank-num {
-  background: rgba(122,184,150,.22);
-  color: #4a7a5a;
+  background: rgba(122,184,150,.22); color: #4a7a5a;
 }
-
-/* ===== AVATAR ===== */
 .clv6-av {
   width: 46px; height: 46px; border-radius: 50%;
   flex-shrink: 0;
@@ -365,18 +376,22 @@
   border: 2px solid #fff;
   box-shadow: 0 3px 10px -4px rgba(45,85,60,.22);
   position: relative;
+  contain: paint;
 }
-.clv6-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.clv6-av img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
 .clv6-card.checked .clv6-av { box-shadow: 0 0 0 2px #7ab896, 0 3px 12px -4px rgba(79,163,112,.4); }
 .clv6-card.top1 .clv6-av { box-shadow: 0 0 0 2px #e0b840, 0 3px 12px -4px rgba(216,168,32,.5); }
 .clv6-card.top2 .clv6-av { box-shadow: 0 0 0 2px #a8b0b8, 0 3px 12px -4px rgba(120,130,140,.35); }
 .clv6-card.top3 .clv6-av { box-shadow: 0 0 0 2px #c88246, 0 3px 12px -4px rgba(200,130,70,.4); }
-
-/* ===== INFO ===== */
 .clv6-info { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .clv6-name {
-  font-size: 15px; font-weight: 900;
-  color: #234a32;
+  font-size: 15px; font-weight: 900; color: #234a32;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   letter-spacing: .002em;
 }
@@ -395,8 +410,6 @@
 .clv6-pts { color: #4fa370; font-weight: 950; font-variant-numeric: tabular-nums; }
 .clv6-pts.early { color: #d89020; }
 .clv6-idle { color: #a8bdb0; }
-
-/* ===== CHECK ICON ===== */
 .clv6-check {
   width: 30px; height: 30px;
   border-radius: 50%;
@@ -404,6 +417,7 @@
   display: flex; align-items: center; justify-content: center;
   background: rgba(200,220,205,.4);
   border: 2px solid rgba(200,220,205,.8);
+  transition: background .3s, border-color .3s, box-shadow .3s;
 }
 .clv6-check.on {
   background: linear-gradient(135deg, #7ad79a, #4fa370);
@@ -412,25 +426,16 @@
 }
 .clv6-check svg { width: 16px; height: 16px; color: transparent; }
 .clv6-check.on svg { color: #fff; }
-
-/* ===== EMPTY ===== */
 .clv6-empty {
-  padding: 60px 20px;
-  text-align: center;
-  color: #9ab0a0;
+  padding: 60px 20px; text-align: center; color: #9ab0a0;
 }
 .clv6-empty-emoji { font-size: 52px; margin-bottom: 12px; opacity: .55; }
 .clv6-empty-title { font-size: 15px; font-weight: 900; color: #6b8f78; margin-bottom: 4px; }
 .clv6-empty-sub { font-size: 12px; color: #a8bdb0; font-weight: 700; }
-
-/* ===== FOOTER (FIXED) ===== */
 .clv6-footer {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
+  position: absolute; left: 0; right: 0; bottom: 0;
   z-index: 20;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
   padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
   background: rgba(255,255,255,.96);
   backdrop-filter: blur(20px) saturate(120%);
@@ -439,12 +444,9 @@
   box-shadow: 0 -8px 24px rgba(45,85,60,.08);
 }
 .clv6-foot-btn {
-  min-height: 50px;
-  padding: 12px 14px;
+  min-height: 50px; padding: 12px 14px;
   border-radius: 14px;
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 950;
+  font-family: inherit; font-size: 13.5px; font-weight: 950;
   cursor: pointer;
   border: 1.5px solid transparent;
   display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -455,8 +457,7 @@
 .clv6-foot-btn:disabled { opacity: .55; pointer-events: none; }
 .clv6-foot-btn svg { width: 18px; height: 18px; }
 .clv6-foot-btn.save {
-  background: #fff;
-  color: #315744;
+  background: #fff; color: #315744;
   border-color: rgba(200,220,205,.85);
   box-shadow: 0 4px 12px -6px rgba(45,85,60,.16);
 }
@@ -465,56 +466,21 @@
   color: #fff;
   box-shadow: 0 8px 20px -8px rgba(79,163,112,.55);
 }
-
-/* ===== DEBUG MODAL ===== */
-#clv6DebugModal {
-  position: fixed; inset: 0; z-index: 32000;
-  display: none; align-items: center; justify-content: center;
-  background: rgba(0,0,0,.75);
-  padding: 16px;
-}
-#clv6DebugModal.show { display: flex; }
-.clv6-debug-panel {
-  width: 100%; max-width: 440px; max-height: 80vh;
-  background: #0f1e17; color: #d4d4d4;
-  border-radius: 16px; padding: 18px;
-  font-family: ui-monospace, Menlo, Consolas, monospace;
-  font-size: 11.5px; line-height: 1.7;
-  overflow: auto;
-  white-space: pre-wrap; word-break: break-word;
-}
-.clv6-debug-panel button {
-  margin-top: 14px; width: 100%; padding: 12px;
-  background: #007acc; color: #fff; border: 0;
-  border-radius: 10px; font-weight: 950;
-  cursor: pointer; font-size: 13px; font-family: inherit;
-}
-
-/* ===== TOAST ===== */
 #clv6Toast {
-  position: fixed;
-  bottom: 90px;
-  left: 50%;
+  position: fixed; bottom: 90px; left: 50%;
   transform: translateX(-50%) translateY(20px);
   z-index: 33000;
   padding: 10px 18px;
   background: rgba(35,74,50,.95);
-  color: #fff;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 900;
+  color: #fff; font-family: inherit;
+  font-size: 13px; font-weight: 900;
   border-radius: 999px;
   box-shadow: 0 12px 30px -8px rgba(0,0,0,.4);
-  opacity: 0;
-  pointer-events: none;
+  opacity: 0; pointer-events: none;
   transition: opacity .25s, transform .25s;
-  max-width: 90vw;
-  text-align: center;
+  max-width: 90vw; text-align: center;
 }
-#clv6Toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
+#clv6Toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     `;
     document.head.appendChild(style);
   }
@@ -580,7 +546,6 @@
     `;
     document.body.appendChild(page);
 
-    // Bind events
     page.querySelector('#clv6Back').addEventListener('click', closePage);
     page.querySelector('#clv6Sync').addEventListener('click', e => {
       const btn = e.currentTarget;
@@ -643,14 +608,163 @@
 
     return {
       all: [...top3, ...checked, ...unchecked],
-      top3,
-      top3Names,
+      top3, top3Names,
       counts: {
         all: items.length,
         checked: items.filter(x => x.checked).length,
         unchecked: items.filter(x => !x.checked).length
       }
     };
+  }
+
+  /* =========================================================
+     CARD FACTORY + UPDATE (giữ DOM node, không tạo lại)
+     ========================================================= */
+  function createCard(){
+    const card = document.createElement('div');
+    card.className = 'clv6-card';
+
+    const rankEl = document.createElement('div');
+    rankEl.className = 'clv6-rank';
+
+    const av = document.createElement('div');
+    av.className = 'clv6-av';
+
+    const info = document.createElement('div');
+    info.className = 'clv6-info';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'clv6-name';
+    const subEl = document.createElement('div');
+    subEl.className = 'clv6-sub';
+    info.appendChild(nameEl);
+    info.appendChild(subEl);
+
+    const checkEl = document.createElement('div');
+    checkEl.className = 'clv6-check';
+    checkEl.innerHTML = ICON.check;
+
+    card.appendChild(rankEl);
+    card.appendChild(av);
+    card.appendChild(info);
+    card.appendChild(checkEl);
+
+    return {
+      card, rankEl, av, nameEl, subEl, checkEl,
+      _avatarUrl: undefined,
+      _subKey: undefined,
+      _rankKey: undefined,
+      _name: undefined,
+      _cardClass: undefined,
+      _checkClass: undefined,
+    };
+  }
+
+  function updateCard(cached, item, displayIdx, rankIdx){
+    const { card, rankEl, av, nameEl, subEl, checkEl } = cached;
+    const checked = !!item.checked;
+
+    // ⚡ Card class — chỉ set khi đổi
+    const isTop = rankIdx !== undefined && rankIdx >= 0 && rankIdx <= 2;
+    const newCardClass = 'clv6-card' +
+      (checked ? ' checked' : '') +
+      (isTop ? ' top' + (rankIdx + 1) : '');
+    if (cached._cardClass !== newCardClass){
+      cached._cardClass = newCardClass;
+      card.className = newCardClass;
+    }
+
+    // ⚡ Rank — chỉ update khi đổi
+    const rankKey = isTop ? 'top' + rankIdx : 'num' + displayIdx;
+    if (cached._rankKey !== rankKey){
+      cached._rankKey = rankKey;
+      if (isTop){
+        rankEl.innerHTML = '';
+        rankEl.textContent = ['🥇','🥈','🥉'][rankIdx];
+      } else {
+        rankEl.innerHTML = '';
+        const num = document.createElement('span');
+        num.className = 'clv6-rank-num';
+        num.textContent = String(displayIdx);
+        rankEl.appendChild(num);
+      }
+    }
+
+    // ⚡ Avatar — CHỈ update nếu URL đổi (không tạo lại img)
+    const url = avatarUrl(item.name) || '';
+    if (cached._avatarUrl !== url){
+      cached._avatarUrl = url;
+      av.innerHTML = '';
+      if (url){
+        const img = document.createElement('img');
+        img.src = url;
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.onerror = () => {
+          img.remove();
+          av.textContent = getInitial(item.name);
+        };
+        av.appendChild(img);
+      } else {
+        av.textContent = getInitial(item.name);
+      }
+    }
+
+    // ⚡ Name — chỉ update khi đổi
+    if (cached._name !== item.name){
+      cached._name = item.name;
+      nameEl.textContent = item.name;
+    }
+
+    // ⚡ Sub — chỉ update khi đổi giờ/điểm/status
+    const subKey = checked
+      ? `${item.time}|${item.points}`
+      : 'idle';
+    if (cached._subKey !== subKey){
+      cached._subKey = subKey;
+      subEl.innerHTML = '';
+
+      if (checked && item.time){
+        const ago = timeAgo(item.time);
+        const isRecent = ago === 'vừa xong' || /\d+ phút trước/.test(ago);
+
+        const tEl = document.createElement('span');
+        tEl.className = 'clv6-time' + (isRecent ? ' recent' : '');
+        tEl.textContent = '🕐 ' + item.time;
+        subEl.appendChild(tEl);
+
+        if (isRecent && ago !== item.time){
+          const d = document.createElement('span');
+          d.className = 'clv6-dot';
+          subEl.appendChild(d);
+          const a = document.createElement('span');
+          a.style.color = '#4fa370';
+          a.textContent = ago;
+          subEl.appendChild(a);
+        }
+
+        if (item.points > 0){
+          const d2 = document.createElement('span');
+          d2.className = 'clv6-dot';
+          subEl.appendChild(d2);
+          const p = document.createElement('span');
+          p.className = 'clv6-pts' + (item.points >= 20 ? ' early' : '');
+          p.textContent = '⭐ ' + item.points + 'đ';
+          subEl.appendChild(p);
+        }
+      } else {
+        const idle = document.createElement('span');
+        idle.className = 'clv6-idle';
+        idle.textContent = 'Chưa check hôm nay';
+        subEl.appendChild(idle);
+      }
+    }
+
+    // ⚡ Check — chỉ update class khi đổi
+    const newCheckClass = 'clv6-check' + (checked ? ' on' : '');
+    if (cached._checkClass !== newCheckClass){
+      cached._checkClass = newCheckClass;
+      checkEl.className = newCheckClass;
+    }
   }
 
   /* ============ RENDER ============ */
@@ -662,11 +776,9 @@
     const checkedCount = S.checks.filter(Boolean).length;
     const pct = total ? Math.round(checkedCount * 100 / total) : 0;
 
-    // Stats
     const numEl = $('clv6StatNum');
-    if (numEl){
-      numEl.innerHTML = `${checkedCount}<small>/${total}</small>`;
-    }
+    if (numEl) numEl.innerHTML = `${checkedCount}<small>/${total}</small>`;
+
     const dateEl = $('clv6StatDate');
     if (dateEl){
       const now = new Date();
@@ -688,8 +800,6 @@
     }
 
     const all = buildSortedList();
-
-    // Filter theo search
     let displayItems = all.all.slice();
     if (S.search){
       const q = S.search;
@@ -706,17 +816,26 @@
       return;
     }
 
-    const ICONS = ['🥇','🥈','🥉'];
-    const frag = document.createDocumentFragment();
-    const prevByName = (S.prev && S.prev.byName) ? S.prev.byName : {};
+    // ⚡ Xoá card cache không dùng nữa
+    const keepNames = new Set(displayItems.map(x => x.name));
+    for (const [name, cached] of S.cardCache){
+      if (!keepNames.has(name)){
+        cached.card.remove();
+        S.cardCache.delete(name);
+      }
+    }
 
-    // Đếm số thứ tự: top3 dùng icon, sau đó đếm từ 4 trở đi
+    // ⚡ Clear list nhưng KHÔNG destroy cache
+    // (card node vẫn được giữ trong S.cardCache)
+    list.innerHTML = '';
+
     let counter = 0;
     let lastSection = null;
     const showDividers = !S.search;
 
     displayItems.forEach(item => {
       counter++;
+
       const isTop3 = all.top3Names.has(item.name);
       const rankIdx = isTop3
         ? all.top3.findIndex(x => x.name === item.name)
@@ -735,108 +854,21 @@
           : section === 'checked'
             ? `✓ Đã check (${all.counts.checked - all.top3.length})`
             : `○ Chưa check (${all.counts.unchecked})`;
-        frag.appendChild(div);
+        list.appendChild(div);
         lastSection = section;
       }
 
-      const { name, checked, time, points } = item;
-      const prevVal = prevByName[name];
-      const justChecked = prevVal === false && checked === true;
-
-      const card = document.createElement('div');
-      card.className = 'clv6-card';
-      if (checked) card.classList.add('checked');
-      if (rankIdx !== undefined && rankIdx >= 0 && rankIdx <= 2){
-        card.classList.add('top' + (rankIdx + 1));
+      // ⚡ Reuse card từ cache, hoặc tạo mới
+      let cached = S.cardCache.get(item.name);
+      if (!cached){
+        cached = createCard();
+        S.cardCache.set(item.name, cached);
       }
+      updateCard(cached, item, counter, rankIdx);
 
-      // ⚡ Rank: top3 dùng icon, còn lại dùng counter hiển thị
-      const rankEl = document.createElement('div');
-      rankEl.className = 'clv6-rank';
-      if (rankIdx !== undefined && rankIdx >= 0 && rankIdx <= 2){
-        rankEl.textContent = ICONS[rankIdx];
-      } else {
-        const numEl2 = document.createElement('span');
-        numEl2.className = 'clv6-rank-num';
-        numEl2.textContent = String(counter);
-        rankEl.appendChild(numEl2);
-      }
-
-      // Avatar
-      const av = document.createElement('div');
-      av.className = 'clv6-av';
-      const u = avatarUrl(name);
-      if (u){
-        const img = document.createElement('img');
-        img.src = u; img.loading = 'lazy'; img.decoding = 'async';
-        img.onerror = () => { img.remove(); av.textContent = getInitial(name); };
-        av.appendChild(img);
-      } else {
-        av.textContent = getInitial(name);
-      }
-
-      // Info
-      const info = document.createElement('div');
-      info.className = 'clv6-info';
-
-      const nm = document.createElement('div');
-      nm.className = 'clv6-name';
-      nm.textContent = name;
-
-      const sub = document.createElement('div');
-      sub.className = 'clv6-sub';
-
-      if (checked && time){
-        const ago = timeAgo(time);
-        const isRecent = ago === 'vừa xong' || /\d+ phút trước/.test(ago);
-        const tEl = document.createElement('span');
-        tEl.className = 'clv6-time' + (isRecent ? ' recent' : '');
-        tEl.textContent = '🕐 ' + time;
-        sub.appendChild(tEl);
-
-        if (isRecent && ago !== time){
-          const d = document.createElement('span');
-          d.className = 'clv6-dot';
-          sub.appendChild(d);
-          const a = document.createElement('span');
-          a.style.color = '#4fa370';
-          a.textContent = ago;
-          sub.appendChild(a);
-        }
-
-        if (points > 0){
-          const d2 = document.createElement('span');
-          d2.className = 'clv6-dot';
-          sub.appendChild(d2);
-          const p = document.createElement('span');
-          p.className = 'clv6-pts' + (points >= 20 ? ' early' : '');
-          p.textContent = '⭐ ' + points + 'đ';
-          sub.appendChild(p);
-        }
-      } else {
-        const idle = document.createElement('span');
-        idle.className = 'clv6-idle';
-        idle.textContent = 'Chưa check hôm nay';
-        sub.appendChild(idle);
-      }
-
-      info.appendChild(nm);
-      info.appendChild(sub);
-
-      // Check
-      const checkEl = document.createElement('div');
-      checkEl.className = 'clv6-check' + (checked ? ' on' : '');
-      checkEl.innerHTML = ICON.check;
-
-      card.appendChild(rankEl);
-      card.appendChild(av);
-      card.appendChild(info);
-      card.appendChild(checkEl);
-      frag.appendChild(card);
+      // appendChild sẽ move node (không tạo lại)
+      list.appendChild(cached.card);
     });
-
-    list.innerHTML = '';
-    list.appendChild(frag);
 
     const byName = {};
     S.names.forEach((n, i) => { byName[n] = !!S.checks[i]; });
@@ -864,6 +896,8 @@
     S.times  = Array.isArray(data.times)  ? data.times.slice()  : [];
     S.points = Array.isArray(data.points) ? data.points.slice() : [];
     S.ranks  = Array.isArray(data.ranks)  ? data.ranks.slice()  : [];
+    // Clear URL cache khi data đổi (phòng trường hợp user đổi avatar)
+    // Nhưng thực tế URL avatar ít đổi → giữ cache cũng OK
     return true;
   }
 
@@ -872,7 +906,11 @@
     S.loading = true;
     try {
       const data = await fetchData();
-      if (data && applyState(data)) render();
+      if (data && applyState(data)) {
+        render();
+        // Preload avatar cho canvas chạy nền
+        preloadAvatarsInBackground();
+      }
     } finally {
       S.loading = false;
     }
@@ -886,15 +924,25 @@
     S.prev = { byName: oldBy };
     applyState(data);
     render();
+    preloadAvatarsInBackground();
   }
 
   /* =========================================================
-     DRAW CANVAS — Vẽ checklist thành ảnh
+     DRAW CANVAS — CÓ AVATAR THẬT
      ========================================================= */
-  function drawCanvas(){
+  async function drawCanvas(){
     const sorted = buildSortedList();
     const total = sorted.all.length;
     if (!total) return null;
+
+    // ⚡ Preload avatar trước khi vẽ
+    const avatarImages = {};
+    await Promise.all(sorted.all.map(async item => {
+      const url = avatarUrl(item.name) || '';
+      if (!url) return;
+      const img = await loadAvatarImage(url);
+      if (img) avatarImages[item.name] = img;
+    }));
 
     const dpr = Math.min(3, Math.max(2, window.devicePixelRatio || 2));
     const W = 520;
@@ -958,7 +1006,7 @@
     ctx.font = '600 12px -apple-system, system-ui, sans-serif';
     ctx.fillText(dateStr, W - padX, 48);
 
-    // Progress bar
+    // Progress
     const barY = 100;
     const barW = W - padX * 2;
     ctx.fillStyle = 'rgba(200,220,205,.5)';
@@ -1018,7 +1066,6 @@
         ctx.fillStyle = '#234a32';
         ctx.fillText(['🥇','🥈','🥉'][rankIdx], rankX, cy);
       } else {
-        // Circle num
         ctx.fillStyle = item.checked ? 'rgba(122,184,150,.25)' : 'rgba(200,220,205,.4)';
         ctx.beginPath();
         ctx.arc(rankX, cy, 14, 0, Math.PI * 2);
@@ -1028,13 +1075,42 @@
         ctx.fillText(String(counter), rankX, cy + 1);
       }
 
-      // Avatar
+      // ⚡ Avatar — dùng ảnh thật nếu có
       const avX = padX + 68;
       const avR = 22;
+
+      // Vẽ nền tròn (fallback)
       ctx.fillStyle = '#d4ead9';
       ctx.beginPath();
       ctx.arc(avX, cy, avR, 0, Math.PI * 2);
       ctx.fill();
+
+      // Vẽ ảnh nếu có
+      const avImg = avatarImages[item.name];
+      if (avImg){
+        try {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(avX, cy, avR, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(avImg, avX - avR, cy - avR, avR * 2, avR * 2);
+          ctx.restore();
+        } catch(e){
+          // CORS fail → vẽ chữ cái
+          ctx.fillStyle = '#4a7a5a';
+          ctx.font = 'bold 17px -apple-system, system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(getInitial(item.name), avX, cy + 1);
+        }
+      } else {
+        // Không có ảnh → chữ cái
+        ctx.fillStyle = '#4a7a5a';
+        ctx.font = 'bold 17px -apple-system, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(getInitial(item.name), avX, cy + 1);
+      }
 
       // Avatar ring
       if (rankIdx === 0) ctx.strokeStyle = '#e0b840';
@@ -1046,11 +1122,6 @@
       ctx.beginPath();
       ctx.arc(avX, cy, avR, 0, Math.PI * 2);
       ctx.stroke();
-
-      // Initial
-      ctx.fillStyle = '#4a7a5a';
-      ctx.font = 'bold 17px -apple-system, system-ui, sans-serif';
-      ctx.fillText(getInitial(item.name), avX, cy + 1);
 
       // Name
       const textX = padX + 104;
@@ -1088,7 +1159,6 @@
         ctx.beginPath();
         ctx.arc(checkCX, cy, checkR, 0, Math.PI * 2);
         ctx.fill();
-        // Check mark
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 2.5;
         ctx.lineCap = 'round';
@@ -1161,7 +1231,8 @@
     }
 
     try {
-      const canvas = drawCanvas();
+      // ⚡ await vì drawCanvas giờ là async
+      const canvas = await drawCanvas();
       if (!canvas) throw new Error('Chưa có dữ liệu');
 
       const blob = await canvasToBlob(canvas);
@@ -1200,13 +1271,12 @@
     }
 
     try {
-      const canvas = drawCanvas();
+      const canvas = await drawCanvas();
       if (!canvas) throw new Error('Chưa có dữ liệu');
 
       const blob = await canvasToBlob(canvas);
       const filename = 'checklist-' + new Date().toISOString().slice(0,10) + '.png';
 
-      // Ưu tiên Web Share API
       const file = new File([blob], filename, { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [file] })){
         try {
@@ -1218,15 +1288,12 @@
           toast('Đã chia sẻ ✓');
           return;
         } catch(e){
-          if (e && e.name === 'AbortError'){
-            // User cancel → không báo lỗi
-            return;
-          }
+          if (e && e.name === 'AbortError') return;
           console.warn('[CL6] share fail, fallback download:', e);
         }
       }
 
-      // Fallback: tải ảnh về
+      // Fallback download
       toast('Thiết bị không hỗ trợ chia sẻ, đã lưu ảnh');
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1257,7 +1324,6 @@
     document.body.style.overflow = 'hidden';
     S.pageOpen = true;
 
-    // Reset search
     const search = page.querySelector('#clv6Search');
     if (search){ search.value = ''; S.search = ''; }
     const searchClear = page.querySelector('#clv6SearchClear');
@@ -1314,10 +1380,9 @@
     bindGlobalEvents();
     startAutoTimer();
 
-    // Bind nút mở page trong bottomNav
+    // Bind nút mở page
     const openBtn = $('checklistBtn');
     if (openBtn){
-      // Xoá listener cũ nếu có (dùng cách thay thế node)
       const newBtn = openBtn.cloneNode(true);
       openBtn.parentNode.replaceChild(newBtn, openBtn);
       newBtn.addEventListener('click', e => {
@@ -1327,7 +1392,6 @@
       });
     }
 
-    // Expose
     window.__clV6 = {
       open: openPage,
       close: closePage,
@@ -1338,7 +1402,7 @@
       share: onShare,
     };
 
-    log('v6.1 ready ✓');
+    log('v6.2 ready ✓');
   }
 
   if (document.readyState === 'loading'){
