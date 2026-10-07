@@ -1,13 +1,26 @@
 /* =========================================================
-   CHECKLIST UI v5.0
-   - FIX CHỤP: chỉ dùng CDN, có timeout, không treo
-   - UI MỚI: tabs filter + search + stat pills + card gọn
-   - SORT: Top3 → checked → unchecked
-   - SCROLL: max-height + overflow auto
+   CHECKLIST UI v5.1
+   - FIX 1: cleanup v3/v4 cũ tránh chồng UI
+   - FIX 2: đợi ảnh avatar load xong trước khi chụp
+   - FIX 3: revoke blob URL khi đóng preview (tránh leak)
+   - FIX 4: normalize giờ "5:12" → "05:12" để sort đúng
+   - FIX 5: search tiếng Việt không dấu
+   - Nút chụp: chỉ dùng CDN + timeout, không treo
+   - UI: logo + tabs filter + search + stat pills
    ========================================================= */
 (function(){
   "use strict";
   if (window.__clV5) return;
+
+  // ⚡ FIX 1: Cleanup v3/v4 cũ nếu còn sót
+  try {
+    ['clV3Root','clV4Root','clV3Styles','clV4Styles','clV3DebugModal','clV4DebugModal','clV4PreviewModal'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    });
+    window.__clV3Loaded = true;
+    window.__clV4Loaded = true;
+  } catch(_){}
 
   const ROOT_ID    = 'clV5Root';
   const REFRESH_MS = 20000;
@@ -26,7 +39,7 @@
     retryCount: 0,
     booted: false,
     h2cPromise: null,
-    filter: 'all',   // all | checked | unchecked
+    filter: 'all',
     search: '',
   };
 
@@ -34,6 +47,22 @@
   const $ = id => document.getElementById(id);
   const log = (...args) => console.log('[CL5]', ...args);
   const warn = (...args) => console.warn('[CL5]', ...args);
+
+  // ⚡ FIX 5: normalize bỏ dấu tiếng Việt
+  function normalize(s){
+    return String(s || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd');
+  }
+
+  // ⚡ FIX 4: normalize giờ "5:12" → "05:12"
+  function normTime(t){
+    const m = String(t || '').match(/^(\d{1,2}):(\d{2})/);
+    if (!m) return '99:99';
+    return String(m[1]).padStart(2, '0') + ':' + m[2];
+  }
 
   function getApi(){
     return window.__srankApi || (window.SRank && window.SRank.api) || null;
@@ -88,11 +117,9 @@
   }
 
   function loadHtml2Canvas(){
-    // Đã có sẵn
     if (typeof window.html2canvas === 'function'){
       return Promise.resolve(window.html2canvas);
     }
-    // Đang load
     if (S.h2cPromise) return S.h2cPromise;
 
     log('Bắt đầu load html2canvas từ CDN...');
@@ -105,7 +132,7 @@
         }
       }
       warn('✗ Tất cả CDN thất bại');
-      S.h2cPromise = null;   // cho phép retry lần sau
+      S.h2cPromise = null;
       return null;
     })();
 
@@ -118,7 +145,6 @@
     const style = document.createElement('style');
     style.id = 'clV5Styles';
     style.textContent = `
-/* ===== ROOT ===== */
 #clV5Root {
   display: flex; flex-direction: column;
   padding: 16px 14px 14px; border-radius: 24px;
@@ -131,8 +157,6 @@
     0 4px 12px -4px rgba(45,85,60,.08),
     inset 0 1px 0 rgba(255,255,255,.95);
 }
-
-/* ===== HEADER ===== */
 .clv5-head {
   display: flex; align-items: center; justify-content: space-between;
   gap: 12px; margin-bottom: 14px; padding: 0 2px; flex-shrink: 0;
@@ -146,24 +170,14 @@
   box-shadow: 0 6px 14px -6px rgba(79,163,112,.55);
   flex-shrink: 0;
 }
-.clv5-title {
-  font-size: 15.5px; font-weight: 950;
-  color: #234a32; letter-spacing: .005em;
-  line-height: 1.15;
-}
-.clv5-sub {
-  font-size: 10.5px; font-weight: 800;
-  color: #7a9a85; margin-top: 1px;
-}
+.clv5-title { font-size: 15.5px; font-weight: 950; color: #234a32; line-height: 1.15; }
+.clv5-sub { font-size: 10.5px; font-weight: 800; color: #7a9a85; margin-top: 1px; }
 .clv5-count-pill {
-  flex-shrink: 0;
-  font-size: 12.5px; font-weight: 950;
-  color: #4a7a5a;
-  background: rgba(122,184,150,.16);
+  flex-shrink: 0; font-size: 12.5px; font-weight: 950;
+  color: #4a7a5a; background: rgba(122,184,150,.16);
   padding: 5px 12px; border-radius: 999px;
   border: 1px solid rgba(122,184,150,.25);
   font-variant-numeric: tabular-nums;
-  transition: all .3s ease;
 }
 .clv5-count-pill.full {
   color: #fff;
@@ -171,13 +185,10 @@
   border-color: transparent;
   box-shadow: 0 4px 12px -3px rgba(79,163,112,.5);
 }
-
-/* ===== PROGRESS ===== */
 .clv5-progress {
   height: 8px; border-radius: 4px;
   background: rgba(200,220,205,.42);
-  overflow: hidden; margin: 0 2px 14px;
-  flex-shrink: 0;
+  overflow: hidden; margin: 0 2px 14px; flex-shrink: 0;
   position: relative;
 }
 .clv5-progress-fill {
@@ -199,15 +210,11 @@
   0%, 100% { opacity: 0; }
   50% { opacity: 1; }
 }
-
-/* ===== TOOLBAR ===== */
 .clv5-toolbar {
   display: flex; gap: 8px; margin-bottom: 12px;
   flex-shrink: 0; align-items: center;
 }
-.clv5-search-wrap {
-  flex: 1; position: relative; min-width: 0;
-}
+.clv5-search-wrap { flex: 1; position: relative; min-width: 0; }
 .clv5-search {
   width: 100%; height: 38px;
   padding: 0 32px 0 34px;
@@ -244,8 +251,6 @@
   align-items: center; justify-content: center;
 }
 .clv5-search-clear.show { display: flex; }
-
-/* ===== FILTER TABS ===== */
 .clv5-tabs {
   display: flex; gap: 6px; margin-bottom: 12px;
   padding: 4px; border-radius: 14px;
@@ -259,10 +264,9 @@
   flex: 1 1 auto; min-width: 0;
   min-height: 34px; padding: 6px 12px;
   border: 1.5px solid transparent;
-  border-radius: 1060,.px;
-14  background: transparent;
-  color);
-: #6b8f78;
+  border-radius: 10px;
+  background: transparent;
+  color: #6b8f78;
   font-family: inherit; font-size: 12px; font-weight: 900;
   cursor: pointer;
   white-space: nowrap;
@@ -274,7 +278,8 @@
   background: #fff;
   color: #2a4d38;
   border-color: rgba(122,184,150,.35);
-  box-shadow: 0 2px 8px -2px rgba(45,85,}
+  box-shadow: 0 2px 8px -2px rgba(45,85,60,.14);
+}
 .clv5-tab-badge {
   font-size: 10px;
   padding: 1px 6px; border-radius: 999px;
@@ -287,8 +292,6 @@
   background: rgba(122,184,150,.22);
   color: #2a6b45;
 }
-
-/* ===== LIST ===== */
 .clv5-list {
   display: flex; flex-direction: column; gap: 6px;
   max-height: 56vh; overflow-y: auto; overflow-x: hidden;
@@ -304,8 +307,6 @@
   background: rgba(122,184,150,.42);
   border-radius: 3px;
 }
-
-/* ===== DIVIDER ===== */
 .clv5-divider {
   display: flex; align-items: center; gap: 10px;
   margin: 10px 2px 2px;
@@ -318,8 +319,6 @@
   background: linear-gradient(90deg, transparent, rgba(200,220,205,.8), transparent);
 }
 .clv5-divider:first-child { margin-top: 2px; }
-
-/* ===== CARD ===== */
 .clv5-card {
   display: grid;
   grid-template-columns: 24px 40px 1fr auto;
@@ -333,7 +332,6 @@
               border-color .25s ease;
   position: relative; overflow: hidden;
   flex-shrink: 0;
-  cursor: default;
 }
 .clv5-card:active { transform: scale(.985); }
 .clv5-card.checked {
@@ -355,8 +353,6 @@
   border-color: rgba(200,130,70,.55);
   box-shadow: 0 5px 16px -10px rgba(200,130,70,.38);
 }
-
-/* ===== RANK ===== */
 .clv5-rank {
   width: 24px; height: 24px;
   display: flex; align-items: center; justify-content: center;
@@ -366,8 +362,6 @@
   font-size: 11.5px; color: #a8bdb0; font-weight: 950;
   font-variant-numeric: tabular-nums;
 }
-
-/* ===== AVATAR ===== */
 .clv5-av {
   width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
   background: linear-gradient(135deg, #e8f5ec, #d4ead9);
@@ -384,16 +378,10 @@
 .clv5-card.top1 .clv5-av { box-shadow: 0 0 0 2px #e0b840, 0 3px 12px -4px rgba(216,168,32,.45); }
 .clv5-card.top2 .clv5-av { box-shadow: 0 0 0 2px #a8b0b8, 0 3px 12px -4px rgba(120,130,140,.3); }
 .clv5-card.top3 .clv5-av { box-shadow: 0 0 0 2px #c88246, 0 3px 12px -4px rgba(200,130,70,.35); }
-
-/* ===== INFO ===== */
-.clv5-info {
-  min-width: 0;
-  display: flex; flex-direction: column; gap: 2px;
-}
+.clv5-info { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .clv5-name {
   font-size: 14px; font-weight: 900; color: #234a32;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  letter-spacing: .002em;
 }
 .clv5-card.checked .clv5-name { color: #1a3d28; }
 .clv5-card.top1 .clv5-name { color: #7a5410; }
@@ -406,18 +394,10 @@
 }
 .clv5-time { font-variant-numeric: tabular-nums; font-weight: 900; color: #6b8f78; }
 .clv5-time.recent { color: #4fa370; }
-.clv5-dot {
-  width: 3px; height: 3px; border-radius: 50%;
-  background: #c0d0c4; flex-shrink: 0;
-}
-.clv5-pts {
-  font-variant-numeric: tabular-nums; font-weight: 950;
-  color: #4fa370;
-}
+.clv5-dot { width: 3px; height: 3px; border-radius: 50%; background: #c0d0c4; flex-shrink: 0; }
+.clv5-pts { font-variant-numeric: tabular-nums; font-weight: 950; color: #4fa370; }
 .clv5-pts.early { color: #d89020; }
 .clv5-idle { color: #a8bdb0; }
-
-/* ===== STATUS CHECK ===== */
 .clv5-check {
   width: 26px; height: 26px; border-radius: 50%;
   flex-shrink: 0;
@@ -434,8 +414,6 @@
 .clv5-check svg { width: 14px; height: 14px; }
 .clv5-check.on svg { color: #fff; }
 .clv5-check svg { color: transparent; }
-
-/* ===== EMPTY ===== */
 .clv5-empty {
   padding: 40px 20px; text-align: center;
   color: #9ab0a0; font-size: 13px; font-weight: 800;
@@ -447,8 +425,6 @@
 }
 .clv5-empty-title { font-size: 14px; font-weight: 900; color: #6b8f78; margin-bottom: 4px; }
 .clv5-empty-sub { font-size: 11.5px; color: #a8bdb0; }
-
-/* ===== ACTIONS ===== */
 .clv5-actions {
   display: grid;
   grid-template-columns: 1fr 1fr 40px;
@@ -477,8 +453,6 @@
 }
 .clv5-btn.primary:active { background: linear-gradient(180deg, #6ba885, #44956a); }
 .clv5-btn.icon-only { padding: 0; }
-
-/* ===== FOOTER ===== */
 .clv5-foot {
   margin-top: 8px; font-size: 10.5px; font-weight: 800;
   color: #a8bdb0; text-align: center;
@@ -494,8 +468,6 @@
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: .4; transform: scale(.85); }
 }
-
-/* ===== MODAL PREVIEW ===== */
 #clv5PreviewModal {
   position: fixed; inset: 0; z-index: 30000;
   display: none; align-items: center; justify-content: center;
@@ -564,8 +536,6 @@
   color: #8fa89a; text-align: center; line-height: 1.45;
 }
 .clv5-preview-hint b { color: #4a7a5a; }
-
-/* ===== DEBUG PANEL ===== */
 #clv5DebugModal {
   position: fixed; inset: 0; z-index: 31000;
   display: none; align-items: center; justify-content: center;
@@ -675,7 +645,7 @@
     `;
     panel.appendChild(root);
 
-    // Bind
+    // Bind nút với capture=true để chặn event bubble
     root.querySelector('#clv5Capture').addEventListener('click', e => {
       e.preventDefault(); e.stopPropagation(); onCapture();
     }, true);
@@ -690,7 +660,8 @@
     const search = root.querySelector('#clv5Search');
     const searchClear = root.querySelector('#clv5SearchClear');
     search.addEventListener('input', () => {
-      S.search = search.value.trim().toLowerCase();
+      // ⚡ FIX 5: normalize bỏ dấu
+      S.search = normalize(search.value.trim());
       searchClear.classList.toggle('show', S.search.length > 0);
       render();
     });
@@ -720,7 +691,7 @@
     const L = [];
     const p = (icon, txt) => L.push(icon + ' ' + txt);
 
-    p('ℹ️', '=== DEBUG CHECKLIST v5.0 ===');
+    p('ℹ️', '=== DEBUG CHECKLIST v5.1 ===');
     p('ℹ️', 'Time: ' + new Date().toLocaleString('vi-VN'));
     p('ℹ️', '');
 
@@ -746,7 +717,6 @@
 
     showDebugPanel(L);
 
-    // Test load
     try {
       const h2c = await loadHtml2Canvas();
       p(h2c ? '✅' : '❌', 'html2canvas: ' + (h2c ? 'LOAD OK' : 'LOAD FAIL (mạng/adblock)'));
@@ -821,9 +791,15 @@
     `;
     document.body.appendChild(modal);
 
+    // ⚡ FIX 3: revoke URL khi đóng
     const close = () => {
       modal.classList.remove('show');
-      setTimeout(() => modal.remove(), 250);
+      setTimeout(() => {
+        modal.remove();
+        setTimeout(() => {
+          try { URL.revokeObjectURL(url); } catch(_){}
+        }, 5000);
+      }, 250);
     };
     modal.querySelector('.clv5-preview-close').addEventListener('click', close);
     modal.addEventListener('click', e => { if (e.target === modal) close(); });
@@ -858,8 +834,9 @@
       origIdx: i
     }));
 
+    // ⚡ FIX 4: normalize giờ trước khi sort
     const withTime = items.filter(x => x.checked && x.time)
-      .sort((a, b) => a.time.localeCompare(b.time));
+      .sort((a, b) => normTime(a.time).localeCompare(normTime(b.time)));
     const top3 = withTime.slice(0, 3);
     const top3Names = new Set(top3.map(x => x.name));
     const checked = withTime.slice(3);
@@ -902,7 +879,6 @@
         : 'Chưa có ai';
     }
 
-    // Update tabs badge
     const all = buildSortedList();
     const tabAll = $('clv5TabAll');
     const tabChecked = $('clv5TabChecked');
@@ -932,11 +908,11 @@
       displayItems = all.all.slice();
     }
 
-    // Filter theo search
+    // ⚡ FIX 5: search với normalize
     if (S.search){
       const q = S.search;
       displayItems = displayItems.filter(x =>
-        x.name.toLowerCase().includes(q)
+        normalize(x.name).includes(q)
       );
     }
 
@@ -956,11 +932,9 @@
     const prevByName = (S.prev && S.prev.byName) ? S.prev.byName : {};
 
     let lastSection = null;
-    // Chỉ hiện divider khi ở tab "all" và không search
     const showDividers = (S.filter === 'all' && !S.search);
 
     displayItems.forEach(item => {
-      // Section logic
       let section;
       if (all.top3Names.has(item.name)) section = 'top3';
       else if (item.checked) section = 'checked';
@@ -1080,12 +1054,10 @@
     list.innerHTML = '';
     list.appendChild(frag);
 
-    // Save prev
     const byName = {};
     S.names.forEach((n, i) => { byName[n] = !!S.checks[i]; });
     S.prev = { byName };
 
-    // Footer
     if (footEl){
       const now = new Date();
       const hh = String(now.getHours()).padStart(2,'0');
@@ -1180,13 +1152,13 @@
         animation: 'none',
       });
 
-      // Bỏ toolbar search + tabs filter + actions + debug footer khỏi ảnh
+      // Bỏ toolbar + tabs + actions + footer khỏi ảnh
       clone.querySelector('.clv5-toolbar')?.remove();
       clone.querySelector('.clv5-tabs')?.remove();
       clone.querySelector('.clv5-actions')?.remove();
       clone.querySelector('.clv5-foot')?.remove();
 
-      // Hiện TẤT CẢ người trong clone (bỏ filter + search)
+      // Bỏ scroll ở list
       const listClone = clone.querySelector('.clv5-list');
       if (listClone){
         listClone.style.maxHeight = 'none';
@@ -1197,8 +1169,21 @@
       document.body.appendChild(clone);
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-      // Nếu clone đang filter → render lại full
-      // (vì clone có sẵn nội dung, nhưng cần đảm bảo đủ)
+      // ⚡ FIX 2: đợi tất cả ảnh load xong
+      const imgs = [...clone.querySelectorAll('img')];
+      if (imgs.length){
+        log('Capture: đợi ' + imgs.length + ' ảnh load...');
+        await Promise.all(imgs.map(img => {
+          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+          return new Promise(res => {
+            img.onload = res;
+            img.onerror = res;
+            setTimeout(res, 3000);
+          });
+        }));
+        log('Capture: ảnh load xong');
+      }
+
       log('Capture: render canvas...');
       const canvas = await h2c(clone, {
         backgroundColor: '#f5fbf5',
@@ -1275,7 +1260,6 @@
       if (!S.names.length) await refresh();
     }, 3000);
 
-    // Preload html2canvas
     loadHtml2Canvas().catch(() => {});
 
     window.__clV5 = {
@@ -1285,7 +1269,7 @@
       debug: runDebug,
       loadH2C: loadHtml2Canvas,
     };
-    log('v5.0 ready ✓');
+    log('v5.1 ready ✓');
   }
 
   if (document.readyState === 'loading'){
