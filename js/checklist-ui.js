@@ -1,10 +1,8 @@
 /* =========================================================
-   CHECKLIST UI v6.3.1
-   - Xoá ô date khỏi DOM (chỉ giữ trong ảnh chụp)
-   - NEW: rank badge + điểm hôm nay ở dòng 2
-   - Card cache → không flicker
-   - Canvas native → có avatar thật
-   - Full page + save + share
+   CHECKLIST UI v6.4
+   - Rank đầy đủ "S-rank", "SS-rank"... + màu gradient đẹp
+   - Flame animation cho top3 (vàng cam / bạc / đồng)
+   - Canvas có flame tĩnh + rank đầy đủ
    ========================================================= */
 (function(){
   "use strict";
@@ -45,6 +43,12 @@
   /* ============ HELPERS ============ */
   const $ = id => document.getElementById(id);
   const log = (...args) => console.log('[CL6]', ...args);
+
+  // ⚡ Format rank text
+  function rankLabel(rank){
+    const r = String(rank || 'B').trim();
+    return r + '-rank';
+  }
 
   function normalize(s){
     return String(s || '')
@@ -105,7 +109,7 @@
   }
 
   /* =========================================================
-     AVATAR LOADER CHO CANVAS
+     AVATAR LOADER
      ========================================================= */
   function loadAvatarImage(url){
     if (!url) return Promise.resolve(null);
@@ -166,6 +170,7 @@
   overflow: hidden;
 }
 #${PAGE_ID}.show { display: flex; }
+
 .clv6-head {
   flex-shrink: 0;
   display: grid; grid-template-columns: 44px 1fr 44px;
@@ -183,8 +188,7 @@
   border: 1.5px solid rgba(200,220,205,.7);
   border-radius: 14px;
   background: rgba(255,255,255,.9);
-  color: #4a7a5a;
-  font-size: 20px; font-weight: 900;
+  color: #4a7a5a; font-size: 20px; font-weight: 900;
   cursor: pointer;
   transition: transform .15s ease, background .15s ease;
 }
@@ -309,6 +313,8 @@
 }
 .clv6-divider:first-child { margin-top: 4px; }
 .clv6-list { display: flex; flex-direction: column; gap: 8px; }
+
+/* ===== CARD ===== */
 .clv6-card {
   display: grid;
   grid-template-columns: 34px 46px 1fr auto;
@@ -316,33 +322,153 @@
   padding: 12px 14px; border-radius: 16px;
   background: #fff;
   border: 1.5px solid rgba(200,220,205,.55);
-  transition: transform .18s ease, box-shadow .25s ease, background .25s ease, border-color .25s ease;
-  position: relative; overflow: hidden;
+  transition: transform .18s ease, background .25s ease;
+  position: relative;
+  isolation: isolate;
 }
 .clv6-card:active { transform: scale(.985); }
 .clv6-card.checked {
   background: linear-gradient(160deg, #f4fbf6 0%, #e8f6ed 100%);
   border-color: rgba(122,184,150,.55);
 }
+
+/* ===== FLAME TOP 1 (vàng cam) ===== */
 .clv6-card.top1 {
+  border-color: transparent;
   background: linear-gradient(160deg, #fffbe9 0%, #fff0c4 100%);
-  border-color: rgba(216,168,32,.6);
-  box-shadow: 0 6px 20px -12px rgba(216,168,32,.5);
+  box-shadow: 0 6px 24px -10px rgba(255,140,0,.55);
+  animation: flamePulseGold 2.2s ease-in-out infinite;
 }
+@keyframes flamePulseGold {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px rgba(255,140,0,.85),
+      0 0 14px 2px rgba(255,165,0,.55),
+      0 0 28px 6px rgba(255,200,0,.32),
+      0 8px 24px -10px rgba(255,140,0,.55);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(255,180,0,.95),
+      0 0 20px 4px rgba(255,165,0,.7),
+      0 0 40px 10px rgba(255,200,0,.45),
+      0 8px 24px -10px rgba(255,140,0,.55);
+  }
+}
+.clv6-card.top1::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 18px;
+  padding: 2px;
+  background: linear-gradient(120deg,
+    #ff4500, #ff8c00, #ffd700, #ffec8b, #ffd700, #ff8c00, #ff4500,
+    #ff8c00, #ffd700, #ff4500);
+  background-size: 300% 100%;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: flameBorderShift 2.6s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes flameBorderShift {
+  to { background-position: -300% 0; }
+}
+
+/* ===== FLAME TOP 2 (bạc) ===== */
 .clv6-card.top2 {
+  border-color: transparent;
   background: linear-gradient(160deg, #fafbfc 0%, #eaedef 100%);
-  border-color: rgba(150,158,168,.55);
-  box-shadow: 0 6px 20px -12px rgba(120,130,140,.4);
+  animation: flamePulseSilver 2.2s ease-in-out infinite;
 }
+@keyframes flamePulseSilver {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px rgba(168,176,184,.85),
+      0 0 14px 2px rgba(200,210,220,.55),
+      0 0 28px 6px rgba(220,230,240,.35),
+      0 6px 24px -10px rgba(120,130,140,.5);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(200,208,216,.95),
+      0 0 20px 4px rgba(220,230,240,.7),
+      0 0 40px 10px rgba(240,245,250,.5),
+      0 6px 24px -10px rgba(120,130,140,.5);
+  }
+}
+.clv6-card.top2::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 18px;
+  padding: 2px;
+  background: linear-gradient(120deg,
+    #8a9298, #b8c0c8, #e8eef3, #ffffff, #e8eef3, #b8c0c8, #8a9298,
+    #b8c0c8, #e8eef3, #8a9298);
+  background-size: 300% 100%;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: flameBorderShift 2.6s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ===== FLAME TOP 3 (đồng) ===== */
 .clv6-card.top3 {
+  border-color: transparent;
   background: linear-gradient(160deg, #fff5e8 0%, #ffe2c4 100%);
-  border-color: rgba(200,130,70,.55);
-  box-shadow: 0 6px 20px -12px rgba(200,130,70,.42);
+  animation: flamePulseBronze 2.2s ease-in-out infinite;
 }
+@keyframes flamePulseBronze {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px rgba(200,130,70,.85),
+      0 0 14px 2px rgba(220,150,90,.55),
+      0 0 28px 6px rgba(230,170,110,.32),
+      0 6px 24px -10px rgba(180,110,50,.5);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(220,150,90,.95),
+      0 0 20px 4px rgba(230,170,110,.7),
+      0 0 40px 10px rgba(240,190,140,.45),
+      0 6px 24px -10px rgba(180,110,50,.5);
+  }
+}
+.clv6-card.top3::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 18px;
+  padding: 2px;
+  background: linear-gradient(120deg,
+    #8a4a1a, #c87a3a, #e8a86a, #ffd4a8, #e8a86a, #c87a3a, #8a4a1a,
+    #c87a3a, #e8a86a, #8a4a1a);
+  background-size: 300% 100%;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: flameBorderShift 2.6s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ===== RANK ===== */
 .clv6-rank {
   width: 34px; height: 34px;
   display: flex; align-items: center; justify-content: center;
   font-size: 22px; line-height: 1; flex-shrink: 0;
+  position: relative;
+  z-index: 3;
 }
 .clv6-rank-num {
   width: 28px; height: 28px;
@@ -367,6 +493,7 @@
   box-shadow: 0 3px 10px -4px rgba(45,85,60,.22);
   position: relative;
   contain: paint;
+  z-index: 3;
 }
 .clv6-av img {
   width: 100%; height: 100%;
@@ -376,10 +503,12 @@
   -webkit-backface-visibility: hidden;
 }
 .clv6-card.checked .clv6-av { box-shadow: 0 0 0 2px #7ab896, 0 3px 12px -4px rgba(79,163,112,.4); }
-.clv6-card.top1 .clv6-av { box-shadow: 0 0 0 2px #e0b840, 0 3px 12px -4px rgba(216,168,32,.5); }
-.clv6-card.top2 .clv6-av { box-shadow: 0 0 0 2px #a8b0b8, 0 3px 12px -4px rgba(120,130,140,.35); }
-.clv6-card.top3 .clv6-av { box-shadow: 0 0 0 2px #c88246, 0 3px 12px -4px rgba(200,130,70,.4); }
-.clv6-info { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.clv6-card.top1 .clv6-av { box-shadow: 0 0 0 2px #ffb800, 0 3px 14px -4px rgba(255,140,0,.6); }
+.clv6-card.top2 .clv6-av { box-shadow: 0 0 0 2px #c8d0d8, 0 3px 14px -4px rgba(150,160,170,.5); }
+.clv6-card.top3 .clv6-av { box-shadow: 0 0 0 2px #d18a4a, 0 3px 14px -4px rgba(200,130,70,.55); }
+
+/* ===== INFO ===== */
+.clv6-info { min-width: 0; display: flex; flex-direction: column; gap: 3px; position: relative; z-index: 3; }
 .clv6-line1 {
   display: flex; align-items: center; justify-content: space-between;
   gap: 8px; min-width: 0;
@@ -394,42 +523,93 @@
 .clv6-card.top1 .clv6-name { color: #7a5410; }
 .clv6-card.top2 .clv6-name { color: #4a5460; }
 .clv6-card.top3 .clv6-name { color: #7a4a20; }
+
+/* ===== RANK BADGE (ĐẸP HƠN) ===== */
 .clv6-rank-badge {
   flex-shrink: 0;
-  padding: 2px 8px;
-  border-radius: 6px;
+  padding: 3px 9px;
+  border-radius: 7px;
   font-size: 10px;
   font-weight: 950;
-  letter-spacing: .06em;
-  line-height: 1.2;
+  letter-spacing: .05em;
+  line-height: 1.25;
   color: #6b8f78;
-  background: rgba(200,220,205,.5);
+  background: linear-gradient(180deg, #f0f5f1 0%, #e0eae3 100%);
+  border: 1px solid rgba(200,220,205,.6);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+  text-shadow: 0 1px 0 rgba(255,255,255,.6);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
+
+/* VIP - vàng kim cương */
 .clv6-rank-badge.rank-VIP {
-  background: linear-gradient(135deg, #f5c542, #d89020);
-  color: #fff;
-  box-shadow: 0 2px 6px -2px rgba(216,144,32,.5);
+  background: linear-gradient(135deg, #fff4c4 0%, #ffd700 30%, #f0a800 70%, #d88800 100%);
+  color: #4a2a00;
+  border-color: rgba(216,136,0,.7);
+  text-shadow: 0 1px 0 rgba(255,255,255,.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.7),
+    inset 0 -1px 0 rgba(140,80,0,.3),
+    0 2px 8px -2px rgba(216,144,32,.65);
 }
+
+/* SSS - đỏ huyền thoại */
 .clv6-rank-badge.rank-SSS {
-  background: linear-gradient(135deg, #a855f7, #7e22ce);
+  background: linear-gradient(135deg, #ff6b6b 0%, #dc2626 40%, #991b1b 100%);
   color: #fff;
-  box-shadow: 0 2px 6px -2px rgba(126,34,206,.45);
+  border-color: rgba(153,27,27,.6);
+  text-shadow: 0 1px 2px rgba(80,0,0,.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,180,180,.5),
+    inset 0 -1px 0 rgba(80,0,0,.3),
+    0 2px 8px -2px rgba(220,38,38,.6);
 }
+
+/* SS - hồng tím */
 .clv6-rank-badge.rank-SS {
-  background: linear-gradient(135deg, #c084fc, #a855f7);
+  background: linear-gradient(135deg, #f0a5ff 0%, #c026d3 45%, #86198f 100%);
   color: #fff;
-  box-shadow: 0 2px 6px -2px rgba(168,85,247,.4);
+  border-color: rgba(134,25,143,.6);
+  text-shadow: 0 1px 2px rgba(80,0,80,.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,200,255,.5),
+    inset 0 -1px 0 rgba(60,0,60,.3),
+    0 2px 8px -2px rgba(192,38,211,.6);
 }
+
+/* S - cam đỏ */
 .clv6-rank-badge.rank-S {
-  background: linear-gradient(135deg, #ec4899, #db2777);
+  background: linear-gradient(135deg, #ffb366 0%, #f97316 45%, #c2410c 100%);
   color: #fff;
-  box-shadow: 0 2px 6px -2px rgba(219,39,119,.4);
+  border-color: rgba(194,65,12,.6);
+  text-shadow: 0 1px 2px rgba(100,30,0,.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,220,180,.5),
+    inset 0 -1px 0 rgba(80,20,0,.3),
+    0 2px 8px -2px rgba(249,115,22,.6);
 }
+
+/* A - xanh dương */
 .clv6-rank-badge.rank-A {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, #93c5fd 0%, #3b82f6 45%, #1e40af 100%);
   color: #fff;
-  box-shadow: 0 2px 6px -2px rgba(37,99,235,.4);
+  border-color: rgba(30,64,175,.6);
+  text-shadow: 0 1px 2px rgba(0,20,80,.5);
+  box-shadow:
+    inset 0 1px 0 rgba(200,220,255,.5),
+    inset 0 -1px 0 rgba(0,20,80,.3),
+    0 2px 8px -2px rgba(59,130,246,.6);
 }
+
+/* B - xám nhẹ */
+.clv6-rank-badge.rank-B {
+  background: linear-gradient(135deg, #e8eef3 0%, #d0d8e0 100%);
+  color: #6b7a86;
+  border-color: rgba(180,190,200,.7);
+}
+
+/* ===== SUB ===== */
 .clv6-sub {
   display: flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 800; color: #7a9a85;
@@ -450,6 +630,8 @@
 .clv6-pts.neg { color: #e05b5b; }
 .clv6-pts.zero { color: #a8bdb0; }
 .clv6-idle { color: #a8bdb0; font-weight: 800; }
+
+/* ===== CHECK ===== */
 .clv6-check {
   width: 30px; height: 30px;
   border-radius: 50%;
@@ -458,6 +640,8 @@
   background: rgba(200,220,205,.4);
   border: 2px solid rgba(200,220,205,.8);
   transition: background .3s, border-color .3s, box-shadow .3s;
+  position: relative;
+  z-index: 3;
 }
 .clv6-check.on {
   background: linear-gradient(135deg, #7ad79a, #4fa370);
@@ -466,10 +650,14 @@
 }
 .clv6-check svg { width: 16px; height: 16px; color: transparent; }
 .clv6-check.on svg { color: #fff; }
+
+/* ===== EMPTY ===== */
 .clv6-empty { padding: 60px 20px; text-align: center; color: #9ab0a0; }
 .clv6-empty-emoji { font-size: 52px; margin-bottom: 12px; opacity: .55; }
 .clv6-empty-title { font-size: 15px; font-weight: 900; color: #6b8f78; margin-bottom: 4px; }
 .clv6-empty-sub { font-size: 12px; color: #a8bdb0; font-weight: 700; }
+
+/* ===== FOOTER ===== */
 .clv6-footer {
   position: absolute; left: 0; right: 0; bottom: 0;
   z-index: 20;
@@ -540,7 +728,6 @@
     page.id = PAGE_ID;
     page.setAttribute('aria-label', 'Checklist hôm nay');
     page.setAttribute('aria-hidden', 'true');
-    // ⚡ ĐÃ XOÁ ô date khỏi stats
     page.innerHTML = `
       <header class="clv6-head">
         <button type="button" class="clv6-head-btn" id="clv6Back" aria-label="Đóng">←</button>
@@ -706,6 +893,7 @@
       _cardClass: undefined,
       _checkClass: undefined,
       _rankBadge: undefined,
+      _rankBadgeLabel: undefined,
     };
   }
 
@@ -714,6 +902,7 @@
     const checked = !!item.checked;
     const todayP = Number(item.todayPoints) || 0;
     const rank = item.rank || 'B';
+    const rankText = rankLabel(rank);
 
     const isTop = rankIdx !== undefined && rankIdx >= 0 && rankIdx <= 2;
     const newCardClass = 'clv6-card' +
@@ -763,9 +952,13 @@
       nameEl.textContent = item.name;
     }
 
+    // ⚡ Rank badge — text đầy đủ + class màu
+    if (cached._rankBadgeLabel !== rankText){
+      cached._rankBadgeLabel = rankText;
+      rankBadgeEl.textContent = rankText;
+    }
     if (cached._rankBadge !== rank){
       cached._rankBadge = rank;
-      rankBadgeEl.textContent = rank;
       rankBadgeEl.className = 'clv6-rank-badge rank-' + rank;
     }
 
@@ -834,8 +1027,6 @@
     const numEl = $('clv6StatNum');
     if (numEl) numEl.innerHTML = `${checkedCount}<small>/${total}</small>`;
 
-    // ⚡ ĐÃ XOÁ đoạn update date
-
     const barEl = $('clv6Bar');
     if (barEl) barEl.style.width = pct + '%';
 
@@ -897,7 +1088,7 @@
         const div = document.createElement('div');
         div.className = 'clv6-divider';
         div.textContent = section === 'top3'
-          ? '🏆 Top 3 check sớm'
+          ? '🔥 Top 3 check sớm'
           : section === 'checked'
             ? `✓ Đã check (${all.counts.checked - all.top3.length})`
             : `○ Chưa check (${all.counts.unchecked})`;
@@ -970,7 +1161,7 @@
   }
 
   /* =========================================================
-     DRAW CANVAS — vẫn giữ date ở header
+     DRAW CANVAS — flame tĩnh + rank đầy đủ
      ========================================================= */
   async function drawCanvas(){
     const sorted = buildSortedList();
@@ -987,7 +1178,7 @@
 
     const dpr = Math.min(3, Math.max(2, window.devicePixelRatio || 2));
     const W = 520;
-    const rowH = 74;
+    const rowH = 76;
     const headerH = 130;
     const footerH = 60;
     const padX = 16;
@@ -1033,7 +1224,6 @@
     ctx.font = '600 13px -apple-system, system-ui, sans-serif';
     ctx.fillText(`${checkedCount} đã check · ${total - checkedCount} còn lại`, padX + 60, 68);
 
-    // ⚡ Date vẫn có trong ảnh
     const now = new Date();
     const dateStr = String(now.getDate()).padStart(2,'0') + '/' +
                     String(now.getMonth()+1).padStart(2,'0') + '/' +
@@ -1075,31 +1265,77 @@
       const rankIdx = isTop3 ? sorted.top3.findIndex(x => x.name === item.name) : undefined;
       const todayP = Number(item.todayPoints) || 0;
       const rank = item.rank || 'B';
+      const rankText = rankLabel(rank);
 
       const rowY = y + rowPad / 2;
       const rowHeight = rowH - rowPad;
 
-      if (rankIdx === 0) ctx.fillStyle = '#fff8e3';
-      else if (rankIdx === 1) ctx.fillStyle = '#f3f5f7';
-      else if (rankIdx === 2) ctx.fillStyle = '#fff0e0';
-      else if (item.checked) ctx.fillStyle = '#eef8f1';
-      else ctx.fillStyle = '#ffffff';
-      roundRect(ctx, padX, rowY, rowW, rowHeight, 14);
-      ctx.fill();
+      // ⚡ FLAME GLOW (vẽ trước card)
+      if (rankIdx === 0){
+        ctx.save();
+        ctx.shadowColor = 'rgba(255,140,0,.7)';
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = '#fff8e3';
+        roundRect(ctx, padX, rowY, rowW, rowHeight, 14);
+        ctx.fill();
+        ctx.restore();
+      } else if (rankIdx === 1){
+        ctx.save();
+        ctx.shadowColor = 'rgba(180,190,200,.6)';
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = '#f3f5f7';
+        roundRect(ctx, padX, rowY, rowW, rowHeight, 14);
+        ctx.fill();
+        ctx.restore();
+      } else if (rankIdx === 2){
+        ctx.save();
+        ctx.shadowColor = 'rgba(200,130,70,.6)';
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = '#fff0e0';
+        roundRect(ctx, padX, rowY, rowW, rowHeight, 14);
+        ctx.fill();
+        ctx.restore();
+      } else if (item.checked){
+        ctx.fillStyle = '#eef8f1';
+        roundRect(ctx, padX, rowY, rowW, rowHeight, 14);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#ffffff';
+        roundRect(ctx, padX, rowY, rowW, rowHeight, 14);
+        ctx.fill();
+      }
 
-      let borderColor;
-      if (rankIdx === 0) borderColor = 'rgba(216,168,32,.6)';
-      else if (rankIdx === 1) borderColor = 'rgba(150,158,168,.55)';
-      else if (rankIdx === 2) borderColor = 'rgba(200,130,70,.55)';
-      else if (item.checked) borderColor = 'rgba(122,184,150,.5)';
-      else borderColor = 'rgba(200,220,205,.65)';
-      ctx.strokeStyle = borderColor;
-      ctx.lineWidth = 1.5;
-      roundRect(ctx, padX, rowY, rowW, rowHeight, 14);
-      ctx.stroke();
+      // ⚡ FLAME BORDER cho top3 (vẽ gradient border 3px)
+      if (rankIdx !== undefined && rankIdx >= 0 && rankIdx <= 2){
+        let grad1, grad2;
+        if (rankIdx === 0){
+          grad1 = '#ff4500'; grad2 = '#ffd700';
+        } else if (rankIdx === 1){
+          grad1 = '#8a9298'; grad2 = '#ffffff';
+        } else {
+          grad1 = '#8a4a1a'; grad2 = '#ffd4a8';
+        }
+        const borderGrad = ctx.createLinearGradient(padX, 0, padX + rowW, 0);
+        borderGrad.addColorStop(0, grad1);
+        borderGrad.addColorStop(0.5, grad2);
+        borderGrad.addColorStop(1, grad1);
+        ctx.strokeStyle = borderGrad;
+        ctx.lineWidth = 2.5;
+        roundRect(ctx, padX, rowY, rowW, rowHeight, 14);
+        ctx.stroke();
+      } else {
+        let borderColor;
+        if (item.checked) borderColor = 'rgba(122,184,150,.5)';
+        else borderColor = 'rgba(200,220,205,.65)';
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, padX, rowY, rowW, rowHeight, 14);
+        ctx.stroke();
+      }
 
       const cy = rowY + rowHeight / 2;
 
+      // Rank
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       if (rankIdx !== undefined && rankIdx >= 0 && rankIdx <= 2){
@@ -1116,6 +1352,7 @@
         ctx.fillText(String(counter), rankCX, cy + 1);
       }
 
+      // Avatar
       ctx.fillStyle = '#d4ead9';
       ctx.beginPath();
       ctx.arc(avX, cy, avR, 0, Math.PI * 2);
@@ -1145,9 +1382,9 @@
         ctx.fillText(getInitial(item.name), avX, cy + 1);
       }
 
-      if (rankIdx === 0) ctx.strokeStyle = '#e0b840';
-      else if (rankIdx === 1) ctx.strokeStyle = '#a8b0b8';
-      else if (rankIdx === 2) ctx.strokeStyle = '#c88246';
+      if (rankIdx === 0) ctx.strokeStyle = '#ffb800';
+      else if (rankIdx === 1) ctx.strokeStyle = '#c8d0d8';
+      else if (rankIdx === 2) ctx.strokeStyle = '#d18a4a';
       else if (item.checked) ctx.strokeStyle = '#7ab896';
       else ctx.strokeStyle = 'rgba(200,220,205,.5)';
       ctx.lineWidth = 2;
@@ -1155,31 +1392,57 @@
       ctx.arc(avX, cy, avR, 0, Math.PI * 2);
       ctx.stroke();
 
-      const badgeText = rank;
+      // ⚡ Rank badge (đầy đủ "S-rank")
       ctx.font = 'bold 11px -apple-system, system-ui, sans-serif';
-      const badgeTextW = ctx.measureText(badgeText).width;
-      const badgeW = badgeTextW + 18;
-      const badgeH = 20;
+      const badgeTextW = ctx.measureText(rankText).width;
+      const badgeW = badgeTextW + 20;
+      const badgeH = 22;
       const badgeX = infoRight - badgeW;
-      const badgeY = rowY + 12;
+      const badgeY = rowY + 10;
       const badgeCY = badgeY + badgeH / 2;
 
-      let badgeBg;
-      if (rank === 'VIP') badgeBg = '#d89020';
-      else if (rank === 'SSS') badgeBg = '#7e22ce';
-      else if (rank === 'SS') badgeBg = '#a855f7';
-      else if (rank === 'S') badgeBg = '#db2777';
-      else if (rank === 'A') badgeBg = '#2563eb';
-      else badgeBg = 'rgba(200,220,205,.6)';
-      ctx.fillStyle = badgeBg;
-      roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 5);
+      // Màu theo rank
+      let badgeBg1, badgeBg2, badgeTextCol, badgeBorderCol;
+      if (rank === 'VIP'){
+        badgeBg1 = '#fff4c4'; badgeBg2 = '#d88800';
+        badgeTextCol = '#4a2a00'; badgeBorderCol = '#d88800';
+      } else if (rank === 'SSS'){
+        badgeBg1 = '#ff6b6b'; badgeBg2 = '#991b1b';
+        badgeTextCol = '#ffffff'; badgeBorderCol = '#991b1b';
+      } else if (rank === 'SS'){
+        badgeBg1 = '#f0a5ff'; badgeBg2 = '#86198f';
+        badgeTextCol = '#ffffff'; badgeBorderCol = '#86198f';
+      } else if (rank === 'S'){
+        badgeBg1 = '#ffb366'; badgeBg2 = '#c2410c';
+        badgeTextCol = '#ffffff'; badgeBorderCol = '#c2410c';
+      } else if (rank === 'A'){
+        badgeBg1 = '#93c5fd'; badgeBg2 = '#1e40af';
+        badgeTextCol = '#ffffff'; badgeBorderCol = '#1e40af';
+      } else {
+        badgeBg1 = '#e8eef3'; badgeBg2 = '#d0d8e0';
+        badgeTextCol = '#6b7a86'; badgeBorderCol = 'rgba(180,190,200,.9)';
+      }
+
+      const badgeGrad = ctx.createLinearGradient(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH);
+      badgeGrad.addColorStop(0, badgeBg1);
+      badgeGrad.addColorStop(1, badgeBg2);
+      ctx.fillStyle = badgeGrad;
+      roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 6);
       ctx.fill();
 
-      ctx.fillStyle = (rank === 'B') ? '#6b8f78' : '#ffffff';
+      // Border
+      ctx.strokeStyle = badgeBorderCol;
+      ctx.lineWidth = 1;
+      roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 6);
+      ctx.stroke();
+
+      // Text
+      ctx.fillStyle = badgeTextCol;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(badgeText, badgeX + badgeW / 2, badgeCY + 1);
+      ctx.fillText(rankText, badgeX + badgeW / 2, badgeCY + 0.5);
 
+      // Name
       const nameMaxW = badgeX - textX - 8;
       let nameColor = '#234a32';
       if (rankIdx === 0) nameColor = '#7a5410';
@@ -1192,39 +1455,32 @@
       ctx.fillText(truncate(ctx, item.name, nameMaxW), textX, rowY + 28);
 
       ctx.font = '600 13px -apple-system, system-ui, sans-serif';
-      const subY = rowY + 52;
+      const subY = rowY + 54;
 
       if (item.checked && item.time){
         const timeText = '🕐 ' + item.time;
         ctx.fillStyle = '#6b8f78';
         ctx.fillText(timeText, textX, subY);
-
         const timeW = ctx.measureText(timeText).width;
-
         ctx.fillStyle = '#c0d0c4';
         ctx.fillText('·', textX + timeW + 6, subY);
-
         const dotW = ctx.measureText('·').width;
         const ptsText = formatPoints(todayP);
         if (todayP > 0) ctx.fillStyle = '#4fa370';
         else if (todayP < 0) ctx.fillStyle = '#e05b5b';
         else ctx.fillStyle = '#a8bdb0';
         ctx.fillText(ptsText, textX + timeW + 6 + dotW + 6, subY);
-
       } else if (!item.checked && todayP !== 0){
         ctx.fillStyle = '#a8bdb0';
         const idleText = 'Hôm nay';
         ctx.fillText(idleText, textX, subY);
         const idleW = ctx.measureText(idleText).width;
-
         ctx.fillStyle = '#c0d0c4';
         ctx.fillText('·', textX + idleW + 6, subY);
-
         const dotW = ctx.measureText('·').width;
         const ptsText = formatPoints(todayP);
         ctx.fillStyle = todayP > 0 ? '#4fa370' : '#e05b5b';
         ctx.fillText(ptsText, textX + idleW + 6 + dotW + 6, subY);
-
       } else {
         ctx.fillStyle = '#a8bdb0';
         ctx.fillText('Chưa check hôm nay', textX, subY);
@@ -1459,7 +1715,7 @@
       share: onShare,
     };
 
-    log('v6.3.1 ready ✓');
+    log('v6.4 ready ✓');
   }
 
   if (document.readyState === 'loading'){
