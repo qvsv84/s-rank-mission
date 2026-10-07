@@ -1,9 +1,8 @@
 /* =========================================================
-   BIRTHDAY CHAT — v1.9
-   - Nút reply nổi bật (to hơn, gradient hồng, có hint)
+   BIRTHDAY CHAT — v2.0
+   - FIX: mọi tin đều là wish card (bỏ chat bubble)
+   - Nút reply hiện trên mọi wish của người khác (khi owner)
    - Reply hiển thị ngay dưới wish gốc (threaded)
-   - Chat bubble luôn bên TRÁI
-   - Wish Mỹ Dung: bên PHẢI + special
    ========================================================= */
 (function(){
   "use strict";
@@ -265,7 +264,6 @@
 .bd-empty-title { font-size: 15px; font-weight: 900; color: #c04a90; margin-bottom: 4px; }
 .bd-empty-sub { font-size: 12px; font-weight: 700; line-height: 1.5; }
 
-/* ===== WISH CARD ===== */
 .bd-wish {
   position: relative;
   align-self: flex-start;
@@ -361,7 +359,7 @@
   color: #fff;
 }
 
-/* ===== NÚT TRẢ LỜI — nổi bật ===== */
+/* Nút trả lời nổi bật */
 .bd-wish-actions {
   margin-top: 10px;
   padding-left: 46px;
@@ -369,11 +367,6 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-}
-.bd-wish.me .bd-wish-actions {
-  padding-left: 0;
-  padding-right: 46px;
-  justify-content: flex-end;
 }
 .bd-reply-btn {
   display: inline-flex;
@@ -397,10 +390,7 @@
   background: linear-gradient(135deg, #ffe6f2, #ffd0e5);
   box-shadow: 0 2px 6px -2px rgba(216,91,158,.5);
 }
-.bd-reply-btn .bd-reply-icon {
-  font-size: 14px;
-  line-height: 1;
-}
+.bd-reply-btn .bd-reply-icon { font-size: 14px; line-height: 1; }
 .bd-reply-hint {
   font-size: 10.5px;
   font-weight: 800;
@@ -409,20 +399,19 @@
   padding: 2px 6px;
 }
 
-/* ===== THREAD — gom wish + replies ===== */
+/* Thread */
 .bd-thread {
   display: flex; flex-direction: column;
   gap: 6px;
   width: 100%;
 }
 
-/* ===== REPLY BUBBLE ===== */
+/* Reply bubble */
 .bd-reply {
-  display: flex; gap: 8px; align-items: flex-start;
+  display: flex;
   align-self: flex-end;
   max-width: 82%;
   margin-top: 2px;
-  padding-left: 40px;
   animation: bdWishIn .35s ease-out both;
 }
 .bd-reply-wrap {
@@ -452,10 +441,7 @@
   font-size: 11.5px; font-weight: 950; color: #c04a90;
   white-space: nowrap;
 }
-.bd-reply-arrow {
-  font-size: 12px; color: #c04a90;
-  opacity: .7;
-}
+.bd-reply-arrow { font-size: 12px; color: #c04a90; opacity: .7; }
 .bd-reply-message {
   font-size: 13.5px; font-weight: 650;
   line-height: 1.45;
@@ -467,44 +453,6 @@
   margin-top: 4px;
   font-size: 10px; font-weight: 800; color: #c9a0b8;
   text-align: right;
-}
-
-/* ===== CHAT ROW ===== */
-.bd-chat-row {
-  display: flex; gap: 8px; align-items: flex-end;
-  margin-top: 4px;
-  animation: bdWishIn .3s ease-out both;
-}
-.bd-chat-avatar {
-  width: 30px; height: 30px; border-radius: 50%;
-  flex: 0 0 auto;
-  background: linear-gradient(135deg, #ffd6e8, #ffb0d5);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 950; color: #fff;
-  border: 2px solid #fff;
-  overflow: hidden;
-  align-self: flex-start;
-}
-.bd-chat-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.bd-chat-wrap { max-width: 76%; display: flex; flex-direction: column; gap: 3px; }
-.bd-chat-name {
-  font-size: 11px; font-weight: 900; color: #c04a90;
-  padding: 0 4px;
-}
-.bd-chat-bubble {
-  padding: 9px 13px;
-  border-radius: 16px 16px 16px 4px;
-  background: #fff;
-  border: 1.5px solid rgba(255,158,199,.35);
-  font-size: 14.5px; font-weight: 650;
-  color: #4a2a3a;
-  line-height: 1.45;
-  white-space: pre-wrap; word-break: break-word;
-  box-shadow: 0 3px 10px -4px rgba(216,91,158,.2);
-}
-.bd-chat-time {
-  font-size: 10px; font-weight: 800; color: #c9a0b8;
-  padding: 0 4px;
 }
 
 .bd-composer {
@@ -1027,7 +975,7 @@
 
     card.append(head, msg, foot);
 
-    // ⚡ Hàng action riêng — nút reply nổi bật
+    // Nút reply cho owner (không trên wish của chính Mỹ Dung)
     if (S.isOwner && !w.isFromRecipient) {
       const actions = document.createElement('div');
       actions.className = 'bd-wish-actions';
@@ -1128,52 +1076,15 @@
         frag.appendChild(d);
       }
 
-      const isWish = w.type === 'wish' || w.isFromRecipient;
+      // ⚡ Tất cả tin đều render thành wish card
+      const thread = document.createElement('div');
+      thread.className = 'bd-thread';
+      thread.appendChild(renderWishCard(w));
 
-      if (isWish) {
-        const thread = document.createElement('div');
-        thread.className = 'bd-thread';
-        thread.appendChild(renderWishCard(w));
+      const replies = repliesByParent[w.id] || [];
+      replies.forEach(r => thread.appendChild(renderReply(r)));
 
-        const replies = repliesByParent[w.id] || [];
-        replies.forEach(r => thread.appendChild(renderReply(r)));
-
-        frag.appendChild(thread);
-      } else {
-        const row = document.createElement('div');
-        row.className = 'bd-chat-row';
-
-        const av = document.createElement('div');
-        av.className = 'bd-chat-avatar';
-        const avUrl = getAvatarUrl(w.sender);
-        if (avUrl) {
-          const img = document.createElement('img');
-          img.src = avUrl; img.alt = ''; img.loading = 'lazy';
-          img.onerror = () => { img.remove(); av.textContent = getInitial(w.sender); };
-          av.appendChild(img);
-        } else av.textContent = getInitial(w.sender);
-
-        const wrap = document.createElement('div');
-        wrap.className = 'bd-chat-wrap';
-
-        const nEl = document.createElement('div');
-        nEl.className = 'bd-chat-name';
-        nEl.textContent = w.sender || 'Ẩn danh';
-        wrap.appendChild(nEl);
-
-        const bub = document.createElement('div');
-        bub.className = 'bd-chat-bubble';
-        bub.textContent = w.message;
-        wrap.appendChild(bub);
-
-        const tEl = document.createElement('div');
-        tEl.className = 'bd-chat-time';
-        tEl.textContent = formatTime(w.ts);
-        wrap.appendChild(tEl);
-
-        row.append(av, wrap);
-        frag.appendChild(row);
-      }
+      frag.appendChild(thread);
 
       lastTs = w.ts;
     }
@@ -1208,7 +1119,6 @@
           message: String(raw.message || ''),
           isFromRecipient: !!raw.isFromRecipient,
           replyToId,
-          type: raw.isFromRecipient ? 'wish' : 'message',
           ts
         });
         added++;
@@ -1251,7 +1161,6 @@
         message: String(data.message || message),
         isFromRecipient: !!data.isFromRecipient,
         replyToId: data.replyToId ? String(data.replyToId) : null,
-        type: data.isFromRecipient ? 'wish' : 'message',
         ts: Number(data.ts) || Date.now()
       };
       S.wishes.push(w);
@@ -1553,7 +1462,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v1.9 ready ✓');
+    log('v2.0 ready ✓');
   }
 
   if (document.readyState === 'loading') {
