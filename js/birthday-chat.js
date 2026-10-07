@@ -1,8 +1,8 @@
 /* =========================================================
-   BIRTHDAY CHAT — v3.1
-   - Hồng đậm cute hơn
-   - Hiệu ứng: shine bubble, glow, bounce
-   - Reply cùng hàng tên: [AV] Mỹ Dung: nội dung
+   BIRTHDAY CHAT — v3.2
+   - Flame border chạy quanh page + header + bubble me
+   - Title to nổi bật với gradient + glow
+   - Giữ palette hồng cute
    ========================================================= */
 (function(){
   "use strict";
@@ -133,7 +133,38 @@
     const style = document.createElement('style');
     style.id = 'bdStyles';
     style.textContent = `
-/* ===== FAB ===== */
+/* ============================================================
+   FLAME KEYFRAMES — dùng chung
+============================================================ */
+@keyframes bdFlameRotate {
+  from { --bd-angle: 0deg; }
+  to { --bd-angle: 360deg; }
+}
+@property --bd-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes bdFlameShift {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+@keyframes bdFlamePulse {
+  0%,100% { filter: brightness(1) saturate(1); }
+  50%     { filter: brightness(1.3) saturate(1.2); }
+}
+@keyframes bdGlowPulse {
+  0%,100% {
+    box-shadow: 0 0 8px rgba(255,140,0,.5), 0 0 16px rgba(255,80,0,.35), inset 0 0 8px rgba(255,220,120,.3);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(255,180,0,.7), 0 0 28px rgba(255,100,0,.5), inset 0 0 14px rgba(255,220,120,.5);
+  }
+}
+
+/* ============================================================
+   FAB — nút nổi
+============================================================ */
 #bdFab {
   position: fixed; right: 18px;
   bottom: max(24px, calc(18px + env(safe-area-inset-bottom)));
@@ -148,9 +179,9 @@
   display: flex; align-items: center; gap: 8px;
   cursor: pointer;
   box-shadow: 0 8px 24px -6px rgba(216,27,96,.55);
-  transition: transform .15s ease, box-shadow .25s ease;
+  transition: transform .15s ease;
 }
-#bdFab:active { transform: scale(.96); box-shadow: 0 4px 14px -4px rgba(216,27,96,.7); }
+#bdFab:active { transform: scale(.96); }
 #bdFab.hidden { display: none !important; }
 #bdFab .bd-fab-icon { font-size: 20px; line-height: 1; }
 #bdFab .bd-fab-badge {
@@ -164,32 +195,106 @@
 }
 #bdFab .bd-fab-badge.show { display: flex; }
 
-/* ===== PAGE ===== */
+/* ============================================================
+   PAGE — nền + FLAME VIỀN CHẠY QUANH
+============================================================ */
 #bdPage {
   position: fixed; inset: 0;
   z-index: 20900;
   display: none; flex-direction: column;
-  background:
-    radial-gradient(circle at 10% 0%, rgba(255,182,213,.45), transparent 40%),
-    radial-gradient(circle at 90% 100%, rgba(255,146,187,.4), transparent 40%),
-    linear-gradient(180deg, #ffeef5 0%, #ffd9e8 100%);
+  background: #ffeef5;
   color: #3d0f24;
   font-family: var(--font, ui-rounded, system-ui);
   overflow: hidden;
+  padding: 6px;
+  box-sizing: border-box;
 }
 #bdPage.show { display: flex; }
 
-/* ===== HEADER ===== */
+/* Flame viền quanh page */
+#bdPage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  padding: 5px;
+  background: conic-gradient(
+    from var(--bd-angle),
+    #ff2200 0deg,
+    #ff6600 40deg,
+    #ffcc00 80deg,
+    #ffee88 110deg,
+    #ffffff 130deg,
+    #ffee88 150deg,
+    #ffcc00 180deg,
+    #ff8800 220deg,
+    #ff4400 260deg,
+    #cc1100 300deg,
+    #ff6600 340deg,
+    #ffcc00 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: bdFlameRotate 3s linear infinite, bdFlamePulse 1.6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Overlay mờ ảo tạo cảm giác lửa cháy */
+#bdPage::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(255,100,0,.08), transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(255,150,0,.08), transparent 40%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bd-shell {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #ffeef5 0%, #ffd9e8 100%);
+  border-radius: 16px;
+  overflow: hidden;
+  z-index: 2;
+}
+
+/* ============================================================
+   HEADER — Tiêu đề to + flame
+============================================================ */
 .bd-head {
   flex: 0 0 auto;
-  display: grid; grid-template-columns: 40px 1fr auto;
-  align-items: center; gap: 10px;
-  padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: calc(14px + env(safe-area-inset-top)) 14px 14px;
   background: linear-gradient(135deg, #fff5fa 0%, #ffe0ec 100%);
-  border-bottom: 1px solid #ffc0dd;
-  box-shadow: 0 2px 12px rgba(216,27,96,.08);
+  border-bottom: 2px solid transparent;
   z-index: 10;
 }
+.bd-head::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg,
+    #ff2200, #ff6600, #ffcc00, #ffee88, #ffffff,
+    #ffee88, #ffcc00, #ff8800, #ff4400, #cc1100, #ff2200);
+  background-size: 200% 100%;
+  animation: bdFlameShift 2.4s linear infinite;
+  box-shadow: 0 0 12px rgba(255,140,0,.6), 0 0 20px rgba(255,80,0,.4);
+}
+
 .bd-head-btn {
   width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
@@ -198,57 +303,110 @@
   color: #d81b60;
   font-size: 18px; font-weight: 700;
   cursor: pointer;
-  transition: transform .15s ease, background .15s ease, border-color .15s ease;
+  transition: transform .15s ease, background .15s ease;
+  position: relative;
+  z-index: 2;
 }
 .bd-head-btn:active { transform: scale(.92); background: #fff0f5; }
-.bd-head-center { min-width: 0; display: flex; align-items: center; gap: 10px; }
+
+.bd-head-center {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 2;
+}
+
 .bd-head-avatar {
   position: relative;
-  width: 38px; height: 38px; border-radius: 50%;
+  width: 46px; height: 46px; border-radius: 50%;
   flex: 0 0 auto;
   background: linear-gradient(135deg, #ff9cc0, #d81b60);
   color: #fff;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 800;
+  font-size: 16px; font-weight: 800;
   overflow: hidden;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 3px #ff9cc0, 0 4px 12px rgba(216,27,96,.3);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 3px #ff7fb0,
+    0 0 12px rgba(255,127,176,.5),
+    0 4px 14px rgba(216,27,96,.35);
+  animation: bdGlowPulse 2s ease-in-out infinite;
 }
 .bd-head-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.bd-head-info { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.bd-head-title {
-  font-size: 14.5px; font-weight: 800;
-  color: #8a0f45;
-  letter-spacing: -.005em;
-  line-height: 1.2;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.bd-head-sub {
-  font-size: 11.5px; font-weight: 600;
-  color: #e91e63;
-  line-height: 1.3;
+
+.bd-head-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-/* ===== BODY ===== */
+/* ⚡ TIÊU ĐỀ TO NỔI BẬT */
+.bd-head-title {
+  font-size: 22px;
+  font-weight: 950;
+  letter-spacing: -.01em;
+  line-height: 1.15;
+  background: linear-gradient(
+    90deg,
+    #ff2200 0%,
+    #ff6600 15%,
+    #ffcc00 30%,
+    #ff2288 50%,
+    #ff6600 70%,
+    #ff2200 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: bdFlameShift 3s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(255,120,0,.35)) drop-shadow(0 1px 0 rgba(255,255,255,.9));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bd-head-sub {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #e91e63;
+  line-height: 1.3;
+  letter-spacing: .01em;
+}
+
+/* ============================================================
+   BODY
+============================================================ */
 .bd-body {
   flex: 1 1 auto;
-  overflow-y: auto; overflow-x: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 12px 12px 130px;
-  display: flex; flex-direction: column; gap: 10px;
+  padding: 14px 12px 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  z-index: 2;
 }
 .bd-body::-webkit-scrollbar { width: 3px; }
 .bd-body::-webkit-scrollbar-thumb { background: #ff9cc0; border-radius: 2px; }
 .bd-body > * { flex-shrink: 0; }
 
 .bd-day-divider {
-  align-self: center; margin: 14px 0 6px;
+  align-self: center;
+  margin: 14px 0 6px;
   padding: 4px 14px;
-  background: rgba(255,255,255,.85);
+  background: rgba(255,255,255,.9);
   border: 1px solid #ffd6e8;
   border-radius: 999px;
   color: #d81b60;
-  font-size: 11px; font-weight: 800;
+  font-size: 11px;
+  font-weight: 800;
   letter-spacing: .08em;
   text-transform: uppercase;
   box-shadow: 0 2px 8px rgba(216,27,96,.08);
@@ -259,16 +417,24 @@
   text-align: center;
   color: #d1759a;
 }
-.bd-empty-emoji { font-size: 56px; margin-bottom: 14px; opacity: .7; filter: drop-shadow(0 4px 8px rgba(216,27,96,.2)); }
+.bd-empty-emoji {
+  font-size: 56px;
+  margin-bottom: 14px;
+  opacity: .7;
+  filter: drop-shadow(0 4px 8px rgba(216,27,96,.2));
+}
 .bd-empty-title { font-size: 15.5px; font-weight: 800; color: #8a0f45; margin-bottom: 6px; }
 .bd-empty-sub { font-size: 13px; font-weight: 500; line-height: 1.55; }
 
-/* ===== CARD ===== */
+/* ============================================================
+   CARD
+============================================================ */
 .bd-card {
   display: flex;
   flex-direction: column;
   gap: 4px;
   animation: bdCardIn .4s cubic-bezier(.16,.9,.25,1) both;
+  position: relative;
 }
 .bd-card.me { align-items: flex-end; }
 @keyframes bdCardIn {
@@ -276,7 +442,9 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* ===== MAIN ROW (AV + name + bubble) ===== */
+/* ============================================================
+   MAIN ROW
+============================================================ */
 .bd-main {
   display: flex;
   align-items: flex-start;
@@ -304,7 +472,8 @@
 .bd-card.me .bd-av { display: none; }
 
 .bd-bubble-wrap {
-  display: flex; flex-direction: column;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   flex: 1;
 }
@@ -319,18 +488,24 @@
 }
 .bd-card.me .bd-name-row { flex-direction: row-reverse; }
 .bd-name {
-  font-size: 12.5px; font-weight: 800;
+  font-size: 12.5px;
+  font-weight: 800;
   color: #d81b60;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   max-width: 160px;
 }
 .bd-time-inline {
-  font-size: 10.5px; font-weight: 600;
+  font-size: 10.5px;
+  font-weight: 600;
   color: #c98ba6;
   flex-shrink: 0;
 }
 
-/* ===== BUBBLE ===== */
+/* ============================================================
+   BUBBLE — wish thường
+============================================================ */
 .bd-bubble {
   position: relative;
   padding: 10px 14px;
@@ -348,18 +523,60 @@
   overflow: hidden;
 }
 
+/* ============================================================
+   BUBBLE ME — flame viền chạy quanh
+============================================================ */
 .bd-card.me .bd-bubble {
+  padding: 11px 16px;
+  border-radius: 20px 20px 6px 20px;
   background: linear-gradient(135deg, #ff7fb0 0%, #d81b60 100%);
   color: #fff;
-  border-radius: 20px 20px 6px 20px;
+  font-weight: 600;
+  text-shadow: 0 1px 1px rgba(120,0,50,.2);
+  /* Flame viền ngoài */
   box-shadow:
-    0 6px 18px -4px rgba(216,27,96,.45),
-    inset 0 1px 0 rgba(255,255,255,.2);
-  text-shadow: 0 1px 1px rgba(120,0,50,.15);
+    0 0 0 2px #ff2200,
+    0 0 0 3px #ff8800,
+    0 0 12px rgba(255,100,0,.7),
+    0 0 24px rgba(255,60,0,.4),
+    0 6px 18px -4px rgba(216,27,96,.5);
+  animation: bdFlamePulse 1.6s ease-in-out infinite;
 }
 
-/* Shine effect khi bubble me xuất hiện */
-.bd-card.me .bd-bubble.shine::before {
+/* Lớp lửa chạy quanh bubble me */
+.bd-card.me .bd-bubble::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 24px 24px 8px 24px;
+  padding: 3px;
+  background: conic-gradient(
+    from var(--bd-angle),
+    transparent 0deg,
+    transparent 60deg,
+    #ff2200 90deg,
+    #ff8800 120deg,
+    #ffcc00 150deg,
+    #fff7c0 170deg,
+    #ffcc00 190deg,
+    #ff8800 220deg,
+    #ff2200 250deg,
+    transparent 280deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: bdFlameRotate 2.4s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+  filter: drop-shadow(0 0 6px rgba(255,140,0,.8));
+}
+
+/* Shine effect cho bubble me mới */
+.bd-card.me .bd-bubble.shine::after {
   content: '';
   position: absolute;
   top: 0; left: 0; bottom: 0;
@@ -367,7 +584,7 @@
   background: linear-gradient(100deg,
     transparent 0%,
     transparent 30%,
-    rgba(255,255,255,.5) 50%,
+    rgba(255,255,255,.55) 50%,
     transparent 70%,
     transparent 100%);
   transform: translateX(-100%);
@@ -378,32 +595,22 @@
   to { transform: translateX(100%); }
 }
 
-/* Glow pulse cho tin mới */
-.bd-card.new .bd-bubble {
-  animation: bdGlow 1s ease-out;
-}
-@keyframes bdGlow {
-  0%   { box-shadow: 0 2px 8px rgba(216,27,96,.1), 0 0 0 0 rgba(255,127,176,.55); }
-  60%  { box-shadow: 0 2px 8px rgba(216,27,96,.1), 0 0 0 12px rgba(255,127,176,0); }
-  100% { box-shadow: 0 2px 8px rgba(216,27,96,.1), 0 0 0 0 rgba(255,127,176,0); }
-}
-
-/* ===== REPLIES BLOCK ===== */
+/* ============================================================
+   REPLIES BLOCK
+============================================================ */
 .bd-replies {
   display: flex;
   flex-direction: column;
   gap: 6px;
   margin-left: 42px;
   margin-top: 4px;
-  max-width: calc(82% + 0px);
+  max-width: 82%;
 }
 .bd-card.me .bd-replies {
   margin-left: 0;
-  margin-right: 0;
   align-self: flex-end;
 }
 
-/* Reply inline: [AV nhỏ] Name: message */
 .bd-reply-inline {
   display: flex;
   align-items: flex-start;
@@ -455,10 +662,11 @@
   font-weight: 600;
   color: #c98ba6;
   margin-left: 6px;
-  opacity: 0.9;
 }
 
-/* ===== INPUT INLINE ===== */
+/* ============================================================
+   INPUT INLINE
+============================================================ */
 .bd-reply-input-row {
   display: flex;
   align-items: flex-start;
@@ -505,8 +713,7 @@
   border: 0; border-radius: 50%;
   background: linear-gradient(135deg, #ff7fb0, #d81b60);
   color: #fff;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 12px; font-weight: 800;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: transform .15s ease, opacity .15s ease;
@@ -522,8 +729,7 @@
   border: 0; border-radius: 50%;
   background: #fff0f5;
   color: #c98ba6;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 13px; font-weight: 600;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: background .15s ease;
@@ -539,7 +745,9 @@
   padding: 0 6px;
 }
 
-/* ===== REPLY LINK ===== */
+/* ============================================================
+   REPLY LINK
+============================================================ */
 .bd-reply-link {
   display: inline-flex;
   align-items: center;
@@ -562,17 +770,34 @@
 .bd-reply-link:active { background: #ffe0ec; transform: scale(.96); }
 .bd-reply-link .bd-rl-icon { font-size: 11px; }
 
-/* ===== COMPOSER ===== */
+/* ============================================================
+   COMPOSER
+============================================================ */
 .bd-composer {
-  position: absolute; left: 0; right: 0; bottom: 0;
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
   z-index: 20;
-  display: grid; grid-template-columns: 44px 1fr;
+  display: grid;
+  grid-template-columns: 44px 1fr;
   gap: 8px;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   background: linear-gradient(180deg, #fff8fc 0%, #ffe9f2 100%);
-  border-top: 1px solid #ffc0dd;
+  border-top: 2px solid transparent;
   box-shadow: 0 -4px 20px rgba(216,27,96,.08);
 }
+.bd-composer::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    #ff2200, #ff6600, #ffcc00, #ffee88, #ff2288,
+    #ffee88, #ffcc00, #ff8800, #cc1100, #ff2200);
+  background-size: 200% 100%;
+  animation: bdFlameShift 2.4s linear infinite;
+  box-shadow: 0 0 10px rgba(255,140,0,.5);
+}
+
 .bd-gift-btn {
   width: 44px; height: 44px;
   border: 0; border-radius: 50%;
@@ -581,10 +806,16 @@
   font-size: 20px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 6px 16px -4px rgba(216,27,96,.5);
+  box-shadow:
+    0 0 0 2px #ff2200,
+    0 0 0 3px #ff8800,
+    0 0 12px rgba(255,100,0,.6),
+    0 6px 16px -4px rgba(216,27,96,.5);
   transition: transform .15s ease;
+  animation: bdFlamePulse 1.6s ease-in-out infinite;
 }
 .bd-gift-btn:active { transform: scale(.92); }
+
 .bd-composer-inner { display: flex; align-items: flex-end; gap: 8px; }
 
 .bd-input {
@@ -618,17 +849,28 @@
   border: 0; border-radius: 50%;
   background: linear-gradient(135deg, #ff7fb0, #d81b60);
   color: #fff;
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 15px; font-weight: 800;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 6px 16px -4px rgba(216,27,96,.55);
+  box-shadow:
+    0 0 0 2px #ff2200,
+    0 0 0 3px #ff8800,
+    0 0 12px rgba(255,100,0,.6),
+    0 6px 16px -4px rgba(216,27,96,.5);
   transition: transform .15s ease, opacity .15s ease;
+  animation: bdFlamePulse 1.6s ease-in-out infinite;
 }
 .bd-send-btn:active { transform: scale(.92) rotate(-8deg); }
-.bd-send-btn:disabled { opacity: .3; pointer-events: none; box-shadow: none; }
+.bd-send-btn:disabled {
+  opacity: .35;
+  pointer-events: none;
+  box-shadow: none;
+  animation: none;
+}
 
-/* ===== MODAL ===== */
+/* ============================================================
+   MODAL
+============================================================ */
 #bdModal {
   position: fixed; inset: 0;
   z-index: 21100;
@@ -655,13 +897,18 @@
   margin: 0 auto 20px;
 }
 .bd-modal-title {
-  font-size: 18px; font-weight: 800;
-  color: #8a0f45;
-  margin-bottom: 4px;
-  letter-spacing: -.01em;
+  font-size: 20px;
+  font-weight: 950;
+  background: linear-gradient(90deg, #ff2200, #ff8800, #ffcc00, #ff2288, #ff2200);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: bdFlameShift 3s linear infinite;
+  margin-bottom: 6px;
 }
 .bd-modal-sub {
-  font-size: 13px; font-weight: 500;
+  font-size: 13px; font-weight: 600;
   color: #d81b60;
   margin-bottom: 20px;
 }
@@ -785,7 +1032,9 @@
   color: #d81b60;
 }
 
-/* ===== CONFETTI ===== */
+/* ============================================================
+   CONFETTI
+============================================================ */
 .bd-confetti {
   position: fixed;
   top: -20px;
@@ -799,7 +1048,9 @@
   100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
 }
 
-/* ===== CELEBRATION ===== */
+/* ============================================================
+   CELEBRATION
+============================================================ */
 #bdCelebration {
   position: fixed; inset: 0; z-index: 21300;
   display: none; align-items: center; justify-content: center;
@@ -819,7 +1070,8 @@
   100% { opacity: 1; transform: scale(1); }
 }
 .bd-cele-cake {
-  font-size: 72px; margin-bottom: 12px;
+  font-size: 72px;
+  margin-bottom: 12px;
   animation: bdCakeBob 1.8s ease-in-out infinite;
   filter: drop-shadow(0 8px 20px rgba(216,27,96,.35));
 }
@@ -828,20 +1080,23 @@
   50% { transform: translateY(-6px) rotate(3deg); }
 }
 .bd-cele-title {
-  font-size: 20px; font-weight: 500;
+  font-size: 20px;
+  font-weight: 500;
   color: #d81b60;
   letter-spacing: .18em;
   text-transform: uppercase;
   margin-bottom: 10px;
 }
 .bd-cele-name {
-  font-size: 34px; font-weight: 800;
+  font-size: 34px;
+  font-weight: 800;
   color: #8a0f45;
   letter-spacing: -.02em;
   margin-bottom: 14px;
 }
 .bd-cele-sub {
-  font-size: 14px; font-weight: 600;
+  font-size: 14px;
+  font-weight: 600;
   color: #d1759a;
   margin-bottom: 28px;
   line-height: 1.5;
@@ -852,7 +1107,8 @@
   background: linear-gradient(135deg, #ff7fb0, #d81b60);
   color: #fff;
   font-family: inherit;
-  font-size: 14px; font-weight: 800;
+  font-size: 14px;
+  font-weight: 800;
   cursor: pointer;
   box-shadow: 0 10px 24px -8px rgba(216,27,96,.6);
   transition: transform .15s ease;
@@ -914,26 +1170,28 @@
     page.id = 'bdPage';
     page.setAttribute('aria-hidden', 'true');
     page.innerHTML = `
-      <header class="bd-head">
-        <button type="button" class="bd-head-btn" id="bdBack" aria-label="Quay lại">←</button>
-        <div class="bd-head-center">
-          <div class="bd-head-avatar">
-            <span id="bdHeadAvatar">🎂</span>
-            <img id="bdHeadAvatarImg" alt="" style="display:none">
+      <div class="bd-shell">
+        <header class="bd-head">
+          <button type="button" class="bd-head-btn" id="bdBack" aria-label="Quay lại">←</button>
+          <div class="bd-head-center">
+            <div class="bd-head-avatar">
+              <span id="bdHeadAvatar">🎂</span>
+              <img id="bdHeadAvatarImg" alt="" style="display:none">
+            </div>
+            <div class="bd-head-info">
+              <span class="bd-head-title" id="bdHeadTitle">Sinh nhật ${esc(RECIPIENT)} 🎂</span>
+              <span class="bd-head-sub" id="bdWishCount">0 lời chúc</span>
+            </div>
           </div>
-          <div class="bd-head-info">
-            <span class="bd-head-title">Sinh nhật ${esc(RECIPIENT)}</span>
-            <span class="bd-head-sub" id="bdWishCount">0 lời chúc</span>
+          <button type="button" class="bd-head-btn" id="bdOwnerBtn" aria-label="Đăng nhập chính chủ">👑</button>
+        </header>
+        <div class="bd-body" id="bdBody"></div>
+        <div class="bd-composer">
+          <button type="button" class="bd-gift-btn" id="bdGiftBtn" aria-label="Gửi lời chúc">🎁</button>
+          <div class="bd-composer-inner">
+            <textarea class="bd-input" id="bdInput" rows="1" maxlength="500" placeholder="Nhắn tin với ${esc(RECIPIENT)}..." autocomplete="off"></textarea>
+            <button type="button" class="bd-send-btn" id="bdSendBtn" disabled>➤</button>
           </div>
-        </div>
-        <button type="button" class="bd-head-btn" id="bdOwnerBtn" aria-label="Đăng nhập chính chủ">👑</button>
-      </header>
-      <div class="bd-body" id="bdBody"></div>
-      <div class="bd-composer">
-        <button type="button" class="bd-gift-btn" id="bdGiftBtn" aria-label="Gửi lời chúc">🎁</button>
-        <div class="bd-composer-inner">
-          <textarea class="bd-input" id="bdInput" rows="1" maxlength="500" placeholder="Nhắn tin với ${esc(RECIPIENT)}..." autocomplete="off"></textarea>
-          <button type="button" class="bd-send-btn" id="bdSendBtn" disabled>➤</button>
         </div>
       </div>
     `;
@@ -990,7 +1248,7 @@
       btn.style.background = 'linear-gradient(135deg, #ff7fb0, #d81b60)';
       btn.style.color = '#fff';
       btn.style.borderColor = 'transparent';
-      btn.style.boxShadow = '0 4px 12px -2px rgba(216,27,96,.5)';
+      btn.style.boxShadow = '0 0 0 2px #ff2200, 0 0 8px rgba(255,140,0,.6)';
     } else {
       btn.style.background = '#fff';
       btn.style.color = '#d81b60';
@@ -1203,10 +1461,9 @@
     const isNew = !S.seenIds.has(w.id);
 
     const card = document.createElement('div');
-    card.className = 'bd-card' + (isMe ? ' me' : '') + (isNew ? ' new' : '');
+    card.className = 'bd-card' + (isMe ? ' me' : '');
     card.dataset.id = w.id;
 
-    // Main row
     const main = document.createElement('div');
     main.className = 'bd-main';
 
@@ -1239,7 +1496,6 @@
     main.appendChild(wrap);
     card.appendChild(main);
 
-    // Replies block
     const hasReplies = replies && replies.length > 0;
     const isReplying = S.inlineReplyToId === w.id;
 
@@ -1258,7 +1514,6 @@
       card.appendChild(repliesBlock);
     }
 
-    // Reply link (owner + không phải wish của Mỹ Dung + chưa mở input)
     if (S.isOwner && !isMe && !isReplying) {
       const link = document.createElement('button');
       link.type = 'button';
@@ -1503,8 +1758,8 @@
     modal.innerHTML = `
       <div class="bd-modal-panel" role="dialog" aria-modal="true">
         <div class="bd-modal-handle"></div>
-        <div class="bd-modal-title">Gửi lời chúc</div>
-        <div class="bd-modal-sub">Cho ${esc(RECIPIENT)} — sinh nhật 7/10 🎂</div>
+        <div class="bd-modal-title">Gửi lời chúc 🎂</div>
+        <div class="bd-modal-sub">Cho ${esc(RECIPIENT)} — sinh nhật 7/10</div>
         ${presetHtml}
         <div class="bd-group-label">Hoặc tự viết</div>
         <textarea class="bd-textarea" id="bdCustomMsg" maxlength="500" placeholder="Viết lời chúc từ trái tim bạn..."></textarea>
@@ -1703,7 +1958,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v3.1 ready ✓');
+    log('v3.2 ready ✓');
   }
 
   if (document.readyState === 'loading') {
