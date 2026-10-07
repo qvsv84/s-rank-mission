@@ -1,15 +1,15 @@
 /* =========================================================
-   CHECKLIST UI v6.2 — Avatar cache + Canvas có ảnh thật
-   - FIX flicker: cache DOM node theo tên (reuse khi render)
-   - FIX canvas: preload avatar + vẽ vào canvas (clip tròn)
-   - Full page + native canvas + share
-   - Số thứ tự: theo vị trí hiển thị sau sort
+   CHECKLIST UI v6.3
+   - NEW: rank badge cạnh tên + điểm hôm nay ở dòng 2
+   - Điểm hôm nay = tổng score_audit hôm nay (gồm checkin + Q + X)
+   - Card cache → không flicker
+   - Canvas native → có avatar thật
+   - Full page + save + share
    ========================================================= */
 (function(){
   "use strict";
   if (window.__clV6) return;
 
-  // Cleanup bản cũ
   try {
     ['clV3Root','clV4Root','clV5Root','clV3Styles','clV4Styles','clV5Styles',
      'clV3DebugModal','clV4DebugModal','clV5DebugModal','clV4PreviewModal','clV5PreviewModal'].forEach(id => {
@@ -27,7 +27,7 @@
   const AVATAR_TIMEOUT = 5000;
 
   const S = {
-    names: [], checks: [], times: [], points: [], ranks: [],
+    names: [], checks: [], times: [], points: [], ranks: [], todayPoints: [],
     prev: null,
     loading: false,
     timer: null,
@@ -36,13 +36,11 @@
     pageOpen: false,
     search: '',
     busy: false,
-    cardCache: new Map(),   // name → cached DOM node
+    cardCache: new Map(),
   };
 
-  // Cache URL avatar (tránh tính lại)
   const _avatarUrlCache = new Map();
-  // Cache Image object cho canvas (đã load)
-  const _avatarImgCache = new Map();  // url → { status, img, promise }
+  const _avatarImgCache = new Map();
 
   /* ============ HELPERS ============ */
   const $ = id => document.getElementById(id);
@@ -67,7 +65,6 @@
     const s = String(n || '').trim();
     return s ? s.slice(0,1).toUpperCase() : '?';
   }
-  // ⚡ Cache URL avatar
   function avatarUrl(name){
     if (_avatarUrlCache.has(name)) return _avatarUrlCache.get(name);
     let url = '';
@@ -95,6 +92,20 @@
     return hhmm;
   }
 
+  // ⚡ Format điểm: +20đ / -20đ / 0đ
+  function formatPoints(p){
+    const n = Number(p) || 0;
+    if (n > 0) return '+' + n + 'đ';
+    if (n < 0) return n + 'đ';
+    return '0đ';
+  }
+  function pointsClass(p){
+    const n = Number(p) || 0;
+    if (n > 0) return 'pos';
+    if (n < 0) return 'neg';
+    return 'zero';
+  }
+
   /* =========================================================
      AVATAR LOADER CHO CANVAS
      ========================================================= */
@@ -106,7 +117,6 @@
       if (c.status === 'failed') return Promise.resolve(null);
       return c.promise;
     }
-
     const entry = { status: 'loading', img: null, promise: null };
     _avatarImgCache.set(url, entry);
 
@@ -114,10 +124,7 @@
       const img = new Image();
       img.crossOrigin = 'anonymous';
       const timer = setTimeout(() => {
-        if (entry.status === 'loading'){
-          entry.status = 'failed';
-          resolve(null);
-        }
+        if (entry.status === 'loading'){ entry.status = 'failed'; resolve(null); }
       }, AVATAR_TIMEOUT);
       img.onload = () => {
         clearTimeout(timer);
@@ -132,11 +139,9 @@
       };
       img.src = url;
     });
-
     return entry.promise;
   }
 
-  // Preload avatar chạy nền (không block UI)
   function preloadAvatarsInBackground(){
     S.names.forEach(name => {
       const url = avatarUrl(name);
@@ -163,7 +168,6 @@
   overflow: hidden;
 }
 #${PAGE_ID}.show { display: flex; }
-
 .clv6-head {
   flex-shrink: 0;
   display: grid; grid-template-columns: 44px 1fr 44px;
@@ -227,8 +231,7 @@
 }
 .clv6-stats-num {
   font-size: 28px; font-weight: 950;
-  color: #4fa370;
-  font-variant-numeric: tabular-nums;
+  color: #4fa370; font-variant-numeric: tabular-nums;
   line-height: 1; letter-spacing: -.02em;
 }
 .clv6-stats-num small {
@@ -242,8 +245,7 @@
 }
 .clv6-stats-date {
   font-size: 11.5px; font-weight: 900;
-  color: #8fa89a;
-  background: rgba(200,220,205,.35);
+  color: #8fa89a; background: rgba(200,220,205,.35);
   padding: 5px 11px; border-radius: 999px;
   font-variant-numeric: tabular-nums;
 }
@@ -267,17 +269,15 @@
   animation: clv6Shine 2.5s ease-in-out infinite;
 }
 @keyframes clv6Shine { 0%,100% { opacity: 0; } 50% { opacity: 1; } }
-.clv6-search-wrap {
-  position: relative; margin-bottom: 14px;
-}
+.clv6-search-wrap { position: relative; margin-bottom: 14px; }
 .clv6-search {
   width: 100%; height: 46px;
   padding: 0 40px 0 42px;
   border: 1.5px solid rgba(200,220,205,.7);
   border-radius: 14px;
   background: rgba(255,255,255,.95);
-  color: #234a32;
-  font-family: inherit; font-size: 15px; font-weight: 700;
+  color: #234a32; font-family: inherit;
+  font-size: 15px; font-weight: 700;
   outline: none;
   transition: border-color .2s, box-shadow .2s;
 }
@@ -316,9 +316,9 @@
   background: linear-gradient(90deg, transparent, rgba(200,220,205,.85), transparent);
 }
 .clv6-divider:first-child { margin-top: 4px; }
-.clv6-list {
-  display: flex; flex-direction: column; gap: 8px;
-}
+.clv6-list { display: flex; flex-direction: column; gap: 8px; }
+
+/* ===== CARD ===== */
 .clv6-card {
   display: grid;
   grid-template-columns: 34px 46px 1fr auto;
@@ -389,8 +389,15 @@
 .clv6-card.top1 .clv6-av { box-shadow: 0 0 0 2px #e0b840, 0 3px 12px -4px rgba(216,168,32,.5); }
 .clv6-card.top2 .clv6-av { box-shadow: 0 0 0 2px #a8b0b8, 0 3px 12px -4px rgba(120,130,140,.35); }
 .clv6-card.top3 .clv6-av { box-shadow: 0 0 0 2px #c88246, 0 3px 12px -4px rgba(200,130,70,.4); }
+
+/* ===== INFO ===== */
 .clv6-info { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.clv6-line1 {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; min-width: 0;
+}
 .clv6-name {
+  flex: 1 1 auto; min-width: 0;
   font-size: 15px; font-weight: 900; color: #234a32;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   letter-spacing: .002em;
@@ -399,17 +406,69 @@
 .clv6-card.top1 .clv6-name { color: #7a5410; }
 .clv6-card.top2 .clv6-name { color: #4a5460; }
 .clv6-card.top3 .clv6-name { color: #7a4a20; }
+
+/* ===== RANK BADGE ===== */
+.clv6-rank-badge {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .06em;
+  line-height: 1.2;
+  color: #6b8f78;
+  background: rgba(200,220,205,.5);
+}
+.clv6-rank-badge.rank-VIP {
+  background: linear-gradient(135deg, #f5c542, #d89020);
+  color: #fff;
+  box-shadow: 0 2px 6px -2px rgba(216,144,32,.5);
+}
+.clv6-rank-badge.rank-SSS {
+  background: linear-gradient(135deg, #a855f7, #7e22ce);
+  color: #fff;
+  box-shadow: 0 2px 6px -2px rgba(126,34,206,.45);
+}
+.clv6-rank-badge.rank-SS {
+  background: linear-gradient(135deg, #c084fc, #a855f7);
+  color: #fff;
+  box-shadow: 0 2px 6px -2px rgba(168,85,247,.4);
+}
+.clv6-rank-badge.rank-S {
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  color: #fff;
+  box-shadow: 0 2px 6px -2px rgba(219,39,119,.4);
+}
+.clv6-rank-badge.rank-A {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
+  box-shadow: 0 2px 6px -2px rgba(37,99,235,.4);
+}
+/* rank-B giữ default */
+
+/* ===== SUB ===== */
 .clv6-sub {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 800; color: #7a9a85;
   flex-wrap: wrap;
 }
-.clv6-time { color: #6b8f78; font-weight: 900; font-variant-numeric: tabular-nums; }
-.clv6-time.recent { color: #4fa370; }
-.clv6-dot { width: 3px; height: 3px; border-radius: 50%; background: #c0d0c4; flex-shrink: 0; }
-.clv6-pts { color: #4fa370; font-weight: 950; font-variant-numeric: tabular-nums; }
-.clv6-pts.early { color: #d89020; }
-.clv6-idle { color: #a8bdb0; }
+.clv6-time {
+  color: #6b8f78; font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+.clv6-dot {
+  width: 3px; height: 3px; border-radius: 50%;
+  background: #c0d0c4; flex-shrink: 0;
+}
+.clv6-pts {
+  font-weight: 950; font-variant-numeric: tabular-nums;
+}
+.clv6-pts.pos { color: #4fa370; }
+.clv6-pts.neg { color: #e05b5b; }
+.clv6-pts.zero { color: #a8bdb0; }
+.clv6-idle { color: #a8bdb0; font-weight: 800; }
+
+/* ===== CHECK ===== */
 .clv6-check {
   width: 30px; height: 30px;
   border-radius: 50%;
@@ -426,12 +485,14 @@
 }
 .clv6-check svg { width: 16px; height: 16px; color: transparent; }
 .clv6-check.on svg { color: #fff; }
-.clv6-empty {
-  padding: 60px 20px; text-align: center; color: #9ab0a0;
-}
+
+/* ===== EMPTY ===== */
+.clv6-empty { padding: 60px 20px; text-align: center; color: #9ab0a0; }
 .clv6-empty-emoji { font-size: 52px; margin-bottom: 12px; opacity: .55; }
 .clv6-empty-title { font-size: 15px; font-weight: 900; color: #6b8f78; margin-bottom: 4px; }
 .clv6-empty-sub { font-size: 12px; color: #a8bdb0; font-weight: 700; }
+
+/* ===== FOOTER ===== */
 .clv6-footer {
   position: absolute; left: 0; right: 0; bottom: 0;
   z-index: 20;
@@ -464,10 +525,10 @@
 .clv6-foot-btn.share {
   background: linear-gradient(180deg, #7ab896, #4fa370);
   color: #fff;
-  box-shadow: 0 8px 20px -8px rgba(79,163,112,.55);
+  box-shadow:=" 0 8px 20px -8px rgba(79,cl163v,112,.55);
 }
 #clv6Toast {
-  position: fixed; bottom: 90px; left: 50%;
+ 6 position: fixed; bottom:Stat 90px; left: 50Date%;
   transform: translateX(-50%) translateY(20px);
   z-index: 33000;
   padding: 10px 18px;
@@ -519,7 +580,7 @@
               <div class="clv6-stats-num" id="clv6StatNum">0<small>/0</small></div>
               <div class="clv6-stats-label">đã check</div>
             </div>
-            <div class="clv6-stats-date" id="clv6StatDate">--/--/----</div>
+            <div class="clv6-stats-date" id">--/--/----</div>
           </div>
           <div class="clv6-progress">
             <div class="clv6-progress-fill" id="clv6Bar"></div>
@@ -596,6 +657,8 @@
       checked: !!S.checks[i],
       time: String(S.times[i] || '').trim(),
       points: Number(S.points[i]) || 0,
+      todayPoints: Number(S.todayPoints[i]) || 0,
+      rank: S.ranks[i] || 'B',
       origIdx: i
     }));
 
@@ -618,7 +681,7 @@
   }
 
   /* =========================================================
-     CARD FACTORY + UPDATE (giữ DOM node, không tạo lại)
+     CARD FACTORY + UPDATE
      ========================================================= */
   function createCard(){
     const card = document.createElement('div');
@@ -632,11 +695,20 @@
 
     const info = document.createElement('div');
     info.className = 'clv6-info';
+
+    const line1 = document.createElement('div');
+    line1.className = 'clv6-line1';
     const nameEl = document.createElement('div');
     nameEl.className = 'clv6-name';
+    const rankBadgeEl = document.createElement('div');
+    rankBadgeEl.className = 'clv6-rank-badge';
+    line1.appendChild(nameEl);
+    line1.appendChild(rankBadgeEl);
+
     const subEl = document.createElement('div');
     subEl.className = 'clv6-sub';
-    info.appendChild(nameEl);
+
+    info.appendChild(line1);
     info.appendChild(subEl);
 
     const checkEl = document.createElement('div');
@@ -649,21 +721,24 @@
     card.appendChild(checkEl);
 
     return {
-      card, rankEl, av, nameEl, subEl, checkEl,
+      card, rankEl, av, nameEl, rankBadgeEl, subEl, checkEl,
       _avatarUrl: undefined,
       _subKey: undefined,
       _rankKey: undefined,
       _name: undefined,
       _cardClass: undefined,
       _checkClass: undefined,
+      _rankBadge: undefined,
     };
   }
 
   function updateCard(cached, item, displayIdx, rankIdx){
-    const { card, rankEl, av, nameEl, subEl, checkEl } = cached;
+    const { card, rankEl, av, nameEl, rankBadgeEl, subEl, checkEl } = cached;
     const checked = !!item.checked;
+    const todayP = Number(item.todayPoints) || 0;
+    const rank = item.rank || 'B';
 
-    // ⚡ Card class — chỉ set khi đổi
+    // Card class
     const isTop = rankIdx !== undefined && rankIdx >= 0 && rankIdx <= 2;
     const newCardClass = 'clv6-card' +
       (checked ? ' checked' : '') +
@@ -673,7 +748,7 @@
       card.className = newCardClass;
     }
 
-    // ⚡ Rank — chỉ update khi đổi
+    // Rank icon
     const rankKey = isTop ? 'top' + rankIdx : 'num' + displayIdx;
     if (cached._rankKey !== rankKey){
       cached._rankKey = rankKey;
@@ -689,7 +764,7 @@
       }
     }
 
-    // ⚡ Avatar — CHỈ update nếu URL đổi (không tạo lại img)
+    // Avatar
     const url = avatarUrl(item.name) || '';
     if (cached._avatarUrl !== url){
       cached._avatarUrl = url;
@@ -709,49 +784,62 @@
       }
     }
 
-    // ⚡ Name — chỉ update khi đổi
+    // Name
     if (cached._name !== item.name){
       cached._name = item.name;
       nameEl.textContent = item.name;
     }
 
-    // ⚡ Sub — chỉ update khi đổi giờ/điểm/status
+    // Rank badge
+    if (cached._rankBadge !== rank){
+      cached._rankBadge = rank;
+      rankBadgeEl.textContent = rank;
+      rankBadgeEl.className = 'clv6-rank-badge rank-' + rank;
+    }
+
+    // Sub: 2 trường hợp chính
     const subKey = checked
-      ? `${item.time}|${item.points}`
-      : 'idle';
+      ? `c|${item.time}|${todayP}`
+      : (todayP !== 0 ? `p|${todayP}` : 'idle');
+
     if (cached._subKey !== subKey){
       cached._subKey = subKey;
       subEl.innerHTML = '';
 
       if (checked && item.time){
-        const ago = timeAgo(item.time);
-        const isRecent = ago === 'vừa xong' || /\d+ phút trước/.test(ago);
-
+        // Dòng dưới: 🕐 HH:MM · +Xđ
         const tEl = document.createElement('span');
-        tEl.className = 'clv6-time' + (isRecent ? ' recent' : '');
+        tEl.className = 'clv6-time';
         tEl.textContent = '🕐 ' + item.time;
         subEl.appendChild(tEl);
 
-        if (isRecent && ago !== item.time){
-          const d = document.createElement('span');
-          d.className = 'clv6-dot';
-          subEl.appendChild(d);
-          const a = document.createElement('span');
-          a.style.color = '#4fa370';
-          a.textContent = ago;
-          subEl.appendChild(a);
-        }
+        const dot = document.createElement('span');
+        dot.className = 'clv6-dot';
+        subEl.appendChild(dot);
 
-        if (item.points > 0){
-          const d2 = document.createElement('span');
-          d2.className = 'clv6-dot';
-          subEl.appendChild(d2);
-          const p = document.createElement('span');
-          p.className = 'clv6-pts' + (item.points >= 20 ? ' early' : '');
-          p.textContent = '⭐ ' + item.points + 'đ';
-          subEl.appendChild(p);
-        }
+        const pEl = document.createElement('span');
+        pEl.className = 'clv6-pts ' + pointsClass(todayP);
+        pEl.textContent = formatPoints(todayP);
+        subEl.appendChild(pEl);
+
+      } else if (!checked && todayP !== 0){
+        // Không check nhưng có điểm (Q/X)
+        const idle = document.createElement('span');
+        idle.className = 'clv6-idle';
+        idle.textContent = 'Hôm nay';
+        subEl.appendChild(idle);
+
+        const dot = document.createElement('span');
+        dot.className = 'clv6-dot';
+        subEl.appendChild(dot);
+
+        const pEl = document.createElement('span');
+        pEl.className = 'clv6-pts ' + pointsClass(todayP);
+        pEl.textContent = formatPoints(todayP);
+        subEl.appendChild(pEl);
+
       } else {
+        // Chưa check, không có điểm
         const idle = document.createElement('span');
         idle.className = 'clv6-idle';
         idle.textContent = 'Chưa check hôm nay';
@@ -759,7 +847,7 @@
       }
     }
 
-    // ⚡ Check — chỉ update class khi đổi
+    // Check
     const newCheckClass = 'clv6-check' + (checked ? ' on' : '');
     if (cached._checkClass !== newCheckClass){
       cached._checkClass = newCheckClass;
@@ -816,7 +904,7 @@
       return;
     }
 
-    // ⚡ Xoá card cache không dùng nữa
+    // Xoá cache không dùng
     const keepNames = new Set(displayItems.map(x => x.name));
     for (const [name, cached] of S.cardCache){
       if (!keepNames.has(name)){
@@ -825,8 +913,6 @@
       }
     }
 
-    // ⚡ Clear list nhưng KHÔNG destroy cache
-    // (card node vẫn được giữ trong S.cardCache)
     list.innerHTML = '';
 
     let counter = 0;
@@ -858,15 +944,12 @@
         lastSection = section;
       }
 
-      // ⚡ Reuse card từ cache, hoặc tạo mới
       let cached = S.cardCache.get(item.name);
       if (!cached){
         cached = createCard();
         S.cardCache.set(item.name, cached);
       }
       updateCard(cached, item, counter, rankIdx);
-
-      // appendChild sẽ move node (không tạo lại)
       list.appendChild(cached.card);
     });
 
@@ -896,8 +979,7 @@
     S.times  = Array.isArray(data.times)  ? data.times.slice()  : [];
     S.points = Array.isArray(data.points) ? data.points.slice() : [];
     S.ranks  = Array.isArray(data.ranks)  ? data.ranks.slice()  : [];
-    // Clear URL cache khi data đổi (phòng trường hợp user đổi avatar)
-    // Nhưng thực tế URL avatar ít đổi → giữ cache cũng OK
+    S.todayPoints = Array.isArray(data.todayPoints) ? data.todayPoints.slice() : [];
     return true;
   }
 
@@ -906,9 +988,8 @@
     S.loading = true;
     try {
       const data = await fetchData();
-      if (data && applyState(data)) {
+      if (data && applyState(data)){
         render();
-        // Preload avatar cho canvas chạy nền
         preloadAvatarsInBackground();
       }
     } finally {
@@ -928,14 +1009,14 @@
   }
 
   /* =========================================================
-     DRAW CANVAS — CÓ AVATAR THẬT
+     DRAW CANVAS — CÓ AVATAR + RANK BADGE + ĐIỂM HÔM NAY
      ========================================================= */
   async function drawCanvas(){
     const sorted = buildSortedList();
     const total = sorted.all.length;
     if (!total) return null;
 
-    // ⚡ Preload avatar trước khi vẽ
+    // Preload avatar
     const avatarImages = {};
     await Promise.all(sorted.all.map(async item => {
       const url = avatarUrl(item.name) || '';
@@ -946,7 +1027,7 @@
 
     const dpr = Math.min(3, Math.max(2, window.devicePixelRatio || 2));
     const W = 520;
-    const rowH = 70;
+    const rowH = 74;
     const headerH = 130;
     const footerH = 60;
     const padX = 16;
@@ -1020,7 +1101,15 @@
     roundRect(ctx, padX, barY, barW * pct, 8, 4);
     ctx.fill();
 
-    // Rows
+    // ⚡ Layout constants
+    const rankCX = padX + 24;            // rank icon center X
+    const avX = padX + 68;               // avatar center X
+    const avR = 22;
+    const textX = padX + 104;            // name/sub start X
+    const checkCX = W - padX - 22;       // check circle center X
+    const checkR = 15;
+    const infoRight = checkCX - checkR - 10;  // info area right edge
+
     let y = headerH;
     const rowPad = 6;
     const rowW = W - padX * 2;
@@ -1030,6 +1119,8 @@
       counter++;
       const isTop3 = sorted.top3Names.has(item.name);
       const rankIdx = isTop3 ? sorted.top3.findIndex(x => x.name === item.name) : undefined;
+      const todayP = Number(item.todayPoints) || 0;
+      const rank = item.rank || 'B';
 
       const rowY = y + rowPad / 2;
       const rowHeight = rowH - rowPad;
@@ -1043,7 +1134,7 @@
       roundRect(ctx, padX, rowY, rowW, rowHeight, 14);
       ctx.fill();
 
-      // Row border
+      // Border
       let borderColor;
       if (rankIdx === 0) borderColor = 'rgba(216,168,32,.6)';
       else if (rankIdx === 1) borderColor = 'rgba(150,158,168,.55)';
@@ -1058,34 +1149,28 @@
       const cy = rowY + rowHeight / 2;
 
       // Rank
-      const rankX = padX + 24;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       if (rankIdx !== undefined && rankIdx >= 0 && rankIdx <= 2){
         ctx.font = '24px -apple-system, system-ui, sans-serif';
         ctx.fillStyle = '#234a32';
-        ctx.fillText(['🥇','🥈','🥉'][rankIdx], rankX, cy);
+        ctx.fillText(['🥇','🥈','🥉'][rankIdx], rankCX, cy);
       } else {
         ctx.fillStyle = item.checked ? 'rgba(122,184,150,.25)' : 'rgba(200,220,205,.4)';
         ctx.beginPath();
-        ctx.arc(rankX, cy, 14, 0, Math.PI * 2);
+        ctx.arc(rankCX, cy, 14, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = item.checked ? '#4a7a5a' : '#8fa89a';
         ctx.font = 'bold 12px -apple-system, system-ui, sans-serif';
-        ctx.fillText(String(counter), rankX, cy + 1);
+        ctx.fillText(String(counter), rankCX, cy + 1);
       }
 
-      // ⚡ Avatar — dùng ảnh thật nếu có
-      const avX = padX + 68;
-      const avR = 22;
-
-      // Vẽ nền tròn (fallback)
+      // Avatar
       ctx.fillStyle = '#d4ead9';
       ctx.beginPath();
       ctx.arc(avX, cy, avR, 0, Math.PI * 2);
       ctx.fill();
 
-      // Vẽ ảnh nếu có
       const avImg = avatarImages[item.name];
       if (avImg){
         try {
@@ -1096,7 +1181,6 @@
           ctx.drawImage(avImg, avX - avR, cy - avR, avR * 2, avR * 2);
           ctx.restore();
         } catch(e){
-          // CORS fail → vẽ chữ cái
           ctx.fillStyle = '#4a7a5a';
           ctx.font = 'bold 17px -apple-system, system-ui, sans-serif';
           ctx.textAlign = 'center';
@@ -1104,7 +1188,6 @@
           ctx.fillText(getInitial(item.name), avX, cy + 1);
         }
       } else {
-        // Không có ảnh → chữ cái
         ctx.fillStyle = '#4a7a5a';
         ctx.font = 'bold 17px -apple-system, system-ui, sans-serif';
         ctx.textAlign = 'center';
@@ -1123,34 +1206,89 @@
       ctx.arc(avX, cy, avR, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Name
-      const textX = padX + 104;
-      const textMaxW = W - textX - 60;
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'alphabetic';
+      // ⚡ Rank badge (right of info area)
+      const badgeText = rank;
+      ctx.font = 'bold 11px -apple-system, system-ui, sans-serif';
+      const badgeTextW = ctx.measureText(badgeText).width;
+      const badgeW = badgeTextW + 18;
+      const badgeH = 20;
+      const badgeX = infoRight - badgeW;
+      const badgeY = rowY + 12;
+      const badgeCY = badgeY + badgeH / 2;
+
+      // Badge bg
+      let badgeBg;
+      if (rank === 'VIP') badgeBg = '#d89020';
+      else if (rank === 'SSS') badgeBg = '#7e22ce';
+      else if (rank === 'SS') badgeBg = '#a855f7';
+      else if (rank === 'S') badgeBg = '#db2777';
+      else if (rank === 'A') badgeBg = '#2563eb';
+      else badgeBg = 'rgba(200,220,205,.6)';
+      ctx.fillStyle = badgeBg;
+      roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 5);
+      ctx.fill();
+
+      // Badge text
+      ctx.fillStyle = (rank === 'B') ? '#6b8f78' : '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(badgeText, badgeX + badgeW / 2, badgeCY + 1);
+
+      // ⚡ Name (line 1)
+      const nameMaxW = badgeX - textX - 8;
       let nameColor = '#234a32';
       if (rankIdx === 0) nameColor = '#7a5410';
       else if (rankIdx === 1) nameColor = '#4a5460';
       else if (rankIdx === 2) nameColor = '#7a4a20';
       ctx.fillStyle = nameColor;
-      ctx.font = 'bold 16px -apple-system, system-ui, sans-serif';
-      ctx.fillText(truncate(ctx, item.name, textMaxW), textX, rowY + 30);
+      ctx.font = 'bold 15px -apple-system, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(truncate(ctx, item.name, nameMaxW), textX, rowY + 28);
 
-      // Sub
+      // ⚡ Sub (line 2): giờ + điểm hôm nay
       ctx.font = '600 13px -apple-system, system-ui, sans-serif';
+      const subY = rowY + 52;
+
       if (item.checked && item.time){
-        ctx.fillStyle = '#4fa370';
-        let subTxt = '🕐 ' + item.time;
-        if (item.points > 0) subTxt += '   ⭐ ' + item.points + 'đ';
-        ctx.fillText(subTxt, textX, rowY + 52);
+        const timeText = '🕐 ' + item.time;
+        ctx.fillStyle = '#6b8f78';
+        ctx.fillText(timeText, textX, subY);
+
+        const timeW = ctx.measureText(timeText).width;
+
+        // Dấu ·
+        ctx.fillStyle = '#c0d0c4';
+        ctx.fillText('·', textX + timeW + 6, subY);
+
+        // Điểm
+        const dotW = ctx.measureText('·').width;
+        const ptsText = formatPoints(todayP);
+        if (todayP > 0) ctx.fillStyle = '#4fa370';
+        else if (todayP < 0) ctx.fillStyle = '#e05b5b';
+        else ctx.fillStyle = '#a8bdb0';
+        ctx.fillText(ptsText, textX + timeW + 6 + dotW + 6, subY);
+
+      } else if (!item.checked && todayP !== 0){
+        ctx.fillStyle = '#a8bdb0';
+        const idleText = 'Hôm nay';
+        ctx.fillText(idleText, textX, subY);
+        const idleW = ctx.measureText(idleText).width;
+
+        ctx.fillStyle = '#c0d0c4';
+        ctx.fillText('·', textX + idleW + 6, subY);
+
+        const dotW = ctx.measureText('·').width;
+        const ptsText = formatPoints(todayP);
+        ctx.fillStyle = todayP > 0 ? '#4fa370' : '#e05b5b';
+        ctx.fillText(ptsText, textX + idleW + 6 + dotW + 6, subY);
+
       } else {
         ctx.fillStyle = '#a8bdb0';
-        ctx.fillText('Chưa check hôm nay', textX, rowY + 52);
+        ctx.fillText('Chưa check hôm nay', textX, subY);
       }
 
-      // Check circle
-      const checkCX = W - padX - 22;
-      const checkR = 15;
+      // ⚡ Check circle
       if (item.checked){
         const cg = ctx.createLinearGradient(checkCX - checkR, cy - checkR, checkCX + checkR, cy + checkR);
         cg.addColorStop(0, '#7ad79a');
@@ -1222,29 +1360,23 @@
   async function onSave(){
     if (S.busy) return;
     S.busy = true;
-
     const btn = $('clv6Save');
     const oldHTML = btn ? btn.innerHTML : '';
     if (btn){
       btn.disabled = true;
       btn.innerHTML = '<span>⏳</span><span>Đang tạo…</span>';
     }
-
     try {
-      // ⚡ await vì drawCanvas giờ là async
       const canvas = await drawCanvas();
       if (!canvas) throw new Error('Chưa có dữ liệu');
-
       const blob = await canvasToBlob(canvas);
       const url = URL.createObjectURL(blob);
-
       const a = document.createElement('a');
       a.href = url;
       a.download = 'checklist-' + new Date().toISOString().slice(0,10) + '.png';
       document.body.appendChild(a);
       a.click();
       a.remove();
-
       setTimeout(() => { try { URL.revokeObjectURL(url); } catch(_){} }, 5000);
       toast('Đã lưu ảnh ✓');
     } catch(e){
@@ -1252,28 +1384,22 @@
       toast('Lỗi: ' + (e.message || e));
     } finally {
       S.busy = false;
-      if (btn){
-        btn.disabled = false;
-        btn.innerHTML = oldHTML;
-      }
+      if (btn){ btn.disabled = false; btn.innerHTML = oldHTML; }
     }
   }
 
   async function onShare(){
     if (S.busy) return;
     S.busy = true;
-
     const btn = $('clv6Share');
     const oldHTML = btn ? btn.innerHTML : '';
     if (btn){
       btn.disabled = true;
       btn.innerHTML = '<span>⏳</span><span>Đang tạo…</span>';
     }
-
     try {
       const canvas = await drawCanvas();
       if (!canvas) throw new Error('Chưa có dữ liệu');
-
       const blob = await canvasToBlob(canvas);
       const filename = 'checklist-' + new Date().toISOString().slice(0,10) + '.png';
 
@@ -1293,7 +1419,6 @@
         }
       }
 
-      // Fallback download
       toast('Thiết bị không hỗ trợ chia sẻ, đã lưu ảnh');
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1308,10 +1433,7 @@
       toast('Lỗi: ' + (e.message || e));
     } finally {
       S.busy = false;
-      if (btn){
-        btn.disabled = false;
-        btn.innerHTML = oldHTML;
-      }
+      if (btn){ btn.disabled = false; btn.innerHTML = oldHTML; }
     }
   }
 
@@ -1323,12 +1445,10 @@
     page.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
     S.pageOpen = true;
-
     const search = page.querySelector('#clv6Search');
     if (search){ search.value = ''; S.search = ''; }
     const searchClear = page.querySelector('#clv6SearchClear');
     if (searchClear) searchClear.classList.remove('show');
-
     render();
     refresh();
   }
@@ -1367,7 +1487,6 @@
   async function boot(){
     if (S.booted) return;
     injectStyles();
-
     const page = ensurePage();
     if (!page){
       S.retryCount++;
@@ -1375,12 +1494,10 @@
       setTimeout(boot, 300);
       return;
     }
-
     S.booted = true;
     bindGlobalEvents();
     startAutoTimer();
 
-    // Bind nút mở page
     const openBtn = $('checklistBtn');
     if (openBtn){
       const newBtn = openBtn.cloneNode(true);
@@ -1402,7 +1519,7 @@
       share: onShare,
     };
 
-    log('v6.2 ready ✓');
+    log('v6.3 ready ✓');
   }
 
   if (document.readyState === 'loading'){
