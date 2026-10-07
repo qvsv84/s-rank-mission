@@ -1,9 +1,8 @@
 /* =========================================================
-   CHECKLIST UI v4.1
-   - FIX nút chụp: tự load html2canvas từ CDN, clone để chụp full
-   - FIX SCROLL: list max-height + overflow-y auto
-   - FIX SORT: Top3 → checked → unchecked
-   - Chèn root vào TRONG #checklistPanel
+   CHECKLIST UI v4.2
+   - FIX chụp: modal preview tự chứa, không cần main.js
+   - FIX scroll + sort (giữ từ v4.0)
+   - Load html2canvas từ 2 CDN dự phòng
    ========================================================= */
 (function(){
   "use strict";
@@ -12,7 +11,11 @@
   const ROOT_ID    = 'clV4Root';
   const REFRESH_MS = 15000;
   const MAX_RETRY  = 20;
-  const H2C_CDN    = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  const CDN_LIST   = [
+    'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+    'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+    'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js'
+  ];
 
   const S = {
     names: [], checks: [], times: [], points: [], ranks: [],
@@ -63,40 +66,50 @@
     return hhmm;
   }
 
-  /* ============ LOAD html2canvas from CDN (fallback) ============ */
-  function loadHtml2Canvas(){
-    if (window.html2canvas) return Promise.resolve(window.html2canvas);
-    if (S.h2cPromise) return S.h2cPromise;
-
-    // Thử dùng SRank helper trước (nếu main.js cũ còn)
-    if (window.SRank && typeof window.SRank.ensureHtml2Canvas === 'function'){
-      S.h2cPromise = Promise.resolve()
-        .then(() => window.SRank.ensureHtml2Canvas())
-        .then(() => window.html2canvas || null)
-        .catch(() => null);
-      return S.h2cPromise;
-    }
-
-    // Fallback: tự load CDN
-    S.h2cPromise = new Promise((resolve) => {
+  /* ============ LOAD html2canvas (multi-CDN fallback) ============ */
+  function tryLoadScript(url){
+    return new Promise((resolve) => {
       const s = document.createElement('script');
-      s.src = H2C_CDN;
+      s.src = url;
       s.async = true;
       s.onload = () => {
-        if (window.html2canvas){
-          log('html2canvas loaded from CDN ✓');
-          resolve(window.html2canvas);
-        } else {
-          warn('html2canvas load xong nhưng window.html2canvas không có');
-          resolve(null);
-        }
+        if (typeof window.html2canvas === 'function') resolve(true);
+        else resolve(false);
       };
-      s.onerror = () => {
-        warn('Không tải được html2canvas từ CDN');
-        resolve(null);
-      };
+      s.onerror = () => resolve(false);
       document.head.appendChild(s);
     });
+  }
+
+  function loadHtml2Canvas(){
+    if (typeof window.html2canvas === 'function') return Promise.resolve(window.html2canvas);
+    if (S.h2cPromise) return S.h2cPromise;
+
+    S.h2cPromise = (async () => {
+      // Thử SRank helper trước
+      if (window.SRank && typeof window.SRank.ensureHtml2Canvas === 'function'){
+        try {
+          await window.SRank.ensureHtml2Canvas();
+          if (typeof window.html2canvas === 'function'){
+            log('h2c loaded via SRank helper ✓');
+            return window.html2canvas;
+          }
+        } catch(_){}
+      }
+
+      // Thử lần lượt các CDN
+      for (const url of CDN_LIST){
+        const ok = await tryLoadScript(url);
+        if (ok){
+          log('h2c loaded from CDN ✓', url);
+          return window.html2canvas;
+        }
+      }
+
+      warn('Không tải được html2canvas từ mọi CDN');
+      return null;
+    })();
+
     return S.h2cPromise;
   }
 
@@ -107,10 +120,8 @@
     style.id = 'clV4Styles';
     style.textContent = `
 #clV4Root {
-  display: flex;
-  flex-direction: column;
-  padding: 14px 12px 12px;
-  border-radius: 22px;
+  display: flex; flex-direction: column;
+  padding: 14px 12px 12px; border-radius: 22px;
   background:
     radial-gradient(ellipse 90% 50% at 50% 0%, rgba(255,255,255,.9), transparent 70%),
     linear-gradient(160deg, #ffffff 0%, #f5fbf5 55%, #eef7ef 100%);
@@ -130,8 +141,7 @@
 }
 .clv4-title .ico { font-size: 17px; }
 .clv4-count {
-  font-size: 12px; font-weight: 900;
-  color: #6b8f78;
+  font-size: 12px; font-weight: 900; color: #6b8f78;
   background: rgba(122,184,150,.14);
   padding: 3px 9px; border-radius: 999px;
   font-variant-numeric: tabular-nums;
@@ -162,12 +172,8 @@
   50%     { box-shadow: 0 0 18px rgba(79,163,112,.75); }
 }
 .clv4-list {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  max-height: 58vh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  display: flex; flex-direction: column; gap: 7px;
+  max-height: 58vh; overflow-y: auto; overflow-x: hidden;
   padding: 2px 6px 2px 2px;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
@@ -177,12 +183,9 @@
 .clv4-list::-webkit-scrollbar { width: 5px; }
 .clv4-list::-webkit-scrollbar-track { background: transparent; }
 .clv4-list::-webkit-scrollbar-thumb {
-  background: rgba(122,184,150,.42);
-  border-radius: 3px;
+  background: rgba(122,184,150,.42); border-radius: 3px;
 }
-.clv4-list::-webkit-scrollbar-thumb:active {
-  background: rgba(122,184,150,.7);
-}
+.clv4-list::-webkit-scrollbar-thumb:active { background: rgba(122,184,150,.7); }
 .clv4-divider {
   display: flex; align-items: center; gap: 8px;
   margin: 6px 2px 2px;
@@ -190,16 +193,12 @@
   color: #8fa89a; letter-spacing: .08em;
   text-transform: uppercase;
 }
-.clv4-divider::before,
-.clv4-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
+.clv4-divider::before, .clv4-divider::after {
+  content: ''; flex: 1; height: 1px;
   background: rgba(203,220,201,.55);
 }
 .clv4-card {
-  display: grid;
-  grid-template-columns: 26px 38px 1fr auto;
+  display: grid; grid-template-columns: 26px 38px 1fr auto;
   align-items: center; gap: 9px;
   padding: 9px 11px; border-radius: 14px;
   background: #fff;
@@ -236,12 +235,6 @@
   font-size: 17px; line-height: 1; flex-shrink: 0;
 }
 .clv4-rank.empty { font-size: 12px; color: #c0d0c4; font-weight: 900; }
-.clv4-rank.badge { animation: clv4Badge .5s cubic-bezier(.16,.9,.25,1); }
-@keyframes clv4Badge {
-  0%   { transform: scale(0) rotate(-40deg); }
-  65%  { transform: scale(1.25) rotate(8deg); }
-  100% { transform: scale(1) rotate(0); }
-}
 .clv4-av {
   width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
   background: linear-gradient(135deg, #e8f5ec, #d4ead9);
@@ -279,10 +272,7 @@
 .clv4-dot { width: 3px; height: 3px; border-radius: 50%; background: #c0d0c4; }
 .clv4-pts { font-variant-numeric: tabular-nums; font-weight: 900; color: #4fa370; }
 .clv4-pts.early { color: #d89020; }
-.clv4-status {
-  font-size: 19px; line-height: 1; flex-shrink: 0;
-  transition: transform .3s cubic-bezier(.16,.9,.25,1);
-}
+.clv4-status { font-size: 19px; line-height: 1; flex-shrink: 0; }
 .clv4-status.idle { font-size: 15px; color: #c0d0c4; }
 .clv4-empty {
   padding: 40px 20px; text-align: center;
@@ -308,17 +298,161 @@
   background: #f5fbf5;
   border-color: rgba(122,184,150,.6);
 }
-.clv4-actions button:disabled {
-  opacity: .55;
-  pointer-events: none;
-}
+.clv4-actions button:disabled { opacity: .55; pointer-events: none; }
 .clv4-debug {
   margin-top: 8px; font-size: 10.5px; font-weight: 800;
-  color: #9ab0a0; text-align: center; min-height: 14px;
-  flex-shrink: 0;
+  color: #9ab0a0; text-align: center; min-height: 14px; flex-shrink: 0;
+}
+
+/* ===== MODAL PREVIEW ===== */
+#clv4PreviewModal {
+  position: fixed; inset: 0; z-index: 30000;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(17, 40, 30, .72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 16px;
+}
+#clv4PreviewModal.show { display: flex; animation: clv4Fade .22s ease; }
+@keyframes clv4Fade { from { opacity: 0 } to { opacity: 1 } }
+.clv4-preview-panel {
+  width: 100%; max-width: 440px; max-height: 92vh;
+  background: #fff;
+  border-radius: 22px;
+  padding: 14px;
+  display: flex; flex-direction: column; gap: 12px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.35);
+  animation: clv4Pop .28s cubic-bezier(.16,.9,.25,1);
+}
+@keyframes clv4Pop {
+  from { opacity: 0; transform: scale(.92) }
+  to   { opacity: 1; transform: scale(1) }
+}
+.clv4-preview-head {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.clv4-preview-title {
+  font-size: 15px; font-weight: 950; color: #2a4d38;
+}
+.clv4-preview-close {
+  width: 34px; height: 34px;
+  border: 0; border-radius: 50%;
+  background: rgba(203,220,201,.5);
+  color: #4a7a5a;
+  font-size: 20px; font-weight: 900;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.clv4-preview-imgbox {
+  flex: 1 1 auto;
+  overflow: auto;
+  border-radius: 12px;
+  background: #f5fbf5;
+  display: flex; align-items: flex-start; justify-content: center;
+  min-height: 120px;
+}
+.clv4-preview-imgbox img {
+  width: 100%; height: auto; display: block;
+  border-radius: 12px;
+}
+.clv4-preview-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.clv4-preview-actions button {
+  min-height: 44px; padding: 10px 14px;
+  border-radius: 12px;
+  font-family: inherit; font-size: 13px; font-weight: 900;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: transform .15s ease, opacity .15s ease;
+}
+.clv4-preview-actions button:active { transform: scale(.96); }
+.clv4-preview-actions .save {
+  background: linear-gradient(180deg, #7ab896 0%, #4fa370 100%);
+  color: #fff;
+  box-shadow: 0 6px 16px -6px rgba(79,163,112,.5);
+}
+.clv4-preview-actions .open {
+  background: #fff; color: #315744;
+  border-color: rgba(203,220,201,.75);
+}
+.clv4-preview-hint {
+  font-size: 11.5px; font-weight: 800; color: #8fa89a;
+  text-align: center; line-height: 1.4;
 }
     `;
     document.head.appendChild(style);
+  }
+
+  /* ============ PREVIEW MODAL (tự chứa) ============ */
+  function showPreview(url, filename){
+    let modal = $('clv4PreviewModal');
+    if (modal) modal.remove();
+
+    modal = document.createElement('div');
+    modal.id = 'clv4PreviewModal';
+    modal.setAttribute('aria-hidden', 'false');
+    modal.innerHTML = `
+      <div class="clv4-preview-panel" role="dialog" aria-modal="true">
+        <div class="clv4-preview-head">
+          <div class="clv4-preview-title">📸 Checklist đã chụp</div>
+          <button type="button" class="clv4-preview-close" aria-label="Đóng">×</button>
+        </div>
+        <div class="clv4-preview-imgbox">
+          <img src="${url}" alt="Checklist">
+        </div>
+        <div class="clv4-preview-actions">
+          <button type="button" class="save">💾 Lưu ảnh</button>
+          <button type="button" class="open">🔗 Mở tab mới</button>
+        </div>
+        <div class="clv4-preview-hint">
+          Nếu nút Lưu không hoạt động → <b>nhấn giữ vào ảnh</b> rồi chọn "Lưu ảnh" để tải về.
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Đóng
+    const close = () => {
+      modal.classList.remove('show');
+      setTimeout(() => {
+        modal.remove();
+        // Giải phóng blob URL khi không cần nữa (sau 10s)
+        setTimeout(() => { try { URL.revokeObjectURL(url); } catch(_){} }, 10000);
+      }, 250);
+    };
+    modal.querySelector('.clv4-preview-close').addEventListener('click', close);
+    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+
+    // Lưu ảnh
+    modal.querySelector('.save').addEventListener('click', () => {
+      try {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename || ('checklist-' + Date.now() + '.png');
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } catch (e){
+        warn('Download fail:', e && e.message);
+        // Fallback: mở tab mới
+        window.open(url, '_blank');
+      }
+    });
+
+    // Mở tab mới
+    modal.querySelector('.open').addEventListener('click', () => {
+      window.open(url, '_blank');
+    });
+
+    // Show
+    requestAnimationFrame(() => modal.classList.add('show'));
+
+    // ESC để đóng
+    const onEsc = (e) => {
+      if (e.key === 'Escape'){ close(); document.removeEventListener('keydown', onEsc); }
+    };
+    document.addEventListener('keydown', onEsc);
   }
 
   /* ============ BUILD ROOT ============ */
@@ -361,19 +495,16 @@
 
     panel.appendChild(root);
 
-    // Bind with capture=true để không bị chặn bởi parent
     const captureBtn = root.querySelector('#clv4Capture');
     const syncBtn = root.querySelector('#clv4Sync');
 
     captureBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+      e.preventDefault(); e.stopPropagation();
       onCapture();
     }, true);
 
     syncBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+      e.preventDefault(); e.stopPropagation();
       forceRefresh();
     }, true);
 
@@ -418,7 +549,7 @@
     const list = $('clv4List');
     const countEl = $('clv4Count');
     const barEl = $('clv4Bar');
-    if (!list) { warn('list không tồn tại'); return; }
+    if (!list) return;
 
     const total = S.names.length;
     const checkedCount = S.checks.filter(Boolean).length;
@@ -447,21 +578,15 @@
     const frag = document.createDocumentFragment();
 
     const prevByName = {};
-    if (S.prev && S.prev.byName){
-      Object.assign(prevByName, S.prev.byName);
-    }
+    if (S.prev && S.prev.byName) Object.assign(prevByName, S.prev.byName);
 
     let lastSection = null;
 
     sorted.items.forEach((item, displayIdx) => {
       let section = null;
-      if (displayIdx < sorted.top3.length){
-        section = 'top3';
-      } else if (item.checked){
-        section = 'checked';
-      } else {
-        section = 'unchecked';
-      }
+      if (displayIdx < sorted.top3.length) section = 'top3';
+      else if (item.checked) section = 'checked';
+      else section = 'unchecked';
 
       if (section !== lastSection){
         const div = document.createElement('div');
@@ -493,7 +618,6 @@
       const rankEl = document.createElement('div');
       rankEl.className = 'clv4-rank';
       if (rankIdx !== undefined && rankIdx >= 0 && rankIdx <= 2){
-        rankEl.classList.add('badge');
         rankEl.textContent = RANK_ICONS[rankIdx];
       } else {
         rankEl.classList.add('empty');
@@ -595,16 +719,10 @@
   /* ============ DATA ============ */
   async function fetchData(){
     const api = getApi();
-    if (!api){
-      warn('API chưa sẵn sàng');
-      return null;
-    }
+    if (!api) return null;
     try {
       const r = await api('getData', { _ts: Date.now() }, 15000);
-      if (!r || !r.ok){
-        warn('getData lỗi:', r && r.error);
-        return null;
-      }
+      if (!r || !r.ok) return null;
       return r.data;
     } catch (e){
       warn('getData exception:', e && e.message);
@@ -613,10 +731,7 @@
   }
 
   function applyState(data){
-    if (!data || !Array.isArray(data.names)){
-      warn('data không hợp lệ:', data);
-      return false;
-    }
+    if (!data || !Array.isArray(data.names)) return false;
     S.names  = data.names.slice();
     S.checks = Array.isArray(data.checks) ? data.checks.slice() : [];
     S.times  = Array.isArray(data.times)  ? data.times.slice()  : [];
@@ -639,19 +754,18 @@
   async function forceRefresh(){
     const oldBy = {};
     S.names.forEach((n, i) => { oldBy[n] = !!S.checks[i]; });
-
     const data = await fetchData();
     if (!data) return;
-
     S.prev = { byName: oldBy };
     applyState(data);
     render();
   }
 
-  /* ============ CAPTURE (FIX) ============ */
+  /* ============ CAPTURE ============ */
   async function onCapture(){
-    log('Capture clicked');
+    log('=== CAPTURE START ===');
     const btn = $('clv4Capture');
+    const oldLabel = btn ? btn.textContent : '';
     if (btn){
       btn.disabled = true;
       btn.textContent = '⏳ Đang tạo ảnh…';
@@ -659,22 +773,26 @@
 
     let clone = null;
     try {
+      // 1. Load html2canvas
+      log('Step 1: load html2canvas...');
       const h2c = await loadHtml2Canvas();
       if (typeof h2c !== 'function'){
-        throw new Error('Không tải được thư viện chụp ảnh (html2canvas)');
+        throw new Error('Không tải được html2canvas. Kiểm tra mạng / tắt adblock.');
       }
+      log('Step 1 ✓ html2canvas ready');
 
+      // 2. Tìm root
       const root = $(ROOT_ID);
-      if (!root) throw new Error('Không tìm thấy checklist');
+      if (!root) throw new Error('Không tìm thấy #' + ROOT_ID);
+      log('Step 2 ✓ root found, size:', root.offsetWidth, 'x', root.offsetHeight);
 
-      // ⚡ Clone root để chụp TOÀN BỘ (không bị cắt bởi max-height)
+      // 3. Clone
+      log('Step 3: clone...');
       clone = root.cloneNode(true);
-
-      // Xoá hết id trong clone để tránh trùng
       clone.removeAttribute('id');
       clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
 
-      // Bỏ animation/transition
+      // Reset animation
       clone.style.animation = 'none';
       clone.style.transition = 'none';
       Object.assign(clone.style, {
@@ -690,86 +808,75 @@
         zIndex: '-1',
         opacity: '1',
         visibility: 'visible',
+        background: '#f5fbf5'
       });
 
-      // Bỏ scroll ở list clone
+      // Mở list clone (bỏ scroll)
       const listClone = clone.querySelector('.clv4-list');
       if (listClone){
         listClone.style.maxHeight = 'none';
         listClone.style.overflow = 'visible';
-        listClone.style.padding = '2px';
         listClone.style.height = 'auto';
       }
 
-      // Bỏ nút actions + debug khỏi ảnh
-      const actionsClone = clone.querySelector('.clv4-actions');
-      const debugClone = clone.querySelector('.clv4-debug');
-      if (actionsClone) actionsClone.remove();
-      if (debugClone) debugClone.remove();
+      // Bỏ actions + debug
+      clone.querySelector('.clv4-actions')?.remove();
+      clone.querySelector('.clv4-debug')?.remove();
 
-      // Bỏ animation delay ở card
+      // Reset animation card
       clone.querySelectorAll('.clv4-card').forEach(c => {
         c.style.animation = 'none';
-        c.style.animationDelay = '0ms';
         c.style.opacity = '1';
         c.style.transform = 'none';
       });
 
       document.body.appendChild(clone);
+      log('Step 3 ✓ clone appended, size:', clone.offsetWidth, 'x', clone.scrollHeight);
 
-      // Đợi 2 frame để layout ổn định
+      // 4. Đợi layout
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
+      // 5. Chụp
+      log('Step 4: render canvas...');
       const canvas = await h2c(clone, {
-        backgroundColor: null,
+        backgroundColor: '#f5fbf5',
         scale: Math.min(3, Math.max(2, window.devicePixelRatio || 2)),
         useCORS: true,
         allowTaint: false,
-        logging: false,
+        logging: true,
         width: clone.offsetWidth,
         height: clone.scrollHeight,
         windowWidth: clone.offsetWidth,
         windowHeight: clone.scrollHeight,
       });
+      log('Step 4 ✓ canvas:', canvas.width, 'x', canvas.height);
 
-      const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 1));
-      if (!blob) throw new Error('Không tạo được blob ảnh');
+      // 6. Blob
+      log('Step 5: toBlob...');
+      const blob = await new Promise((res, rej) => {
+        canvas.toBlob((b) => {
+          if (b) res(b);
+          else rej(new Error('toBlob trả về null'));
+        }, 'image/png', 1);
+      });
+      log('Step 5 ✓ blob size:', (blob.size / 1024).toFixed(1), 'KB');
 
       const url = URL.createObjectURL(blob);
 
-      // Ưu tiên preview của main.js nếu có
-      const preview = (window.SRank && window.SRank.showCapturePreview)
-        || window.showCapturePreview;
-
-      if (typeof preview === 'function'){
-        try {
-          preview(url, blob, '📸 Checklist', 'checklist-dao-meo.png',
-            'Bấm Lưu ảnh hoặc nhấn giữ để lưu.');
-          log('Preview shown ✓');
-          return;
-        } catch (e){
-          warn('Preview fail, fallback download:', e && e.message);
-        }
-      }
-
-      // Fallback: tải file trực tiếp
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'checklist-dao-meo-' + Date.now() + '.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-      log('Downloaded ✓');
+      // 7. Preview modal
+      log('Step 6: show preview modal...');
+      const filename = 'checklist-' + new Date().toISOString().slice(0,10) + '.png';
+      showPreview(url, filename);
+      log('=== CAPTURE SUCCESS ===');
 
     } catch (e){
-      console.error('[CL4] capture lỗi:', e);
-      alert('Chụp thất bại: ' + (e && e.message || e));
+      console.error('[CL4] CAPTURE ERROR:', e);
+      alert('Chụp thất bại:\n\n' + (e && e.message || e));
     } finally {
       if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
       if (btn){
         btn.disabled = false;
-        btn.textContent = '📸 Chụp checklist';
+        btn.textContent = oldLabel || '📸 Chụp checklist';
       }
     }
   }
@@ -778,9 +885,7 @@
   function bindGlobalEvents(){
     window.addEventListener('checkinDone', (e) => {
       const name = e && e.detail && e.detail.name;
-      if (name && S.prev && S.prev.byName){
-        S.prev.byName[name] = false;
-      }
+      if (name && S.prev && S.prev.byName) S.prev.byName[name] = false;
       setTimeout(() => forceRefresh(), 500);
     });
 
@@ -817,27 +922,23 @@
     bindGlobalEvents();
     startAutoTimer();
 
-    // Load lần đầu
     await refresh();
 
-    // Retry nếu chưa có data
     setTimeout(async () => {
       if (!S.names.length) await refresh();
     }, 3000);
 
-    // Preload html2canvas (chạy nền để nút chụp ready sẵn)
+    // Preload html2canvas nền
     loadHtml2Canvas().catch(() => {});
 
     window.__clV4 = {
-      refresh,
-      forceRefresh,
-      render,
-      state: S,
+      refresh, forceRefresh, render, state: S,
       root: () => $(ROOT_ID),
       capture: onCapture,
       loadH2C: loadHtml2Canvas,
+      preview: showPreview,
     };
-    log('✓ Checklist UI v4.1 ready');
+    log('✓ Checklist UI v4.2 ready');
   }
 
   if (document.readyState === 'loading'){
