@@ -1,8 +1,9 @@
 /* =========================================================
-   BIRTHDAY CHAT — v1.8
-   - Reply hiển thị NGAY DƯỚI wish gốc (threaded)
-   - Reply có style nhỏ hơn, indent 36px
-   - replyToId lưu trong DB
+   BIRTHDAY CHAT — v1.9
+   - Nút reply nổi bật (to hơn, gradient hồng, có hint)
+   - Reply hiển thị ngay dưới wish gốc (threaded)
+   - Chat bubble luôn bên TRÁI
+   - Wish Mỹ Dung: bên PHẢI + special
    ========================================================= */
 (function(){
   "use strict";
@@ -360,6 +361,54 @@
   color: #fff;
 }
 
+/* ===== NÚT TRẢ LỜI — nổi bật ===== */
+.bd-wish-actions {
+  margin-top: 10px;
+  padding-left: 46px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bd-wish.me .bd-wish-actions {
+  padding-left: 0;
+  padding-right: 46px;
+  justify-content: flex-end;
+}
+.bd-reply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(216,91,158,.55);
+  background: linear-gradient(135deg, #fff5fa, #ffe6f2);
+  color: #c04a90;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: .02em;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+  box-shadow: 0 3px 10px -4px rgba(216,91,158,.35);
+}
+.bd-reply-btn:active {
+  transform: scale(.95);
+  background: linear-gradient(135deg, #ffe6f2, #ffd0e5);
+  box-shadow: 0 2px 6px -2px rgba(216,91,158,.5);
+}
+.bd-reply-btn .bd-reply-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+.bd-reply-hint {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #c9a0b8;
+  font-style: italic;
+  padding: 2px 6px;
+}
+
 /* ===== THREAD — gom wish + replies ===== */
 .bd-thread {
   display: flex; flex-direction: column;
@@ -367,7 +416,7 @@
   width: 100%;
 }
 
-/* ===== REPLY BUBBLE — nhỏ hơn, indent ===== */
+/* ===== REPLY BUBBLE ===== */
 .bd-reply {
   display: flex; gap: 8px; align-items: flex-start;
   align-self: flex-end;
@@ -865,9 +914,8 @@
     }
   }
 
-  /* ============ REPLIES HELPERS ============ */
+  /* ============ REPLIES ============ */
   function buildThreads() {
-    // Tách wish gốc và replies
     const topWishes = [];
     const repliesByParent = {};
 
@@ -880,7 +928,6 @@
       }
     }
 
-    // Sort top theo ts, replies cũng sort theo ts
     topWishes.sort((a, b) => a.ts - b.ts);
     Object.keys(repliesByParent).forEach(k => {
       repliesByParent[k].sort((a, b) => a.ts - b.ts);
@@ -977,19 +1024,33 @@
       tag.textContent = 'SPECIAL';
       foot.appendChild(tag);
     }
+
+    card.append(head, msg, foot);
+
+    // ⚡ Hàng action riêng — nút reply nổi bật
     if (S.isOwner && !w.isFromRecipient) {
+      const actions = document.createElement('div');
+      actions.className = 'bd-wish-actions';
+
       const replyBtn = document.createElement('button');
       replyBtn.type = 'button';
-      replyBtn.textContent = '↩️ Trả lời';
-      replyBtn.style.cssText = 'margin-left:auto;padding:3px 10px;border-radius:999px;border:1.5px solid rgba(216,91,158,.5);background:#fff;color:#c04a90;font-family:inherit;font-size:10.5px;font-weight:900;cursor:pointer;';
+      replyBtn.className = 'bd-reply-btn';
+      const firstName = String(w.sender || '').split(' ')[0] || 'bạn';
+      replyBtn.innerHTML = '<span class="bd-reply-icon">↩️</span><span>Trả lời ' + esc(firstName) + '</span>';
       replyBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         replyToWish(w);
       });
-      foot.appendChild(replyBtn);
+      actions.appendChild(replyBtn);
+
+      const hint = document.createElement('span');
+      hint.className = 'bd-reply-hint';
+      hint.textContent = 'Bấm để trả lời ngay dưới lời chúc này';
+      actions.appendChild(hint);
+
+      card.appendChild(actions);
     }
 
-    card.append(head, msg, foot);
     return card;
   }
 
@@ -1001,7 +1062,6 @@
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
 
-    // Hiện badge "đang trả lời..."
     const badge = modal.querySelector('#bdReplyBadge');
     if (badge) {
       badge.textContent = '↩️ Đang trả lời ' + (wish.sender || 'bạn') + ': "' + 
@@ -1071,10 +1131,8 @@
       const isWish = w.type === 'wish' || w.isFromRecipient;
 
       if (isWish) {
-        // Gom wish gốc + replies thành thread
         const thread = document.createElement('div');
         thread.className = 'bd-thread';
-
         thread.appendChild(renderWishCard(w));
 
         const replies = repliesByParent[w.id] || [];
@@ -1082,7 +1140,6 @@
 
         frag.appendChild(thread);
       } else {
-        // Chat bubble (không phải wish)
         const row = document.createElement('div');
         row.className = 'bd-chat-row';
 
@@ -1204,7 +1261,6 @@
 
       if (data.isFromRecipient) {
         fireConfetti(40);
-        // Chỉ celebration khi KHÔNG phải reply (tránh spam)
         if (!data.replyToId) showCelebration();
       } else {
         fireConfetti(30);
@@ -1497,7 +1553,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v1.8 ready ✓');
+    log('v1.9 ready ✓');
   }
 
   if (document.readyState === 'loading') {
