@@ -4,357 +4,548 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#f3f8f1">
-<link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg">
-<link rel="apple-touch-icon" href="/icon.svg">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Đảo Mèo">
-<meta name="application-name" content="Đảo Mèo">
+<title>Đảo Mèo — UI Khung</title>
+<style>
+/* ============================================================
+   THEME TOKENS
+============================================================ */
+:root{
+  --p-forest:#245943;
+  --p-green:#4f9b70;
+  --p-shadow:0 18px 50px rgba(42,78,57,.1),0 3px 12px rgba(42,78,57,.05);
+  --mint-green:#2f6b4f;
+  --mint-border:#cbdcc9;
+  --mint-text:#315744;
+  --mint-muted:#7b8e82;
+  --mint-yellow:#ffe6a0;
+  --mint-shadow:0 10px 28px rgba(54,91,65,.09);
+  --mint-shadow-soft:0 5px 16px rgba(54,91,65,.07);
+  --bg:#f3f7f1;
+  --surface:#fff;
+  --ink:#284b3a;
+  --muted:#7d9184;
+  --green:#4b9a6b;
+  --green-strong:#2f6b4f;
+  --green-soft:#e4f2e6;
+  --line:#d4e1d3;
+  --line-2:#e4ece2;
+  --yellow:#f8dda0;
+  --shadow:0 14px 38px rgba(47,78,59,.09);
+  --shadow-sm:0 6px 18px rgba(47,78,59,.07);
+  --radius-xl:24px;
+  --font:ui-rounded,"SF Pro Rounded","Arial Rounded MT Bold","Avenir Next",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
 
-<!-- CDN preconnect -->
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+*{box-sizing:border-box}
+html,body{
+  margin:0;width:100%;height:100%;overflow:hidden;
+  background:#f3f7f1;color:#284b3a;
+  font-family:var(--font);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  font-weight:600;
+}
+body{touch-action:none}
+button,input,textarea,select{font-family:inherit!important}
+button{font:inherit;cursor:pointer}
+button:focus{outline:none}
+button:focus-visible{outline:3px solid rgba(79,155,112,.48);outline-offset:3px;border-radius:inherit}
 
-<!-- Supabase project: yodvujkylnvzjybvgika -->
-<link rel="preconnect" href="https://yodvujkylnvzjybvgika.supabase.co" crossorigin>
-<link rel="dns-prefetch" href="https://yodvujkylnvzjybvgika.supabase.co">
+/* ============================================================
+   BACKGROUND SPACE
+============================================================ */
+#space{
+  position:relative;width:100%;height:100%;overflow:hidden;isolation:isolate;
+  background:
+    radial-gradient(ellipse 80% 48% at 50% -5%,rgba(255,255,255,.98) 0%,rgba(255,255,255,.7) 42%,transparent 72%),
+    radial-gradient(circle at 8% 88%,rgba(190,225,198,.34),transparent 27%),
+    radial-gradient(circle at 96% 58%,rgba(218,237,221,.38),transparent 28%),
+    linear-gradient(180deg,#f8fbf7,#f2f8f1 48%,#eaf3e9);
+}
+#space::before,#space::after{
+  content:"";position:absolute;z-index:0;pointer-events:none;border-radius:50%;filter:blur(2px);
+}
+#space::before{width:280px;height:280px;left:-150px;top:43%;background:rgba(151,203,168,.1)}
+#space::after{width:360px;height:360px;right:-190px;bottom:7%;background:rgba(239,215,151,.1)}
 
-<title>S Rank — Daily Mission</title>
-<link rel="preload" href="css/main.css" as="style">
-<link rel="preload" href="js/main.js" as="script">
-<link rel="stylesheet" href="css/main.css">
+#appVersion{
+  position:fixed;left:10px;bottom:10px;z-index:10002;
+  color:rgba(78,112,91,.58);font-size:9px;font-weight:900;letter-spacing:.4px;
+  user-select:none;pointer-events:none;
+}
+#status{
+  position:absolute;right:12px;top:10px;z-index:100;
+  color:#708278;font-size:10px;opacity:0;transition:opacity .2s;
+}
+#status.show{opacity:1}
+
+/* ============================================================
+   HERO / QUESTION
+============================================================ */
+#homeStack{
+  position:absolute;left:50%;
+  top:calc(env(safe-area-inset-top) + 150px);
+  bottom:calc(env(safe-area-inset-bottom) + 78px);
+  transform:translateX(-50%);
+  width:min(94vw,520px);max-width:520px;
+  z-index:9;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:12px;overflow:hidden;
+  pointer-events:none;padding:0;
+}
+#homeStack #questionWrap{
+  width:100%;max-width:100%;text-align:center;pointer-events:none;margin:0;
+}
+
+#question{
+  position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  width:100%;padding:20px 22px 22px;
+  border-radius:28px;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%,rgba(255,255,255,.98) 0%,rgba(255,255,255,.72) 45%,transparent 75%),
+    linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(248,252,246,.94) 55%,rgba(240,248,238,.92) 100%);
+  border:1px solid rgba(120,175,135,.18);
+  box-shadow:
+    0 24px 60px -20px rgba(42,78,57,.18),
+    0 12px 32px -12px rgba(42,78,57,.12),
+    0 2px 8px rgba(42,78,57,.05),
+    inset 0 1px 0 rgba(255,255,255,.95);
+  backdrop-filter:blur(20px) saturate(120%);
+  -webkit-backdrop-filter:blur(20px) saturate(120%);
+  overflow:hidden;
+  cursor:pointer;user-select:none;
+  color:var(--p-forest);
+  pointer-events:auto;
+  transition:opacity .25s,transform .25s;
+}
+#question::before{
+  content:"";position:absolute;top:-50%;right:-50%;width:200%;height:200%;
+  background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.65) 0%,transparent 45%);
+  pointer-events:none;z-index:0;
+}
+#question>*{position:relative;z-index:1}
+
+.landing-kicker{
+  display:block;width:100%;margin:0 0 6px;
+  color:#8ca598;font-size:clamp(9px,2.3vw,11px);
+  font-weight:900;letter-spacing:.32em;
+  text-align:center;text-transform:uppercase;line-height:1;
+  opacity:.85;
+}
+.landing-title{
+  display:block;width:100%;
+  color:var(--p-forest);
+  font-size:clamp(30px,8.4vw,54px);
+  font-weight:950;letter-spacing:-.055em;line-height:.98;
+  text-align:center;
+  text-shadow:0 2px 0 rgba(255,255,255,.95),0 10px 28px rgba(42,91,65,.1);
+  white-space:nowrap;
+}
+.landing-title::after{
+  content:"";display:block;width:min(120px,26vw);height:4px;
+  margin:8px auto 0;border-radius:99px;
+  background:linear-gradient(90deg,transparent,#efd48a 15%,#efd48a 85%,transparent);
+  opacity:.9;
+}
+.landing-cta{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-width:160px;min-height:46px;padding:10px 28px;margin-top:2px;
+  border:1px solid rgba(67,137,93,.42);
+  border-radius:999px;
+  background:linear-gradient(180deg,#5aad7f,#4a9a6c);
+  color:#fff;font-size:13px;font-weight:950;
+  letter-spacing:.16em;text-transform:uppercase;
+  text-shadow:0 1px 2px rgba(42,78,57,.2);
+  box-shadow:
+    0 12px 28px -8px rgba(74,154,108,.42),
+    0 4px 10px -2px rgba(42,78,57,.14),
+    inset 0 1px 0 rgba(255,255,255,.3);
+  cursor:pointer;
+  transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s;
+}
+.landing-cta::before{content:"→";display:inline-block;font-size:16px;font-weight:900}
+.landing-cta:hover{transform:translateY(-2px) scale(1.02)}
+.landing-cta:active{transform:translateY(0) scale(.98)}
+
+/* ============================================================
+   TOP NAV / SECONDARY NAV
+============================================================ */
+#bottomNav,#secondaryNav{
+  position:absolute;left:50%;transform:translateX(-50%);
+  box-sizing:border-box;overflow:hidden;margin:0;
+  border:1px solid rgba(62,112,79,.17);
+  background:rgba(255,255,255,.78);
+  backdrop-filter:blur(22px) saturate(115%);
+  -webkit-backdrop-filter:blur(22px) saturate(115%);
+  box-shadow:0 14px 36px rgba(42,78,57,.08),inset 0 1px 0 rgba(255,255,255,.92);
+  touch-action:manipulation;z-index:10000;
+}
+#bottomNav{
+  top:12px;
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+  width:calc(100vw - 28px);max-width:760px;height:64px;
+  gap:4px;padding:4px;border-radius:18px;
+}
+#secondaryNav{
+  top:92px;
+  display:flex;justify-content:center;align-items:stretch;
+  width:calc(100vw - 28px);max-width:760px;height:64px;
+  gap:4px;padding:4px;border-radius:18px;z-index:9999;
+}
+#bottomNav>button,#secondaryNav>button{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  width:100%;min-width:0;height:100%;margin:0;padding:0 4px;
+  border:1px solid transparent;border-radius:14px;
+  background:transparent;color:#61776b;
+  font-size:clamp(9px,2.35vw,11px);font-weight:850;
+  letter-spacing:-.015em;line-height:1.08;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  text-align:center;-webkit-tap-highlight-color:transparent;
+  transition:transform .2s,background .2s,color .2s;
+}
+#secondaryNav>button{flex:1 1 0}
+#bottomNav>button:active,#secondaryNav>button:active{transform:translateY(1px) scale(.975)}
+#homeBtn{
+  background:linear-gradient(135deg,#5aad7f,#4a9a6c);
+  color:#fff;
+}
+#bottomNav>button.active{
+  color:var(--p-forest);
+  background:linear-gradient(180deg,#f2faf2,#e5f3e7);
+  border-color:rgba(79,155,112,.2);
+  box-shadow:0 7px 17px rgba(63,132,88,.1),inset 0 1px 0 rgba(255,255,255,.95);
+}
+
+/* ============================================================
+   WHEEL AREA
+============================================================ */
+#wheelArea{
+  position:absolute;left:50%;top:65%;z-index:20;
+  width:min(88vw,390px);height:250px;
+  transform:translate(-50%,-50%);
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+#wheelArea.show{opacity:1;pointer-events:auto}
+.wheel-viewport{
+  position:absolute;inset:0;border-radius:28px;overflow:hidden;touch-action:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(241,248,239,.96));
+  border:1px solid var(--line);
+  box-shadow:inset 0 0 30px rgba(67,130,87,.05);
+}
+.wheel-selection{
+  position:absolute;left:10px;right:10px;top:50%;height:58px;
+  transform:translateY(-50%);
+  border-top:1px solid #8fbea0;border-bottom:1px solid #8fbea0;
+  border-radius:15px;background:rgba(80,157,107,.07);
+  z-index:3;pointer-events:none;
+}
+.wheel-items{position:absolute;inset:0;z-index:2}
+
+#wheelHint{
+  position:absolute;bottom:-31px;left:50%;transform:translateX(-50%);
+  color:#8a9b90;font-size:11px;white-space:nowrap;
+}
+#confirm{
+  position:absolute;left:50%;bottom:-91px;transform:translateX(-50%);
+  min-width:130px;min-height:46px;padding:10px 22px;border-radius:999px;
+  border:1px solid #4e9d6b;
+  background:linear-gradient(135deg,#4e9d6b,#74c69d);
+  color:#fff;font-size:15px;font-weight:700;
+  box-shadow:0 8px 18px rgba(75,154,107,.16);
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+#confirm.show{opacity:1;pointer-events:auto}
+
+/* ============================================================
+   PANELS (Checklist / Top / Monitor)
+============================================================ */
+#checklistPanel,#topPanel{
+  position:absolute;left:50%;top:50%;z-index:9999;
+  width:min(92vw,520px);max-height:82vh;
+  padding:21px;border:1px solid rgba(62,112,79,.16);
+  border-radius:26px;
+  background:linear-gradient(180deg,rgba(255,255,255,.985),rgba(249,252,248,.985));
+  box-shadow:var(--p-shadow);color:var(--ink);
+  transform:translate(-50%,-50%) scale(.94);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .25s,transform .3s;
+  overflow:hidden;
+}
+#checklistPanel.show,#topPanel.show{
+  opacity:1;visibility:visible;pointer-events:auto;
+  transform:translate(-50%,-50%) scale(1);
+}
+#checklistScroll{max-height:65vh;overflow:auto;border-radius:20px;scrollbar-width:none}
+#checklistScroll::-webkit-scrollbar{display:none}
+#checklist{
+  width:100%;border-collapse:separate;border-spacing:0;
+  border:1px solid rgba(62,112,79,.15);border-radius:20px;
+  overflow:hidden;background:#fff;
+}
+#checklist th,#checklist td{
+  padding:12px 15px;border-bottom:1px solid var(--line-2);background:#fff;
+}
+#checklist th{
+  color:#71877b;background:#f4f9f3;font-size:11px;
+  letter-spacing:1.2px;text-transform:uppercase;font-weight:900;
+}
+#checklist th:last-child,#checklist td:last-child{text-align:center;width:78px}
+
+#topTitle{text-align:center;color:var(--p-forest);font-size:26px;font-weight:900;letter-spacing:-.02em}
+#topSub{text-align:center;color:var(--muted);font-size:12px;margin:5px 0 12px}
+#topTable{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+#topTable th,#topTable td{padding:11px 9px;border-bottom:1px solid var(--line-2);color:#456251;background:#fff}
+#topTable th{color:#819187;background:#f5f9f4;font-size:10px;letter-spacing:1px;text-transform:uppercase}
+
+.panel-actions{
+  display:flex;justify-content:center;gap:8px;margin:12px auto 0;flex-wrap:wrap;
+}
+.panel-actions button{
+  min-height:42px;padding:9px 14px;border-radius:14px;
+  border:1px solid var(--line);font:inherit;font-weight:850;
+  color:#557164;background:#f7faf6;
+}
+.panel-actions button.primary{
+  background:#4e9d6b;color:#fff;border-color:#4e9d6b;
+  box-shadow:0 5px 12px rgba(75,160,105,.15);
+}
+
+/* Empty state */
+.empty-state{
+  padding:60px 20px;text-align:center;color:#8aa299;
+}
+.empty-state .emoji{font-size:52px;margin-bottom:12px;opacity:.55}
+.empty-state .title{font-size:15px;font-weight:900;color:#6b8f78;margin-bottom:4px}
+.empty-state .sub{font-size:12px;color:#a8bdb0;font-weight:700;line-height:1.5}
+
+/* ============================================================
+   FABs
+============================================================ */
+.fab{
+  position:fixed;z-index:20600;
+  border:0;border-radius:26px;
+  background:linear-gradient(135deg,#ff4d94 0%,#b1005c 100%);
+  color:#fff;font-family:inherit;font-size:13px;font-weight:800;
+  display:flex;align-items:center;gap:8px;
+  padding:0 18px 0 14px;height:52px;
+  cursor:pointer;
+  box-shadow:0 0 0 1px rgba(255,120,180,.4),0 8px 24px -6px rgba(255,77,148,.5);
+  transition:transform .15s ease;
+}
+.fab:active{transform:scale(.96)}
+#bdFab{right:18px;bottom:max(24px,calc(18px + env(safe-area-inset-bottom)))}
+.fab .fab-icon{font-size:20px;line-height:1}
+.fab .fab-badge{
+  position:absolute;top:-4px;right:-4px;
+  min-width:20px;height:20px;padding:0 6px;border-radius:10px;
+  background:#fff;color:#b1005c;
+  font-size:11px;font-weight:800;
+  display:none;align-items:center;justify-content:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
+}
+.fab .fab-badge.show{display:flex}
+
+#liveFeedBtn{
+  position:fixed;right:16px;bottom:max(96px,calc(86px + env(safe-area-inset-bottom)));
+  z-index:9998;width:48px;height:48px;border-radius:50%;
+  border:1px solid rgba(62,112,79,.18);
+  background:rgba(255,255,255,.94);
+  box-shadow:0 10px 24px rgba(42,78,57,.14),0 3px 8px rgba(42,78,57,.06);
+  color:#2f6b4f;font-size:20px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+
+#chatFab{
+  position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 84px);
+  transform:translateX(-50%);z-index:19000;
+  min-height:44px;padding:10px 22px;border-radius:999px;
+  border:1.5px solid rgba(255,158,199,.5);
+  background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(255,247,252,.98) 50%,rgba(255,240,250,.98));
+  font-size:12.5px;font-weight:900;letter-spacing:.06em;
+  color:#c04a90;
+  box-shadow:
+    0 12px 28px -10px rgba(255,120,180,.4),
+    0 4px 12px -4px rgba(95,140,120,.15),
+    inset 0 1px 0 rgba(255,255,255,.95);
+  display:flex;align-items:center;gap:8px;
+}
+
+/* ============================================================
+   MODAL OVERLAYS
+============================================================ */
+.overlay{
+  position:fixed;inset:0;z-index:20000;
+  display:none;align-items:center;justify-content:center;
+  padding:20px;background:rgba(228,239,226,.68);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+.overlay.show{display:flex}
+.modal-box{
+  width:min(92vw,420px);padding:22px;
+  border:1px solid rgba(62,112,79,.16);border-radius:26px;
+  background:linear-gradient(180deg,rgba(255,255,255,.985),rgba(249,252,248,.985));
+  box-shadow:var(--p-shadow);color:var(--ink);text-align:center;
+}
+.modal-title{font-size:20px;font-weight:900;color:var(--p-forest);margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media(max-width:600px){
+  #bottomNav{top:8px;width:calc(100vw - 20px);max-width:calc(100vw - 20px);height:64px}
+  #secondaryNav{top:88px;width:calc(100vw - 20px);max-width:calc(100vw - 20px);height:60px}
+  #bottomNav>button,#secondaryNav>button{font-size:10px}
+}
+@media(max-width:390px){
+  #bottomNav,#secondaryNav{width:calc(100vw - 14px);max-width:calc(100vw - 14px);gap:3px;padding:3px}
+  #bottomNav>button,#secondaryNav>button{font-size:8px}
+}
+</style>
 </head>
 <body>
 <main id="space">
-<div id="status"></div>
-<div id="appVersion" aria-label="Phiên bản">v1.07</div>
 
-<div id="homeStack">
-  <div id="questionWrap">
-    <div id="counter">CÂU 1</div>
-    <div id="question"></div>
+  <div id="status"></div>
+  <div id="appVersion">v1.07</div>
+
+  <!-- ===================== HERO / QUESTION ===================== -->
+  <div id="homeStack">
+    <div id="questionWrap">
+      <div id="question">
+        <span class="landing-kicker">🐱 DAILY TEAM HUB</span>
+        <span class="landing-title">CHECKLIST ĐẢO MÈO</span>
+        <div class="empty-state" style="padding:14px 8px 4px">
+          <div class="sub" style="font-size:11px;color:#8aa299">Chưa có dữ liệu — hãy là người đầu tiên!</div>
+        </div>
+        <span class="landing-cta" role="button" tabindex="0">CLICK HERE</span>
+      </div>
+    </div>
   </div>
-</div>
 
-<div id="wheelArea">
-  <div id="wheelViewport" class="wheel-viewport">
-    <div class="wheel-selection"></div>
-    <div id="items" class="wheel-items"></div>
+  <!-- ===================== WHEEL ===================== -->
+  <div id="wheelArea">
+    <div class="wheel-viewport">
+      <div class="wheel-selection"></div>
+      <div id="items" class="wheel-items"></div>
+    </div>
+    <div id="wheelHint">Vuốt lên / xuống để chọn</div>
+    <button id="confirm" type="button">Xác nhận ❤️</button>
   </div>
-  <div id="wheelHint">Vuốt lên / xuống để chọn</div>
-  <button id="confirm" type="button">Xác nhận ❤️</button>
-</div>
 
-<div id="message"></div>
-
-<section id="checklistPanel">
-  <div id="checklistScroll"><table id="checklist">
-    <thead><tr><th>Kiểm duyệt viên</th><th>Giờ</th><th>Hoàn thành</th></tr></thead><tbody></tbody>
-  </table></div>
-  <div id="checklistActions"><button id="captureBtn" type="button">📸 Chụp checklist</button><button id="syncBtn" type="button">↻ Đồng bộ lại</button></div>
-</section>
-
-<section id="topPanel" aria-hidden="true">
-  <div id="topTitle">🏆 BXH TOP THÁNG 9</div>
-  <div id="topSub">Xếp hạng theo điểm chấm công</div>
-  <div id="topMonthBar"><select id="topMonthSelect" aria-label="Chọn tháng BXH TOP"></select></div>
-  <div id="topScroll"><table id="topTable">
-    <thead><tr><th>#</th><th>Tên</th><th>⭐ Điểm</th><th>Rank</th></tr></thead><tbody></tbody>
-  </table></div>
-  <div id="topActions"><button id="topCaptureBtn" type="button">📸 Chụp BXH</button><button id="topCloseBtn" type="button">Đóng</button></div>
-</section>
-
-<nav id="bottomNav" aria-label="Điều hướng chính">
-  <button id="homeBtn" type="button" aria-label="Về trang chủ">⌂ Home</button>
-  <button id="adminBtn" type="button" aria-label="Mở cài đặt admin">⚙ Admin</button>
-  <button id="monitorBtn" type="button" aria-label="Mở bảng giám sát">👁 Giám sát</button>
-  <button id="topBtn" type="button" aria-label="Mở bảng xếp hạng">🏆 BXH TOP</button>
-  <button id="checklistBtn" type="button" aria-label="Mở checklist" aria-expanded="false">☑ Checklist</button>
-</nav>
-<nav id="secondaryNav" aria-label="Công cụ">
-  <button id="kdvRulesBtn" type="button" aria-label="Mở Luật KDV">📜 Luật KDV</button>
-  <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?">🍜 Bữa trưa ăn gì?</button>
-  <button id="attendanceBtn" type="button" aria-label="Mở Chấm công">🗓 Chấm công</button>
-  <button id="quizBtn" type="button" aria-label="Bài kiểm tra">📝 Bài KT</button>
-</nav>
-
-<div id="monitorOverlay" aria-hidden="true">
-  <section id="monitorPanel" role="dialog" aria-modal="true">
-    <div id="monitorTitle">👁 Giám sát</div>
-    <div id="monitorSub">Bấm CHECK để mở Facebook của từng người</div>
-    <div id="monitorScroll">
-      <table id="monitorTable">
-        <thead><tr><th>Kiểm duyệt viên</th><th>Thao tác</th></tr></thead>
-        <tbody></tbody>
+  <!-- ===================== CHECKLIST PANEL ===================== -->
+  <section id="checklistPanel" aria-hidden="true">
+    <div id="checklistScroll">
+      <table id="checklist">
+        <thead>
+          <tr><th>Kiểm duyệt viên</th><th>Giờ</th><th>Hoàn thành</th></tr>
+        </thead>
+        <tbody>
+          <!-- EMPTY -->
+        </tbody>
       </table>
-    </div>
-    <button id="monitorCloseBtn" type="button" aria-label="Đóng">×</button>
-  </section>
-</div>
-
-<div id="linkEditorOverlay" aria-hidden="true">
-  <section id="linkEditorPanel" role="dialog" aria-modal="true">
-    <div id="linkEditorTitle">🔗 Gán liên kết</div>
-    <div id="linkEditorName"></div>
-    <input id="linkEditorInput" type="url" inputmode="url" autocomplete="off" placeholder="https://facebook.com/ten-nguoi">
-    <div id="linkEditorHint">Mỗi người có thể dùng một liên kết riêng. Liên kết được lưu trên thiết bị này.</div>
-    <div id="linkEditorActions">
-      <button id="linkEditorCancel" type="button">Huỷ</button>
-      <button id="linkEditorClear" type="button">Xoá link</button>
-      <button id="linkEditorSave" type="button">Lưu</button>
-    </div>
-  </section>
-</div>
-
-<div id="adminPasswordOverlay" aria-hidden="true">
-  <section id="adminPasswordBox">
-    <div id="adminPasswordTitle">🔐 Admin</div>
-    <div id="adminPasswordSub">Nhập mật khẩu để mở cài đặt</div>
-    <input id="adminPasswordInput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••">
-    <div id="adminPasswordMsg"></div>
-    <div id="adminPasswordActions"><button id="adminPasswordCancel" type="button">Huỷ</button><button id="adminPasswordOk" type="button">Xác nhận</button></div>
-  </section>
-</div>
-
-<section id="adminPage" aria-label="Cài đặt Admin">
-  <header id="adminPageHeader">
-    <button id="adminPageBack" type="button" aria-label="Quay lại">←</button>
-    <div id="adminPageTitle"><span class="admin-page-kicker">HỆ THỐNG</span><span class="admin-page-name">Cài đặt Admin</span></div>
-    <button id="adminPageLogout" type="button" aria-label="Đăng xuất admin">🚪</button>
-  </header>
-  <div id="adminPageBody">
-    <nav id="adminPageNav" aria-label="Mục cài đặt">
-      <button class="admin-tab active" data-admin-tab="schedule" type="button"><span class="admin-tab-icon">⚙</span><span class="admin-tab-label">Giờ</span></button>
-      <button class="admin-tab" data-admin-tab="checklist" type="button"><span class="admin-tab-icon">☑</span><span class="admin-tab-label">Checklist</span></button>
-      <button class="admin-tab" data-admin-tab="stats" type="button"><span class="admin-tab-icon">📊</span><span class="admin-tab-label">Thống kê</span></button>
-    </nav>
-    <div id="adminPageContent">
-      <div class="admin-panel-view active" data-admin-view="schedule">
-        <h2 class="admin-section-title">Khung giờ hoạt động</h2>
-        <div class="admin-card">
-          <div class="admin-card-row"><div class="admin-card-icon">🔄</div><div class="admin-card-info"><label for="resetTimeInput">Giờ reset mỗi ngày</label><p>Checklist tự động làm mới vào lúc này</p></div><input id="resetTimeInput" type="text" value="00:00" inputmode="numeric" maxlength="5" placeholder="00:00" autocomplete="off"></div>
-          <div class="admin-card-row"><div class="admin-card-icon">🔒</div><div class="admin-card-info"><label for="checklistLockTimeInput">Giờ khoá Checklist</label><p>Sau giờ này, nút Checklist sẽ tạm khoá</p></div><input id="checklistLockTimeInput" type="text" value="21:00" inputmode="numeric" maxlength="5" placeholder="21:00" autocomplete="off"></div>
-        </div>
-        <div class="admin-note"><span class="admin-note-icon">💡</span><span>Ví dụ: reset <b>00:00</b>, khoá <b>21:00</b> → Checklist mở từ 0h đến 21h mỗi ngày.</span></div>
-        <div id="adminStatus" class="admin-status"></div>
-        <div class="admin-actions"><button id="adminSaveBtn" type="button">💾 Lưu cài đặt</button></div>
-      </div>
-      <div class="admin-panel-view" data-admin-view="checklist">
-        <h2 class="admin-section-title">Quản lý Checklist hôm nay</h2>
-        <div class="admin-toolbar"><input id="adminChecklistSearch" type="text" placeholder="🔍 Tìm tên..." autocomplete="off"><div class="admin-filters"><button class="admin-filter-btn active" data-filter="all" type="button">Tất cả</button><button class="admin-filter-btn" data-filter="checked" type="button">✓ Đã</button><button class="admin-filter-btn" data-filter="unchecked" type="button">○ Chưa</button></div></div>
-        <div id="adminChecklistStats" class="admin-stats-bar"></div>
-        <div id="adminChecklistRows" class="admin-list"></div>
-      </div>
-      <div class="admin-panel-view" data-admin-view="stats">
-        <h2 class="admin-section-title">Thống kê hôm nay</h2>
-        <div class="admin-stats-grid">
-          <div class="admin-stat-card"><div class="admin-stat-icon">👥</div><div id="adminStatTotal" class="admin-stat-value">0</div><div class="admin-stat-label">Tổng số</div></div>
-          <div class="admin-stat-card success"><div class="admin-stat-icon">✅</div><div id="adminStatChecked" class="admin-stat-value">0</div><div class="admin-stat-label">Đã check</div></div>
-          <div class="admin-stat-card warn"><div class="admin-stat-icon">⭕</div><div id="adminStatUnchecked" class="admin-stat-value">0</div><div class="admin-stat-label">Chưa check</div></div>
-        </div>
-        <h3 class="admin-section-subtitle">⏰ Top 3 check sớm nhất</h3>
-        <div id="adminStatTop3" class="admin-list"></div>
-        <h3 class="admin-section-subtitle">📈 Bảng xếp hạng tháng</h3>
-        <div class="admin-note"><span class="admin-note-icon">ℹ</span><span>Xem chi tiết ở trang <b>BXH TOP</b> ngoài Home.</span></div>
+      <div class="empty-state" id="checklistEmpty">
+        <div class="emoji">📋</div>
+        <div class="title">Chưa có ai check hôm nay</div>
+        <div class="sub">Danh sách sẽ hiện khi có dữ liệu</div>
       </div>
     </div>
+    <div class="panel-actions">
+      <button type="button" class="primary">📸 Chụp checklist</button>
+      <button type="button">↻ Đồng bộ lại</button>
+    </div>
+  </section>
+
+  <!-- ===================== TOP PANEL ===================== -->
+  <section id="topPanel" aria-hidden="true">
+    <div id="topTitle">🏆 BXH TOP THÁNG</div>
+    <div id="topSub">Xếp hạng theo điểm chấm công</div>
+    <div id="topScroll">
+      <table id="topTable">
+        <thead>
+          <tr><th>#</th><th>Tên</th><th>⭐ Điểm</th><th>Rank</th></tr>
+        </thead>
+        <tbody>
+          <!-- EMPTY -->
+        </tbody>
+      </table>
+      <div class="empty-state">
+        <div class="emoji">🏆</div>
+        <div class="title">Bảng xếp hạng trống</div>
+        <div class="sub">Chưa có điểm nào được ghi nhận</div>
+      </div>
+    </div>
+    <div class="panel-actions">
+      <button type="button" class="primary">📸 Chụp BXH</button>
+      <button type="button">Đóng</button>
+    </div>
+  </section>
+
+  <!-- ===================== BOTTOM NAV ===================== -->
+  <nav id="bottomNav" aria-label="Điều hướng chính">
+    <button id="homeBtn" type="button">⌂ Home</button>
+    <button type="button">⚙ Admin</button>
+    <button type="button">👁 Giám sát</button>
+    <button type="button">🏆 BXH TOP</button>
+    <button type="button">☑ Checklist</button>
+  </nav>
+
+  <!-- ===================== SECONDARY NAV ===================== -->
+  <nav id="secondaryNav" aria-label="Công cụ">
+    <button type="button">📜 Luật KDV</button>
+    <button type="button">🍜 Bữa trưa</button>
+    <button type="button">🗓 Chấm công</button>
+    <button type="button">📝 Bài KT</button>
+  </nav>
+
+  <!-- ===================== MONITOR OVERLAY ===================== -->
+  <div class="overlay" id="monitorOverlay">
+    <section class="modal-box">
+      <div class="modal-title">👁 Giám sát</div>
+      <div class="modal-sub">Bấm CHECK để mở Facebook</div>
+      <div class="empty-state">
+        <div class="emoji">🔍</div>
+        <div class="title">Chưa có thành viên</div>
+        <div class="sub">Danh sách trống</div>
+      </div>
+      <div class="panel-actions" style="margin-top:16px">
+        <button type="button">Đóng</button>
+      </div>
+    </section>
   </div>
-</section>
 
-<div id="hint" aria-hidden="true" hidden></div>
+  <!-- ===================== ADMIN PASSWORD OVERLAY ===================== -->
+  <div class="overlay" id="adminPasswordOverlay">
+    <section class="modal-box" style="width:min(88vw,340px)">
+      <div class="modal-title">🔐 Admin</div>
+      <div class="modal-sub">Nhập mật khẩu để mở cài đặt</div>
+      <input type="password" inputmode="numeric" maxlength="4" placeholder="••••"
+        style="width:100%;height:46px;border-radius:14px;border:1px solid var(--line);
+               background:#fff;color:var(--ink);font-size:20px;text-align:center;
+               letter-spacing:5px;outline:none;margin-bottom:14px">
+      <div class="panel-actions" style="margin-top:0">
+        <button type="button">Huỷ</button>
+        <button type="button" class="primary">Xác nhận</button>
+      </div>
+    </section>
+  </div>
+
 </main>
 
-<section id="attendancePage" aria-label="Lịch chấm công">
-  <div class="att-page-inner">
-    <div class="att-shell">
-      <header class="att-head">
-        <button id="attendanceBack" class="att-icon-btn" type="button" aria-label="Quay lại">←</button>
-        <div class="att-head-title"><span class="att-kicker">HỆ THỐNG 02</span><span class="att-title">Chấm công</span></div>
-        <div class="att-head-actions">
-          <button id="attendanceTodayBtn" class="att-icon-btn" type="button" aria-label="Về tháng hiện tại">📅</button>
-          <button id="attendanceSyncBtn" class="att-icon-btn" type="button" aria-label="Đồng bộ">⟳</button>
-        </div>
-      </header>
-      <button id="attendanceEmployeeWheelBtn" class="att-employee-card" type="button">
-        <span class="att-employee-avatar" id="attendanceEmployeeAvatar">?</span>
-        <span class="att-employee-info"><span class="att-employee-label">Kiểm Duyệt Viên</span><span class="wheel-value">Đang tải…</span></span>
-        <span class="att-employee-chevron">⌄</span>
-      </button>
-      <select id="attendanceEmployee" aria-hidden="true" tabindex="-1"></select>
-      <div class="att-month-nav">
-        <button id="attendancePrev" type="button" aria-label="Tháng trước">‹</button>
-        <div class="att-month-label"><span id="attendanceMonthLabel">Tháng 9</span><span id="attendanceYearLabel">2026</span></div>
-        <button id="attendanceNext" type="button" aria-label="Tháng sau">›</button>
-      </div>
-      <div class="att-inline-stats">
-        <div class="att-inline-stat work"><span class="att-inline-stat-icon">✓</span><span class="att-inline-stat-value" id="attendanceWorkCount">0</span><span class="att-inline-stat-label">làm</span></div>
-        <div class="att-inline-stat off"><span class="att-inline-stat-icon">—</span><span class="att-inline-stat-value" id="attendanceOffCount">0</span><span class="att-inline-stat-label">nghỉ</span></div>
-        <div class="att-inline-stat leave"><span class="att-inline-stat-icon">🌴</span><span class="att-inline-stat-value" id="attendanceLeaveCount">0</span><span class="att-inline-stat-label">phép</span></div>
-      </div>
-      <section class="att-card att-calendar-card">
-        <div class="att-week" aria-hidden="true"><div>T2</div><div>T3</div><div>T4</div><div>T5</div><div>T6</div><div>T7</div><div>CN</div></div>
-        <div id="attendanceGrid" class="att-grid"></div>
-      </section>
-      <div class="att-footer-status">
-        <div id="attendanceSyncStatus" class="att-footer-line" aria-live="polite"><span class="att-footer-dot"></span><span class="att-footer-text">Chưa đồng bộ</span></div>
-        <div id="attendanceAutoStatus" class="att-footer-line muted"><span>⟳</span><span class="att-footer-text">Tự động làm mới sau <b id="attendanceCountdown">60</b>s</span></div>
-      </div>
-    </div>
-  </div>
-</section>
+<!-- ===================== FABs ===================== -->
+<button id="liveFeedBtn" type="button" aria-label="Live Feed">🔔</button>
 
-<div id="attendanceNameWheel" aria-hidden="true">
-  <section class="att-name-wheel-panel" role="dialog" aria-modal="true">
-    <div class="att-name-wheel-head"><div class="att-name-wheel-title">Chọn kiểm duyệt viên</div><button id="attendanceNameWheelClose" type="button" aria-label="Đóng">×</button></div>
-    <div id="attendanceNameWheelViewport" class="att-name-wheel-viewport wheel-viewport"><div class="wheel-selection"></div><div id="attendanceNameWheelItems" class="wheel-items"></div></div>
-    <div class="att-name-wheel-hint">Vuốt lên / xuống để chọn</div>
-    <button id="attendanceNameWheelConfirm" type="button">Xác nhận</button>
-  </section>
-</div>
+<button id="chatFab" type="button" aria-label="Chat nhóm">
+  <span style="font-size:16px">🐱</span>
+  <span>Chat nhóm</span>
+</button>
 
-<div id="attendanceStatusOverlay" aria-hidden="true">
-  <section id="attendanceStatusPanel" role="dialog" aria-modal="true">
-    <div class="att-sheet-handle" aria-hidden="true"></div>
-    <div id="attendanceStatusHead">
-      <div><div id="attendanceStatusTitle">Cập nhật chấm công</div><div id="attendanceStatusSub"></div></div>
-      <button id="attendanceStatusClose" type="button" aria-label="Đóng">×</button>
-    </div>
-    <div id="attendanceStatusOptions">
-      <button class="att-status-option work" type="button" data-status=""><span class="att-status-icon">✓</span><span class="att-status-label">Đi làm</span></button>
-      <button class="att-status-option leave" type="button" data-status="P"><span class="att-status-icon">🌴</span><span class="att-status-label">Phép</span></button>
-      <button class="att-status-option off" type="button" data-status="O"><span class="att-status-icon">—</span><span class="att-status-label">OFF</span></button>
-      <button class="att-status-option ot" type="button" data-status="T"><span class="att-status-icon">⚡</span><span class="att-status-label">OT</span></button>
-      <button class="att-status-option q" type="button" data-status="Q"><span class="att-status-icon">❓</span><span class="att-status-label">Quên</span></button>
-      <button class="att-status-option x" type="button" data-status="X"><span class="att-status-icon">⚠️</span><span class="att-status-label">Không phép</span></button>
-      <button id="attendanceMultiBtn" class="att-status-option multi" type="button"><span class="att-status-icon">☷</span><span class="att-status-label">Chọn nhiều</span></button>
-      <button class="att-status-option clear" type="button" data-status="__clear"><span class="att-status-icon">🗑</span><span class="att-status-label">Xoá</span></button>
-    </div>
-    <div id="attendanceStatusSaving"></div>
-  </section>
-</div>
+<button class="fab" id="bdFab" type="button" aria-label="Sinh nhật">
+  <span class="fab-icon">🎂</span>
+  <span>Chúc mừng SN</span>
+  <span class="fab-badge">0</span>
+</button>
 
-<div id="attendanceMultiBar" aria-hidden="true">
-  <button class="att-multi-action cancel" id="attendanceMultiCancel" type="button">Hủy</button>
-  <div id="attendanceMultiCount">0 ngày</div>
-  <button class="att-multi-action p" data-multi-status="P" type="button">Phép</button>
-  <button class="att-multi-action o" data-multi-status="O" type="button">OFF</button>
-  <button class="att-multi-action t" data-multi-status="T" type="button">OT</button>
-  <button class="att-multi-action q" data-multi-status="Q" type="button">Quên</button>
-  <button class="att-multi-action x" data-multi-status="X" type="button">X</button>
-  <button class="att-multi-action clear" data-multi-status="" type="button">Xóa</button>
-</div>
-
-<div id="quizOverlay" aria-hidden="true">
-  <section id="quizPanel" role="dialog" aria-modal="true">
-    <div id="quizHead">
-      <div id="quizTitle"><span class="quiz-kicker">ĐẢO MÈO</span><span class="quiz-name">📝 Bài kiểm tra</span></div>
-      <button id="quizClose" type="button" aria-label="Đóng">×</button>
-    </div>
-
-    <nav id="quizModeTabs" hidden>
-      <button class="quiz-mode-tab active" data-quiz-mode="user" type="button">📝 Làm bài</button>
-      <button class="quiz-mode-tab" data-quiz-mode="create" type="button">➕ Tạo câu hỏi</button>
-      <button class="quiz-mode-tab" data-quiz-mode="results" type="button">📊 Kết quả</button>
-    </nav>
-
-    <div id="quizBody">
-      <div class="quiz-view active" data-quiz-view="user">
-        <div id="quizUserStart">
-          <div class="quiz-hero-emoji">📝</div>
-          <div class="quiz-hero-title">Bài kiểm tra nội bộ</div>
-          <div class="quiz-hero-sub">Nhập tên để bắt đầu</div>
-          <input id="quizUserNameInput" type="text" placeholder="Tên của bạn" autocomplete="off" maxlength="60">
-          <button id="quizStartBtn" type="button">Bắt đầu làm bài</button>
-          <div id="quizUserStartMsg"></div>
-        </div>
-
-        <div id="quizUserRun" hidden>
-          <div id="quizRunHeader">
-            <div id="quizGreeting"></div>
-            <div id="quizProgress">
-              <span id="quizProgressText">Câu 1/1</span>
-              <div id="quizProgressBar"><div id="quizProgressFill"></div></div>
-            </div>
-          </div>
-          <div id="quizQuestionCard"></div>
-          <div id="quizNavBar">
-            <button id="quizPrevBtn" type="button">‹ Câu trước</button>
-            <button id="quizNextBtn" type="button">Câu tiếp ›</button>
-          </div>
-        </div>
-
-        <div id="quizUserResult" hidden>
-          <div class="quiz-result-card">
-            <div id="quizResultEmoji" class="quiz-result-emoji">🎉</div>
-            <div id="quizResultScore" class="quiz-result-score">0/0</div>
-            <div id="quizResultLabel" class="quiz-result-label"></div>
-            <div id="quizResultDetail" class="quiz-result-detail"></div>
-          </div>
-          <div class="quiz-result-actions">
-            <button id="quizRetryBtn" type="button">Làm lại</button>
-            <button id="quizExitBtn" type="button">Đóng</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="quiz-view" data-quiz-view="create">
-        <div class="quiz-section-title">✏️ Tạo / sửa câu hỏi</div>
-        <div class="quiz-create-form">
-          <label class="quiz-field-label">Câu hỏi</label>
-          <textarea id="quizQuestionInput" rows="2" maxlength="500" placeholder="Nhập nội dung câu hỏi…"></textarea>
-
-          <label class="quiz-field-label">Đáp án <span class="quiz-hint">(chọn ô tròn để đánh dấu đáp án đúng)</span></label>
-          <div id="quizAnswersList"></div>
-          <button id="quizAddAnswerBtn" type="button">＋ Thêm đáp án</button>
-
-          <div id="quizFormMsg"></div>
-          <div class="quiz-create-actions">
-            <button id="quizSaveBtn" type="button">Thêm câu hỏi</button>
-            <button id="quizCancelEditBtn" type="button" hidden>Huỷ</button>
-          </div>
-        </div>
-        <div class="quiz-section-title" style="margin-top:22px">📚 Danh sách câu hỏi (<span id="quizCountLabel">0</span>)</div>
-        <div id="quizQuestionList"></div>
-      </div>
-
-      <div class="quiz-view" data-quiz-view="results">
-        <div class="quiz-section-title">📊 Kết quả bài kiểm tra</div>
-        <div id="quizResultsList"></div>
-      </div>
-    </div>
-  </section>
-</div>
-
-<button id="liveFeedBtn" type="button" aria-label="Mở Live Feed"><span aria-hidden="true">🔔</span><span id="liveFeedBadge" hidden></span></button>
-<div id="liveFeedOverlay" aria-hidden="true">
-  <section id="liveFeedPanel" role="dialog" aria-modal="true">
-    <div id="liveFeedHead"><div id="liveFeedTitle"><span class="live-pulse"></span>Live Feed</div><button id="liveFeedClose" type="button" aria-label="Đóng">×</button></div>
-    <div id="liveFeedList"></div>
-    <div id="liveFeedFoot"><span id="liveFeedCount"></span> · <button id="liveFeedClear" type="button">Xoá lịch sử</button></div>
-  </section>
-</div>
-
-<!-- ✅ CONFIG (đã gộp LRU + config) — KHÔNG defer, load trước -->
-<script src="js/config.js"></script>
-
-<!-- Scheduler + Supabase -->
-<script src="js/scheduler.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-adapter.js" defer></script>
-
-<!-- App core -->
-<script src="js/main.js" defer></script>
-<script src="js/checklist-ui.js?v=6.3" defer></script>
-<script src="js/attendance.js" defer></script>
-<script src="js/attendance-top3.js" defer></script>
-<script src="js/lunch.js" defer></script>
-<script src="js/kdv-rules.js" defer></script>
-<script src="js/secret-mail.js" defer></script>
-<script src="js/realtime.js" defer></script>
-<script src="js/bxh-top.js" defer></script>
-<script src="js/quiz.js" defer></script>
-<script src="js/birthday-chat.js?v=1.9" defer></script>
 </body>
 </html>
