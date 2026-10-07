@@ -1,8 +1,8 @@
 /* =========================================================
-   BIRTHDAY CHAT — v2.0
-   - FIX: mọi tin đều là wish card (bỏ chat bubble)
-   - Nút reply hiện trên mọi wish của người khác (khi owner)
-   - Reply hiển thị ngay dưới wish gốc (threaded)
+   BIRTHDAY CHAT — v2.1
+   - Reply inline: bấm nút → input hiện ngay dưới wish
+   - Enter để gửi, Shift+Enter xuống dòng, Esc huỷ
+   - Mọi tin đều là wish card (bỏ chat bubble)
    ========================================================= */
 (function(){
   "use strict";
@@ -45,7 +45,8 @@
     sending: false,
     booted: false,
     isOwner: false,
-    replyTo: null,
+    inlineReplyToId: null,
+    inlineSending: false,
   };
 
   const $ = id => document.getElementById(id);
@@ -359,7 +360,7 @@
   color: #fff;
 }
 
-/* Nút trả lời nổi bật */
+/* Nút trả lời */
 .bd-wish-actions {
   margin-top: 10px;
   padding-left: 46px;
@@ -390,13 +391,90 @@
   background: linear-gradient(135deg, #ffe6f2, #ffd0e5);
   box-shadow: 0 2px 6px -2px rgba(216,91,158,.5);
 }
+.bd-reply-btn.active {
+  background: linear-gradient(135deg, #ff7db5, #c04a90);
+  color: #fff;
+  border-color: transparent;
+}
 .bd-reply-btn .bd-reply-icon { font-size: 14px; line-height: 1; }
-.bd-reply-hint {
-  font-size: 10.5px;
-  font-weight: 800;
-  color: #c9a0b8;
+
+/* ===== INLINE REPLY INPUT ===== */
+.bd-inline-reply {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+  padding-left: 46px;
+  animation: bdWishIn .3s ease-out both;
+}
+.bd-inline-reply-wrap {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 6px 6px 6px 14px;
+  border-radius: 18px 18px 4px 18px;
+  background: linear-gradient(140deg, #ffe4f5 0%, #ffd0e5 100%);
+  border: 1.5px solid rgba(216,91,158,.5);
+  box-shadow: 0 4px 12px -8px rgba(216,91,158,.4);
+}
+.bd-inline-input {
+  flex: 1;
+  min-height: 28px;
+  max-height: 100px;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: #4a2a3a;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+  outline: none;
+  resize: none;
+  overflow-y: auto;
+}
+.bd-inline-input::placeholder {
+  color: #d0a8c0;
   font-style: italic;
-  padding: 2px 6px;
+}
+.bd-inline-send {
+  width: 34px; height: 34px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffa5d0, #ff7db5);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 10px -4px rgba(255,120,180,.55);
+  transition: transform .15s ease, opacity .15s ease;
+}
+.bd-inline-send:active { transform: scale(.9); }
+.bd-inline-send:disabled { opacity: .4; pointer-events: none; }
+.bd-inline-cancel {
+  width: 30px; height: 30px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,.7);
+  color: #c04a90;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .15s ease;
+}
+.bd-inline-cancel:active { transform: scale(.9); }
+.bd-inline-error {
+  margin-top: 6px;
+  padding-left: 46px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #e05b5b;
+  text-align: right;
 }
 
 /* Thread */
@@ -536,18 +614,6 @@
   font-size: 12px; font-weight: 800; color: #e05b9e;
   text-align: center; margin-bottom: 16px;
 }
-.bd-reply-badge {
-  padding: 8px 12px;
-  margin-bottom: 12px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #fff0f8, #ffe4d0);
-  border: 1.5px solid rgba(216,91,158,.4);
-  font-size: 11.5px; font-weight: 800;
-  color: #c04a90;
-  display: none;
-  text-align: center;
-}
-.bd-reply-badge.show { display: block; }
 .bd-group-label {
   font-size: 11px; font-weight: 950; color: #c04a90;
   letter-spacing: .08em; text-transform: uppercase;
@@ -842,6 +908,7 @@
     if (S.isOwner) {
       if (confirm('👑 Bạn đang đăng nhập chính chủ.\n\nĐăng xuất khỏi chế độ này?')) {
         S.isOwner = false;
+        S.inlineReplyToId = null;
         try { localStorage.removeItem(OWNER_KEY); } catch(_){}
         updateOwnerBtn();
         render();
@@ -856,9 +923,73 @@
       updateOwnerBtn();
       render();
       fireConfetti(40);
-      alert('👑 Đã đăng nhập chính chủ!\n\nBây giờ bạn có thể:\n• Gõ chat → tin nhắn tự động là lời chúc đặc biệt\n• Trả lời ngay dưới wish của mọi người');
+      alert('👑 Đã đăng nhập chính chủ!\n\nBây giờ bạn có thể:\n• Bấm ↩️ để trả lời ngay dưới lời chúc\n• Gõ chat → tin nhắn tự động là lời chúc đặc biệt');
     } else {
       alert('❌ Mật khẩu không đúng');
+    }
+  }
+
+  /* ============ INLINE REPLY ============ */
+  function toggleInlineReply(wishId) {
+    if (S.inlineReplyToId === wishId) {
+      S.inlineReplyToId = null;
+    } else {
+      S.inlineReplyToId = wishId;
+    }
+    _lastRenderSig = '';
+    render();
+
+    // Auto focus input
+    if (S.inlineReplyToId) {
+      setTimeout(() => {
+        const input = document.querySelector('.bd-inline-input[data-id="' + S.inlineReplyToId + '"]');
+        if (input) {
+          input.focus();
+          // Scroll vào giữa màn hình
+          try { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(_){}
+        }
+      }, 100);
+    }
+  }
+
+  function cancelInlineReply() {
+    S.inlineReplyToId = null;
+    _lastRenderSig = '';
+    render();
+  }
+
+  async function sendInlineReply(wishId, text) {
+    const msg = String(text || '').trim();
+    if (!msg) return;
+    if (S.inlineSending) return;
+
+    S.inlineSending = true;
+    const inputEl = document.querySelector('.bd-inline-input[data-id="' + wishId + '"]');
+    const sendBtn = document.querySelector('.bd-inline-send[data-id="' + wishId + '"]');
+    if (sendBtn) sendBtn.disabled = true;
+
+    try {
+      // Gửi với tên Mỹ Dung (vì owner login mới có nút này)
+      await sendWish(RECIPIENT, msg, true, wishId);
+      S.inlineReplyToId = null;
+      _lastRenderSig = '';
+      render();
+    } catch (e) {
+      log('Reply error:', e);
+      if (inputEl) {
+        // Hiện lỗi nhỏ bên dưới
+        let errEl = document.querySelector('.bd-inline-error[data-id="' + wishId + '"]');
+        if (!errEl) {
+          errEl = document.createElement('div');
+          errEl.className = 'bd-inline-error';
+          errEl.dataset.id = wishId;
+          inputEl.closest('.bd-inline-reply')?.parentNode?.insertBefore(errEl, inputEl.closest('.bd-inline-reply')?.nextSibling);
+        }
+        errEl.textContent = 'Lỗi: ' + (e.message || e);
+      }
+      if (sendBtn) sendBtn.disabled = false;
+    } finally {
+      S.inlineSending = false;
     }
   }
 
@@ -929,6 +1060,61 @@
     return row;
   }
 
+  function renderInlineReply(w) {
+    const box = document.createElement('div');
+    box.className = 'bd-inline-reply';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'bd-inline-reply-wrap';
+
+    const input = document.createElement('textarea');
+    input.className = 'bd-inline-input';
+    input.dataset.id = w.id;
+    input.rows = 1;
+    input.maxLength = 500;
+    input.placeholder = 'Trả lời ' + (String(w.sender || '').split(' ')[0] || 'bạn') + '...';
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+      const btn = document.querySelector('.bd-inline-send[data-id="' + w.id + '"]');
+      if (btn) btn.disabled = input.value.trim().length === 0;
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        if (input.value.trim()) sendInlineReply(w.id, input.value);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelInlineReply();
+      }
+    });
+
+    const sendBtn = document.createElement('button');
+    sendBtn.type = 'button';
+    sendBtn.className = 'bd-inline-send';
+    sendBtn.dataset.id = w.id;
+    sendBtn.disabled = true;
+    sendBtn.textContent = '➤';
+    sendBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (input.value.trim()) sendInlineReply(w.id, input.value);
+    });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'bd-inline-cancel';
+    cancelBtn.textContent = '×';
+    cancelBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      cancelInlineReply();
+    });
+
+    wrap.append(input, sendBtn, cancelBtn);
+    box.appendChild(wrap);
+
+    return box;
+  }
+
   function renderWishCard(w) {
     const card = document.createElement('div');
     card.className = 'bd-wish' + (w.isFromRecipient ? ' me' : '');
@@ -982,62 +1168,19 @@
 
       const replyBtn = document.createElement('button');
       replyBtn.type = 'button';
-      replyBtn.className = 'bd-reply-btn';
+      replyBtn.className = 'bd-reply-btn' + (S.inlineReplyToId === w.id ? ' active' : '');
       const firstName = String(w.sender || '').split(' ')[0] || 'bạn';
       replyBtn.innerHTML = '<span class="bd-reply-icon">↩️</span><span>Trả lời ' + esc(firstName) + '</span>';
       replyBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        replyToWish(w);
+        toggleInlineReply(w.id);
       });
       actions.appendChild(replyBtn);
-
-      const hint = document.createElement('span');
-      hint.className = 'bd-reply-hint';
-      hint.textContent = 'Bấm để trả lời ngay dưới lời chúc này';
-      actions.appendChild(hint);
 
       card.appendChild(actions);
     }
 
     return card;
-  }
-
-  function replyToWish(wish) {
-    S.replyTo = wish;
-    const old = $('bdModal');
-    if (old) old.remove();
-    const modal = buildModal();
-    modal.classList.add('show');
-    modal.setAttribute('aria-hidden', 'false');
-
-    const badge = modal.querySelector('#bdReplyBadge');
-    if (badge) {
-      badge.textContent = '↩️ Đang trả lời ' + (wish.sender || 'bạn') + ': "' + 
-        String(wish.message || '').slice(0, 40) + (wish.message && wish.message.length > 40 ? '…' : '') + '"';
-      badge.classList.add('show');
-    }
-
-    const senderSel = modal.querySelector('#bdSenderSelect');
-    if (senderSel) {
-      const hasOpt = Array.from(senderSel.options).some(o => o.value === RECIPIENT);
-      if (!hasOpt) {
-        const opt = document.createElement('option');
-        opt.value = RECIPIENT;
-        opt.textContent = RECIPIENT + ' 👑';
-        senderSel.appendChild(opt);
-      }
-      senderSel.value = RECIPIENT;
-      senderSel.dispatchEvent(new Event('change'));
-    }
-
-    const ta = modal.querySelector('#bdCustomMsg');
-    if (ta) {
-      ta.value = 'Cảm ơn ' + (wish.sender || 'bạn') + ' nhiều nha! 💕 ';
-      ta.focus();
-      ta.setSelectionRange(ta.value.length, ta.value.length);
-    }
-
-    modal.querySelectorAll('.bd-preset').forEach(b => b.classList.remove('selected'));
   }
 
   /* ============ RENDER ============ */
@@ -1048,7 +1191,9 @@
     const countEl = $('bdWishCount');
     if (!body) return;
 
-    const sig = S.wishes.map(w => `${w.id}|${w.ts}|${w.isFromRecipient?1:0}|${w.replyToId||''}`).join('::') + '|' + (S.isOwner ? 'O' : 'U');
+    const sig = S.wishes.map(w => `${w.id}|${w.ts}|${w.isFromRecipient?1:0}|${w.replyToId||''}`).join('::')
+      + '|' + (S.isOwner ? 'O' : 'U')
+      + '|' + (S.inlineReplyToId || '');
     if (sig === _lastRenderSig) return;
     _lastRenderSig = sig;
 
@@ -1076,10 +1221,14 @@
         frag.appendChild(d);
       }
 
-      // ⚡ Tất cả tin đều render thành wish card
       const thread = document.createElement('div');
       thread.className = 'bd-thread';
       thread.appendChild(renderWishCard(w));
+
+      // Inline reply input nếu đang mở cho wish này
+      if (S.inlineReplyToId === w.id) {
+        thread.appendChild(renderInlineReply(w));
+      }
 
       const replies = repliesByParent[w.id] || [];
       replies.forEach(r => thread.appendChild(renderReply(r)));
@@ -1091,7 +1240,12 @@
 
     body.innerHTML = '';
     body.appendChild(frag);
-    requestAnimationFrame(() => body.scrollTop = body.scrollHeight);
+    requestAnimationFrame(() => {
+      // Chỉ scroll xuống cuối khi không phải đang inline reply
+      if (!S.inlineReplyToId) {
+        body.scrollTop = body.scrollHeight;
+      }
+    });
   }
 
   /* ============ DATA ============ */
@@ -1133,7 +1287,10 @@
         try { localStorage.setItem(UNREAD_KEY, String(S.unread)); } catch(_){}
       }
 
-      if (added > 0 || force) render();
+      if (added > 0 || force) {
+        _lastRenderSig = '';
+        render();
+      }
       updateFabBadge();
     } catch (e) {
       log('fetch lỗi:', e && e.message);
@@ -1170,6 +1327,7 @@
 
       if (data.isFromRecipient) {
         fireConfetti(40);
+        // Chỉ celebration nếu không phải reply (tránh spam)
         if (!data.replyToId) showCelebration();
       } else {
         fireConfetti(30);
@@ -1237,7 +1395,7 @@
     fireConfetti(100);
   }
 
-  /* ============ MODAL ============ */
+  /* ============ MODAL (cho gửi lời chúc mới) ============ */
   function buildModal() {
     let modal = $('bdModal');
     if (modal) modal.remove();
@@ -1268,7 +1426,6 @@
         <div class="bd-modal-handle"></div>
         <div class="bd-modal-title">🎁 Gửi lời chúc</div>
         <div class="bd-modal-sub">Cho ${esc(RECIPIENT)} — sinh nhật 7/10 🎂</div>
-        <div class="bd-reply-badge" id="bdReplyBadge"></div>
         ${presetHtml}
         <div class="bd-group-label">✍️ Hoặc tự viết</div>
         <textarea class="bd-textarea" id="bdCustomMsg" maxlength="500" placeholder="Viết lời chúc từ trái tim bạn..."></textarea>
@@ -1317,7 +1474,6 @@
       modal.setAttribute('aria-hidden', 'true');
       modal.querySelector('#bdModalMsg').textContent = '';
       selectedPreset = '';
-      S.replyTo = null;
       modal.querySelectorAll('.bd-preset').forEach(b => b.classList.remove('selected'));
       modal.querySelector('#bdCustomMsg').value = '';
       setTimeout(() => { if (modal.parentNode) modal.remove(); }, 300);
@@ -1336,7 +1492,6 @@
       if (!sender) { msgEl.textContent = 'Chọn tên người gửi'; return; }
 
       const isFromRecipient = sender === RECIPIENT;
-      const replyToId = S.replyTo ? S.replyTo.id : null;
 
       const btn = modal.querySelector('#bdModalSend');
       btn.disabled = true;
@@ -1344,7 +1499,7 @@
       msgEl.textContent = '';
 
       try {
-        await sendWish(sender, msg, isFromRecipient, replyToId);
+        await sendWish(sender, msg, isFromRecipient, null);
         msgEl.style.color = '#4fa370';
         msgEl.textContent = 'Đã gửi ✓';
         saveMyName(sender);
@@ -1385,6 +1540,7 @@
     updateFabBadge();
     syncFabVisibility();
 
+    _lastRenderSig = '';
     render();
     fetchWishes(true);
   }
@@ -1396,6 +1552,7 @@
     page.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
     S.pageOpen = false;
+    S.inlineReplyToId = null;
     syncFabVisibility();
   }
 
@@ -1405,6 +1562,8 @@
       S.pollTimer = setTimeout(tick, POLL_MS);
       if (document.hidden) return;
       if (!S.pageOpen && S.wishes.length === 0) return;
+      // Tạm dừng poll khi đang gõ inline reply (tránh mất text)
+      if (S.inlineReplyToId) return;
       fetchWishes(false);
     };
     tick();
@@ -1440,11 +1599,17 @@
     setInterval(syncFabVisibility, 800);
 
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) fetchWishes(false);
+      if (!document.hidden && !S.inlineReplyToId) fetchWishes(false);
     });
 
     document.addEventListener('keydown', e => {
       if (e.key !== 'Escape') return;
+      if (S.inlineReplyToId) {
+        cancelInlineReply();
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        return;
+      }
       const modal = $('bdModal');
       if (modal && modal.classList.contains('show')) {
         modal.querySelector('#bdModalCancel')?.click();
@@ -1462,7 +1627,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v2.0 ready ✓');
+    log('v2.1 ready ✓');
   }
 
   if (document.readyState === 'loading') {
