@@ -1,11 +1,71 @@
 /* =========================================================
-   SRANK CONFIG — Single source of truth
+   SRANK CONFIG — Single source of truth + LRU Cache
    Load TRƯỚC tất cả script khác (không defer)
    ========================================================= */
 (function(){
   "use strict";
 
-  if (window.__SRANK_CONFIG) return; // idempotent
+  /* ---------- 1. LRU Cache + TTL ---------- */
+  if (!window.LRUCache) {
+    window.LRUCache = function(opts){
+      const cfg = opts || {};
+      const max = Number(cfg.max) > 0 ? Number(cfg.max) : 500;
+      const ttl = Number(cfg.ttl) > 0 ? Number(cfg.ttl) : 0;
+      const map = new Map();  // key -> { value, ts }
+
+      const cache = {
+        get(key) {
+          const e = map.get(key);
+          if (!e) return undefined;
+          if (ttl && Date.now() - e.ts > ttl) {
+            map.delete(key);
+            return undefined;
+          }
+          map.delete(key);
+          map.set(key, e);
+          return e.value;
+        },
+        set(key, value) {
+          if (map.has(key)) map.delete(key);
+          map.set(key, { value, ts: Date.now() });
+          if (map.size > max) {
+            const oldest = map.keys().next().value;
+            map.delete(oldest);
+          }
+        },
+        has(key) {
+          return cache.get(key) !== undefined;
+        },
+        delete(key) {
+          return map.delete(key);
+        },
+        clear() {
+          map.clear();
+        },
+        keys() {
+          return Array.from(map.keys())[Symbol.iterator]();
+        },
+        values() {
+          return Array.from(map.values(), e => e.value)[Symbol.iterator]();
+        },
+        entries() {
+          return Array.from(map.entries(), ([k, e]) => [k, e.value])[Symbol.iterator]();
+        },
+        forEach(fn, thisArg) {
+          map.forEach((e, k) => fn.call(thisArg, e.value, k, cache));
+        },
+        get size() {
+          return map.size;
+        }
+      };
+      cache[Symbol.iterator] = cache.entries;
+      return cache;
+    };
+    console.log('[LRU] installed ✓');
+  }
+
+  /* ---------- 2. Config ---------- */
+  if (window.__SRANK_CONFIG) return;
 
   window.__SRANK_CONFIG = Object.freeze({
     /* Supabase */
