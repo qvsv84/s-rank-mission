@@ -1,8 +1,8 @@
 /* =========================================================
-   BIRTHDAY CHAT — v1.2
-   - FIX: modal rebuild mỗi lần mở → dropdown tên cập nhật đúng
-   - Owner login (mật khẩu 0810)
-   - Reply wish khi owner
+   BIRTHDAY CHAT — v1.3
+   - Owner chat tự động special (tên Mỹ Dung)
+   - Chống spam celebration (chỉ fullscreen lần đầu)
+   - Modal rebuild mỗi lần mở → dropdown luôn đúng
    ========================================================= */
 (function(){
   "use strict";
@@ -48,6 +48,7 @@
     sending: false,
     booted: false,
     isOwner: false,
+    celebratedOnce: false,
     replyTo: null,
   };
 
@@ -759,6 +760,7 @@
     if (S.isOwner) {
       if (confirm('👑 Bạn đang đăng nhập chính chủ.\n\nĐăng xuất khỏi chế độ này?')) {
         S.isOwner = false;
+        S.celebratedOnce = false;
         try { localStorage.removeItem(OWNER_KEY); } catch(_){}
         updateOwnerBtn();
         render();
@@ -769,11 +771,12 @@
     if (pwd === null) return;
     if (String(pwd).trim() === OWNER_PASSWORD) {
       S.isOwner = true;
+      S.celebratedOnce = false;
       try { localStorage.setItem(OWNER_KEY, '1'); } catch(_){}
       updateOwnerBtn();
       render();
       fireConfetti(40);
-      alert('👑 Đã đăng nhập chính chủ!\n\nBây giờ bạn có thể:\n• Gửi tin với tên "' + RECIPIENT + '"\n• Trả lời lời chúc của mọi người');
+      alert('👑 Đã đăng nhập chính chủ!\n\nBây giờ bạn có thể:\n• Gõ chat → tin nhắn sẽ tự động là lời chúc đặc biệt\n• Trả lời lời chúc của mọi người');
     } else {
       alert('❌ Mật khẩu không đúng');
     }
@@ -1020,8 +1023,18 @@
       S.lastTs = Math.max(S.lastTs, w.ts);
       render();
 
-      fireConfetti(data.isFromRecipient ? 60 : 30);
-      if (data.isFromRecipient) showCelebration();
+      // ⚡ Special handling
+      if (data.isFromRecipient) {
+        if (!S.celebratedOnce) {
+          S.celebratedOnce = true;
+          fireConfetti(60);
+          showCelebration();
+        } else {
+          fireConfetti(15);
+        }
+      } else {
+        fireConfetti(30);
+      }
 
       return w;
     } finally {
@@ -1034,8 +1047,13 @@
     if (!msg) return;
     if (!S.myName) { S.myName = loadMyName(); }
     if (!S.myName) { alert('Chưa có tên người gửi'); return; }
+
+    // ⚡ Owner login → gửi với vai trò Mỹ Dung + special
+    const sender = S.isOwner ? RECIPIENT : S.myName;
+    const isFromRecipient = S.isOwner;
+
     try {
-      await sendWish(S.myName, msg, false);
+      await sendWish(sender, msg, isFromRecipient);
     } catch (e) {
       alert('Gửi lỗi: ' + (e.message || e));
     }
@@ -1084,7 +1102,6 @@
 
   /* ============ MODAL ============ */
   function buildModal() {
-    // ⚡ Luôn build mới — không dùng cache
     let modal = $('bdModal');
     if (modal) modal.remove();
 
@@ -1106,7 +1123,6 @@
       });
     });
 
-    // ⚡ Filter Mỹ Dung nếu không phải owner
     const names = getAllNames().filter(n => S.isOwner || n !== RECIPIENT);
     const namesOpts = names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
 
@@ -1309,7 +1325,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v1.2 ready ✓');
+    log('v1.3 ready ✓');
   }
 
   if (document.readyState === 'loading') {
