@@ -1,18 +1,16 @@
 /* =========================================================
-   CHECKLIST UI v5.1
-   - FIX 1: cleanup v3/v4 cũ tránh chồng UI
-   - FIX 2: đợi ảnh avatar load xong trước khi chụp
-   - FIX 3: revoke blob URL khi đóng preview (tránh leak)
-   - FIX 4: normalize giờ "5:12" → "05:12" để sort đúng
-   - FIX 5: search tiếng Việt không dấu
-   - Nút chụp: chỉ dùng CDN + timeout, không treo
-   - UI: logo + tabs filter + search + stat pills
+   CHECKLIST UI v6.0 — Native Canvas (BỎ html2canvas)
+   - Chụp ảnh: tự vẽ bằng Canvas API, không cần thư viện ngoài
+   - Không treo, không phụ thuộc CDN
+   - UI: logo + search + tabs + card
+   - Sort: Top3 → checked → unchecked
+   - Scroll: max-height + overflow
    ========================================================= */
 (function(){
   "use strict";
   if (window.__clV5) return;
 
-  // ⚡ FIX 1: Cleanup v3/v4 cũ nếu còn sót
+  // Cleanup v3/v4 cũ
   try {
     ['clV3Root','clV4Root','clV3Styles','clV4Styles','clV3DebugModal','clV4DebugModal','clV4PreviewModal'].forEach(id => {
       const el = document.getElementById(id);
@@ -25,11 +23,6 @@
   const ROOT_ID    = 'clV5Root';
   const REFRESH_MS = 20000;
   const MAX_RETRY  = 20;
-  const CDN_LIST   = [
-    'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
-    'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
-    'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js'
-  ];
 
   const S = {
     names: [], checks: [], times: [], points: [], ranks: [],
@@ -38,17 +31,14 @@
     timer: null,
     retryCount: 0,
     booted: false,
-    h2cPromise: null,
     filter: 'all',
     search: '',
   };
 
   /* ============ HELPERS ============ */
   const $ = id => document.getElementById(id);
-  const log = (...args) => console.log('[CL5]', ...args);
-  const warn = (...args) => console.warn('[CL5]', ...args);
+  const log = (...args) => console.log('[CL6]', ...args);
 
-  // ⚡ FIX 5: normalize bỏ dấu tiếng Việt
   function normalize(s){
     return String(s || '')
       .toLowerCase()
@@ -56,14 +46,11 @@
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/đ/g, 'd');
   }
-
-  // ⚡ FIX 4: normalize giờ "5:12" → "05:12"
   function normTime(t){
     const m = String(t || '').match(/^(\d{1,2}):(\d{2})/);
     if (!m) return '99:99';
     return String(m[1]).padStart(2, '0') + ':' + m[2];
   }
-
   function getApi(){
     return window.__srankApi || (window.SRank && window.SRank.api) || null;
   }
@@ -91,52 +78,6 @@
     if (mins < 1) return 'vừa xong';
     if (mins < 60) return mins + ' phút trước';
     return hhmm;
-  }
-
-  /* ============ LOAD html2canvas — ROBUST ============ */
-  function tryLoadScript(url, timeoutMs){
-    return new Promise((resolve) => {
-      const timer = setTimeout(() => {
-        warn('Timeout CDN: ' + url);
-        resolve(false);
-      }, timeoutMs || 4000);
-
-      const s = document.createElement('script');
-      s.src = url;
-      s.async = true;
-      s.onload = () => {
-        clearTimeout(timer);
-        resolve(typeof window.html2canvas === 'function');
-      };
-      s.onerror = () => {
-        clearTimeout(timer);
-        resolve(false);
-      };
-      document.head.appendChild(s);
-    });
-  }
-
-  function loadHtml2Canvas(){
-    if (typeof window.html2canvas === 'function'){
-      return Promise.resolve(window.html2canvas);
-    }
-    if (S.h2cPromise) return S.h2cPromise;
-
-    log('Bắt đầu load html2canvas từ CDN...');
-    S.h2cPromise = (async () => {
-      for (const url of CDN_LIST){
-        const ok = await tryLoadScript(url, 4000);
-        if (ok){
-          log('✓ h2c loaded: ' + url);
-          return window.html2canvas;
-        }
-      }
-      warn('✗ Tất cả CDN thất bại');
-      S.h2cPromise = null;
-      return null;
-    })();
-
-    return S.h2cPromise;
   }
 
   /* ============ STYLES ============ */
@@ -183,13 +124,11 @@
   color: #fff;
   background: linear-gradient(135deg, #7ad79a, #4fa370);
   border-color: transparent;
-  box-shadow: 0 4px 12px -3px rgba(79,163,112,.5);
 }
 .clv5-progress {
   height: 8px; border-radius: 4px;
   background: rgba(200,220,205,.42);
   overflow: hidden; margin: 0 2px 14px; flex-shrink: 0;
-  position: relative;
 }
 .clv5-progress-fill {
   height: 100%; width: 0%;
@@ -197,18 +136,6 @@
   border-radius: 4px;
   transition: width .8s cubic-bezier(.16,.9,.25,1);
   box-shadow: 0 0 12px rgba(79,163,112,.5);
-  position: relative;
-}
-.clv5-progress-fill::after {
-  content: '';
-  position: absolute;
-  top: 0; right: 0; bottom: 0; width: 30px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.5));
-  animation: clv5Shine 2.5s ease-in-out infinite;
-}
-@keyframes clv5Shine {
-  0%, 100% { opacity: 0; }
-  50% { opacity: 1; }
 }
 .clv5-toolbar {
   display: flex; gap: 8px; margin-bottom: 12px;
@@ -228,8 +155,7 @@
 }
 .clv5-search::placeholder { color: #a8bdb0; font-weight: 800; }
 .clv5-search:focus {
-  border-color: #7ab896;
-  background: #fff;
+  border-color: #7ab896; background: #fff;
   box-shadow: 0 0 0 4px rgba(122,184,150,.15);
 }
 .clv5-search-icon {
@@ -243,8 +169,7 @@
   transform: translateY(-50%);
   width: 22px; height: 22px; padding: 0;
   border: 0; border-radius: 50%;
-  background: rgba(200,220,205,.5);
-  color: #6b8f78;
+  background: rgba(200,220,205,.5); color: #6b8f78;
   font-size: 12px; font-weight: 900;
   cursor: pointer;
   display: none;
@@ -275,22 +200,17 @@
 }
 .clv5-tab:active { transform: scale(.96); }
 .clv5-tab.active {
-  background: #fff;
-  color: #2a4d38;
+  background: #fff; color: #2a4d38;
   border-color: rgba(122,184,150,.35);
   box-shadow: 0 2px 8px -2px rgba(45,85,60,.14);
 }
 .clv5-tab-badge {
-  font-size: 10px;
-  padding: 1px 6px; border-radius: 999px;
-  background: rgba(200,220,205,.6);
-  color: #4a7a5a;
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
+  font-size: 10px; padding: 1px 6px; border-radius: 999px;
+  background: rgba(200,220,205,.6); color: #4a7a5a;
+  font-weight: 900; font-variant-numeric: tabular-nums;
 }
 .clv5-tab.active .clv5-tab-badge {
-  background: rgba(122,184,150,.22);
-  color: #2a6b45;
+  background: rgba(122,184,150,.22); color: #2a6b45;
 }
 .clv5-list {
   display: flex; flex-direction: column; gap: 6px;
@@ -304,8 +224,7 @@
 .clv5-list::-webkit-scrollbar { width: 5px; }
 .clv5-list::-webkit-scrollbar-track { background: transparent; }
 .clv5-list::-webkit-scrollbar-thumb {
-  background: rgba(122,184,150,.42);
-  border-radius: 3px;
+  background: rgba(122,184,150,.42); border-radius: 3px;
 }
 .clv5-divider {
   display: flex; align-items: center; gap: 10px;
@@ -326,14 +245,10 @@
   padding: 10px 12px; border-radius: 14px;
   background: #fff;
   border: 1.5px solid rgba(200,220,205,.55);
-  transition: transform .18s cubic-bezier(.16,.9,.25,1),
-              box-shadow .25s ease,
-              background .25s ease,
-              border-color .25s ease;
+  transition: transform .18s ease;
   position: relative; overflow: hidden;
   flex-shrink: 0;
 }
-.clv5-card:active { transform: scale(.985); }
 .clv5-card.checked {
   background: linear-gradient(160deg, #f4fbf6 0%, #e8f6ed 100%);
   border-color: rgba(122,184,150,.55);
@@ -341,17 +256,14 @@
 .clv5-card.top1 {
   background: linear-gradient(160deg, #fffbe9 0%, #fff0c4 100%);
   border-color: rgba(216,168,32,.6);
-  box-shadow: 0 6px 18px -10px rgba(216,168,32,.45);
 }
 .clv5-card.top2 {
   background: linear-gradient(160deg, #fafbfc 0%, #eaedef 100%);
   border-color: rgba(150,158,168,.55);
-  box-shadow: 0 5px 16px -10px rgba(120,130,140,.35);
 }
 .clv5-card.top3 {
   background: linear-gradient(160deg, #fff5e8 0%, #ffe2c4 100%);
   border-color: rgba(200,130,70,.55);
-  box-shadow: 0 5px 16px -10px rgba(200,130,70,.38);
 }
 .clv5-rank {
   width: 24px; height: 24px;
@@ -360,7 +272,6 @@
 }
 .clv5-rank-num {
   font-size: 11.5px; color: #a8bdb0; font-weight: 950;
-  font-variant-numeric: tabular-nums;
 }
 .clv5-av {
   width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
@@ -370,14 +281,13 @@
   font-size: 15px; font-weight: 950;
   overflow: hidden;
   border: 2px solid #fff;
-  box-shadow: 0 3px 10px -4px rgba(45,85,60,.2);
   position: relative;
 }
 .clv5-av img { width:100%; height:100%; object-fit:cover; display:block; }
-.clv5-card.checked .clv5-av { box-shadow: 0 0 0 2px #7ab896, 0 3px 12px -4px rgba(79,163,112,.35); }
-.clv5-card.top1 .clv5-av { box-shadow: 0 0 0 2px #e0b840, 0 3px 12px -4px rgba(216,168,32,.45); }
-.clv5-card.top2 .clv5-av { box-shadow: 0 0 0 2px #a8b0b8, 0 3px 12px -4px rgba(120,130,140,.3); }
-.clv5-card.top3 .clv5-av { box-shadow: 0 0 0 2px #c88246, 0 3px 12px -4px rgba(200,130,70,.35); }
+.clv5-card.checked .clv5-av { box-shadow: 0 0 0 2px #7ab896; }
+.clv5-card.top1 .clv5-av { box-shadow: 0 0 0 2px #e0b840; }
+.clv5-card.top2 .clv5-av { box-shadow: 0 0 0 2px #a8b0b8; }
+.clv5-card.top3 .clv5-av { box-shadow: 0 0 0 2px #c88246; }
 .clv5-info { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .clv5-name {
   font-size: 14px; font-weight: 900; color: #234a32;
@@ -392,10 +302,10 @@
   font-size: 11px; font-weight: 800; color: #7a9a85;
   flex-wrap: wrap; min-height: 14px;
 }
-.clv5-time { font-variant-numeric: tabular-nums; font-weight: 900; color: #6b8f78; }
+.clv5-time { font-weight: 900; color: #6b8f78; }
 .clv5-time.recent { color: #4fa370; }
 .clv5-dot { width: 3px; height: 3px; border-radius: 50%; background: #c0d0c4; flex-shrink: 0; }
-.clv5-pts { font-variant-numeric: tabular-nums; font-weight: 950; color: #4fa370; }
+.clv5-pts { font-weight: 950; color: #4fa370; }
 .clv5-pts.early { color: #d89020; }
 .clv5-idle { color: #a8bdb0; }
 .clv5-check {
@@ -404,32 +314,23 @@
   display: flex; align-items: center; justify-content: center;
   background: rgba(200,220,205,.4);
   border: 2px solid rgba(200,220,205,.7);
-  transition: all .3s ease;
 }
 .clv5-check.on {
   background: linear-gradient(135deg, #7ad79a, #4fa370);
   border-color: transparent;
-  box-shadow: 0 3px 10px -3px rgba(79,163,112,.55);
 }
-.clv5-check svg { width: 14px; height: 14px; }
+.clv5-check svg { width: 14px; height: 14px; color: transparent; }
 .clv5-check.on svg { color: #fff; }
-.clv5-check svg { color: transparent; }
 .clv5-empty {
   padding: 40px 20px; text-align: center;
   color: #9ab0a0; font-size: 13px; font-weight: 800;
 }
-.clv5-empty-emoji {
-  font-size: 44px; margin-bottom: 10px;
-  opacity: .55;
-  filter: drop-shadow(0 4px 8px rgba(122,184,150,.2));
-}
+.clv5-empty-emoji { font-size: 44px; margin-bottom: 10px; opacity: .55; }
 .clv5-empty-title { font-size: 14px; font-weight: 900; color: #6b8f78; margin-bottom: 4px; }
 .clv5-empty-sub { font-size: 11.5px; color: #a8bdb0; }
 .clv5-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr 40px;
-  gap: 8px;
-  margin-top: 14px; padding-top: 14px;
+  display: grid; grid-template-columns: 1fr 1fr 40px;
+  gap: 8px; margin-top: 14px; padding-top: 14px;
   border-top: 1px dashed rgba(200,220,205,.7);
   flex-shrink: 0;
 }
@@ -451,7 +352,6 @@
   color: #fff; border-color: transparent;
   box-shadow: 0 6px 14px -6px rgba(79,163,112,.5);
 }
-.clv5-btn.primary:active { background: linear-gradient(180deg, #6ba885, #44956a); }
 .clv5-btn.icon-only { padding: 0; }
 .clv5-foot {
   margin-top: 8px; font-size: 10.5px; font-weight: 800;
@@ -483,24 +383,15 @@
   background: #fff; border-radius: 22px; padding: 16px;
   display: flex; flex-direction: column; gap: 12px;
   box-shadow: 0 30px 80px rgba(0,0,0,.4);
-  animation: clv5Pop .3s cubic-bezier(.16,.9,.25,1);
-}
-@keyframes clv5Pop {
-  from { opacity: 0; transform: scale(.92) translateY(10px) }
-  to   { opacity: 1; transform: scale(1) translateY(0) }
 }
 .clv5-preview-head {
   display: flex; align-items: center; justify-content: space-between;
 }
-.clv5-preview-title {
-  font-size: 15px; font-weight: 950; color: #234a32;
-  display: flex; align-items: center; gap: 8px;
-}
+.clv5-preview-title { font-size: 15px; font-weight: 950; color: #234a32; }
 .clv5-preview-close {
   width: 34px; height: 34px; border: 0; border-radius: 50%;
   background: rgba(200,220,205,.5); color: #4a7a5a;
   font-size: 20px; font-weight: 900; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
 }
 .clv5-preview-imgbox {
   flex: 1 1 auto; overflow: auto;
@@ -520,12 +411,9 @@
   font-size: 13px; font-weight: 950; cursor: pointer;
   border: 1.5px solid transparent;
   display: flex; align-items: center; justify-content: center; gap: 6px;
-  transition: transform .15s ease;
 }
-.clv5-preview-actions button:active { transform: scale(.96); }
 .clv5-preview-actions .save {
   background: linear-gradient(180deg, #7ab896, #4fa370); color: #fff;
-  box-shadow: 0 8px 18px -8px rgba(79,163,112,.5);
 }
 .clv5-preview-actions .open {
   background: #fff; color: #315744;
@@ -539,8 +427,7 @@
 #clv5DebugModal {
   position: fixed; inset: 0; z-index: 31000;
   display: none; align-items: center; justify-content: center;
-  background: rgba(0,0,0,.75);
-  padding: 16px;
+  background: rgba(0,0,0,.75); padding: 16px;
 }
 #clv5DebugModal.show { display: flex; }
 .clv5-debug-panel {
@@ -549,13 +436,8 @@
   border-radius: 16px; padding: 18px;
   font-family: ui-monospace, Menlo, Consolas, monospace;
   font-size: 11.5px; line-height: 1.7;
-  overflow: auto;
-  white-space: pre-wrap; word-break: break-word;
+  overflow: auto; white-space: pre-wrap; word-break: break-word;
 }
-.clv5-debug-panel .ok { color: #4ec9b0; }
-.clv5-debug-panel .fail { color: #f48771; }
-.clv5-debug-panel .warn { color: #dcdcaa; }
-.clv5-debug-panel .info { color: #9cdcfe; }
 .clv5-debug-panel button {
   margin-top: 14px; width: 100%; padding: 12px;
   background: #007acc; color: #fff; border: 0;
@@ -645,7 +527,6 @@
     `;
     panel.appendChild(root);
 
-    // Bind nút với capture=true để chặn event bubble
     root.querySelector('#clv5Capture').addEventListener('click', e => {
       e.preventDefault(); e.stopPropagation(); onCapture();
     }, true);
@@ -656,11 +537,9 @@
       e.preventDefault(); e.stopPropagation(); runDebug();
     }, true);
 
-    // Search
     const search = root.querySelector('#clv5Search');
     const searchClear = root.querySelector('#clv5SearchClear');
     search.addEventListener('input', () => {
-      // ⚡ FIX 5: normalize bỏ dấu
       S.search = normalize(search.value.trim());
       searchClear.classList.toggle('show', S.search.length > 0);
       render();
@@ -672,7 +551,6 @@
       render();
     });
 
-    // Tabs
     root.querySelectorAll('.clv5-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         root.querySelectorAll('.clv5-tab').forEach(t => t.classList.remove('active'));
@@ -687,67 +565,31 @@
   }
 
   /* ============ DEBUG ============ */
-  async function runDebug(){
+  function runDebug(){
     const L = [];
     const p = (icon, txt) => L.push(icon + ' ' + txt);
-
-    p('ℹ️', '=== DEBUG CHECKLIST v5.1 ===');
+    p('ℹ️', '=== DEBUG CHECKLIST v6.0 ===');
     p('ℹ️', 'Time: ' + new Date().toLocaleString('vi-VN'));
     p('ℹ️', '');
-
-    const root = $(ROOT_ID);
-    p(root ? '✅' : '❌', 'Root: ' + (root ? 'OK' : 'KHÔNG'));
-
-    const panel = $('checklistPanel');
-    p(panel ? '✅' : '❌', 'Panel: ' + (panel ? 'OK' : 'KHÔNG'));
-
-    const api = getApi();
-    p(api ? '✅' : '❌', 'API: ' + (api ? 'OK' : 'KHÔNG'));
-
+    p($(ROOT_ID) ? '✅' : '❌', 'Root: ' + ($(ROOT_ID) ? 'OK' : 'KHÔNG'));
+    p($('checklistPanel') ? '✅' : '❌', 'Panel: ' + ($('checklistPanel') ? 'OK' : 'KHÔNG'));
+    p(getApi() ? '✅' : '❌', 'API: ' + (getApi() ? 'OK' : 'KHÔNG'));
     p('ℹ️', 'Data: ' + S.names.length + ' người');
-
     if (S.names.length){
       const checked = S.checks.filter(Boolean).length;
       p('ℹ️', 'Đã check: ' + checked + '/' + S.names.length);
     }
-
-    p('ℹ️', 'html2canvas: ' + (typeof window.html2canvas === 'function' ? 'đã load' : 'chưa load'));
     p('ℹ️', '');
-    p('⏳', 'Đang test load html2canvas...');
-
-    showDebugPanel(L);
-
-    try {
-      const h2c = await loadHtml2Canvas();
-      p(h2c ? '✅' : '❌', 'html2canvas: ' + (h2c ? 'LOAD OK' : 'LOAD FAIL (mạng/adblock)'));
-
-      if (h2c){
-        p('⏳', 'Test chụp 1 ô nhỏ...');
-        const testDiv = document.createElement('div');
-        testDiv.style.cssText = 'position:fixed;left:-9999px;top:0;width:200px;height:80px;background:#4fa370;color:#fff;padding:20px;font-size:20px;font-weight:bold;border-radius:12px';
-        testDiv.textContent = 'TEST';
-        document.body.appendChild(testDiv);
-        try {
-          const c = await h2c(testDiv, { logging: false });
-          p('✅', 'Test canvas: ' + c.width + 'x' + c.height);
-        } catch(e){
-          p('❌', 'Test canvas lỗi: ' + e.message);
-        }
-        testDiv.remove();
-      }
-    } catch(e){
-      p('❌', 'Load lỗi: ' + e.message);
-    }
-
+    p('ℹ️', '→ Dùng native Canvas, không cần html2canvas');
+    p('✅', 'Canvas API: ' + (typeof document.createElement('canvas').getContext === 'function' ? 'OK' : 'KHÔNG'));
     p('ℹ️', '');
-    p('ℹ️', '=== KẾT THÚC ===');
+    p('ℹ️', 'Bấm 📸 Chụp để test');
     showDebugPanel(L);
   }
 
   function showDebugPanel(lines){
     let modal = $('clv5DebugModal');
     if (modal) modal.remove();
-
     modal = document.createElement('div');
     modal.id = 'clv5DebugModal';
     modal.innerHTML = `
@@ -758,7 +600,6 @@
     `;
     document.body.appendChild(modal);
     modal.classList.add('show');
-
     const close = () => modal.remove();
     modal.querySelector('button').addEventListener('click', close);
     modal.addEventListener('click', e => { if (e.target === modal) close(); });
@@ -768,7 +609,6 @@
   function showPreview(url, filename){
     let modal = $('clv5PreviewModal');
     if (modal) modal.remove();
-
     modal = document.createElement('div');
     modal.id = 'clv5PreviewModal';
     modal.innerHTML = `
@@ -791,14 +631,11 @@
     `;
     document.body.appendChild(modal);
 
-    // ⚡ FIX 3: revoke URL khi đóng
     const close = () => {
       modal.classList.remove('show');
       setTimeout(() => {
         modal.remove();
-        setTimeout(() => {
-          try { URL.revokeObjectURL(url); } catch(_){}
-        }, 5000);
+        setTimeout(() => { try { URL.revokeObjectURL(url); } catch(_){} }, 5000);
       }, 250);
     };
     modal.querySelector('.clv5-preview-close').addEventListener('click', close);
@@ -812,9 +649,7 @@
         document.body.appendChild(a);
         a.click();
         a.remove();
-      } catch(e) {
-        window.open(url, '_blank');
-      }
+      } catch(e) { window.open(url, '_blank'); }
     });
 
     modal.querySelector('.open').addEventListener('click', () => {
@@ -834,7 +669,6 @@
       origIdx: i
     }));
 
-    // ⚡ FIX 4: normalize giờ trước khi sort
     const withTime = items.filter(x => x.checked && x.time)
       .sort((a, b) => normTime(a.time).localeCompare(normTime(b.time)));
     const top3 = withTime.slice(0, 3);
@@ -898,7 +732,6 @@
       return;
     }
 
-    // Filter theo tab
     let displayItems;
     if (S.filter === 'checked'){
       displayItems = all.all.filter(x => x.checked);
@@ -908,12 +741,9 @@
       displayItems = all.all.slice();
     }
 
-    // ⚡ FIX 5: search với normalize
     if (S.search){
       const q = S.search;
-      displayItems = displayItems.filter(x =>
-        normalize(x.name).includes(q)
-      );
+      displayItems = displayItems.filter(x => normalize(x.name).includes(q));
     }
 
     if (!displayItems.length){
@@ -928,9 +758,7 @@
 
     const ICONS = ['🥇','🥈','🥉'];
     const frag = document.createDocumentFragment();
-
     const prevByName = (S.prev && S.prev.byName) ? S.prev.byName : {};
-
     let lastSection = null;
     const showDividers = (S.filter === 'all' && !S.search);
 
@@ -953,8 +781,6 @@
       }
 
       const { name, checked, time, points } = item;
-      const prevVal = prevByName[name];
-      const justChecked = prevVal === false && checked === true;
       const rankIdx = all.top3Names.has(name)
         ? all.top3.findIndex(x => x.name === name)
         : undefined;
@@ -966,7 +792,6 @@
         card.classList.add('top' + (rankIdx + 1));
       }
 
-      // Rank
       const rankEl = document.createElement('div');
       rankEl.className = 'clv5-rank';
       if (rankIdx !== undefined && rankIdx >= 0 && rankIdx <= 2){
@@ -978,7 +803,6 @@
         rankEl.appendChild(numEl);
       }
 
-      // Avatar
       const av = document.createElement('div');
       av.className = 'clv5-av';
       const u = avatarUrl(name);
@@ -991,7 +815,6 @@
         av.textContent = getInitial(name);
       }
 
-      // Info
       const info = document.createElement('div');
       info.className = 'clv5-info';
 
@@ -1039,7 +862,6 @@
       info.appendChild(nm);
       info.appendChild(sub);
 
-      // Check icon
       const checkEl = document.createElement('div');
       checkEl.className = 'clv5-check' + (checked ? ' on' : '');
       checkEl.innerHTML = ICON.check;
@@ -1075,7 +897,7 @@
       if (!r || !r.ok) return null;
       return r.data;
     } catch(e){
-      warn('getData lỗi:', e && e.message);
+      log('getData lỗi:', e && e.message);
       return null;
     }
   }
@@ -1111,94 +933,248 @@
     render();
   }
 
-  /* ============ CAPTURE ============ */
+  /* =========================================================
+     CAPTURE — TỰ VẼ BẰNG CANVAS, KHÔNG html2canvas
+     ========================================================= */
   async function onCapture(){
+    log('=== CAPTURE START ===');
     const btn = $('clv5Capture');
     const oldHTML = btn ? btn.innerHTML : '';
     if (btn){
       btn.disabled = true;
-      btn.innerHTML = '<span>⏳</span><span>Đang chụp…</span>';
+      btn.innerHTML = '<span>⏳</span><span>Đang vẽ…</span>';
     }
 
-    let clone = null;
     try {
-      log('Capture: load h2c...');
-      const h2c = await loadHtml2Canvas();
-      if (typeof h2c !== 'function'){
-        alert('❌ Không tải được thư viện chụp ảnh.\n\nNguyên nhân có thể:\n• Mạng yếu\n• Adblock chặn CDN\n\nThử tắt chặn quảng cáo rồi bấm lại.');
+      if (!S.names.length){
+        alert('Chưa có dữ liệu để chụp');
         return;
       }
 
-      const root = $(ROOT_ID);
-      if (!root){ alert('❌ Không tìm thấy checklist'); return; }
+      const sorted = buildSortedList();
 
-      log('Capture: clone...');
-      clone = root.cloneNode(true);
-      clone.removeAttribute('id');
-      clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+      // ⚡ Setup canvas
+      const dpr = Math.min(3, Math.max(2, window.devicePixelRatio || 2));
+      const W = 500;                          // width logic
+      const rowH = 62;
+      const headerH = 110;
+      const footerH = 50;
+      const padTop = headerH;
+      const totalRows = sorted.all.length;
+      const H = headerH + (totalRows * rowH) + footerH + 20;
 
-      Object.assign(clone.style, {
-        position: 'fixed',
-        left: '-100000px',
-        top: '0',
-        width: root.offsetWidth + 'px',
-        maxHeight: 'none',
-        height: 'auto',
-        transform: 'none',
-        overflow: 'visible',
-        pointerEvents: 'none',
-        zIndex: '-1',
-        background: '#f5fbf5',
-        animation: 'none',
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Không lấy được 2d context');
+      ctx.scale(dpr, dpr);
+
+      // ⚡ Background
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(1, '#f5fbf5');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // ⚡ Header background
+      const headGrad = ctx.createLinearGradient(0, 0, W, headerH);
+      headGrad.addColorStop(0, '#f0faf3');
+      headGrad.addColorStop(1, '#e6f5ec');
+      ctx.fillStyle = headGrad;
+      ctx.fillRect(0, 0, W, headerH);
+
+      // ⚡ Logo box
+      ctx.fillStyle = '#4fa370';
+      roundRect(ctx, 20, 22, 46, 46, 14);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 26px -apple-system, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('☑', 43, 46);
+
+      // ⚡ Title
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#234a32';
+      ctx.font = 'bold 20px -apple-system, system-ui, sans-serif';
+      ctx.fillText('Checklist hôm nay', 82, 48);
+
+      const checkedCount = S.checks.filter(Boolean).length;
+      ctx.fillStyle = '#7a9a85';
+      ctx.font = '600 13px -apple-system, system-ui, sans-serif';
+      ctx.fillText(`${checkedCount} đã check · ${S.names.length - checkedCount} còn lại`, 82, 68);
+
+      // ⚡ Date right
+      const now = new Date();
+      const dateStr = String(now.getDate()).padStart(2,'0') + '/' +
+                      String(now.getMonth()+1).padStart(2,'0') + '/' +
+                      now.getFullYear();
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#8fa89a';
+      ctx.font = '600 12px -apple-system, system-ui, sans-serif';
+      ctx.fillText(dateStr, W - 20, 48);
+
+      // ⚡ Progress bar
+      const barY = 90;
+      const barW = W - 40;
+      ctx.fillStyle = 'rgba(200,220,205,.5)';
+      roundRect(ctx, 20, barY, barW, 6, 3);
+      ctx.fill();
+      const pct = checkedCount / S.names.length;
+      const fillGrad = ctx.createLinearGradient(20, 0, 20 + barW * pct, 0);
+      fillGrad.addColorStop(0, '#a3e0b8');
+      fillGrad.addColorStop(1, '#4fa370');
+      ctx.fillStyle = fillGrad;
+      roundRect(ctx, 20, barY, barW * pct, 6, 3);
+      ctx.fill();
+
+      // ⚡ Rows
+      let y = padTop;
+      const rowPad = 8;
+      const rowW = W - 40;
+
+      sorted.all.forEach((item, idx) => {
+        const rankIdx = sorted.top3Names.has(item.name)
+          ? sorted.top3.findIndex(x => x.name === item.name)
+          : undefined;
+
+        // Row background
+        const rowY = y + rowPad / 2;
+        const rowHeight = rowH - rowPad;
+
+        if (rankIdx === 0){
+          ctx.fillStyle = '#fff8e3';
+        } else if (rankIdx === 1){
+          ctx.fillStyle = '#f3f5f7';
+        } else if (rankIdx === 2){
+          ctx.fillStyle = '#fff0e0';
+        } else if (item.checked){
+          ctx.fillStyle = '#eef8f1';
+        } else {
+          ctx.fillStyle = '#ffffff';
+        }
+        roundRect(ctx, 20, rowY, rowW, rowHeight, 12);
+        ctx.fill();
+
+        // Row border
+        let borderColor;
+        if (rankIdx === 0) borderColor = 'rgba(216,168,32,.6)';
+        else if (rankIdx === 1) borderColor = 'rgba(150,158,168,.5)';
+        else if (rankIdx === 2) borderColor = 'rgba(200,130,70,.55)';
+        else if (item.checked) borderColor = 'rgba(122,184,150,.5)';
+        else borderColor = 'rgba(200,220,205,.6)';
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, 20, rowY, rowW, rowHeight, 12);
+        ctx.stroke();
+
+        // ⚡ Rank icon
+        const rankX = 42;
+        const rankCY = rowY + rowHeight / 2;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        if (rankIdx !== undefined && rankIdx >= 0 && rankIdx <= 2){
+          ctx.font = '22px -apple-system, system-ui, sans-serif';
+          ctx.fillStyle = '#234a32';
+          ctx.fillText(['🥇','🥈','🥉'][rankIdx], rankX, rankCY);
+        } else {
+          ctx.font = 'bold 13px -apple-system, system-ui, sans-serif';
+          ctx.fillStyle = '#a8bdb0';
+          ctx.fillText(String(item.origIdx + 1), rankX, rankCY);
+        }
+
+        // ⚡ Avatar circle
+        const avX = 76;
+        const avR = 20;
+        const avUrl = avatarUrl(item.name);
+        // Vẽ fallback trước
+        ctx.fillStyle = '#d4ead9';
+        ctx.beginPath();
+        ctx.arc(avX, rankCY, avR, 0, Math.PI * 2);
+        ctx.fill();
+        // Viền theo rank
+        if (rankIdx === 0) ctx.strokeStyle = '#e0b840';
+        else if (rankIdx === 1) ctx.strokeStyle = '#a8b0b8';
+        else if (rankIdx === 2) ctx.strokeStyle = '#c88246';
+        else if (item.checked) ctx.strokeStyle = '#7ab896';
+        else ctx.strokeStyle = 'transparent';
+        if (ctx.strokeStyle !== 'transparent'){
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+        // Initial
+        ctx.fillStyle = '#4a7a5a';
+        ctx.font = 'bold 15px -apple-system, system-ui, sans-serif';
+        ctx.fillText(getInitial(item.name), avX, rankCY + 1);
+
+        // ⚡ Name
+        const textX = 108;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+        let nameColor = '#234a32';
+        if (rankIdx === 0) nameColor = '#7a5410';
+        else if (rankIdx === 1) nameColor = '#4a5460';
+        else if (rankIdx === 2) nameColor = '#7a4a20';
+        ctx.fillStyle = nameColor;
+        ctx.font = 'bold 15px -apple-system, system-ui, sans-serif';
+        ctx.fillText(truncate(ctx, item.name, 240), textX, rowY + 26);
+
+        // ⚡ Sub info
+        ctx.font = '500 12px -apple-system, system-ui, sans-serif';
+        if (item.checked && item.time){
+          ctx.fillStyle = '#4fa370';
+          let subTxt = '🕐 ' + item.time;
+          if (item.points > 0) subTxt += '  ⭐ ' + item.points + 'đ';
+          ctx.fillText(subTxt, textX, rowY + 46);
+        } else {
+          ctx.fillStyle = '#a8bdb0';
+          ctx.fillText('Chưa check hôm nay', textX, rowY + 46);
+        }
+
+        // ⚡ Check mark (bên phải)
+        const checkCX = W - 45;
+        const checkR = 13;
+        if (item.checked){
+          const cg = ctx.createLinearGradient(checkCX - checkR, rankCY - checkR, checkCX + checkR, rankCY + checkR);
+          cg.addColorStop(0, '#7ad79a');
+          cg.addColorStop(1, '#4fa370');
+          ctx.fillStyle = cg;
+          ctx.beginPath();
+          ctx.arc(checkCX, rankCY, checkR, 0, Math.PI * 2);
+          ctx.fill();
+          // Dấu check
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2.5;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.beginPath();
+          ctx.moveTo(checkCX - 5, rankCY);
+          ctx.lineTo(checkCX - 1, rankCY + 4);
+          ctx.lineTo(checkCX + 6, rankCY - 4);
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = 'rgba(200,220,205,.8)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(checkCX, rankCY, checkR, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        y += rowH;
       });
 
-      // Bỏ toolbar + tabs + actions + footer khỏi ảnh
-      clone.querySelector('.clv5-toolbar')?.remove();
-      clone.querySelector('.clv5-tabs')?.remove();
-      clone.querySelector('.clv5-actions')?.remove();
-      clone.querySelector('.clv5-foot')?.remove();
+      // ⚡ Footer
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#a8bdb0';
+      ctx.font = '500 11px -apple-system, system-ui, sans-serif';
+      const timeStr = String(now.getHours()).padStart(2,'0') + ':' +
+                      String(now.getMinutes()).padStart(2,'0');
+      ctx.fillText('Cập nhật lúc ' + timeStr + ' · Đảo Mèo', W / 2, H - 25);
 
-      // Bỏ scroll ở list
-      const listClone = clone.querySelector('.clv5-list');
-      if (listClone){
-        listClone.style.maxHeight = 'none';
-        listClone.style.overflow = 'visible';
-        listClone.style.height = 'auto';
-      }
-
-      document.body.appendChild(clone);
-      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-
-      // ⚡ FIX 2: đợi tất cả ảnh load xong
-      const imgs = [...clone.querySelectorAll('img')];
-      if (imgs.length){
-        log('Capture: đợi ' + imgs.length + ' ảnh load...');
-        await Promise.all(imgs.map(img => {
-          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
-          return new Promise(res => {
-            img.onload = res;
-            img.onerror = res;
-            setTimeout(res, 3000);
-          });
-        }));
-        log('Capture: ảnh load xong');
-      }
-
-      log('Capture: render canvas...');
-      const canvas = await h2c(clone, {
-        backgroundColor: '#f5fbf5',
-        scale: Math.min(3, Math.max(2, window.devicePixelRatio || 2)),
-        useCORS: true,
-        allowTaint: false,
-        logging: false,
-        width: clone.offsetWidth,
-        height: clone.scrollHeight,
-        windowWidth: clone.offsetWidth,
-        windowHeight: clone.scrollHeight,
-      });
-
-      log('Capture: canvas ' + canvas.width + 'x' + canvas.height);
-
+      // ⚡ Convert to blob
       const blob = await new Promise((res, rej) => {
         canvas.toBlob(b => b ? res(b) : rej(new Error('toBlob null')), 'image/png', 1);
       });
@@ -1206,18 +1182,40 @@
       const url = URL.createObjectURL(blob);
       const filename = 'checklist-' + new Date().toISOString().slice(0,10) + '.png';
       showPreview(url, filename);
-      log('Capture: success ✓');
+      log('=== CAPTURE SUCCESS ===');
 
     } catch(e){
-      console.error('[CL5] capture error:', e);
-      alert('❌ Chụp thất bại:\n\n' + (e.message || e) + '\n\nBấm nút 🐛 để xem chi tiết.');
+      console.error('[CL6] capture error:', e);
+      alert('❌ Chụp thất bại:\n\n' + (e.message || e));
     } finally {
-      if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
       if (btn){
         btn.disabled = false;
         btn.innerHTML = oldHTML;
       }
     }
+  }
+
+  // Helper vẽ hình chữ nhật bo góc
+  function roundRect(ctx, x, y, w, h, r){
+    if (w < 2 * r) r = w / 2;
+    if (h < 2 * r) r = h / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  // Helper cắt text dài
+  function truncate(ctx, text, maxWidth){
+    if (ctx.measureText(text).width <= maxWidth) return text;
+    let t = text;
+    while (t.length > 1 && ctx.measureText(t + '…').width > maxWidth){
+      t = t.slice(0, -1);
+    }
+    return t + '…';
   }
 
   /* ============ EVENTS ============ */
@@ -1242,7 +1240,6 @@
   async function boot(){
     if (S.booted) return;
     injectStyles();
-
     const root = ensureRoot();
     if (!root){
       S.retryCount++;
@@ -1250,26 +1247,21 @@
       setTimeout(boot, 300);
       return;
     }
-
     S.booted = true;
     bindGlobalEvents();
     startAutoTimer();
     await refresh();
-
     setTimeout(async () => {
       if (!S.names.length) await refresh();
     }, 3000);
-
-    loadHtml2Canvas().catch(() => {});
 
     window.__clV5 = {
       refresh, forceRefresh, render,
       state: S,
       capture: onCapture,
       debug: runDebug,
-      loadH2C: loadHtml2Canvas,
     };
-    log('v5.1 ready ✓');
+    log('v6.0 ready ✓ (native canvas)');
   }
 
   if (document.readyState === 'loading'){
