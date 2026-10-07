@@ -59,37 +59,58 @@
     return hhmm;
   }
 
-  /* ============ LOAD html2canvas ============ */
   function tryLoadScript(url){
-    return new Promise((resolve) => {
-      const s = document.createElement('script');
-      s.src = url;
-      s.async = true;
-      s.onload = () => resolve(typeof window.html2canvas === 'function');
-      s.onerror = () => resolve(false);
-      document.head.appendChild(s);
-    });
-  }
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      warn('Timeout: ' + url);
+      resolve(false);
+    }, 5000);
+
+    const s = document.createElement('script');
+    s.src = url;
+    s.async = true;
+    s.onload = () => {
+      clearTimeout(timer);
+      resolve(typeof window.html2canvas === 'function');
+    };
+    s.onerror = () => {
+      clearTimeout(timer);
+      resolve(false);
+    };
+    document.head.appendChild(s);
+  });
+}
 
   function loadHtml2Canvas(){
-    if (typeof window.html2canvas === 'function') return Promise.resolve(window.html2canvas);
-    if (S.h2cPromise) return S.h2cPromise;
-
-    S.h2cPromise = (async () => {
-      if (window.SRank && typeof window.SRank.ensureHtml2Canvas === 'function'){
-        try {
-          await window.SRank.ensureHtml2Canvas();
-          if (typeof window.html2canvas === 'function') return window.html2canvas;
-        } catch(_){}
-      }
-      for (const url of CDN_LIST){
-        const ok = await tryLoadScript(url);
-        if (ok) return window.html2canvas;
-      }
-      return null;
-    })();
-    return S.h2cPromise;
+  // Đã có sẵn → return luôn
+  if (typeof window.html2canvas === 'function'){
+    return Promise.resolve(window.html2canvas);
   }
+
+  // Đang load → return promise hiện tại
+  if (S.h2cPromise) return S.h2cPromise;
+
+  // Bắt đầu load — KHÔNG dùng SRank helper (tránh treo)
+  S.h2cPromise = (async () => {
+    for (const url of CDN_LIST){
+      const ok = await tryLoadScript(url);
+      if (ok && typeof window.html2canvas === 'function'){
+        log('h2c loaded ✓ ' + url);
+        return window.html2canvas;
+      }
+    }
+    warn('h2c load thất bại hết CDN');
+    return null;
+  })();
+
+  // Nếu thất bại → reset để lần sau thử lại
+  S.h2cPromise = S.h2cPromise.then(h => {
+    if (!h) S.h2cPromise = null;
+    return h;
+  });
+
+  return S.h2cPromise;
+}
 
   /* ============ STYLES ============ */
   function injectStyles(){
