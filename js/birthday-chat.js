@@ -1,15 +1,14 @@
 /* =========================================================
-   BIRTHDAY CHAT — v1.7
-   - FIX: chat bubble luôn bên TRÁI (kể cả user đang login)
-   - Wish Mỹ Dung: bên PHẢI + special
-   - Wish người khác: bên TRÁI
+   BIRTHDAY CHAT — v1.8
+   - Reply hiển thị NGAY DƯỚI wish gốc (threaded)
+   - Reply có style nhỏ hơn, indent 36px
+   - replyToId lưu trong DB
    ========================================================= */
 (function(){
   "use strict";
   if (window.__birthdayChatLoaded) return;
   window.__birthdayChatLoaded = true;
 
-  /* ============ CONFIG ============ */
   const SUPABASE_URL = 'https://yodvujkylnvzjybvgika.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_7D06m2x8CuBWmsUEQi3jMA_edSimUFg';
   const RECIPIENT = 'Mỹ Dung';
@@ -35,7 +34,6 @@
     { group: '💪 Ý nghĩa', text: 'Tuổi mới, chúc Mỹ Dung gặp nhiều may mắn và niềm vui bất ngờ 🍀' }
   ];
 
-  /* ============ STATE ============ */
   const S = {
     wishes: [],
     lastTs: 0,
@@ -50,7 +48,6 @@
     replyTo: null,
   };
 
-  /* ============ HELPERS ============ */
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const log = (...a) => console.log('[BD]', ...a);
@@ -91,7 +88,6 @@
     try { localStorage.setItem(LAST_PICKED_KEY, S.myName); } catch(_){}
   };
 
-  /* ============ RPC ============ */
   async function rpc(name, params, timeout) {
     const url = `${SUPABASE_URL}/rest/v1/rpc/${name}`;
     const ctrl = new AbortController();
@@ -250,7 +246,6 @@
 }
 .bd-body::-webkit-scrollbar { width: 4px; }
 .bd-body::-webkit-scrollbar-thumb { background: rgba(255,158,199,.4); border-radius: 2px; }
-
 .bd-body > * { flex-shrink: 0; }
 
 .bd-day-divider {
@@ -269,6 +264,7 @@
 .bd-empty-title { font-size: 15px; font-weight: 900; color: #c04a90; margin-bottom: 4px; }
 .bd-empty-sub { font-size: 12px; font-weight: 700; line-height: 1.5; }
 
+/* ===== WISH CARD ===== */
 .bd-wish {
   position: relative;
   align-self: flex-start;
@@ -282,7 +278,6 @@
   box-shadow: 0 6px 18px -10px rgba(216,91,158,.35);
   animation: bdWishIn .4s ease-out both;
 }
-
 .bd-wish.me {
   align-self: flex-end;
   border-radius: 18px 18px 4px 18px;
@@ -292,7 +287,6 @@
   border-color: rgba(216,91,158,.65);
   box-shadow: 0 8px 24px -10px rgba(216,91,158,.55), 0 0 20px rgba(255,180,210,.35);
 }
-
 @keyframes bdWishIn {
   0% { opacity: 0; transform: translateY(10px); }
   100% { opacity: 1; transform: translateY(0); }
@@ -366,7 +360,67 @@
   color: #fff;
 }
 
-/* ===== CHAT ROW — luôn bên trái ===== */
+/* ===== THREAD — gom wish + replies ===== */
+.bd-thread {
+  display: flex; flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+/* ===== REPLY BUBBLE — nhỏ hơn, indent ===== */
+.bd-reply {
+  display: flex; gap: 8px; align-items: flex-start;
+  align-self: flex-end;
+  max-width: 82%;
+  margin-top: 2px;
+  padding-left: 40px;
+  animation: bdWishIn .35s ease-out both;
+}
+.bd-reply-wrap {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 14px 14px 4px 14px;
+  background: linear-gradient(140deg, #ffe4f5 0%, #ffd0e5 100%);
+  border: 1.5px solid rgba(216,91,158,.5);
+  box-shadow: 0 4px 12px -8px rgba(216,91,158,.4);
+}
+.bd-reply-head {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.bd-reply-avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  flex: 0 0 auto;
+  background: linear-gradient(135deg, #ffd6e8, #ffb0d5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 950; color: #fff;
+  border: 2px solid #fff;
+  overflow: hidden;
+}
+.bd-reply-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bd-reply-name {
+  font-size: 11.5px; font-weight: 950; color: #c04a90;
+  white-space: nowrap;
+}
+.bd-reply-arrow {
+  font-size: 12px; color: #c04a90;
+  opacity: .7;
+}
+.bd-reply-message {
+  font-size: 13.5px; font-weight: 650;
+  line-height: 1.45;
+  color: #4a2a3a;
+  white-space: pre-wrap; word-break: break-word;
+  text-align: right;
+}
+.bd-reply-time {
+  margin-top: 4px;
+  font-size: 10px; font-weight: 800; color: #c9a0b8;
+  text-align: right;
+}
+
+/* ===== CHAT ROW ===== */
 .bd-chat-row {
   display: flex; gap: 8px; align-items: flex-end;
   margin-top: 4px;
@@ -485,6 +539,18 @@
   font-size: 12px; font-weight: 800; color: #e05b9e;
   text-align: center; margin-bottom: 16px;
 }
+.bd-reply-badge {
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fff0f8, #ffe4d0);
+  border: 1.5px solid rgba(216,91,158,.4);
+  font-size: 11.5px; font-weight: 800;
+  color: #c04a90;
+  display: none;
+  text-align: center;
+}
+.bd-reply-badge.show { display: block; }
 .bd-group-label {
   font-size: 11px; font-weight: 950; color: #c04a90;
   letter-spacing: .08em; text-transform: uppercase;
@@ -793,10 +859,138 @@
       updateOwnerBtn();
       render();
       fireConfetti(40);
-      alert('👑 Đã đăng nhập chính chủ!\n\nBây giờ bạn có thể:\n• Gõ chat → tin nhắn sẽ tự động là lời chúc đặc biệt\n• Trả lời lời chúc của mọi người');
+      alert('👑 Đã đăng nhập chính chủ!\n\nBây giờ bạn có thể:\n• Gõ chat → tin nhắn tự động là lời chúc đặc biệt\n• Trả lời ngay dưới wish của mọi người');
     } else {
       alert('❌ Mật khẩu không đúng');
     }
+  }
+
+  /* ============ REPLIES HELPERS ============ */
+  function buildThreads() {
+    // Tách wish gốc và replies
+    const topWishes = [];
+    const repliesByParent = {};
+
+    for (const w of S.wishes) {
+      if (w.replyToId) {
+        if (!repliesByParent[w.replyToId]) repliesByParent[w.replyToId] = [];
+        repliesByParent[w.replyToId].push(w);
+      } else {
+        topWishes.push(w);
+      }
+    }
+
+    // Sort top theo ts, replies cũng sort theo ts
+    topWishes.sort((a, b) => a.ts - b.ts);
+    Object.keys(repliesByParent).forEach(k => {
+      repliesByParent[k].sort((a, b) => a.ts - b.ts);
+    });
+
+    return { topWishes, repliesByParent };
+  }
+
+  function renderReply(reply) {
+    const row = document.createElement('div');
+    row.className = 'bd-reply';
+    row.dataset.id = reply.id;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'bd-reply-wrap';
+
+    const head = document.createElement('div');
+    head.className = 'bd-reply-head';
+
+    const arrow = document.createElement('span');
+    arrow.className = 'bd-reply-arrow';
+    arrow.textContent = '↩️';
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'bd-reply-name';
+    nameEl.textContent = reply.sender || RECIPIENT;
+
+    const av = document.createElement('span');
+    av.className = 'bd-reply-avatar';
+    const avUrl = getAvatarUrl(reply.sender);
+    if (avUrl) {
+      const img = document.createElement('img');
+      img.src = avUrl; img.alt = ''; img.loading = 'lazy';
+      img.onerror = () => { img.remove(); av.textContent = getInitial(reply.sender); };
+      av.appendChild(img);
+    } else av.textContent = getInitial(reply.sender);
+
+    head.append(arrow, nameEl, av);
+
+    const msg = document.createElement('div');
+    msg.className = 'bd-reply-message';
+    msg.textContent = reply.message;
+
+    const timeEl = document.createElement('div');
+    timeEl.className = 'bd-reply-time';
+    timeEl.textContent = formatTime(reply.ts);
+
+    wrap.append(head, msg, timeEl);
+    row.appendChild(wrap);
+
+    return row;
+  }
+
+  function renderWishCard(w) {
+    const card = document.createElement('div');
+    card.className = 'bd-wish' + (w.isFromRecipient ? ' me' : '');
+    card.dataset.id = w.id;
+
+    const head = document.createElement('div');
+    head.className = 'bd-wish-head';
+
+    const av = document.createElement('div');
+    av.className = 'bd-wish-avatar';
+    const avUrl = getAvatarUrl(w.sender);
+    if (avUrl) {
+      const img = document.createElement('img');
+      img.src = avUrl; img.alt = ''; img.loading = 'lazy';
+      img.onerror = () => { img.remove(); av.textContent = getInitial(w.sender); };
+      av.appendChild(img);
+    } else av.textContent = getInitial(w.sender);
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'bd-wish-name';
+    nameEl.textContent = w.sender || 'Ẩn danh';
+
+    const iconEl = document.createElement('div');
+    iconEl.className = 'bd-wish-icon';
+    iconEl.textContent = w.isFromRecipient ? '🎉' : '🎁';
+
+    head.append(av, nameEl, iconEl);
+
+    const msg = document.createElement('div');
+    msg.className = 'bd-wish-message';
+    msg.textContent = w.message;
+
+    const foot = document.createElement('div');
+    foot.className = 'bd-wish-foot';
+    const tEl = document.createElement('span');
+    tEl.textContent = formatTime(w.ts);
+    foot.appendChild(tEl);
+    if (w.isFromRecipient) {
+      const tag = document.createElement('span');
+      tag.className = 'bd-wish-tag special';
+      tag.textContent = 'SPECIAL';
+      foot.appendChild(tag);
+    }
+    if (S.isOwner && !w.isFromRecipient) {
+      const replyBtn = document.createElement('button');
+      replyBtn.type = 'button';
+      replyBtn.textContent = '↩️ Trả lời';
+      replyBtn.style.cssText = 'margin-left:auto;padding:3px 10px;border-radius:999px;border:1.5px solid rgba(216,91,158,.5);background:#fff;color:#c04a90;font-family:inherit;font-size:10.5px;font-weight:900;cursor:pointer;';
+      replyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        replyToWish(w);
+      });
+      foot.appendChild(replyBtn);
+    }
+
+    card.append(head, msg, foot);
+    return card;
   }
 
   function replyToWish(wish) {
@@ -806,6 +1000,14 @@
     const modal = buildModal();
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
+
+    // Hiện badge "đang trả lời..."
+    const badge = modal.querySelector('#bdReplyBadge');
+    if (badge) {
+      badge.textContent = '↩️ Đang trả lời ' + (wish.sender || 'bạn') + ': "' + 
+        String(wish.message || '').slice(0, 40) + (wish.message && wish.message.length > 40 ? '…' : '') + '"';
+      badge.classList.add('show');
+    }
 
     const senderSel = modal.querySelector('#bdSenderSelect');
     if (senderSel) {
@@ -838,7 +1040,7 @@
     const countEl = $('bdWishCount');
     if (!body) return;
 
-    const sig = S.wishes.map(w => `${w.id}|${w.ts}|${w.isFromRecipient?1:0}`).join('::') + '|' + (S.isOwner ? 'O' : 'U');
+    const sig = S.wishes.map(w => `${w.id}|${w.ts}|${w.isFromRecipient?1:0}|${w.replyToId||''}`).join('::') + '|' + (S.isOwner ? 'O' : 'U');
     if (sig === _lastRenderSig) return;
     _lastRenderSig = sig;
 
@@ -854,10 +1056,11 @@
       return;
     }
 
+    const { topWishes, repliesByParent } = buildThreads();
     const frag = document.createDocumentFragment();
     let lastTs = 0;
 
-    for (const w of S.wishes) {
+    for (const w of topWishes) {
       if (!lastTs || !sameDay(lastTs, w.ts)) {
         const d = document.createElement('div');
         d.className = 'bd-day-divider';
@@ -868,64 +1071,18 @@
       const isWish = w.type === 'wish' || w.isFromRecipient;
 
       if (isWish) {
-        const card = document.createElement('div');
-        card.className = 'bd-wish' + (w.isFromRecipient ? ' me' : '');
-        card.dataset.id = w.id;
+        // Gom wish gốc + replies thành thread
+        const thread = document.createElement('div');
+        thread.className = 'bd-thread';
 
-        const head = document.createElement('div');
-        head.className = 'bd-wish-head';
+        thread.appendChild(renderWishCard(w));
 
-        const av = document.createElement('div');
-        av.className = 'bd-wish-avatar';
-        const avUrl = getAvatarUrl(w.sender);
-        if (avUrl) {
-          const img = document.createElement('img');
-          img.src = avUrl; img.alt = ''; img.loading = 'lazy';
-          img.onerror = () => { img.remove(); av.textContent = getInitial(w.sender); };
-          av.appendChild(img);
-        } else av.textContent = getInitial(w.sender);
+        const replies = repliesByParent[w.id] || [];
+        replies.forEach(r => thread.appendChild(renderReply(r)));
 
-        const nameEl = document.createElement('div');
-        nameEl.className = 'bd-wish-name';
-        nameEl.textContent = w.sender || 'Ẩn danh';
-
-        const iconEl = document.createElement('div');
-        iconEl.className = 'bd-wish-icon';
-        iconEl.textContent = w.isFromRecipient ? '🎉' : '🎁';
-
-        head.append(av, nameEl, iconEl);
-
-        const msg = document.createElement('div');
-        msg.className = 'bd-wish-message';
-        msg.textContent = w.message;
-
-        const foot = document.createElement('div');
-        foot.className = 'bd-wish-foot';
-        const tEl = document.createElement('span');
-        tEl.textContent = formatTime(w.ts);
-        foot.appendChild(tEl);
-        if (w.isFromRecipient) {
-          const tag = document.createElement('span');
-          tag.className = 'bd-wish-tag special';
-          tag.textContent = 'SPECIAL';
-          foot.appendChild(tag);
-        }
-        if (S.isOwner && !w.isFromRecipient) {
-          const replyBtn = document.createElement('button');
-          replyBtn.type = 'button';
-          replyBtn.textContent = '↩️ Trả lời';
-          replyBtn.style.cssText = 'margin-left:auto;padding:3px 10px;border-radius:999px;border:1.5px solid rgba(216,91,158,.5);background:#fff;color:#c04a90;font-family:inherit;font-size:10.5px;font-weight:900;cursor:pointer;';
-          replyBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            replyToWish(w);
-          });
-          foot.appendChild(replyBtn);
-        }
-
-        card.append(head, msg, foot);
-        frag.appendChild(card);
+        frag.appendChild(thread);
       } else {
-        // ⚡ Chat bubble — LUÔN bên trái
+        // Chat bubble (không phải wish)
         const row = document.createElement('div');
         row.className = 'bd-chat-row';
 
@@ -969,6 +1126,7 @@
     requestAnimationFrame(() => body.scrollTop = body.scrollHeight);
   }
 
+  /* ============ DATA ============ */
   async function fetchWishes(force) {
     if (S.pollInFlight && !force) return;
     S.pollInFlight = true;
@@ -986,11 +1144,13 @@
         if (!id) continue;
         if (S.wishes.some(w => w.id === id)) continue;
         const ts = Number(raw.ts) || Date.now();
+        const replyToId = raw.replyToId ? String(raw.replyToId) : null;
         S.wishes.push({
           id,
           sender: String(raw.sender || '').trim() || 'Ẩn danh',
           message: String(raw.message || ''),
           isFromRecipient: !!raw.isFromRecipient,
+          replyToId,
           type: raw.isFromRecipient ? 'wish' : 'message',
           ts
         });
@@ -1015,31 +1175,37 @@
     }
   }
 
-  async function sendWish(sender, message, isFromRecipient) {
+  async function sendWish(sender, message, isFromRecipient, replyToId) {
     if (S.sending) return null;
     S.sending = true;
     try {
-      const data = await rpc('rpc_send_birthday_wish', {
+      const params = {
         p_sender: sender,
         p_message: message,
         p_is_from_recipient: !!isFromRecipient
-      }, 15000);
+      };
+      if (replyToId) params.p_reply_to_id = replyToId;
+
+      const data = await rpc('rpc_send_birthday_wish', params, 15000);
 
       const w = {
         id: String(data.id || ''),
         sender: String(data.sender || sender),
         message: String(data.message || message),
         isFromRecipient: !!data.isFromRecipient,
+        replyToId: data.replyToId ? String(data.replyToId) : null,
         type: data.isFromRecipient ? 'wish' : 'message',
         ts: Number(data.ts) || Date.now()
       };
       S.wishes.push(w);
       S.lastTs = Math.max(S.lastTs, w.ts);
+      _lastRenderSig = '';
       render();
 
       if (data.isFromRecipient) {
-        fireConfetti(60);
-        showCelebration();
+        fireConfetti(40);
+        // Chỉ celebration khi KHÔNG phải reply (tránh spam)
+        if (!data.replyToId) showCelebration();
       } else {
         fireConfetti(30);
       }
@@ -1060,7 +1226,7 @@
     const isFromRecipient = S.isOwner;
 
     try {
-      await sendWish(sender, msg, isFromRecipient);
+      await sendWish(sender, msg, isFromRecipient, null);
     } catch (e) {
       alert('Gửi lỗi: ' + (e.message || e));
     }
@@ -1106,6 +1272,7 @@
     fireConfetti(100);
   }
 
+  /* ============ MODAL ============ */
   function buildModal() {
     let modal = $('bdModal');
     if (modal) modal.remove();
@@ -1136,6 +1303,7 @@
         <div class="bd-modal-handle"></div>
         <div class="bd-modal-title">🎁 Gửi lời chúc</div>
         <div class="bd-modal-sub">Cho ${esc(RECIPIENT)} — sinh nhật 7/10 🎂</div>
+        <div class="bd-reply-badge" id="bdReplyBadge"></div>
         ${presetHtml}
         <div class="bd-group-label">✍️ Hoặc tự viết</div>
         <textarea class="bd-textarea" id="bdCustomMsg" maxlength="500" placeholder="Viết lời chúc từ trái tim bạn..."></textarea>
@@ -1203,13 +1371,15 @@
       if (!sender) { msgEl.textContent = 'Chọn tên người gửi'; return; }
 
       const isFromRecipient = sender === RECIPIENT;
+      const replyToId = S.replyTo ? S.replyTo.id : null;
+
       const btn = modal.querySelector('#bdModalSend');
       btn.disabled = true;
       btn.textContent = '⏳ Đang gửi…';
       msgEl.textContent = '';
 
       try {
-        await sendWish(sender, msg, isFromRecipient);
+        await sendWish(sender, msg, isFromRecipient, replyToId);
         msgEl.style.color = '#4fa370';
         msgEl.textContent = 'Đã gửi ✓';
         saveMyName(sender);
@@ -1327,7 +1497,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v1.7 ready ✓');
+    log('v1.8 ready ✓');
   }
 
   if (document.readyState === 'loading') {
