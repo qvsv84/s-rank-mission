@@ -1,8 +1,10 @@
 /* =========================================================
-   BIRTHDAY CHAT — v2.2
-   - Reply nằm GỌN trong card wish (nested replies)
-   - Card tự mở rộng để chứa reply
-   - Input inline cũng nằm trong card
+   BIRTHDAY CHAT — v2.3 (Minimal Modern)
+   - UI phẳng, sạch, chuyên nghiệp
+   - Bỏ gradient/decoration thừa
+   - Nút reply dạng text link
+   - Reply có đường kẻ trái mỏng
+   - Header 2 nút: ← và 👑
    ========================================================= */
 (function(){
   "use strict";
@@ -116,7 +118,7 @@
     }
   }
 
-  /* ============ CSS ============ */
+  /* ============ CSS — Minimal Modern ============ */
   function injectStyles() {
     if ($('bdStyles')) return;
 
@@ -128,315 +130,415 @@
     const style = document.createElement('style');
     style.id = 'bdStyles';
     style.textContent = `
+/* ============================================================
+   FAB
+============================================================ */
 #bdFab {
-  position: fixed; right: 18px;
+  position: fixed;
+  right: 18px;
   bottom: max(24px, calc(18px + env(safe-area-inset-bottom)));
   z-index: 20600;
-  min-width: 120px; height: 56px;
+  min-width: 116px;
+  height: 52px;
   padding: 0 18px 0 14px;
-  border: 0; border-radius: 28px;
-  background: linear-gradient(135deg, #ff7db5 0%, #e05b9e 40%, #c04a90 100%);
+  border: 0;
+  border-radius: 26px;
+  background: #d63384;
   color: #fff;
-  font-family: inherit; font-size: 13px; font-weight: 950;
-  letter-spacing: .02em;
-  display: flex; align-items: center; gap: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
-  box-shadow: 0 14px 32px -8px rgba(216,91,158,.55), 0 4px 10px -2px rgba(140,40,100,.3), inset 0 1px 0 rgba(255,255,255,.35);
-  animation: bdFabPulse 2.6s ease-in-out infinite;
-  transition: transform .18s ease;
+  box-shadow: 0 8px 22px -8px rgba(214,51,132,.45);
+  transition: transform .15s ease, box-shadow .25s ease;
 }
-#bdFab:active { transform: scale(.94); }
+#bdFab:active { transform: scale(.96); }
 #bdFab.hidden { display: none !important; }
-@keyframes bdFabPulse {
-  0%,100% { box-shadow: 0 14px 32px -8px rgba(216,91,158,.55), 0 4px 10px -2px rgba(140,40,100,.3), inset 0 1px 0 rgba(255,255,255,.35); }
-  50%     { box-shadow: 0 14px 40px -6px rgba(216,91,158,.85), 0 6px 14px -2px rgba(140,40,100,.4), inset 0 1px 0 rgba(255,255,255,.5); }
-}
-#bdFab .bd-fab-icon { font-size: 22px; line-height: 1; }
+#bdFab .bd-fab-icon { font-size: 20px; line-height: 1; }
 #bdFab .bd-fab-badge {
-  position: absolute; top: -6px; right: -6px;
-  min-width: 22px; height: 22px; padding: 0 6px;
-  border-radius: 11px; background: #fff; color: #c04a90;
-  font-size: 11px; font-weight: 950;
-  display: none; align-items: center; justify-content: center;
-  box-shadow: 0 4px 10px rgba(180,60,120,.4);
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #fff;
+  color: #d63384;
+  font-size: 11px;
+  font-weight: 700;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
 }
 #bdFab .bd-fab-badge.show { display: flex; }
 
+/* ============================================================
+   PAGE
+============================================================ */
 #bdPage {
-  position: fixed; inset: 0;
+  position: fixed;
+  inset: 0;
   z-index: 20900;
-  display: none; flex-direction: column;
-  background:
-    radial-gradient(circle at 15% 0%, rgba(255,214,232,.55), transparent 42%),
-    radial-gradient(circle at 88% 100%, rgba(255,240,200,.5), transparent 44%),
-    linear-gradient(180deg, #fff8fc 0%, #fffaf2 100%);
-  color: #4a2a3a;
+  display: none;
+  flex-direction: column;
+  background: #fdfafb;
+  color: #2d2a2c;
   font-family: var(--font, ui-rounded, system-ui);
   overflow: hidden;
 }
 #bdPage.show { display: flex; }
 
+/* ============================================================
+   HEADER
+============================================================ */
 .bd-head {
   flex: 0 0 auto;
-  display: grid; grid-template-columns: 44px 1fr auto;
-  align-items: center; gap: 8px;
-  padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
-  background: linear-gradient(135deg, rgba(255,240,248,.97), rgba(255,250,235,.97));
-  backdrop-filter: blur(20px) saturate(120%);
-  -webkit-backdrop-filter: blur(20px) saturate(120%);
-  border-bottom: 1px solid rgba(255,158,199,.35);
-  box-shadow: 0 4px 20px rgba(255,120,180,.12);
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+  background: #fff;
+  border-bottom: 1px solid #f0e8ec;
   z-index: 10;
 }
 .bd-head-btn {
-  width: 44px; height: 44px;
-  display: flex; align-items: center; justify-content: center;
-  border: 1.5px solid rgba(255,158,199,.4);
-  border-radius: 14px;
-  background: rgba(255,255,255,.9);
-  color: #c04a90; font-size: 20px; font-weight: 900;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ebe3e7;
+  border-radius: 10px;
+  background: #fff;
+  color: #2d2a2c;
+  font-size: 18px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all .15s ease;
+  transition: background .15s ease, border-color .15s ease;
 }
-.bd-head-btn:active { transform: scale(.94); }
-.bd-head-center { min-width: 0; display: flex; align-items: center; gap: 10px; }
+.bd-head-btn:active { background: #f8f2f5; border-color: #e5d8e0; }
+.bd-head-center {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .bd-head-avatar {
   position: relative;
-  width: 42px; height: 42px; border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
   flex: 0 0 auto;
-  background: linear-gradient(135deg, #ffd6e8, #ffb0d5);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px; font-weight: 950; color: #fff;
-  border: 2px solid #fff;
-  box-shadow: 0 3px 10px rgba(216,91,158,.25);
-  overflow: visible;
+  background: #f8f2f5;
+  color: #d63384;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid #ebe3e7;
+  overflow: hidden;
 }
-.bd-head-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; }
-.bd-head-cake {
-  position: absolute; bottom: -4px; right: -4px;
-  font-size: 18px;
-  filter: drop-shadow(0 2px 3px rgba(180,60,120,.3));
-  animation: bdCakeBob 2.2s ease-in-out infinite;
+.bd-head-avatar img {
+  width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%;
 }
-@keyframes bdCakeBob { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-3px) rotate(6deg); } }
-.bd-head-info { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.bd-head-cake { display: none; }
+.bd-head-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 .bd-head-title {
-  font-size: 14.5px; font-weight: 950;
-  color: #c04a90; letter-spacing: .01em;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 14.5px;
+  font-weight: 650;
+  color: #2d2a2c;
+  letter-spacing: -.005em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .bd-head-sub {
-  font-size: 10.5px; font-weight: 800;
-  color: #e05b9e;
-  display: flex; align-items: center; gap: 4px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #a899a3;
+  line-height: 1.3;
 }
-.bd-head-sub .dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: #ff7db5;
-  animation: bdPulse 2s ease-in-out infinite;
-}
-@keyframes bdPulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: .6; } }
+.bd-head-sub .dot { display: none; }
 
+/* ============================================================
+   BODY
+============================================================ */
 .bd-body {
   flex: 1 1 auto;
-  overflow-y: auto; overflow-x: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 14px 12px 120px;
-  display: flex; flex-direction: column; gap: 10px;
+  padding: 16px 16px 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.bd-body::-webkit-scrollbar { width: 4px; }
-.bd-body::-webkit-scrollbar-thumb { background: rgba(255,158,199,.4); border-radius: 2px; }
+.bd-body::-webkit-scrollbar { width: 3px; }
+.bd-body::-webkit-scrollbar-thumb { background: #e5d8e0; border-radius: 2px; }
 .bd-body > * { flex-shrink: 0; }
 
 .bd-day-divider {
-  align-self: center; margin: 12px 0 4px;
-  padding: 4px 14px;
-  background: rgba(255,255,255,.85);
-  border: 1px solid rgba(255,158,199,.35);
-  border-radius: 999px;
-  color: #c04a90;
-  font-size: 10.5px; font-weight: 900;
-  letter-spacing: .08em; text-transform: uppercase;
+  align-self: center;
+  margin: 6px 0 2px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: #b8a8b0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.bd-day-divider::before,
+.bd-day-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #f0e8ec;
 }
 
-.bd-empty { padding: 60px 24px; text-align: center; color: #c9a0b8; }
-.bd-empty-emoji { font-size: 64px; margin-bottom: 10px; opacity: .7; }
-.bd-empty-title { font-size: 15px; font-weight: 900; color: #c04a90; margin-bottom: 4px; }
-.bd-empty-sub { font-size: 12px; font-weight: 700; line-height: 1.5; }
+.bd-empty {
+  padding: 80px 24px;
+  text-align: center;
+  color: #b8a8b0;
+}
+.bd-empty-emoji { font-size: 48px; margin-bottom: 12px; opacity: .6; }
+.bd-empty-title {
+  font-size: 15px; font-weight: 600; color: #6b5a62; margin-bottom: 6px;
+}
+.bd-empty-sub {
+  font-size: 13px; font-weight: 400; line-height: 1.5; color: #a899a3;
+}
 
-/* ===== WISH CARD ===== */
+/* ============================================================
+   WISH CARD
+============================================================ */
 .bd-wish {
   position: relative;
   align-self: flex-start;
   max-width: 92%;
-  padding: 14px 16px 12px;
-  border-radius: 18px 18px 18px 4px;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(255,180,210,.55), transparent 30%),
-    linear-gradient(140deg, #fff8fc 0%, #fff0e0 100%);
-  border: 1.5px solid rgba(255,158,199,.45);
-  box-shadow: 0 6px 18px -10px rgba(216,91,158,.35);
-  animation: bdWishIn .4s ease-out both;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #f0e8ec;
+  box-shadow: 0 1px 2px rgba(45,42,44,.03);
+  animation: bdWishIn .35s ease-out both;
 }
 .bd-wish.me {
   align-self: flex-end;
-  border-radius: 18px 18px 4px 18px;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(255,180,210,.55), transparent 30%),
-    linear-gradient(140deg, #ffe4f5 0%, #ffd0e5 100%);
-  border-color: rgba(216,91,158,.65);
-  box-shadow: 0 8px 24px -10px rgba(216,91,158,.55), 0 0 20px rgba(255,180,210,.35);
+  background: #fff9fc;
+  border-color: #f5dce8;
 }
 @keyframes bdWishIn {
-  0% { opacity: 0; transform: translateY(10px); }
+  0% { opacity: 0; transform: translateY(6px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
-.bd-wish-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bd-wish-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
 .bd-wish.me .bd-wish-head { flex-direction: row-reverse; }
 
 .bd-wish-avatar {
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   flex: 0 0 auto;
-  background: linear-gradient(135deg, #ffd6e8, #ffb0d5);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 950; color: #fff;
-  border: 2px solid #fff;
-  box-shadow: 0 3px 8px rgba(216,91,158,.25);
+  background: #f8f2f5;
+  color: #d63384;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid #ebe3e7;
   overflow: hidden;
 }
-.bd-wish-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bd-wish-avatar img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
 
 .bd-wish-name {
-  flex: 1; min-width: 0;
-  font-size: 13.5px; font-weight: 950;
-  color: #c04a90;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d2a2c;
+  letter-spacing: -.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .bd-wish.me .bd-wish-name { text-align: right; }
 
 .bd-wish-icon {
-  font-size: 22px; flex: 0 0 auto;
-  filter: drop-shadow(0 2px 3px rgba(216,91,158,.3));
+  font-size: 14px;
+  flex: 0 0 auto;
+  opacity: .55;
+  filter: none;
 }
 
 .bd-wish-message {
-  font-size: 14.5px; font-weight: 650;
-  line-height: 1.5; color: #4a2a3a;
-  white-space: pre-wrap; word-break: break-word;
-  padding-left: 46px;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: #3a3538;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding-left: 42px;
   padding-right: 0;
   text-align: left;
 }
 .bd-wish.me .bd-wish-message {
   padding-left: 0;
-  padding-right: 46px;
+  padding-right: 42px;
   text-align: right;
 }
 
 .bd-wish-foot {
-  margin-top: 8px;
-  padding-left: 46px;
+  margin-top: 10px;
+  padding-left: 42px;
   padding-right: 0;
-  font-size: 10.5px; font-weight: 800;
-  color: #c9a0b8;
-  display: flex; align-items: center; gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #b8a8b0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
 }
 .bd-wish.me .bd-wish-foot {
   padding-left: 0;
-  padding-right: 46px;
+  padding-right: 42px;
   justify-content: flex-end;
 }
 
 .bd-wish-tag {
-  padding: 1px 7px;
-  border-radius: 999px;
-  font-size: 9.5px; font-weight: 900;
+  padding: 0;
+  border-radius: 0;
+  font-size: 10.5px;
+  font-weight: 700;
   letter-spacing: .04em;
 }
 .bd-wish-tag.special {
-  background: linear-gradient(135deg, #ff7db5, #c04a90);
-  color: #fff;
+  color: #d63384;
+  background: transparent;
+  padding: 2px 6px;
+  border: 1px solid #f5dce8;
+  border-radius: 4px;
+  font-size: 9.5px;
 }
 
-/* ===== REPLIES BLOCK — nằm trong card ===== */
+/* ============================================================
+   REPLIES — nằm trong card
+============================================================ */
 .bd-wish-replies {
   margin-top: 12px;
-  padding-left: 46px;            /* thẳng hàng với message */
+  padding-left: 42px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   position: relative;
 }
-/* Viền trái hồng phân biệt nested */
 .bd-wish-replies::before {
   content: '';
   position: absolute;
   left: 20px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: linear-gradient(180deg, transparent, rgba(216,91,158,.35) 15%, rgba(216,91,158,.35) 85%, transparent);
+  top: 4px;
+  bottom: 4px;
+  width: 1.5px;
+  background: #f0e0e8;
   border-radius: 2px;
 }
 
-/* Mỗi reply trong card */
 .bd-reply-nested {
-  padding: 9px 12px;
-  border-radius: 12px;
-  background: linear-gradient(140deg, rgba(255,240,250,.95) 0%, rgba(255,220,240,.95) 100%);
-  border: 1px solid rgba(216,91,158,.35);
-  animation: bdWishIn .35s ease-out both;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  animation: bdWishIn .3s ease-out both;
 }
 .bd-reply-nested-head {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 .bd-reply-nested-avatar {
-  width: 20px; height: 20px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   flex: 0 0 auto;
-  background: linear-gradient(135deg, #ffd6e8, #ffb0d5);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 950; color: #fff;
-  border: 1.5px solid #fff;
+  background: #f8f2f5;
+  color: #d63384;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  border: 1px solid #ebe3e7;
   overflow: hidden;
 }
-.bd-reply-nested-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bd-reply-nested-avatar img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
 .bd-reply-nested-arrow {
-  font-size: 11px;
-  color: #c04a90;
-  opacity: .7;
+  font-size: 10px;
+  color: #b8a8b0;
 }
 .bd-reply-nested-name {
-  font-size: 11px; font-weight: 950;
-  color: #c04a90;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #2d2a2c;
   white-space: nowrap;
 }
 .bd-reply-nested-time {
   margin-left: auto;
-  font-size: 9.5px; font-weight: 800;
-  color: #c9a0b8;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #b8a8b0;
 }
 .bd-reply-nested-message {
-  font-size: 13px; font-weight: 650;
-  line-height: 1.45;
-  color: #4a2a3a;
-  white-space: pre-wrap; word-break: break-word;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: #3a3538;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding-left: 26px;
 }
 
-/* ===== ACTION + INLINE INPUT ===== */
+/* ============================================================
+   ACTION — text link
+============================================================ */
 .bd-wish-actions {
   margin-top: 10px;
-  padding-left: 46px;
+  padding-left: 42px;
 }
 .bd-wish.me .bd-wish-actions {
   padding-left: 0;
-  padding-right: 46px;
+  padding-right: 42px;
   display: flex;
   justify-content: flex-end;
 }
@@ -444,273 +546,369 @@
 .bd-reply-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
-  border-radius: 999px;
-  border: 1.5px solid rgba(216,91,158,.5);
-  background: linear-gradient(135deg, #fff5fa, #ffe6f2);
-  color: #c04a90;
+  gap: 4px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: #d63384;
   font-family: inherit;
-  font-size: 11.5px;
-  font-weight: 950;
-  letter-spacing: .02em;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: .005em;
   cursor: pointer;
-  transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
-  box-shadow: 0 3px 10px -4px rgba(216,91,158,.3);
+  transition: opacity .15s ease;
+  box-shadow: none;
 }
-.bd-reply-btn:active {
-  transform: scale(.95);
-  background: linear-gradient(135deg, #ffe6f2, #ffd0e5);
-}
-.bd-reply-btn .bd-reply-icon { font-size: 13px; line-height: 1; }
+.bd-reply-btn:active { opacity: .6; }
+.bd-reply-btn:hover { text-decoration: underline; text-underline-offset: 2px; }
+.bd-reply-btn .bd-reply-icon { font-size: 12px; line-height: 1; }
 
-/* Inline reply input — nằm trong card */
+/* ============================================================
+   INLINE REPLY INPUT
+============================================================ */
 .bd-inline-reply {
-  margin-top: 8px;
-  padding-left: 46px;
-  animation: bdWishIn .3s ease-out both;
+  margin-top: 4px;
+  padding-left: 42px;
+  animation: bdWishIn .25s ease-out both;
 }
 .bd-wish.me .bd-inline-reply {
   padding-left: 0;
-  padding-right: 46px;
+  padding-right: 42px;
 }
 .bd-inline-reply-wrap {
   display: flex;
   align-items: flex-end;
   gap: 6px;
   padding: 6px 6px 6px 12px;
-  border-radius: 14px;
-  background: linear-gradient(140deg, rgba(255,240,250,.95), rgba(255,220,240,.95));
-  border: 1.5px solid rgba(216,91,158,.5);
-  box-shadow: 0 4px 12px -8px rgba(216,91,158,.4);
+  border-radius: 10px;
+  background: #fff;
+  border: 1.5px solid #f5dce8;
+  transition: border-color .15s ease;
+}
+.bd-inline-reply-wrap:focus-within {
+  border-color: #d63384;
 }
 .bd-inline-input {
   flex: 1;
-  min-height: 26px;
+  min-height: 24px;
   max-height: 80px;
-  padding: 5px 0;
+  padding: 4px 0;
   border: 0;
   background: transparent;
-  color: #4a2a3a;
+  color: #2d2a2c;
   font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 650;
+  font-size: 14px;
+  font-weight: 400;
   line-height: 1.4;
   outline: none;
   resize: none;
   overflow-y: auto;
 }
 .bd-inline-input::placeholder {
-  color: #d0a8c0;
-  font-style: italic;
+  color: #c8b8c0;
 }
 .bd-inline-send {
-  width: 32px; height: 32px;
+  width: 30px;
+  height: 30px;
   flex: 0 0 auto;
   border: 0;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ffa5d0, #ff7db5);
+  border-radius: 8px;
+  background: #d63384;
   color: #fff;
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 700;
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 10px -4px rgba(255,120,180,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: transform .15s ease, opacity .15s ease;
 }
-.bd-inline-send:active { transform: scale(.9); }
-.bd-inline-send:disabled { opacity: .4; pointer-events: none; }
+.bd-inline-send:active { transform: scale(.94); }
+.bd-inline-send:disabled { opacity: .35; pointer-events: none; }
 .bd-inline-cancel {
-  width: 28px; height: 28px;
+  width: 28px;
+  height: 28px;
   flex: 0 0 auto;
   border: 0;
-  border-radius: 50%;
-  background: rgba(255,255,255,.75);
-  color: #c04a90;
-  font-size: 13px;
-  font-weight: 900;
+  border-radius: 8px;
+  background: transparent;
+  color: #a899a3;
+  font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: transform .15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s ease;
 }
-.bd-inline-cancel:active { transform: scale(.9); }
+.bd-inline-cancel:active { background: #f8f2f5; }
+
 .bd-inline-error {
   margin-top: 6px;
-  padding-left: 46px;
-  font-size: 11px;
-  font-weight: 800;
+  padding-left: 42px;
+  font-size: 12px;
+  font-weight: 500;
   color: #e05b5b;
 }
 
-/* Composer */
+/* ============================================================
+   COMPOSER
+============================================================ */
 .bd-composer {
-  position: absolute; left: 0; right: 0; bottom: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 20;
-  display: grid; grid-template-columns: 52px 1fr;
+  display: grid;
+  grid-template-columns: 44px 1fr;
   gap: 8px;
-  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-  background: rgba(255,255,255,.97);
-  backdrop-filter: blur(20px) saturate(120%);
-  -webkit-backdrop-filter: blur(20px) saturate(120%);
-  border-top: 1px solid rgba(255,158,199,.3);
-  box-shadow: 0 -4px 24px rgba(255,120,180,.1);
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid #f0e8ec;
 }
 .bd-gift-btn {
-  width: 52px; height: 52px;
-  border: 0; border-radius: 16px;
-  background: linear-gradient(135deg, #ff7db5 0%, #c04a90 100%);
-  color: #fff; font-size: 24px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #f0e8ec;
+  border-radius: 10px;
+  background: #fff;
+  color: #d63384;
+  font-size: 20px;
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 6px 14px -6px rgba(216,91,158,.55);
-  transition: transform .15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s ease, border-color .15s ease;
 }
-.bd-gift-btn:active { transform: scale(.92); }
-.bd-composer-inner { display: flex; align-items: flex-end; gap: 8px; }
+.bd-gift-btn:active { background: #fdf5f9; border-color: #f5dce8; }
+.bd-composer-inner {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
 .bd-input {
-  flex: 1; min-height: 44px; max-height: 100px;
-  padding: 10px 14px;
-  border: 1.5px solid rgba(255,158,199,.4);
+  flex: 1;
+  min-height: 44px;
+  max-height: 100px;
+  padding: 11px 16px;
+  border: 1px solid #ebe3e7;
   border-radius: 22px;
-  background: #fff; color: #4a2a3a;
-  font-family: inherit; font-size: 15px; font-weight: 650;
-  outline: none; resize: none; overflow-y: auto;
+  background: #fff;
+  color: #2d2a2c;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.4;
+  outline: none;
+  resize: none;
+  overflow-y: auto;
+  transition: border-color .15s ease;
 }
-.bd-input:focus { border-color: #ff9ec7; box-shadow: 0 0 0 4px rgba(255,158,199,.15); }
+.bd-input:focus { border-color: #d63384; }
+.bd-input::placeholder { color: #c8b8c0; }
 .bd-send-btn {
-  width: 44px; height: 44px; flex: 0 0 auto;
-  border: 0; border-radius: 50%;
-  background: linear-gradient(135deg, #ffa5d0, #ff7db5);
-  color: #fff; font-size: 16px; font-weight: 900;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 50%;
+  background: #d63384;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 6px 14px -4px rgba(255,120,180,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: transform .15s ease, opacity .15s ease;
 }
-.bd-send-btn:active { transform: scale(.92); }
-.bd-send-btn:disabled { opacity: .4; pointer-events: none; }
+.bd-send-btn:active { transform: scale(.94); }
+.bd-send-btn:disabled { opacity: .3; pointer-events: none; }
 
+/* ============================================================
+   MODAL
+============================================================ */
 #bdModal {
-  position: fixed; inset: 0;
+  position: fixed;
+  inset: 0;
   z-index: 21100;
-  display: none; align-items: flex-end; justify-content: center;
-  background: rgba(74,20,50,.5);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(45,42,44,.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
-#bdModal.show { display: flex; animation: bdFade .22s ease; }
+#bdModal.show { display: flex; animation: bdFade .2s ease; }
 @keyframes bdFade { from { opacity: 0 } to { opacity: 1 } }
 .bd-modal-panel {
-  width: 100%; max-width: 560px; max-height: 88vh;
+  width: 100%;
+  max-width: 560px;
+  max-height: 88vh;
   overflow-y: auto;
-  padding: 20px 18px calc(24px + env(safe-area-inset-bottom));
-  background: linear-gradient(180deg, #fff8fc 0%, #fffaf2 100%);
-  border-radius: 26px 26px 0 0;
-  box-shadow: 0 -20px 60px rgba(180,60,120,.25);
-  animation: bdSlideUp .3s cubic-bezier(.16,.9,.25,1) forwards;
+  padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  animation: bdSlideUp .28s cubic-bezier(.16,.9,.25,1) forwards;
   transform: translateY(100%);
 }
 @keyframes bdSlideUp { to { transform: translateY(0); } }
 .bd-modal-handle {
-  width: 44px; height: 5px; border-radius: 99px;
-  background: rgba(216,91,158,.25);
-  margin: 0 auto 16px;
+  width: 36px;
+  height: 4px;
+  border-radius: 99px;
+  background: #ebe3e7;
+  margin: 0 auto 20px;
 }
 .bd-modal-title {
-  font-size: 18px; font-weight: 950; color: #c04a90;
-  text-align: center; margin-bottom: 4px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2d2a2c;
+  margin-bottom: 4px;
+  letter-spacing: -.01em;
 }
 .bd-modal-sub {
-  font-size: 12px; font-weight: 800; color: #e05b9e;
-  text-align: center; margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #a899a3;
+  margin-bottom: 20px;
 }
 .bd-group-label {
-  font-size: 11px; font-weight: 950; color: #c04a90;
-  letter-spacing: .08em; text-transform: uppercase;
-  margin: 14px 0 8px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #a899a3;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin: 18px 0 8px 0;
 }
 .bd-preset {
-  display: block; width: 100%; text-align: left;
-  padding: 12px 14px; margin-bottom: 8px;
-  border: 1.5px solid rgba(255,158,199,.3);
-  border-radius: 14px;
-  background: #fff; color: #4a2a3a;
-  font-family: inherit; font-size: 13.5px; font-weight: 700;
-  line-height: 1.4; cursor: pointer;
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 11px 14px;
+  margin-bottom: 6px;
+  border: 1px solid #f0e8ec;
+  border-radius: 10px;
+  background: #fff;
+  color: #3a3538;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  cursor: pointer;
   transition: all .15s ease;
 }
-.bd-preset:active { transform: scale(.98); }
+.bd-preset:active { background: #fdf5f9; }
 .bd-preset.selected {
-  border-color: #ff7db5;
-  background: linear-gradient(135deg, #fff0f8, #ffe0f0);
-  box-shadow: 0 4px 12px -6px rgba(216,91,158,.4);
+  border-color: #d63384;
+  background: #fdf5f9;
+  color: #d63384;
+  font-weight: 600;
 }
 .bd-textarea {
-  width: 100%; min-height: 80px;
+  width: 100%;
+  min-height: 80px;
   padding: 12px 14px;
-  border: 1.5px solid rgba(255,158,199,.35);
-  border-radius: 14px;
-  background: #fff; color: #4a2a3a;
-  font-family: inherit; font-size: 14.5px; font-weight: 650;
-  outline: none; resize: vertical;
+  border: 1px solid #ebe3e7;
+  border-radius: 10px;
+  background: #fff;
+  color: #2d2a2c;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+  transition: border-color .15s ease;
 }
-.bd-textarea:focus { border-color: #ff9ec7; box-shadow: 0 0 0 4px rgba(255,158,199,.15); }
+.bd-textarea:focus { border-color: #d63384; }
+.bd-textarea::placeholder { color: #c8b8c0; }
 .bd-field-row {
-  display: flex; align-items: center; gap: 10px;
-  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
 }
 .bd-field-label {
-  font-size: 12px; font-weight: 950; color: #c04a90;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2d2a2c;
   white-space: nowrap;
 }
 .bd-select {
-  flex: 1; height: 44px; padding: 0 14px;
-  border: 1.5px solid rgba(255,158,199,.35);
-  border-radius: 12px;
-  background: #fff; color: #4a2a3a;
-  font-family: inherit; font-size: 14px; font-weight: 850;
+  flex: 1;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #ebe3e7;
+  border-radius: 10px;
+  background: #fff;
+  color: #2d2a2c;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
   outline: none;
+  transition: border-color .15s ease;
 }
+.bd-select:focus { border-color: #d63384; }
 .bd-hint {
-  margin-top: 10px; padding: 10px 12px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #fff0f8, #ffe4d0);
-  border: 1.5px dashed rgba(216,91,158,.4);
-  font-size: 11.5px; font-weight: 800;
-  color: #c04a90; text-align: center;
-  line-height: 1.45; display: none;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fdf5f9;
+  border: 1px solid #f5dce8;
+  font-size: 12px;
+  font-weight: 500;
+  color: #d63384;
+  text-align: center;
+  line-height: 1.5;
+  display: none;
 }
-.bd-hint.show { display: block; animation: bdPop .3s ease; }
-@keyframes bdPop { 0% { transform: scale(.95); opacity: 0 } 100% { transform: scale(1); opacity: 1 } }
+.bd-hint.show { display: block; }
 .bd-modal-actions {
-  display: grid; grid-template-columns: 1fr 1.4fr;
-  gap: 10px; margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 10px;
+  margin-top: 20px;
 }
 .bd-btn {
-  min-height: 48px; padding: 12px 16px;
-  border-radius: 14px;
-  font-family: inherit; font-size: 13.5px; font-weight: 950;
+  min-height: 46px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  border: 1.5px solid rgba(255,158,199,.4);
-  background: #fff; color: #c04a90;
-  transition: transform .15s ease;
+  border: 1px solid #ebe3e7;
+  background: #fff;
+  color: #2d2a2c;
+  transition: background .15s ease, transform .15s ease;
 }
-.bd-btn:active { transform: scale(.97); }
+.bd-btn:active { transform: scale(.98); }
 .bd-btn.primary {
-  background: linear-gradient(135deg, #ff7db5, #c04a90);
-  color: #fff; border-color: transparent;
-  box-shadow: 0 8px 18px -8px rgba(216,91,158,.55);
+  background: #d63384;
+  color: #fff;
+  border-color: transparent;
 }
+.bd-btn.primary:active { background: #b8246e; }
 .bd-btn:disabled { opacity: .5; pointer-events: none; }
 .bd-modal-msg {
-  min-height: 18px; margin-top: 10px;
+  min-height: 18px;
+  margin-top: 12px;
   text-align: center;
-  font-size: 12px; font-weight: 800; color: #c04a90;
+  font-size: 13px;
+  font-weight: 500;
+  color: #d63384;
 }
 
+/* ============================================================
+   CONFETTI + CELEBRATION
+============================================================ */
 .bd-confetti {
-  position: fixed; top: -20px;
-  z-index: 21400; font-size: 22px;
+  position: fixed;
+  top: -20px;
+  z-index: 21400;
+  font-size: 22px;
   pointer-events: none;
   animation: bdConfettiFall linear forwards;
 }
@@ -720,50 +918,68 @@
 }
 
 #bdCelebration {
-  position: fixed; inset: 0; z-index: 21300;
-  display: none; align-items: center; justify-content: center;
-  background: radial-gradient(circle at 50% 40%, rgba(255,240,248,.98), rgba(255,220,235,.98));
+  position: fixed;
+  inset: 0;
+  z-index: 21300;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,250,252,.98);
   text-align: center;
 }
-#bdCelebration.show { display: flex; animation: bdFade .35s ease; }
+#bdCelebration.show { display: flex; animation: bdFade .3s ease; }
 .bd-cele-inner {
-  padding: 20px;
-  animation: bdPop 0.5s cubic-bezier(.16,.9,.25,1);
+  padding: 24px;
+  animation: bdPop .5s cubic-bezier(.16,.9,.25,1);
+}
+@keyframes bdPop {
+  0% { opacity: 0; transform: scale(.94); }
+  100% { opacity: 1; transform: scale(1); }
 }
 .bd-cele-cake {
-  font-size: 96px; margin-bottom: 8px;
-  filter: drop-shadow(0 8px 20px rgba(216,91,158,.4));
-  animation: bdCakeBob 1.6s ease-in-out infinite;
+  font-size: 72px;
+  margin-bottom: 12px;
+  animation: bdCakeBob 1.8s ease-in-out infinite;
+}
+@keyframes bdCakeBob {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 .bd-cele-title {
-  font-size: 28px; font-weight: 950; color: #c04a90;
-  letter-spacing: -.01em; margin-bottom: 6px;
-  text-shadow: 0 2px 0 rgba(255,255,255,.9);
+  font-size: 20px;
+  font-weight: 500;
+  color: #a899a3;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
 }
 .bd-cele-name {
-  font-size: 38px; font-weight: 950;
-  background: linear-gradient(135deg, #ff7db5, #c04a90, #ff7db5);
-  background-size: 200% 200%;
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent;
-  animation: bdGradientShift 2.5s ease-in-out infinite;
-  margin-bottom: 12px; letter-spacing: -.02em;
+  font-size: 32px;
+  font-weight: 800;
+  color: #d63384;
+  letter-spacing: -.02em;
+  margin-bottom: 14px;
 }
-@keyframes bdGradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 .bd-cele-sub {
-  font-size: 14px; font-weight: 850; color: #e05b9e;
-  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #6b5a62;
+  margin-bottom: 28px;
+  line-height: 1.5;
 }
 .bd-cele-btn {
   padding: 12px 28px;
-  border: 0; border-radius: 999px;
-  background: linear-gradient(135deg, #ff7db5, #c04a90);
+  border: 0;
+  border-radius: 999px;
+  background: #d63384;
   color: #fff;
-  font-family: inherit; font-size: 14px; font-weight: 950;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 10px 24px -8px rgba(216,91,158,.55);
+  transition: transform .15s ease;
 }
-.bd-cele-btn:active { transform: scale(.95); }
+.bd-cele-btn:active { transform: scale(.96); }
 `;
     document.head.appendChild(style);
   }
@@ -826,17 +1042,13 @@
           <div class="bd-head-avatar">
             <span id="bdHeadAvatar">🎂</span>
             <img id="bdHeadAvatarImg" alt="" style="display:none">
-            <span class="bd-head-cake">🎂</span>
           </div>
           <div class="bd-head-info">
             <span class="bd-head-title">Sinh nhật ${esc(RECIPIENT)}</span>
-            <span class="bd-head-sub"><span class="dot"></span><span id="bdWishCount">0 lời chúc</span></span>
+            <span class="bd-head-sub" id="bdWishCount">0 lời chúc</span>
           </div>
         </div>
-        <div style="display:flex;gap:6px;justify-content:flex-end;">
-          <button type="button" class="bd-head-btn" id="bdOwnerBtn" aria-label="Đăng nhập chính chủ">👑</button>
-          <button type="button" class="bd-head-btn" id="bdClose" aria-label="Đóng">×</button>
-        </div>
+        <button type="button" class="bd-head-btn" id="bdOwnerBtn" aria-label="Đăng nhập chính chủ">👑</button>
       </header>
       <div class="bd-body" id="bdBody"></div>
       <div class="bd-composer">
@@ -850,7 +1062,6 @@
     document.body.appendChild(page);
 
     page.querySelector('#bdBack').addEventListener('click', closePage);
-    page.querySelector('#bdClose').addEventListener('click', closePage);
     page.querySelector('#bdGiftBtn').addEventListener('click', openModal);
     page.querySelector('#bdOwnerBtn').addEventListener('click', loginOwner);
 
@@ -898,18 +1109,14 @@
     const btn = $('bdOwnerBtn');
     if (!btn) return;
     if (S.isOwner) {
-      btn.textContent = '👑';
-      btn.style.background = 'linear-gradient(135deg,#ffd700,#ff8c00)';
+      btn.style.background = '#d63384';
       btn.style.color = '#fff';
       btn.style.borderColor = 'transparent';
-      btn.style.boxShadow = '0 4px 12px -4px rgba(255,140,0,.6)';
       btn.title = 'Chính chủ đã đăng nhập — bấm để đăng xuất';
     } else {
-      btn.textContent = '👑';
       btn.style.background = '';
-      btn.style.color = '#c04a90';
+      btn.style.color = '#2d2a2c';
       btn.style.borderColor = '';
-      btn.style.boxShadow = '';
       btn.title = 'Đăng nhập chính chủ';
     }
   }
@@ -932,8 +1139,8 @@
       try { localStorage.setItem(OWNER_KEY, '1'); } catch(_){}
       updateOwnerBtn();
       render();
-      fireConfetti(40);
-      alert('👑 Đã đăng nhập chính chủ!\n\nBây giờ bạn có thể:\n• Bấm ↩️ để trả lời ngay dưới lời chúc\n• Gõ chat → tin nhắn tự động là lời chúc đặc biệt');
+      fireConfetti(30);
+      alert('👑 Đã đăng nhập chính chủ!\n\nBây giờ bạn có thể:\n• Bấm ↩ Trả lời ngay dưới lời chúc\n• Gõ chat → tin nhắn tự động là lời chúc đặc biệt');
     } else {
       alert('❌ Mật khẩu không đúng');
     }
@@ -1028,7 +1235,7 @@
 
     const arrow = document.createElement('span');
     arrow.className = 'bd-reply-nested-arrow';
-    arrow.textContent = '↩️';
+    arrow.textContent = '↩';
 
     const av = document.createElement('span');
     av.className = 'bd-reply-nested-avatar';
@@ -1159,7 +1366,7 @@
 
     card.append(head, msg, foot);
 
-    // ===== Replies block — NẰM TRONG CARD =====
+    // Replies block — nằm trong card
     const isReplying = S.inlineReplyToId === w.id;
     const hasReplies = replies && replies.length > 0;
 
@@ -1178,7 +1385,7 @@
       card.appendChild(repliesBox);
     }
 
-    // ===== Action button =====
+    // Action button
     if (S.isOwner && !w.isFromRecipient) {
       const actions = document.createElement('div');
       actions.className = 'bd-wish-actions';
@@ -1188,7 +1395,7 @@
         replyBtn.type = 'button';
         replyBtn.className = 'bd-reply-btn';
         const firstName = String(w.sender || '').split(' ')[0] || 'bạn';
-        replyBtn.innerHTML = '<span class="bd-reply-icon">↩️</span><span>Trả lời ' + esc(firstName) + '</span>';
+        replyBtn.innerHTML = '<span class="bd-reply-icon">↩</span><span>Trả lời ' + esc(firstName) + '</span>';
         replyBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           toggleInlineReply(w.id);
@@ -1222,7 +1429,7 @@
         <div class="bd-empty">
           <div class="bd-empty-emoji">🎂</div>
           <div class="bd-empty-title">Chưa có lời chúc nào</div>
-          <div class="bd-empty-sub">Hãy là người đầu tiên gửi lời chúc<br>đến ${esc(RECIPIENT)} nhé! 🎁</div>
+          <div class="bd-empty-sub">Hãy là người đầu tiên gửi lời chúc<br>đến ${esc(RECIPIENT)} nhé!</div>
         </div>`;
       return;
     }
@@ -1387,8 +1594,8 @@
           <div class="bd-cele-cake">🎂</div>
           <div class="bd-cele-title">Happy Birthday</div>
           <div class="bd-cele-name">${esc(RECIPIENT)}</div>
-          <div class="bd-cele-sub">🎉 Mọi người yêu thương bạn! 🎉</div>
-          <button type="button" class="bd-cele-btn" id="bdCeleClose">Tiếp tục →</button>
+          <div class="bd-cele-sub">Mọi người yêu thương bạn!</div>
+          <button type="button" class="bd-cele-btn" id="bdCeleClose">Tiếp tục</button>
         </div>`;
       document.body.appendChild(el);
       el.querySelector('#bdCeleClose').addEventListener('click', () => {
@@ -1429,10 +1636,10 @@
     modal.innerHTML = `
       <div class="bd-modal-panel" role="dialog" aria-modal="true">
         <div class="bd-modal-handle"></div>
-        <div class="bd-modal-title">🎁 Gửi lời chúc</div>
-        <div class="bd-modal-sub">Cho ${esc(RECIPIENT)} — sinh nhật 7/10 🎂</div>
+        <div class="bd-modal-title">Gửi lời chúc</div>
+        <div class="bd-modal-sub">Cho ${esc(RECIPIENT)} — sinh nhật 7/10</div>
         ${presetHtml}
-        <div class="bd-group-label">✍️ Hoặc tự viết</div>
+        <div class="bd-group-label">Hoặc tự viết</div>
         <textarea class="bd-textarea" id="bdCustomMsg" maxlength="500" placeholder="Viết lời chúc từ trái tim bạn..."></textarea>
         <div class="bd-field-row">
           <span class="bd-field-label">Gửi với tên:</span>
@@ -1440,11 +1647,11 @@
             ${namesOpts}
           </select>
         </div>
-        <div class="bd-hint" id="bdHint">🎉 Bạn đang gửi thay mặt ${esc(RECIPIENT)} — sẽ có hiệu ứng đặc biệt!</div>
+        <div class="bd-hint" id="bdHint">Bạn đang gửi thay mặt ${esc(RECIPIENT)} — sẽ có hiệu ứng đặc biệt</div>
         <div class="bd-modal-msg" id="bdModalMsg"></div>
         <div class="bd-modal-actions">
           <button type="button" class="bd-btn" id="bdModalCancel">Huỷ</button>
-          <button type="button" class="bd-btn primary" id="bdModalSend">🎁 Gửi chúc</button>
+          <button type="button" class="bd-btn primary" id="bdModalSend">Gửi chúc</button>
         </div>
       </div>
     `;
@@ -1500,21 +1707,19 @@
 
       const btn = modal.querySelector('#bdModalSend');
       btn.disabled = true;
-      btn.textContent = '⏳ Đang gửi…';
+      btn.textContent = 'Đang gửi…';
       msgEl.textContent = '';
 
       try {
         await sendWish(sender, msg, isFromRecipient, null);
-        msgEl.style.color = '#4fa370';
         msgEl.textContent = 'Đã gửi ✓';
         saveMyName(sender);
         setTimeout(close, 800);
       } catch (e) {
-        msgEl.style.color = '#e05b5b';
         msgEl.textContent = 'Lỗi: ' + (e.message || e);
       } finally {
         btn.disabled = false;
-        btn.textContent = '🎁 Gửi chúc';
+        btn.textContent = 'Gửi chúc';
       }
     });
 
@@ -1631,7 +1836,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v2.2 ready ✓');
+    log('v2.3 ready ✓');
   }
 
   if (document.readyState === 'loading') {
