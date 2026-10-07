@@ -1,7 +1,8 @@
 /* =========================================================
-   BIRTHDAY CHAT — v1.6
-   - FIX card bị cắt cụt: bỏ overflow:hidden + transform, thêm flex-shrink:0
-   - Decoration góc dùng background layer thay vì ::before
+   BIRTHDAY CHAT — v1.7
+   - FIX: chat bubble luôn bên TRÁI (kể cả user đang login)
+   - Wish Mỹ Dung: bên PHẢI + special
+   - Wish người khác: bên TRÁI
    ========================================================= */
 (function(){
   "use strict";
@@ -34,6 +35,7 @@
     { group: '💪 Ý nghĩa', text: 'Tuổi mới, chúc Mỹ Dung gặp nhiều may mắn và niềm vui bất ngờ 🍀' }
   ];
 
+  /* ============ STATE ============ */
   const S = {
     wishes: [],
     lastTs: 0,
@@ -48,6 +50,7 @@
     replyTo: null,
   };
 
+  /* ============ HELPERS ============ */
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const log = (...a) => console.log('[BD]', ...a);
@@ -88,6 +91,7 @@
     try { localStorage.setItem(LAST_PICKED_KEY, S.myName); } catch(_){}
   };
 
+  /* ============ RPC ============ */
   async function rpc(name, params, timeout) {
     const url = `${SUPABASE_URL}/rest/v1/rpc/${name}`;
     const ctrl = new AbortController();
@@ -247,7 +251,6 @@
 .bd-body::-webkit-scrollbar { width: 4px; }
 .bd-body::-webkit-scrollbar-thumb { background: rgba(255,158,199,.4); border-radius: 2px; }
 
-/* ⚡ Chống shrink mọi item trong flex column */
 .bd-body > * { flex-shrink: 0; }
 
 .bd-day-divider {
@@ -266,14 +269,12 @@
 .bd-empty-title { font-size: 15px; font-weight: 900; color: #c04a90; margin-bottom: 4px; }
 .bd-empty-sub { font-size: 12px; font-weight: 700; line-height: 1.5; }
 
-/* ===== WISH CARD ===== */
 .bd-wish {
   position: relative;
   align-self: flex-start;
   max-width: 88%;
   padding: 14px 16px 12px;
   border-radius: 18px 18px 18px 4px;
-  /* ⚡ Decoration góc dùng background layer — KHÔNG dùng ::before + overflow:hidden */
   background:
     radial-gradient(circle at 100% 0%, rgba(255,180,210,.55), transparent 30%),
     linear-gradient(140deg, #fff8fc 0%, #fff0e0 100%);
@@ -292,13 +293,11 @@
   box-shadow: 0 8px 24px -10px rgba(216,91,158,.55), 0 0 20px rgba(255,180,210,.35);
 }
 
-/* ⚡ Animation đơn giản — không scale, chỉ opacity + translateY */
 @keyframes bdWishIn {
   0% { opacity: 0; transform: translateY(10px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* ===== HEAD ===== */
 .bd-wish-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .bd-wish.me .bd-wish-head { flex-direction: row-reverse; }
 
@@ -327,7 +326,6 @@
   filter: drop-shadow(0 2px 3px rgba(216,91,158,.3));
 }
 
-/* ===== MESSAGE ===== */
 .bd-wish-message {
   font-size: 14.5px; font-weight: 650;
   line-height: 1.5; color: #4a2a3a;
@@ -342,7 +340,6 @@
   text-align: right;
 }
 
-/* ===== FOOT ===== */
 .bd-wish-foot {
   margin-top: 8px;
   padding-left: 46px;
@@ -369,13 +366,12 @@
   color: #fff;
 }
 
-/* ===== CHAT ROW ===== */
+/* ===== CHAT ROW — luôn bên trái ===== */
 .bd-chat-row {
   display: flex; gap: 8px; align-items: flex-end;
   margin-top: 4px;
   animation: bdWishIn .3s ease-out both;
 }
-.bd-chat-row.me { flex-direction: row-reverse; }
 .bd-chat-avatar {
   width: 30px; height: 30px; border-radius: 50%;
   flex: 0 0 auto;
@@ -387,9 +383,7 @@
   align-self: flex-start;
 }
 .bd-chat-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.bd-chat-row.me .bd-chat-avatar { display: none; }
 .bd-chat-wrap { max-width: 76%; display: flex; flex-direction: column; gap: 3px; }
-.bd-chat-row.me .bd-chat-wrap { align-items: flex-end; }
 .bd-chat-name {
   font-size: 11px; font-weight: 900; color: #c04a90;
   padding: 0 4px;
@@ -404,11 +398,6 @@
   line-height: 1.45;
   white-space: pre-wrap; word-break: break-word;
   box-shadow: 0 3px 10px -4px rgba(216,91,158,.2);
-}
-.bd-chat-row.me .bd-chat-bubble {
-  background: linear-gradient(135deg, #ffa5d0, #ff7db5);
-  border-color: transparent; color: #fff;
-  border-radius: 16px 16px 4px 16px;
 }
 .bd-chat-time {
   font-size: 10px; font-weight: 800; color: #c9a0b8;
@@ -936,9 +925,9 @@
         card.append(head, msg, foot);
         frag.appendChild(card);
       } else {
-        const isMe = String(w.sender || '').trim() === S.myName && S.myName;
+        // ⚡ Chat bubble — LUÔN bên trái
         const row = document.createElement('div');
-        row.className = 'bd-chat-row' + (isMe ? ' me' : '');
+        row.className = 'bd-chat-row';
 
         const av = document.createElement('div');
         av.className = 'bd-chat-avatar';
@@ -953,12 +942,10 @@
         const wrap = document.createElement('div');
         wrap.className = 'bd-chat-wrap';
 
-        if (!isMe) {
-          const nEl = document.createElement('div');
-          nEl.className = 'bd-chat-name';
-          nEl.textContent = w.sender || 'Ẩn danh';
-          wrap.appendChild(nEl);
-        }
+        const nEl = document.createElement('div');
+        nEl.className = 'bd-chat-name';
+        nEl.textContent = w.sender || 'Ẩn danh';
+        wrap.appendChild(nEl);
 
         const bub = document.createElement('div');
         bub.className = 'bd-chat-bubble';
@@ -1340,7 +1327,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v1.6 ready ✓');
+    log('v1.7 ready ✓');
   }
 
   if (document.readyState === 'loading') {
