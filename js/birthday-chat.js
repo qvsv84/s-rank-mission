@@ -1,8 +1,8 @@
 /* =========================================================
-   BIRTHDAY CHAT — v2.1
-   - Reply inline: bấm nút → input hiện ngay dưới wish
-   - Enter để gửi, Shift+Enter xuống dòng, Esc huỷ
-   - Mọi tin đều là wish card (bỏ chat bubble)
+   BIRTHDAY CHAT — v2.2
+   - Reply nằm GỌN trong card wish (nested replies)
+   - Card tự mở rộng để chứa reply
+   - Input inline cũng nằm trong card
    ========================================================= */
 (function(){
   "use strict";
@@ -243,14 +243,14 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   padding: 14px 12px 120px;
-  display: flex; flex-direction: column; gap: 8px;
+  display: flex; flex-direction: column; gap: 10px;
 }
 .bd-body::-webkit-scrollbar { width: 4px; }
 .bd-body::-webkit-scrollbar-thumb { background: rgba(255,158,199,.4); border-radius: 2px; }
 .bd-body > * { flex-shrink: 0; }
 
 .bd-day-divider {
-  align-self: center; margin: 12px 0 6px;
+  align-self: center; margin: 12px 0 4px;
   padding: 4px 14px;
   background: rgba(255,255,255,.85);
   border: 1px solid rgba(255,158,199,.35);
@@ -265,10 +265,11 @@
 .bd-empty-title { font-size: 15px; font-weight: 900; color: #c04a90; margin-bottom: 4px; }
 .bd-empty-sub { font-size: 12px; font-weight: 700; line-height: 1.5; }
 
+/* ===== WISH CARD ===== */
 .bd-wish {
   position: relative;
   align-self: flex-start;
-  max-width: 88%;
+  max-width: 92%;
   padding: 14px 16px 12px;
   border-radius: 18px 18px 18px 4px;
   background:
@@ -360,74 +361,139 @@
   color: #fff;
 }
 
-/* Nút trả lời */
+/* ===== REPLIES BLOCK — nằm trong card ===== */
+.bd-wish-replies {
+  margin-top: 12px;
+  padding-left: 46px;            /* thẳng hàng với message */
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+/* Viền trái hồng phân biệt nested */
+.bd-wish-replies::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, transparent, rgba(216,91,158,.35) 15%, rgba(216,91,158,.35) 85%, transparent);
+  border-radius: 2px;
+}
+
+/* Mỗi reply trong card */
+.bd-reply-nested {
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: linear-gradient(140deg, rgba(255,240,250,.95) 0%, rgba(255,220,240,.95) 100%);
+  border: 1px solid rgba(216,91,158,.35);
+  animation: bdWishIn .35s ease-out both;
+}
+.bd-reply-nested-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.bd-reply-nested-avatar {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: linear-gradient(135deg, #ffd6e8, #ffb0d5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 950; color: #fff;
+  border: 1.5px solid #fff;
+  overflow: hidden;
+}
+.bd-reply-nested-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bd-reply-nested-arrow {
+  font-size: 11px;
+  color: #c04a90;
+  opacity: .7;
+}
+.bd-reply-nested-name {
+  font-size: 11px; font-weight: 950;
+  color: #c04a90;
+  white-space: nowrap;
+}
+.bd-reply-nested-time {
+  margin-left: auto;
+  font-size: 9.5px; font-weight: 800;
+  color: #c9a0b8;
+}
+.bd-reply-nested-message {
+  font-size: 13px; font-weight: 650;
+  line-height: 1.45;
+  color: #4a2a3a;
+  white-space: pre-wrap; word-break: break-word;
+}
+
+/* ===== ACTION + INLINE INPUT ===== */
 .bd-wish-actions {
   margin-top: 10px;
   padding-left: 46px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
 }
+.bd-wish.me .bd-wish-actions {
+  padding-left: 0;
+  padding-right: 46px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .bd-reply-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 7px 12px;
   border-radius: 999px;
-  border: 1.5px solid rgba(216,91,158,.55);
+  border: 1.5px solid rgba(216,91,158,.5);
   background: linear-gradient(135deg, #fff5fa, #ffe6f2);
   color: #c04a90;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 950;
   letter-spacing: .02em;
   cursor: pointer;
   transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
-  box-shadow: 0 3px 10px -4px rgba(216,91,158,.35);
+  box-shadow: 0 3px 10px -4px rgba(216,91,158,.3);
 }
 .bd-reply-btn:active {
   transform: scale(.95);
   background: linear-gradient(135deg, #ffe6f2, #ffd0e5);
-  box-shadow: 0 2px 6px -2px rgba(216,91,158,.5);
 }
-.bd-reply-btn.active {
-  background: linear-gradient(135deg, #ff7db5, #c04a90);
-  color: #fff;
-  border-color: transparent;
-}
-.bd-reply-btn .bd-reply-icon { font-size: 14px; line-height: 1; }
+.bd-reply-btn .bd-reply-icon { font-size: 13px; line-height: 1; }
 
-/* ===== INLINE REPLY INPUT ===== */
+/* Inline reply input — nằm trong card */
 .bd-inline-reply {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  margin-top: 10px;
+  margin-top: 8px;
   padding-left: 46px;
   animation: bdWishIn .3s ease-out both;
 }
+.bd-wish.me .bd-inline-reply {
+  padding-left: 0;
+  padding-right: 46px;
+}
 .bd-inline-reply-wrap {
-  flex: 1;
   display: flex;
   align-items: flex-end;
-  gap: 8px;
-  padding: 6px 6px 6px 14px;
-  border-radius: 18px 18px 4px 18px;
-  background: linear-gradient(140deg, #ffe4f5 0%, #ffd0e5 100%);
+  gap: 6px;
+  padding: 6px 6px 6px 12px;
+  border-radius: 14px;
+  background: linear-gradient(140deg, rgba(255,240,250,.95), rgba(255,220,240,.95));
   border: 1.5px solid rgba(216,91,158,.5);
   box-shadow: 0 4px 12px -8px rgba(216,91,158,.4);
 }
 .bd-inline-input {
   flex: 1;
-  min-height: 28px;
-  max-height: 100px;
-  padding: 6px 0;
+  min-height: 26px;
+  max-height: 80px;
+  padding: 5px 0;
   border: 0;
   background: transparent;
   color: #4a2a3a;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 650;
   line-height: 1.4;
   outline: none;
@@ -439,13 +505,13 @@
   font-style: italic;
 }
 .bd-inline-send {
-  width: 34px; height: 34px;
+  width: 32px; height: 32px;
   flex: 0 0 auto;
   border: 0;
   border-radius: 50%;
   background: linear-gradient(135deg, #ffa5d0, #ff7db5);
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 900;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
@@ -455,13 +521,13 @@
 .bd-inline-send:active { transform: scale(.9); }
 .bd-inline-send:disabled { opacity: .4; pointer-events: none; }
 .bd-inline-cancel {
-  width: 30px; height: 30px;
+  width: 28px; height: 28px;
   flex: 0 0 auto;
   border: 0;
   border-radius: 50%;
-  background: rgba(255,255,255,.7);
+  background: rgba(255,255,255,.75);
   color: #c04a90;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 900;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
@@ -474,65 +540,9 @@
   font-size: 11px;
   font-weight: 800;
   color: #e05b5b;
-  text-align: right;
 }
 
-/* Thread */
-.bd-thread {
-  display: flex; flex-direction: column;
-  gap: 6px;
-  width: 100%;
-}
-
-/* Reply bubble */
-.bd-reply {
-  display: flex;
-  align-self: flex-end;
-  max-width: 82%;
-  margin-top: 2px;
-  animation: bdWishIn .35s ease-out both;
-}
-.bd-reply-wrap {
-  flex: 1;
-  padding: 10px 14px;
-  border-radius: 14px 14px 4px 14px;
-  background: linear-gradient(140deg, #ffe4f5 0%, #ffd0e5 100%);
-  border: 1.5px solid rgba(216,91,158,.5);
-  box-shadow: 0 4px 12px -8px rgba(216,91,158,.4);
-}
-.bd-reply-head {
-  display: flex; align-items: center; justify-content: flex-end;
-  gap: 8px;
-  margin-bottom: 5px;
-}
-.bd-reply-avatar {
-  width: 24px; height: 24px; border-radius: 50%;
-  flex: 0 0 auto;
-  background: linear-gradient(135deg, #ffd6e8, #ffb0d5);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 950; color: #fff;
-  border: 2px solid #fff;
-  overflow: hidden;
-}
-.bd-reply-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.bd-reply-name {
-  font-size: 11.5px; font-weight: 950; color: #c04a90;
-  white-space: nowrap;
-}
-.bd-reply-arrow { font-size: 12px; color: #c04a90; opacity: .7; }
-.bd-reply-message {
-  font-size: 13.5px; font-weight: 650;
-  line-height: 1.45;
-  color: #4a2a3a;
-  white-space: pre-wrap; word-break: break-word;
-  text-align: right;
-}
-.bd-reply-time {
-  margin-top: 4px;
-  font-size: 10px; font-weight: 800; color: #c9a0b8;
-  text-align: right;
-}
-
+/* Composer */
 .bd-composer {
   position: absolute; left: 0; right: 0; bottom: 0;
   z-index: 20;
@@ -939,13 +949,11 @@
     _lastRenderSig = '';
     render();
 
-    // Auto focus input
     if (S.inlineReplyToId) {
       setTimeout(() => {
         const input = document.querySelector('.bd-inline-input[data-id="' + S.inlineReplyToId + '"]');
         if (input) {
           input.focus();
-          // Scroll vào giữa màn hình
           try { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(_){}
         }
       }, 100);
@@ -964,26 +972,24 @@
     if (S.inlineSending) return;
 
     S.inlineSending = true;
-    const inputEl = document.querySelector('.bd-inline-input[data-id="' + wishId + '"]');
     const sendBtn = document.querySelector('.bd-inline-send[data-id="' + wishId + '"]');
     if (sendBtn) sendBtn.disabled = true;
 
     try {
-      // Gửi với tên Mỹ Dung (vì owner login mới có nút này)
       await sendWish(RECIPIENT, msg, true, wishId);
       S.inlineReplyToId = null;
       _lastRenderSig = '';
       render();
     } catch (e) {
       log('Reply error:', e);
+      const inputEl = document.querySelector('.bd-inline-input[data-id="' + wishId + '"]');
       if (inputEl) {
-        // Hiện lỗi nhỏ bên dưới
         let errEl = document.querySelector('.bd-inline-error[data-id="' + wishId + '"]');
         if (!errEl) {
           errEl = document.createElement('div');
           errEl.className = 'bd-inline-error';
           errEl.dataset.id = wishId;
-          inputEl.closest('.bd-inline-reply')?.parentNode?.insertBefore(errEl, inputEl.closest('.bd-inline-reply')?.nextSibling);
+          inputEl.closest('.bd-inline-reply')?.appendChild(errEl);
         }
         errEl.textContent = 'Lỗi: ' + (e.message || e);
       }
@@ -993,11 +999,10 @@
     }
   }
 
-  /* ============ REPLIES ============ */
-  function buildThreads() {
+  /* ============ BUILD CARD ============ */
+  function buildThreadsMap() {
     const topWishes = [];
     const repliesByParent = {};
-
     for (const w of S.wishes) {
       if (w.replyToId) {
         if (!repliesByParent[w.replyToId]) repliesByParent[w.replyToId] = [];
@@ -1006,36 +1011,27 @@
         topWishes.push(w);
       }
     }
-
     topWishes.sort((a, b) => a.ts - b.ts);
     Object.keys(repliesByParent).forEach(k => {
       repliesByParent[k].sort((a, b) => a.ts - b.ts);
     });
-
     return { topWishes, repliesByParent };
   }
 
-  function renderReply(reply) {
-    const row = document.createElement('div');
-    row.className = 'bd-reply';
-    row.dataset.id = reply.id;
-
-    const wrap = document.createElement('div');
-    wrap.className = 'bd-reply-wrap';
+  function renderReplyNested(reply) {
+    const box = document.createElement('div');
+    box.className = 'bd-reply-nested';
+    box.dataset.id = reply.id;
 
     const head = document.createElement('div');
-    head.className = 'bd-reply-head';
+    head.className = 'bd-reply-nested-head';
 
     const arrow = document.createElement('span');
-    arrow.className = 'bd-reply-arrow';
+    arrow.className = 'bd-reply-nested-arrow';
     arrow.textContent = '↩️';
 
-    const nameEl = document.createElement('span');
-    nameEl.className = 'bd-reply-name';
-    nameEl.textContent = reply.sender || RECIPIENT;
-
     const av = document.createElement('span');
-    av.className = 'bd-reply-avatar';
+    av.className = 'bd-reply-nested-avatar';
     const avUrl = getAvatarUrl(reply.sender);
     if (avUrl) {
       const img = document.createElement('img');
@@ -1044,20 +1040,22 @@
       av.appendChild(img);
     } else av.textContent = getInitial(reply.sender);
 
-    head.append(arrow, nameEl, av);
+    const nameEl = document.createElement('span');
+    nameEl.className = 'bd-reply-nested-name';
+    nameEl.textContent = reply.sender || RECIPIENT;
 
-    const msg = document.createElement('div');
-    msg.className = 'bd-reply-message';
-    msg.textContent = reply.message;
-
-    const timeEl = document.createElement('div');
-    timeEl.className = 'bd-reply-time';
+    const timeEl = document.createElement('span');
+    timeEl.className = 'bd-reply-nested-time';
     timeEl.textContent = formatTime(reply.ts);
 
-    wrap.append(head, msg, timeEl);
-    row.appendChild(wrap);
+    head.append(arrow, av, nameEl, timeEl);
 
-    return row;
+    const msg = document.createElement('div');
+    msg.className = 'bd-reply-nested-message';
+    msg.textContent = reply.message;
+
+    box.append(head, msg);
+    return box;
   }
 
   function renderInlineReply(w) {
@@ -1075,7 +1073,7 @@
     input.placeholder = 'Trả lời ' + (String(w.sender || '').split(' ')[0] || 'bạn') + '...';
     input.addEventListener('input', () => {
       input.style.height = 'auto';
-      input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+      input.style.height = Math.min(input.scrollHeight, 80) + 'px';
       const btn = document.querySelector('.bd-inline-send[data-id="' + w.id + '"]');
       if (btn) btn.disabled = input.value.trim().length === 0;
     });
@@ -1115,7 +1113,7 @@
     return box;
   }
 
-  function renderWishCard(w) {
+  function renderWishCard(w, replies) {
     const card = document.createElement('div');
     card.className = 'bd-wish' + (w.isFromRecipient ? ' me' : '');
     card.dataset.id = w.id;
@@ -1161,23 +1159,43 @@
 
     card.append(head, msg, foot);
 
-    // Nút reply cho owner (không trên wish của chính Mỹ Dung)
+    // ===== Replies block — NẰM TRONG CARD =====
+    const isReplying = S.inlineReplyToId === w.id;
+    const hasReplies = replies && replies.length > 0;
+
+    if (hasReplies || isReplying) {
+      const repliesBox = document.createElement('div');
+      repliesBox.className = 'bd-wish-replies';
+
+      if (hasReplies) {
+        replies.forEach(r => repliesBox.appendChild(renderReplyNested(r)));
+      }
+
+      if (isReplying) {
+        repliesBox.appendChild(renderInlineReply(w));
+      }
+
+      card.appendChild(repliesBox);
+    }
+
+    // ===== Action button =====
     if (S.isOwner && !w.isFromRecipient) {
       const actions = document.createElement('div');
       actions.className = 'bd-wish-actions';
 
-      const replyBtn = document.createElement('button');
-      replyBtn.type = 'button';
-      replyBtn.className = 'bd-reply-btn' + (S.inlineReplyToId === w.id ? ' active' : '');
-      const firstName = String(w.sender || '').split(' ')[0] || 'bạn';
-      replyBtn.innerHTML = '<span class="bd-reply-icon">↩️</span><span>Trả lời ' + esc(firstName) + '</span>';
-      replyBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleInlineReply(w.id);
-      });
-      actions.appendChild(replyBtn);
-
-      card.appendChild(actions);
+      if (!isReplying) {
+        const replyBtn = document.createElement('button');
+        replyBtn.type = 'button';
+        replyBtn.className = 'bd-reply-btn';
+        const firstName = String(w.sender || '').split(' ')[0] || 'bạn';
+        replyBtn.innerHTML = '<span class="bd-reply-icon">↩️</span><span>Trả lời ' + esc(firstName) + '</span>';
+        replyBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleInlineReply(w.id);
+        });
+        actions.appendChild(replyBtn);
+        card.appendChild(actions);
+      }
     }
 
     return card;
@@ -1209,7 +1227,7 @@
       return;
     }
 
-    const { topWishes, repliesByParent } = buildThreads();
+    const { topWishes, repliesByParent } = buildThreadsMap();
     const frag = document.createDocumentFragment();
     let lastTs = 0;
 
@@ -1221,19 +1239,8 @@
         frag.appendChild(d);
       }
 
-      const thread = document.createElement('div');
-      thread.className = 'bd-thread';
-      thread.appendChild(renderWishCard(w));
-
-      // Inline reply input nếu đang mở cho wish này
-      if (S.inlineReplyToId === w.id) {
-        thread.appendChild(renderInlineReply(w));
-      }
-
       const replies = repliesByParent[w.id] || [];
-      replies.forEach(r => thread.appendChild(renderReply(r)));
-
-      frag.appendChild(thread);
+      frag.appendChild(renderWishCard(w, replies));
 
       lastTs = w.ts;
     }
@@ -1241,7 +1248,6 @@
     body.innerHTML = '';
     body.appendChild(frag);
     requestAnimationFrame(() => {
-      // Chỉ scroll xuống cuối khi không phải đang inline reply
       if (!S.inlineReplyToId) {
         body.scrollTop = body.scrollHeight;
       }
@@ -1327,7 +1333,6 @@
 
       if (data.isFromRecipient) {
         fireConfetti(40);
-        // Chỉ celebration nếu không phải reply (tránh spam)
         if (!data.replyToId) showCelebration();
       } else {
         fireConfetti(30);
@@ -1395,7 +1400,7 @@
     fireConfetti(100);
   }
 
-  /* ============ MODAL (cho gửi lời chúc mới) ============ */
+  /* ============ MODAL ============ */
   function buildModal() {
     let modal = $('bdModal');
     if (modal) modal.remove();
@@ -1562,7 +1567,6 @@
       S.pollTimer = setTimeout(tick, POLL_MS);
       if (document.hidden) return;
       if (!S.pageOpen && S.wishes.length === 0) return;
-      // Tạm dừng poll khi đang gõ inline reply (tránh mất text)
       if (S.inlineReplyToId) return;
       fetchWishes(false);
     };
@@ -1627,7 +1631,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v2.1 ready ✓');
+    log('v2.2 ready ✓');
   }
 
   if (document.readyState === 'loading') {
