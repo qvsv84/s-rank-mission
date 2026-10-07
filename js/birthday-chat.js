@@ -1,10 +1,9 @@
 /* =========================================================
    BIRTHDAY CHAT — Chúc mừng sinh nhật Mỹ Dung (7/10)
-   - Tự ẩn nút chat cũ #secretMailBtn
-   - Tạo FAB mới 🎂 + Page full screen
-   - Load/gửi lời chúc qua Supabase RPC
-   - Polling 5s để nhận lời chúc mới
-   - Confetti khi gửi thành công
+   - Owner login (mật khẩu 0810) → nút 👑
+   - Reply wish khi owner
+   - Filter Mỹ Dung khỏi dropdown nếu không phải owner
+   - Confetti + celebration khi gửi special
    ========================================================= */
 (function(){
   "use strict";
@@ -15,11 +14,13 @@
   const SUPABASE_URL = 'https://yodvujkylnvzjybvgika.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_7D06m2x8CuBWmsUEQi3jMA_edSimUFg';
   const RECIPIENT = 'Mỹ Dung';
+  const OWNER_PASSWORD = '0810';
   const BIRTHDAY = { day: 7, month: 10 };
   const POLL_MS = 5000;
   const MAX_WISHES = 300;
   const LAST_PICKED_KEY = 'srank_last_picked_name_v1';
   const UNREAD_KEY = 'srank_birthday_unread_v1';
+  const OWNER_KEY = 'srank_birthday_owner_v1';
 
   const PRESET_WISHES = [
     { group: '🌸 Yêu thương', text: 'Chúc Mỹ Dung sinh nhật vui vẻ, luôn xinh đẹp và hạnh phúc 🎂' },
@@ -47,6 +48,8 @@
     unread: 0,
     sending: false,
     booted: false,
+    isOwner: false,
+    replyTo: null,
   };
 
   /* ============ HELPERS ============ */
@@ -88,10 +91,9 @@
   const saveMyName = n => {
     S.myName = String(n || '').trim();
     try { localStorage.setItem(LAST_PICKED_KEY, S.myName); } catch(_){}
-    updateMyAvatar();
   };
 
-  /* ============ SQL RPC CALLS ============ */
+  /* ============ RPC ============ */
   async function rpc(name, params, timeout) {
     const url = `${SUPABASE_URL}/rest/v1/rpc/${name}`;
     const ctrl = new AbortController();
@@ -122,6 +124,7 @@
   /* ============ CSS ============ */
   function injectStyles() {
     if ($('bdStyles')) return;
+
     // Ẩn nút chat cũ
     const oldStyle = document.createElement('style');
     oldStyle.id = 'bdHideOldChat';
@@ -131,29 +134,20 @@
     const style = document.createElement('style');
     style.id = 'bdStyles';
     style.textContent = `
-/* ===== FAB mới ===== */
 #bdFab {
-  position: fixed;
-  right: 18px;
+  position: fixed; right: 18px;
   bottom: max(24px, calc(18px + env(safe-area-inset-bottom)));
   z-index: 20600;
-  min-width: 120px;
-  height: 56px;
+  min-width: 120px; height: 56px;
   padding: 0 18px 0 14px;
-  border: 0;
-  border-radius: 28px;
+  border: 0; border-radius: 28px;
   background: linear-gradient(135deg, #ff7db5 0%, #e05b9e 40%, #c04a90 100%);
   color: #fff;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 950;
+  font-family: inherit; font-size: 13px; font-weight: 950;
   letter-spacing: .02em;
   display: flex; align-items: center; gap: 8px;
   cursor: pointer;
-  box-shadow:
-    0 14px 32px -8px rgba(216,91,158,.55),
-    0 4px 10px -2px rgba(140,40,100,.3),
-    inset 0 1px 0 rgba(255,255,255,.35);
+  box-shadow: 0 14px 32px -8px rgba(216,91,158,.55), 0 4px 10px -2px rgba(140,40,100,.3), inset 0 1px 0 rgba(255,255,255,.35);
   animation: bdFabPulse 2.6s ease-in-out infinite;
   transition: transform .18s ease;
 }
@@ -165,27 +159,19 @@
 }
 #bdFab .bd-fab-icon { font-size: 22px; line-height: 1; }
 #bdFab .bd-fab-badge {
-  position: absolute;
-  top: -6px; right: -6px;
-  min-width: 22px; height: 22px;
-  padding: 0 6px;
-  border-radius: 11px;
-  background: #fff;
-  color: #c04a90;
-  font-size: 11px;
-  font-weight: 950;
+  position: absolute; top: -6px; right: -6px;
+  min-width: 22px; height: 22px; padding: 0 6px;
+  border-radius: 11px; background: #fff; color: #c04a90;
+  font-size: 11px; font-weight: 950;
   display: none; align-items: center; justify-content: center;
   box-shadow: 0 4px 10px rgba(180,60,120,.4);
 }
 #bdFab .bd-fab-badge.show { display: flex; }
 
-/* ===== PAGE ===== */
 #bdPage {
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0;
   z-index: 20900;
-  display: none;
-  flex-direction: column;
+  display: none; flex-direction: column;
   background:
     radial-gradient(circle at 15% 0%, rgba(255,214,232,.55), transparent 42%),
     radial-gradient(circle at 88% 100%, rgba(255,240,200,.5), transparent 44%),
@@ -198,10 +184,8 @@
 
 .bd-head {
   flex: 0 0 auto;
-  display: grid;
-  grid-template-columns: 44px 1fr 44px;
-  align-items: center;
-  gap: 8px;
+  display: grid; grid-template-columns: 44px 1fr auto;
+  align-items: center; gap: 8px;
   padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
   background: linear-gradient(135deg, rgba(255,240,248,.97), rgba(255,250,235,.97));
   backdrop-filter: blur(20px) saturate(120%);
@@ -216,9 +200,9 @@
   border: 1.5px solid rgba(255,158,199,.4);
   border-radius: 14px;
   background: rgba(255,255,255,.9);
-  color: #c04a90;
-  font-size: 20px; font-weight: 900;
+  color: #c04a90; font-size: 20px; font-weight: 900;
   cursor: pointer;
+  transition: all .15s ease;
 }
 .bd-head-btn:active { transform: scale(.94); }
 .bd-head-center { min-width: 0; display: flex; align-items: center; gap: 10px; }
@@ -259,11 +243,9 @@
 }
 @keyframes bdPulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: .6; } }
 
-/* ===== LIST ===== */
 .bd-body {
   flex: 1 1 auto;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   padding: 14px 12px 120px;
   display: flex; flex-direction: column; gap: 8px;
@@ -272,8 +254,7 @@
 .bd-body::-webkit-scrollbar-thumb { background: rgba(255,158,199,.4); border-radius: 2px; }
 
 .bd-day-divider {
-  align-self: center;
-  margin: 12px 0 6px;
+  align-self: center; margin: 12px 0 6px;
   padding: 4px 14px;
   background: rgba(255,255,255,.85);
   border: 1px solid rgba(255,158,199,.35);
@@ -283,16 +264,11 @@
   letter-spacing: .08em; text-transform: uppercase;
 }
 
-.bd-empty {
-  padding: 60px 24px;
-  text-align: center;
-  color: #c9a0b8;
-}
+.bd-empty { padding: 60px 24px; text-align: center; color: #c9a0b8; }
 .bd-empty-emoji { font-size: 64px; margin-bottom: 10px; opacity: .7; }
 .bd-empty-title { font-size: 15px; font-weight: 900; color: #c04a90; margin-bottom: 4px; }
 .bd-empty-sub { font-size: 12px; font-weight: 700; line-height: 1.5; }
 
-/* ===== WISH CARD ===== */
 .bd-wish {
   position: relative;
   padding: 14px 16px 12px;
@@ -304,28 +280,21 @@
   overflow: hidden;
 }
 .bd-wish::before {
-  content: '';
-  position: absolute;
-  top: 0; right: 0;
-  width: 60px; height: 60px;
+  content: ''; position: absolute;
+  top: 0; right: 0; width: 60px; height: 60px;
   background: radial-gradient(circle at 100% 0%, rgba(255,180,210,.6), transparent 70%);
   pointer-events: none;
 }
 .bd-wish.from-recipient {
   background: linear-gradient(140deg, #fff0f8 0%, #ffe4c8 60%, #ffd6e8 100%);
   border-color: rgba(216,91,158,.65);
-  box-shadow:
-    0 8px 24px -10px rgba(216,91,158,.55),
-    0 0 20px rgba(255,180,210,.4);
+  box-shadow: 0 8px 24px -10px rgba(216,91,158,.55), 0 0 20px rgba(255,180,210,.4);
 }
 @keyframes bdWishIn {
   0% { opacity: 0; transform: translateY(14px) scale(.96); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
-.bd-wish-head {
-  display: flex; align-items: center; gap: 10px;
-  margin-bottom: 8px;
-}
+.bd-wish-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .bd-wish-avatar {
   width: 36px; height: 36px; border-radius: 50%;
   flex: 0 0 auto;
@@ -344,24 +313,21 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .bd-wish-icon {
-  font-size: 22px;
-  flex: 0 0 auto;
+  font-size: 22px; flex: 0 0 auto;
   filter: drop-shadow(0 2px 3px rgba(216,91,158,.3));
 }
 .bd-wish-message {
   font-size: 14.5px; font-weight: 650;
-  line-height: 1.5;
-  color: #4a2a3a;
-  white-space: pre-wrap;
-  word-break: break-word;
+  line-height: 1.5; color: #4a2a3a;
+  white-space: pre-wrap; word-break: break-word;
   padding-left: 46px;
 }
 .bd-wish-foot {
-  margin-top: 8px;
-  padding-left: 46px;
+  margin-top: 8px; padding-left: 46px;
   font-size: 10.5px; font-weight: 800;
   color: #c9a0b8;
   display: flex; align-items: center; gap: 6px;
+  flex-wrap: wrap;
 }
 .bd-wish-tag {
   padding: 1px 7px;
@@ -374,7 +340,6 @@
   color: #fff;
 }
 
-/* ===== CHAT BUBBLE (giữ cho chat thường, không phải wish) ===== */
 .bd-chat-row {
   display: flex; gap: 8px; align-items: flex-end;
   margin-top: 4px;
@@ -407,14 +372,12 @@
   font-size: 14.5px; font-weight: 650;
   color: #4a2a3a;
   line-height: 1.45;
-  white-space: pre-wrap;
-  word-break: break-word;
+  white-space: pre-wrap; word-break: break-word;
   box-shadow: 0 3px 10px -4px rgba(216,91,158,.2);
 }
 .bd-chat-row.me .bd-chat-bubble {
   background: linear-gradient(135deg, #ffa5d0, #ff7db5);
-  border-color: transparent;
-  color: #fff;
+  border-color: transparent; color: #fff;
   border-radius: 16px 16px 4px 16px;
 }
 .bd-chat-time {
@@ -422,13 +385,10 @@
   padding: 0 4px;
 }
 
-/* ===== COMPOSER ===== */
 .bd-composer {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
+  position: absolute; left: 0; right: 0; bottom: 0;
   z-index: 20;
-  display: grid;
-  grid-template-columns: 52px 1fr;
+  display: grid; grid-template-columns: 52px 1fr;
   gap: 8px;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   background: rgba(255,255,255,.97);
@@ -439,43 +399,31 @@
 }
 .bd-gift-btn {
   width: 52px; height: 52px;
-  border: 0;
-  border-radius: 16px;
+  border: 0; border-radius: 16px;
   background: linear-gradient(135deg, #ff7db5 0%, #c04a90 100%);
-  color: #fff;
-  font-size: 24px;
+  color: #fff; font-size: 24px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 6px 14px -6px rgba(216,91,158,.55);
   transition: transform .15s ease;
 }
 .bd-gift-btn:active { transform: scale(.92); }
-.bd-composer-inner {
-  display: flex; align-items: flex-end; gap: 8px;
-}
+.bd-composer-inner { display: flex; align-items: flex-end; gap: 8px; }
 .bd-input {
-  flex: 1;
-  min-height: 44px; max-height: 100px;
+  flex: 1; min-height: 44px; max-height: 100px;
   padding: 10px 14px;
   border: 1.5px solid rgba(255,158,199,.4);
   border-radius: 22px;
-  background: #fff;
-  color: #4a2a3a;
-  font-family: inherit;
-  font-size: 15px; font-weight: 650;
-  outline: none;
-  resize: none;
-  overflow-y: auto;
+  background: #fff; color: #4a2a3a;
+  font-family: inherit; font-size: 15px; font-weight: 650;
+  outline: none; resize: none; overflow-y: auto;
 }
 .bd-input:focus { border-color: #ff9ec7; box-shadow: 0 0 0 4px rgba(255,158,199,.15); }
 .bd-send-btn {
-  width: 44px; height: 44px;
-  flex: 0 0 auto;
-  border: 0;
-  border-radius: 50%;
+  width: 44px; height: 44px; flex: 0 0 auto;
+  border: 0; border-radius: 50%;
   background: linear-gradient(135deg, #ffa5d0, #ff7db5);
-  color: #fff;
-  font-size: 16px; font-weight: 900;
+  color: #fff; font-size: 16px; font-weight: 900;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 6px 14px -4px rgba(255,120,180,.5);
@@ -484,12 +432,10 @@
 .bd-send-btn:active { transform: scale(.92); }
 .bd-send-btn:disabled { opacity: .4; pointer-events: none; }
 
-/* ===== MODAL GỬI CHÚC ===== */
 #bdModal {
   position: fixed; inset: 0;
   z-index: 21100;
-  display: none;
-  align-items: flex-end; justify-content: center;
+  display: none; align-items: flex-end; justify-content: center;
   background: rgba(74,20,50,.5);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -497,9 +443,7 @@
 #bdModal.show { display: flex; animation: bdFade .22s ease; }
 @keyframes bdFade { from { opacity: 0 } to { opacity: 1 } }
 .bd-modal-panel {
-  width: 100%;
-  max-width: 560px;
-  max-height: 88vh;
+  width: 100%; max-width: 560px; max-height: 88vh;
   overflow-y: auto;
   padding: 20px 18px calc(24px + env(safe-area-inset-bottom));
   background: linear-gradient(180deg, #fff8fc 0%, #fffaf2 100%);
@@ -510,43 +454,31 @@
 }
 @keyframes bdSlideUp { to { transform: translateY(0); } }
 .bd-modal-handle {
-  width: 44px; height: 5px;
-  border-radius: 99px;
+  width: 44px; height: 5px; border-radius: 99px;
   background: rgba(216,91,158,.25);
   margin: 0 auto 16px;
 }
 .bd-modal-title {
-  font-size: 18px; font-weight: 950;
-  color: #c04a90;
-  text-align: center;
-  margin-bottom: 4px;
+  font-size: 18px; font-weight: 950; color: #c04a90;
+  text-align: center; margin-bottom: 4px;
 }
 .bd-modal-sub {
-  font-size: 12px; font-weight: 800;
-  color: #e05b9e;
-  text-align: center;
-  margin-bottom: 16px;
+  font-size: 12px; font-weight: 800; color: #e05b9e;
+  text-align: center; margin-bottom: 16px;
 }
 .bd-group-label {
-  font-size: 11px; font-weight: 950;
-  color: #c04a90;
+  font-size: 11px; font-weight: 950; color: #c04a90;
   letter-spacing: .08em; text-transform: uppercase;
   margin: 14px 0 8px 4px;
 }
 .bd-preset {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 12px 14px;
-  margin-bottom: 8px;
+  display: block; width: 100%; text-align: left;
+  padding: 12px 14px; margin-bottom: 8px;
   border: 1.5px solid rgba(255,158,199,.3);
   border-radius: 14px;
-  background: #fff;
-  color: #4a2a3a;
-  font-family: inherit;
-  font-size: 13.5px; font-weight: 700;
-  line-height: 1.4;
-  cursor: pointer;
+  background: #fff; color: #4a2a3a;
+  font-family: inherit; font-size: 13.5px; font-weight: 700;
+  line-height: 1.4; cursor: pointer;
   transition: all .15s ease;
 }
 .bd-preset:active { transform: scale(.98); }
@@ -556,17 +488,13 @@
   box-shadow: 0 4px 12px -6px rgba(216,91,158,.4);
 }
 .bd-textarea {
-  width: 100%;
-  min-height: 80px;
+  width: 100%; min-height: 80px;
   padding: 12px 14px;
   border: 1.5px solid rgba(255,158,199,.35);
   border-radius: 14px;
-  background: #fff;
-  color: #4a2a3a;
-  font-family: inherit;
-  font-size: 14.5px; font-weight: 650;
-  outline: none;
-  resize: vertical;
+  background: #fff; color: #4a2a3a;
+  font-family: inherit; font-size: 14.5px; font-weight: 650;
+  outline: none; resize: vertical;
 }
 .bd-textarea:focus { border-color: #ff9ec7; box-shadow: 0 0 0 4px rgba(255,158,199,.15); }
 .bd-field-row {
@@ -574,75 +502,57 @@
   margin-top: 14px;
 }
 .bd-field-label {
-  font-size: 12px; font-weight: 950;
-  color: #c04a90;
+  font-size: 12px; font-weight: 950; color: #c04a90;
   white-space: nowrap;
 }
 .bd-select {
-  flex: 1;
-  height: 44px;
-  padding: 0 14px;
+  flex: 1; height: 44px; padding: 0 14px;
   border: 1.5px solid rgba(255,158,199,.35);
   border-radius: 12px;
-  background: #fff;
-  color: #4a2a3a;
-  font-family: inherit;
-  font-size: 14px; font-weight: 850;
+  background: #fff; color: #4a2a3a;
+  font-family: inherit; font-size: 14px; font-weight: 850;
   outline: none;
 }
 .bd-hint {
-  margin-top: 10px;
-  padding: 10px 12px;
+  margin-top: 10px; padding: 10px 12px;
   border-radius: 12px;
   background: linear-gradient(135deg, #fff0f8, #ffe4d0);
   border: 1.5px dashed rgba(216,91,158,.4);
   font-size: 11.5px; font-weight: 800;
-  color: #c04a90;
-  text-align: center;
-  line-height: 1.45;
-  display: none;
+  color: #c04a90; text-align: center;
+  line-height: 1.45; display: none;
 }
 .bd-hint.show { display: block; animation: bdPop .3s ease; }
 @keyframes bdPop { 0% { transform: scale(.95); opacity: 0 } 100% { transform: scale(1); opacity: 1 } }
 .bd-modal-actions {
   display: grid; grid-template-columns: 1fr 1.4fr;
-  gap: 10px;
-  margin-top: 16px;
+  gap: 10px; margin-top: 16px;
 }
 .bd-btn {
-  min-height: 48px;
-  padding: 12px 16px;
+  min-height: 48px; padding: 12px 16px;
   border-radius: 14px;
-  font-family: inherit;
-  font-size: 13.5px; font-weight: 950;
+  font-family: inherit; font-size: 13.5px; font-weight: 950;
   cursor: pointer;
   border: 1.5px solid rgba(255,158,199,.4);
-  background: #fff;
-  color: #c04a90;
+  background: #fff; color: #c04a90;
   transition: transform .15s ease;
 }
 .bd-btn:active { transform: scale(.97); }
 .bd-btn.primary {
   background: linear-gradient(135deg, #ff7db5, #c04a90);
-  color: #fff;
-  border-color: transparent;
+  color: #fff; border-color: transparent;
   box-shadow: 0 8px 18px -8px rgba(216,91,158,.55);
 }
 .bd-btn:disabled { opacity: .5; pointer-events: none; }
 .bd-modal-msg {
-  min-height: 18px;
-  margin-top: 10px;
+  min-height: 18px; margin-top: 10px;
   text-align: center;
-  font-size: 12px; font-weight: 800;
-  color: #c04a90;
+  font-size: 12px; font-weight: 800; color: #c04a90;
 }
 
-/* ===== CONFETTI ===== */
 .bd-confetti {
-  position: fixed;
-  top: -20px;
-  z-index: 21400;
-  font-size: 22px;
+  position: fixed; top: -20px;
+  z-index: 21400; font-size: 22px;
   pointer-events: none;
   animation: bdConfettiFall linear forwards;
 }
@@ -651,12 +561,9 @@
   100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
 }
 
-/* ===== FULLSCREEN CELEBRATION ===== */
 #bdCelebration {
-  position: fixed; inset: 0;
-  z-index: 21300;
-  display: none;
-  align-items: center; justify-content: center;
+  position: fixed; inset: 0; z-index: 21300;
+  display: none; align-items: center; justify-content: center;
   background: radial-gradient(circle at 50% 40%, rgba(255,240,248,.98), rgba(255,220,235,.98));
   text-align: center;
 }
@@ -665,39 +572,36 @@
   padding: 20px;
   animation: bdPop 0.5s cubic-bezier(.16,.9,.25,1);
 }
-.bd-cele-cake { font-size: 96px; margin-bottom: 8px; filter: drop-shadow(0 8px 20px rgba(216,91,158,.4)); animation: bdCakeBob 1.6s ease-in-out infinite; }
+.bd-cele-cake {
+  font-size: 96px; margin-bottom: 8px;
+  filter: drop-shadow(0 8px 20px rgba(216,91,158,.4));
+  animation: bdCakeBob 1.6s ease-in-out infinite;
+}
 .bd-cele-title {
-  font-size: 28px; font-weight: 950;
-  color: #c04a90;
-  letter-spacing: -.01em;
-  margin-bottom: 6px;
+  font-size: 28px; font-weight: 950; color: #c04a90;
+  letter-spacing: -.01em; margin-bottom: 6px;
   text-shadow: 0 2px 0 rgba(255,255,255,.9);
 }
 .bd-cele-name {
   font-size: 38px; font-weight: 950;
   background: linear-gradient(135deg, #ff7db5, #c04a90, #ff7db5);
   background-size: 200% 200%;
-  -webkit-background-clip: text;
-  background-clip: text;
+  -webkit-background-clip: text; background-clip: text;
   color: transparent;
   animation: bdGradientShift 2.5s ease-in-out infinite;
-  margin-bottom: 12px;
-  letter-spacing: -.02em;
+  margin-bottom: 12px; letter-spacing: -.02em;
 }
 @keyframes bdGradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 .bd-cele-sub {
-  font-size: 14px; font-weight: 850;
-  color: #e05b9e;
+  font-size: 14px; font-weight: 850; color: #e05b9e;
   margin-bottom: 24px;
 }
 .bd-cele-btn {
   padding: 12px 28px;
-  border: 0;
-  border-radius: 999px;
+  border: 0; border-radius: 999px;
   background: linear-gradient(135deg, #ff7db5, #c04a90);
   color: #fff;
-  font-family: inherit;
-  font-size: 14px; font-weight: 950;
+  font-family: inherit; font-size: 14px; font-weight: 950;
   cursor: pointer;
   box-shadow: 0 10px 24px -8px rgba(216,91,158,.55);
 }
@@ -706,10 +610,7 @@
     document.head.appendChild(style);
   }
 
-  // Export for updateMyAvatar
-  window.__bdExports = {};
-
-  /* ============ BUILD FAB ============ */
+  /* ============ FAB ============ */
   function ensureFab() {
     let fab = $('bdFab');
     if (fab) return fab;
@@ -740,7 +641,6 @@
   function syncFabVisibility() {
     const fab = $('bdFab');
     if (!fab) return;
-    // Ẩn khi mở các overlay khác
     const otherOpen =
       $('lunchPage')?.classList.contains('show') ||
       $('quizOverlay')?.classList.contains('show') ||
@@ -753,7 +653,7 @@
     fab.classList.toggle('hidden', !!otherOpen);
   }
 
-  /* ============ BUILD PAGE ============ */
+  /* ============ PAGE ============ */
   function ensurePage() {
     let page = $('bdPage');
     if (page) return page;
@@ -775,7 +675,10 @@
             <span class="bd-head-sub"><span class="dot"></span><span id="bdWishCount">0 lời chúc</span></span>
           </div>
         </div>
-        <button type="button" class="bd-head-btn" id="bdClose" aria-label="Đóng">×</button>
+        <div style="display:flex;gap:6px;justify-content:flex-end;">
+          <button type="button" class="bd-head-btn" id="bdOwnerBtn" aria-label="Đăng nhập chính chủ">👑</button>
+          <button type="button" class="bd-head-btn" id="bdClose" aria-label="Đóng">×</button>
+        </div>
       </header>
       <div class="bd-body" id="bdBody"></div>
       <div class="bd-composer">
@@ -792,6 +695,7 @@
     page.querySelector('#bdBack').addEventListener('click', closePage);
     page.querySelector('#bdClose').addEventListener('click', closePage);
     page.querySelector('#bdGiftBtn').addEventListener('click', openModal);
+    page.querySelector('#bdOwnerBtn').addEventListener('click', loginOwner);
 
     const input = page.querySelector('#bdInput');
     const sendBtn = page.querySelector('#bdSendBtn');
@@ -811,11 +715,6 @@
       if (input.value.trim()) { sendChat(input.value); input.value = ''; refresh(); }
     });
     refresh();
-
-    // Scroll listener
-    page.querySelector('#bdBody').addEventListener('scroll', () => {
-      // No-op for MVP, but ready for jump button
-    });
 
     log('Page created ✓');
     return page;
@@ -838,8 +737,79 @@
     }
   }
 
-  function updateMyAvatar() {
-    // No composer avatar in birthday mode - use gift button instead
+  /* ============ OWNER ============ */
+  function updateOwnerBtn() {
+    const btn = $('bdOwnerBtn');
+    if (!btn) return;
+    if (S.isOwner) {
+      btn.textContent = '👑';
+      btn.style.background = 'linear-gradient(135deg,#ffd700,#ff8c00)';
+      btn.style.color = '#fff';
+      btn.style.borderColor = 'transparent';
+      btn.style.boxShadow = '0 4px 12px -4px rgba(255,140,0,.6)';
+      btn.title = 'Chính chủ đã đăng nhập — bấm để đăng xuất';
+    } else {
+      btn.textContent = '👑';
+      btn.style.background = '';
+      btn.style.color = '#c04a90';
+      btn.style.borderColor = '';
+      btn.style.boxShadow = '';
+      btn.title = 'Đăng nhập chính chủ';
+    }
+  }
+
+  function loginOwner() {
+    if (S.isOwner) {
+      if (confirm('👑 Bạn đang đăng nhập chính chủ.\n\nĐăng xuất khỏi chế độ này?')) {
+        S.isOwner = false;
+        try { localStorage.removeItem(OWNER_KEY); } catch(_){}
+        updateOwnerBtn();
+        render();
+      }
+      return;
+    }
+    const pwd = prompt('👑 Nhập mật khẩu chính chủ:');
+    if (pwd === null) return;
+    if (String(pwd).trim() === OWNER_PASSWORD) {
+      S.isOwner = true;
+      try { localStorage.setItem(OWNER_KEY, '1'); } catch(_){}
+      updateOwnerBtn();
+      render();
+      fireConfetti(40);
+      alert('👑 Đã đăng nhập chính chủ!\n\nBây giờ bạn có thể:\n• Gửi tin với tên "' + RECIPIENT + '"\n• Trả lời lời chúc của mọi người');
+    } else {
+      alert('❌ Mật khẩu không đúng');
+    }
+  }
+
+  function replyToWish(wish) {
+    S.replyTo = wish;
+    const modal = buildModal();
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+
+    const senderSel = modal.querySelector('#bdSenderSelect');
+    if (senderSel) {
+      // Đảm bảo có option Mỹ Dung
+      const hasOpt = Array.from(senderSel.options).some(o => o.value === RECIPIENT);
+      if (!hasOpt) {
+        const opt = document.createElement('option');
+        opt.value = RECIPIENT;
+        opt.textContent = RECIPIENT + ' 👑';
+        senderSel.appendChild(opt);
+      }
+      senderSel.value = RECIPIENT;
+      senderSel.dispatchEvent(new Event('change'));
+    }
+
+    const ta = modal.querySelector('#bdCustomMsg');
+    if (ta) {
+      ta.value = 'Cảm ơn ' + (wish.sender || 'bạn') + ' nhiều nha! 💕 ';
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+    }
+
+    modal.querySelectorAll('.bd-preset').forEach(b => b.classList.remove('selected'));
   }
 
   /* ============ RENDER ============ */
@@ -850,7 +820,7 @@
     const countEl = $('bdWishCount');
     if (!body) return;
 
-    const sig = S.wishes.map(w => `${w.id}|${w.ts}|${w.isFromRecipient?1:0}`).join('::');
+    const sig = S.wishes.map(w => `${w.id}|${w.ts}|${w.isFromRecipient?1:0}`).join('::') + '|' + (S.isOwner ? 'O' : 'U');
     if (sig === _lastRenderSig) return;
     _lastRenderSig = sig;
 
@@ -881,7 +851,6 @@
       const isMe = String(w.sender || '').trim() === S.myName && S.myName;
 
       if (isWish) {
-        // Wish card
         const card = document.createElement('div');
         card.className = 'bd-wish' + (w.isFromRecipient ? ' from-recipient' : '');
         card.dataset.id = w.id;
@@ -924,11 +893,22 @@
           tag.textContent = 'SPECIAL';
           foot.appendChild(tag);
         }
+        // Reply button cho owner (không hiện trên wish của chính mình)
+        if (S.isOwner && !w.isFromRecipient) {
+          const replyBtn = document.createElement('button');
+          replyBtn.type = 'button';
+          replyBtn.textContent = '↩️ Trả lời';
+          replyBtn.style.cssText = 'margin-left:auto;padding:3px 10px;border-radius:999px;border:1.5px solid rgba(216,91,158,.5);background:#fff;color:#c04a90;font-family:inherit;font-size:10.5px;font-weight:900;cursor:pointer;';
+          replyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            replyToWish(w);
+          });
+          foot.appendChild(replyBtn);
+        }
 
         card.append(head, msg, foot);
         frag.appendChild(card);
       } else {
-        // Chat bubble
         const row = document.createElement('div');
         row.className = 'bd-chat-row' + (isMe ? ' me' : '');
 
@@ -1043,12 +1023,8 @@
       S.lastTs = Math.max(S.lastTs, w.ts);
       render();
 
-      // Confetti
       fireConfetti(data.isFromRecipient ? 60 : 30);
-
-      if (data.isFromRecipient) {
-        showCelebration();
-      }
+      if (data.isFromRecipient) showCelebration();
 
       return w;
     } finally {
@@ -1109,7 +1085,7 @@
     fireConfetti(100);
   }
 
-  /* ============ MODAL GỬI CHÚC ============ */
+  /* ============ MODAL ============ */
   function buildModal() {
     let modal = $('bdModal');
     if (modal) return modal;
@@ -1128,12 +1104,14 @@
     let presetHtml = '';
     Object.keys(groups).forEach(g => {
       presetHtml += `<div class="bd-group-label">${esc(g)}</div>`;
-      groups[g].forEach((t, i) => {
+      groups[g].forEach((t) => {
         presetHtml += `<button type="button" class="bd-preset" data-text="${esc(t)}">${esc(t)}</button>`;
       });
     });
 
-    const namesOpts = getAllNames().map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    // Danh sách tên (bỏ Mỹ Dung nếu chưa login)
+    const names = getAllNames().filter(n => S.isOwner || n !== RECIPIENT);
+    const namesOpts = names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
 
     modal.innerHTML = `
       <div class="bd-modal-panel" role="dialog" aria-modal="true">
@@ -1159,7 +1137,6 @@
     `;
     document.body.appendChild(modal);
 
-    // Bind
     let selectedPreset = '';
     modal.querySelectorAll('.bd-preset').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1171,7 +1148,13 @@
     });
 
     const senderSel = modal.querySelector('#bdSenderSelect');
-    senderSel.value = S.myName || (getAllNames()[0] || '');
+    // Nếu owner → default chọn Mỹ Dung, ngược lại chọn tên của user
+    if (S.isOwner) {
+      senderSel.value = RECIPIENT;
+    } else {
+      senderSel.value = S.myName || (names[0] || '');
+    }
+
     const hintEl = modal.querySelector('#bdHint');
     const checkSender = () => {
       hintEl.classList.toggle('show', senderSel.value.trim() === RECIPIENT);
@@ -1184,6 +1167,7 @@
       modal.setAttribute('aria-hidden', 'true');
       modal.querySelector('#bdModalMsg').textContent = '';
       selectedPreset = '';
+      S.replyTo = null;
       modal.querySelectorAll('.bd-preset').forEach(b => b.classList.remove('selected'));
       modal.querySelector('#bdCustomMsg').value = '';
     };
@@ -1230,7 +1214,7 @@
     modal.setAttribute('aria-hidden', 'false');
   }
 
-  /* ============ OPEN / CLOSE PAGE ============ */
+  /* ============ OPEN / CLOSE ============ */
   function openPage() {
     const page = $('bdPage');
     if (!page) return;
@@ -1241,6 +1225,7 @@
     S.pageOpen = true;
 
     updateHeadAvatar();
+    updateOwnerBtn();
     S.unread = 0;
     try { localStorage.setItem(UNREAD_KEY, '0'); } catch(_){}
     updateFabBadge();
@@ -1266,7 +1251,7 @@
     const tick = () => {
       S.pollTimer = setTimeout(tick, POLL_MS);
       if (document.hidden) return;
-      if (!S.pageOpen && S.wishes.length === 0) return; // chỉ poll khi đã mở 1 lần
+      if (!S.pageOpen && S.wishes.length === 0) return;
       fetchWishes(false);
     };
     tick();
@@ -1286,10 +1271,14 @@
     ensurePage();
 
     S.myName = loadMyName();
-    try { S.unread = Math.max(0, Number(localStorage.getItem(UNREAD_KEY) || 0) || 0); } catch(_){}
+    try {
+      S.unread = Math.max(0, Number(localStorage.getItem(UNREAD_KEY) || 0) || 0);
+      S.isOwner = localStorage.getItem(OWNER_KEY) === '1';
+    } catch(_){}
     updateFabBadge();
+    updateOwnerBtn();
 
-    // Sync hide/show with other overlays
+    // Sync ẩn/hiện với các overlay khác
     const origSync = window.syncQuickTools;
     if (typeof origSync === 'function') {
       window.syncQuickTools = function() {
@@ -1299,12 +1288,10 @@
     }
     setInterval(syncFabVisibility, 800);
 
-    // Visibility change
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) fetchWishes(false);
     });
 
-    // Escape
     document.addEventListener('keydown', e => {
       if (e.key !== 'Escape') return;
       const modal = $('bdModal');
@@ -1321,11 +1308,10 @@
       }
     });
 
-    // Start polling after 3s
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v1.0 ready ✓');
+    log('v1.1 ready ✓');
   }
 
   if (document.readyState === 'loading') {
