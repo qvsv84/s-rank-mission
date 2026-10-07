@@ -1,20 +1,18 @@
 /* =========================================================
-   BIRTHDAY CHAT — v3.3 (Pink-Black theme, soft flame)
-   - Nền đen hồng, chữ trắng hồng
-   - Flame hồng dịu chạy quanh viền
-   - Title to nổi bật
+   BIRTHDAY CHAT — v3.4 (Pink-Black theme, soft flame)
+   - Đọc config từ window.__SRANK_CONFIG (js/config.js)
+   - Dùng __srankApi adapter thay vì fetch REST trực tiếp
    ========================================================= */
 (function(){
   "use strict";
   if (window.__birthdayChatLoaded) return;
   window.__birthdayChatLoaded = true;
 
-  const SUPABASE_URL = 'https://yodvujkylnvzjybvgika.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_7D06m2x8CuBWmsUEQi3jMA_edSimUFg';
-  const RECIPIENT = 'Mỹ Dung';
+  const CFG = window.__SRANK_CONFIG || {};
+  const RECIPIENT = CFG.BIRTHDAY_RECIPIENT || 'Mỹ Dung';
   const OWNER_PASSWORD = '0810';
-  const POLL_MS = 5000;
-  const MAX_WISHES = 300;
+  const POLL_MS = (CFG.SYNC && CFG.SYNC.BIRTHDAY_POLL) || 5000;
+  const MAX_WISHES = (CFG.CACHE && CFG.CACHE.MAX_WISHES) || 300;
   const LAST_PICKED_KEY = 'srank_last_picked_name_v1';
   const UNREAD_KEY = 'srank_birthday_unread_v1';
   const OWNER_KEY = 'srank_birthday_owner_v1';
@@ -94,31 +92,32 @@
     return arr[arr.length - 1] || 'bạn';
   };
 
+  /* =======================================================
+     rpc() — dùng __srankApi adapter (không fetch REST nữa)
+     ======================================================= */
   async function rpc(name, params, timeout) {
-    const url = `${SUPABASE_URL}/rest/v1/rpc/${name}`;
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), timeout || 12000);
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(params || {}),
-        signal: ctrl.signal
-      });
-      clearTimeout(timer);
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error('HTTP ' + res.status + ': ' + txt.slice(0, 200));
-      }
-      return await res.json();
-    } catch (e) {
-      clearTimeout(timer);
-      throw e;
+    const api = window.__srankApi || (window.SRank && window.SRank.api);
+    if (!api) throw new Error('API chưa sẵn sàng');
+
+    if (name === 'rpc_get_birthday_wishes') {
+      const r = await api('getBirthdayWishes', { since: params.p_since || 0 }, timeout || 12000);
+      if (!r || !r.ok) throw new Error(r && r.error || 'Không tải được lời chúc');
+      const d = r.data || {};
+      return Array.isArray(d) ? { wishes: d } : (d.wishes ? d : { wishes: [] });
     }
+
+    if (name === 'rpc_send_birthday_wish') {
+      const r = await api('sendBirthdayWish', {
+        sender: params.p_sender || '',
+        message: params.p_message || '',
+        isFromRecipient: !!params.p_is_from_recipient,
+        replyToId: params.p_reply_to_id || null
+      }, timeout || 15000);
+      if (!r || !r.ok) throw new Error(r && r.error || 'Không gửi được');
+      return r.data || {};
+    }
+
+    throw new Error('RPC không hỗ trợ qua adapter: ' + name);
   }
 
   /* ============ CSS — PINK BLACK THEME ============ */
@@ -238,7 +237,6 @@
 }
 #bdPage.show { display: flex; }
 
-/* Flame viền page — hồng nhạt, dịu */
 #bdPage::before {
   content: '';
   position: absolute;
@@ -296,7 +294,6 @@
   z-index: 10;
 }
 
-/* Flame dưới header — hồng nhạt */
 .bd-head::after {
   content: '';
   position: absolute;
@@ -365,7 +362,6 @@
   gap: 2px;
 }
 
-/* ⚡ Title — gradient hồng-trắng chạy */
 .bd-head-title {
   font-size: 22px;
   font-weight: 950;
@@ -570,7 +566,6 @@
     0 0 20px rgba(255,77,148,.25);
 }
 
-/* Flame chạy quanh bubble me — hồng dịu */
 .bd-card.me .bd-bubble::before {
   content: '';
   position: absolute;
@@ -599,7 +594,6 @@
   filter: drop-shadow(0 0 6px rgba(255,150,195,.55));
 }
 
-/* Shine effect khi bubble me mới xuất hiện */
 .bd-card.me .bd-bubble.shine::after {
   content: '';
   position: absolute;
@@ -1984,7 +1978,7 @@
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
 
-    log('v3.3 ready ✓');
+    log('v3.4 ready ✓');
   }
 
   if (document.readyState === 'loading') {
