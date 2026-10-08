@@ -55,7 +55,7 @@
   injectBaseCss();
 
   /* ============ DYNAMIC KEYFRAMES (dựa vào số chữ) ============ */
-  const STEP_MS = 350;  // thời gian mỗi chữ chạy
+  const STEP_MS = 180;  // thời gian mỗi chữ chạy
   let _waveStyleEl = null;
   let _waveCount = 0;
 
