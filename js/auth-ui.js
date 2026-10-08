@@ -1,6 +1,7 @@
 /* =========================================================
-   SRANK AUTH UI — v3
-   - FIX: khi login user mới, clear admin session cũ
+   SRANK AUTH UI — v4
+   - FIX: khi login → ẩn v1.07, hiện nút logout (góc trái dưới)
+   - Khi logout → ẩn nút logout, hiện lại v1.07
    - Expose SRank.openLogin cho các module khác
    ========================================================= */
 (function(){
@@ -19,6 +20,7 @@
   const submitBtn = $("loginSubmit");
   const logoutBtn = $("logoutBtn");
   const logoutName = $("logoutName");
+  const appVersion = $("appVersion");
 
   if (!question || !overlay) { console.warn("[AUTH-UI] thiếu DOM"); return; }
 
@@ -144,7 +146,7 @@
     try {
       await Auth.login(u, p);
 
-      // ✅ CLEAR admin session cũ để user mới vào chế độ user thường
+      // Clear admin session cũ để user mới vào chế độ user thường
       try {
         if (window.AdminSession && typeof window.AdminSession.clear === "function") {
           window.AdminSession.clear();
@@ -251,11 +253,15 @@
 
   function updateLogoutBtn(){
     if (currentUser){
-      logoutBtn.hidden = false;
-      logoutName.textContent = currentUser.displayName || currentUser.username || "";
+      if (logoutBtn) logoutBtn.hidden = false;
+      if (logoutName) logoutName.textContent = currentUser.displayName || currentUser.username || "";
+      // ✅ Ẩn v1.07 khi có nút logout
+      if (appVersion) appVersion.style.display = "none";
     } else {
-      logoutBtn.hidden = true;
-      logoutName.textContent = "";
+      if (logoutBtn) logoutBtn.hidden = true;
+      if (logoutName) logoutName.textContent = "";
+      // ✅ Hiện lại v1.07 khi chưa login
+      if (appVersion) appVersion.style.display = "";
     }
   }
 
@@ -264,11 +270,10 @@
     try { await Auth.logout(); } catch(_) {}
   }
 
-  logoutBtn.addEventListener("click", handleLogout);
+  if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
 
   Auth.onChange(function(user){
     if (user){
-      // Clear admin session khi có user mới login
       try {
         if (window.AdminSession && typeof window.AdminSession.clear === "function") {
           window.AdminSession.clear();
@@ -292,5 +297,5 @@
   // Expose login form cho các module khác
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v3");
+  console.log("[AUTH-UI] ready ✓ v4");
 })();
