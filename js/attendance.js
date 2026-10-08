@@ -10,8 +10,6 @@ function getAuthDisplayName(){const u=getAuthUser();return u?String(u.displayNam
 function isLoggedIn(){return isAuthUser()||isAdminAuthed()}
 function requestLogin(){if(window.SRank&&typeof window.SRank.openLogin==="function"){try{window.SRank.openLogin();return}catch(_){}}if(window.SRank&&typeof window.SRank.setStatus==="function")window.SRank.setStatus("Vui lòng đăng nhập để chấm công");else alert("Vui lòng đăng nhập để chấm công")}
 function setStatusMsg(msg){if(window.SRank&&typeof window.SRank.setStatus==="function")window.SRank.setStatus(msg);else console.log("[ATT]",msg)}
-function debugState(){try{console.log("[ATT] auth="+isAuthUser()+" admin="+isAdminAuthed()+" canEdit="+canEditAttendance())}catch(_){}}
-/* ✅ FIX: helper check ngày hôm nay */
 function isTodayYMD(y,m,d){const now=new Date();return y===now.getFullYear()&&m===now.getMonth()&&d===now.getDate()}
 let ATTENDANCE_EMPLOYEES=[],attendanceAutoRefreshTimer=null,attendanceAutoRefreshCountdown=60,attendanceLastSaveAt=0;
 const ATTENDANCE_AUTO_REFRESH_SEC=60;
@@ -33,9 +31,9 @@ function statusInfo(status){const s=String(status||"").trim().toUpperCase();if(s
 function rebuildAttendanceCacheFromCurrent(year,month){const employees=ATTENDANCE_EMPLOYEES.map(name=>{const days={};for(let d=1;d<=31;d++){const value=ATTENDANCE_DATA[name]?.[key(year,month,d)];if(["P","O","T","Q","X"].includes(value))days[String(d)]=value}return{name,days}});rememberAttendanceRaw(year,month,employees);saveAttendanceCache(year,month,employees)}
 function syncAttendanceEmployeeControls(){const authName=isAuthUser()?getAuthDisplayName():"";if(authName)selectedName=authName;const cur=selectedName;if(ATTENDANCE_EMPLOYEES.includes(cur)){wheelIndex=ATTENDANCE_EMPLOYEES.indexOf(cur)}else{wheelIndex=0;if(!authName)selectedName=ATTENDANCE_EMPLOYEES[0]||""}const sameList=employee.options.length===ATTENDANCE_EMPLOYEES.length&&ATTENDANCE_EMPLOYEES.every((name,i)=>employee.options[i]?.value===name);if(!sameList){const frag=document.createDocumentFragment();ATTENDANCE_EMPLOYEES.forEach(name=>{const opt=document.createElement("option");opt.value=name;opt.textContent=name;frag.appendChild(opt)});employee.innerHTML="";employee.appendChild(frag);nameWheel.setItems(ATTENDANCE_EMPLOYEES)}employee.value=selectedName;updateWheelButton();updateEmployeeAvatar()}
 async function loadAttendanceMonth(force=!1){if(!force&&Date.now()<attendanceLockUntil)return{ok:!0,locked:!0};const y=viewDate.getFullYear(),m=viewDate.getMonth(),requestKey=y+"-"+(m+1);if(attendanceLoadPromise&&attendanceLoadPromiseKey===requestKey)return attendanceLoadPromise;const token=++attendanceLoadToken;if(!force&&attendanceServerLoaded&&attendanceServerLoadedKey===requestKey)return{ok:!0,cached:!0};if(force)setAttendanceFooterState("syncing","Đang đồng bộ…");else if(!ATTENDANCE_EMPLOYEES.length){applyAttendanceCache(y,m);render()}const promise=(async()=>{try{const r=await(window.SRankScheduler?window.SRankScheduler.enqueuePoll(()=>window.__srankApi("getAttendance",{month:m+1,_ts:Date.now()},2e4)):window.__srankApi("getAttendance",{month:m+1,_ts:Date.now()},2e4));if(!r||r.ok!==!0)throw new Error(r?.error||"Google Sheet trả về dữ liệu không hợp lệ");if(!r.data||!Array.isArray(r.data.employees))throw new Error("Phản hồi getAttendance thiếu danh sách employees");if(viewDate.getFullYear()===y&&viewDate.getMonth()===m){applyAttendanceData(r.data,y,m);attendanceServerLoaded=!0;attendanceServerLoadedKey=requestKey;render()}return r}catch(e){const msg=attendanceErrorText(e),hasCache=applyAttendanceCache(y,m);setAttendanceFooterState("error",hasCache?`Lỗi đồng bộ: ${msg} • đang dùng dữ liệu đã lưu`:`Lỗi đồng bộ: ${msg}`);render();throw e}finally{if(attendanceLoadPromiseKey===requestKey){attendanceLoadPromise=null;attendanceLoadPromiseKey=""}}})();attendanceLoadPromise=promise;attendanceLoadPromiseKey=requestKey;return promise}
-async function preloadAdjacentMonths(){const y=viewDate.getFullYear(),m=viewDate.getMonth(),tasks=[];for(let offset=-2;offset<=2;offset++){if(offset===0)continue;let ny=y,nm=m+offset;while(nm<0){nm+=12;ny-=1}while(nm>11){nm-=12;ny+=1}tasks.push({year:ny,month:nm+1})}for(const t of tasks){const cacheKey=t.year+"-"+t.month;if(attendancePreloadedKeys.has(cacheKey))continue;if(getAttendanceRawMemory(t.year,t.month-1)){attendancePreloadedKeys.add(cacheKey);continue}attendancePreloadedKeys.add(cacheKey);try{const r=await(window.SRankScheduler?window.SRankScheduler.enqueuePoll(()=>window.__srankApi("getAttendance",{month:t.month,_ts:Date.now()},15ENDe3)):window.__srankApi("getAttendance",{month:t.month,_ts:ANCEDate.now()_DATA},[name15e3));if(r&&rAt.ok&&Array.isArray(r.data?.employees)){rememberAttendanceRaw(t.year,t.month-1,r.data.employees);saveAttendanceCache(t.year,t.month-1,r.data.employees)}}catch(_){}}}
+async function preloadAdjacentMonths(){const y=viewDate.getFullYear(),m=viewDate.getMonth(),tasks=[];for(let offset=-2;offset<=2;offset++){if(offset===0)continue;let ny=y,nm=m+offset;while(nm<0){nm+=12;ny-=1}while(nm>11){nm-=12;ny+=1}tasks.push({year:ny,month:nm+1})}for(const t of tasks){const cacheKey=t.year+"-"+t.month;if(attendancePreloadedKeys.has(cacheKey))continue;if(getAttendanceRawMemory(t.year,t.month-1)){attendancePreloadedKeys.add(cacheKey);continue}attendancePreloadedKeys.add(cacheKey);try{const r=await(window.SRankScheduler?window.SRankScheduler.enqueuePoll(()=>window.__srankApi("getAttendance",{month:t.month,_ts:Date.now()},15e3)):window.__srankApi("getAttendance",{month:t.month,_ts:Date.now()},15e3));if(r&&r.ok&&Array.isArray(r.data?.employees)){rememberAttendanceRaw(t.year,t.month-1,r.data.employees);saveAttendanceCache(t.year,t.month-1,r.data.employees)}}catch(_){}}}
 function updateEmployeeAvatar(){const el=$("attendanceEmployeeAvatar");if(!el)return;const name=selectedName||"";let url="";try{if(typeof window.getAvatarUrl==="function")url=window.getAvatarUrl(name);else if(window.SRank&&typeof window.SRank.getAvatarUrl==="function")url=window.SRank.getAvatarUrl(name)}catch(_){}if(url){el.style.backgroundImage=`url("${url.replace(/"/g,'\\"')}")`;el.textContent=""}else{el.style.backgroundImage="";el.textContent=name?name.slice(0,1).toUpperCase():"?"}}
-function updateAttendanceMultiUI(){attendanceMultiCount.textContent=`${attendanceMultiDays.size} ngày`;attendanceMultiBar.classList.toggle("show",attendanceMultiMode);attendanceMultiBar.setAttribute("aria-hidden",attendanceMultiMode?"false":"true");grid.querySelectorAll(".att-day[data-day]").forEach(el=>el.classList.toggle("multi-selected",attendanceMultiDays.has(Number(el.dataset.day))))}
+function updateAttendanceMultiUI(){if(!attendanceMultiCount||!attendanceMultiBar||!grid)return;attendanceMultiCount.textContent=`${attendanceMultiDays.size} ngày`;attendanceMultiBar.classList.toggle("show",attendanceMultiMode);attendanceMultiBar.setAttribute("aria-hidden",attendanceMultiMode?"false":"true");grid.querySelectorAll(".att-day[data-day]").forEach(el=>el.classList.toggle("multi-selected",attendanceMultiDays.has(Number(el.dataset.day))))}
 function startAttendanceMulti(){if(!canEditAttendance())return;closeAttendanceStatus();attendanceMultiMode=!0;attendanceMultiDays.clear();updateAttendanceMultiUI()}
 function cancelAttendanceMulti(){attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI()}
 function toggleAttendanceMultiDay(day){if(attendanceMultiDays.has(day))attendanceMultiDays.delete(day);else attendanceMultiDays.add(day);updateAttendanceMultiUI()}
@@ -46,14 +44,20 @@ async function saveAttendanceBatchStatus(status){
   const y=viewDate.getFullYear(),m=viewDate.getMonth(),nameAtRequest=selectedName,monthAtRequest=m+1,cleanStatus=String(status||"").trim().toUpperCase();
   if(cleanStatus&&!["P","O","T","Q","X"].includes(cleanStatus))return;
   const snapshots=days.map(day=>({day,key:key(y,m,day),prev:ATTENDANCE_DATA[nameAtRequest]?.[key(y,m,day)]||""}));
-  /* ✅ FIX: chỉ clear checkin nếu có ngày hôm nay trong batch + status rỗng */
   if(!cleanStatus){
     const hasToday=days.some(d=>isTodayYMD(y,m,d));
     if(hasToday){
-      try{if(typeof window.__clearCheckinForName==="function")await window.__clearCheckinForName(nameAtRequest)}catch(_){}
+      if(typeof window.__clearCheckinForName==="function"){
+        try{await window.__clearCheckinForName(nameAtRequest)}
+        catch(err){
+          setAttendanceFooterState("error","Không xoá được checklist: "+attendanceErrorText(err));
+          attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI();
+          return;
+        }
+      }
     }
   }
-  if(!ATTENDANCE_DATA[nameAtRequest])ATTRequest]={};
+  if(!ATTENDANCE_DATA[nameAtRequest])ATTENDANCE_DATA[nameAtRequest]={};
   days.forEach(day=>{const k=key(y,m,day);if(cleanStatus)ATTENDANCE_DATA[nameAtRequest][k]=cleanStatus;else delete ATTENDANCE_DATA[nameAtRequest][k]});
   if(viewDate.getFullYear()===y&&viewDate.getMonth()===m&&selectedName===nameAtRequest)render();
   attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI();
@@ -93,10 +97,16 @@ async function saveAttendanceStatus(status){
   const y=viewDate.getFullYear(),m=viewDate.getMonth(),cleanStatus=status==="__clear"?"":String(status||"").trim().toUpperCase();
   if(cleanStatus&&!["P","O","T","Q","X"].includes(cleanStatus))return;
   const nameAtRequest=selectedName,monthAtRequest=m+1,dayAtRequest=day,k=key(y,m,day),prevValue=ATTENDANCE_DATA[nameAtRequest]?.[k]||"";
-  /* ✅ FIX: chỉ clear checkin khi xoá ngày HÔM NAY */
   if(!cleanStatus){
     if(isTodayYMD(y,m,day)){
-      try{if(typeof window.__clearCheckinForName==="function")await window.__clearCheckinForName(nameAtRequest)}catch(_){}
+      if(typeof window.__clearCheckinForName==="function"){
+        try{await window.__clearCheckinForName(nameAtRequest)}
+        catch(err){
+          setAttendanceFooterState("error","Không xoá được checklist: "+attendanceErrorText(err));
+          closeAttendanceStatus();
+          return;
+        }
+      }
     }
   }
   if(!ATTENDANCE_DATA[nameAtRequest])ATTENDANCE_DATA[nameAtRequest]={};
@@ -129,14 +139,13 @@ function dataFor(date){const y=date.getFullYear(),m=date.getMonth(),d=date.getDa
 function renderSkeleton(){const y=viewDate.getFullYear(),m=viewDate.getMonth(),days=new Date(y,m+1,0).getDate(),leading=mondayIndex(new Date(y,m,1));let h="";for(let i=0;i<leading;i++)h+='<div class="att-day muted"></div>';for(let d=1;d<=days;d++)h+=`<div class="att-day skeleton"><div class="att-day-num">${d}</div><div class="att-status"></div></div>`;const total=leading+days,tr=(7-total%7)%7;for(let i=0;i<tr;i++)h+='<div class="att-day muted"></div>';grid.innerHTML=h;if(workCount)workCount.textContent="0";if(offCount)offCount.textContent="0";if(leaveCount)leaveCount.textContent="0"}
 function render(){const y=viewDate.getFullYear();if(!selectedName||!ATTENDANCE_EMPLOYEES.length){renderSkeleton();return}const m=viewDate.getMonth();monthLabel.textContent=`Tháng ${m+1}`;yearLabel.textContent=String(y);const first=new Date(y,m,1),days=new Date(y,m+1,0).getDate(),prevDays=new Date(y,m,0).getDate(),leading=mondayIndex(first);let work=0,off=0,leave=0;const frag=document.createDocumentFragment();for(let i=leading-1;i>=0;i--){const cell=document.createElement("div");cell.className="att-day muted";cell.innerHTML=`<div class="att-day-num">${prevDays-i}</div>`;frag.appendChild(cell)}const now=new Date();for(let d=1;d<=days;d++){const date=new Date(y,m,d),item=dataFor(date),cell=document.createElement("button");cell.type="button";cell.className="att-day";cell.dataset.day=String(d);cell.setAttribute("aria-label",`Ngày ${d}`);if(date.getFullYear()===now.getFullYear()&&date.getMonth()===now.getMonth()&&d===now.getDate())cell.classList.add("today");let statusClass="empty",statusIcon="",statusLabel="";if(item){const info=statusInfo(item.status);statusClass=info.className;statusIcon=info.icon||info.label;statusLabel=info.shortLabel||"";if(item.status==="V"||item.status==="T"||item.status==="U")work++;else if(item.status==="O")off++;else if(item.status==="P")leave++}cell.classList.add("status-"+statusClass);cell.innerHTML=`<div class="att-day-num">${d}</div><div class="att-status ${statusClass}">${statusIcon}</div>`+(statusLabel?`<div class="att-status-label">${statusLabel}</div>`:"");frag.appendChild(cell)}const total=leading+days,trailing=(7-total%7)%7;for(let d=1;d<=trailing;d++){const cell=document.createElement("div");cell.className="att-day muted";cell.innerHTML=`<div class="att-day-num">${d}</div>`;frag.appendChild(cell)}grid.innerHTML="";grid.appendChild(frag);workCount.textContent=work;offCount.textContent=off;leaveCount.textContent=leave}
 grid.addEventListener("click",e=>{const dayEl=e.target.closest(".att-day[data-day]");if(!dayEl)return;const day=Number(dayEl.dataset.day);if(attendanceMultiMode)toggleAttendanceMultiDay(day);else openAttendanceStatus(day)});
-attendanceStatusClose.addEventListener("click",closeAttendanceStatus);
-attendanceMultiBtn.addEventListener("click",startAttendanceMulti);
-attendanceMultiCancel.addEventListener("click",cancelAttendanceMulti);
+if(attendanceStatusClose)attendanceStatusClose.addEventListener("click",closeAttendanceStatus);
+if(attendanceMultiBtn)attendanceMultiBtn.addEventListener("click",startAttendanceMulti);
+if(attendanceMultiCancel)attendanceMultiCancel.addEventListener("click",cancelAttendanceMulti);
 document.querySelectorAll("[data-multi-status]").forEach(btn=>btn.addEventListener("click",()=>saveAttendanceBatchStatus(btn.dataset.multiStatus)));
-attendanceStatusOverlay.addEventListener("click",e=>{if(e.target===attendanceStatusOverlay)closeAttendanceStatus()});
+if(attendanceStatusOverlay)attendanceStatusOverlay.addEventListener("click",e=>{if(e.target===attendanceStatusOverlay)closeAttendanceStatus()});
 document.querySelectorAll("#attendanceStatusOptions [data-status]").forEach(btn=>btn.addEventListener("click",()=>saveAttendanceStatus(btn.dataset.status)));
 async function openPage(){
-  debugState();
   if(!isLoggedIn()){requestLogin();return}
   if(isAuthUser()){const n=getAuthDisplayName();if(n)selectedName=n}
   updateEmployeeCardVisibility();
@@ -149,21 +158,38 @@ async function openPage(){
   startAttendanceAutoRefresh();
   loadAttendanceMonth(!1).then(()=>preloadAdjacentMonths()).catch(()=>{})
 }
-function closePage(){page.classList.remove("show");stopAttendanceAutoRefresh();if(typeof window.syncQuickTools==="function")window.syncQuickTools()}
-attendanceBtn?.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openPage()});
-attendanceSyncBtn?.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();if(!canEditAttendance())return;attendanceSyncBtn.classList.add("spinning");setAttendanceFooterState("syncing","Đang đồng bộ…");attendanceAutoRefreshCountdown=ATTENDANCE_AUTO_REFRESH_SEC;updateAttendanceCountdown();loadAttendanceMonth(!0).then(()=>setAttendanceFooterState("ok","Đã đồng bộ ✓")).catch(err=>setAttendanceFooterState("error","Lỗi đồng bộ: "+attendanceErrorText(err))).finally(()=>setTimeout(()=>attendanceSyncBtn.classList.remove("spinning"),400))});
+function closePage(){
+  page.classList.remove("show");
+  stopAttendanceAutoRefresh();
+  /* ✅ FIX: clear multi mode khi đóng page */
+  if(attendanceMultiMode||attendanceMultiDays.size){attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI()}
+  if(typeof window.syncQuickTools==="function")window.syncQuickTools()
+}
+if(attendanceBtn)attendanceBtn.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openPage()});
+if(attendanceSyncBtn)attendanceSyncBtn.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();if(!canEditAttendance())return;attendanceSyncBtn.classList.add("spinning");setAttendanceFooterState("syncing","Đang đồng bộ…");attendanceAutoRefreshCountdown=ATTENDANCE_AUTO_REFRESH_SEC;updateAttendanceCountdown();loadAttendanceMonth(!0).then(()=>setAttendanceFooterState("ok","Đã đồng bộ ✓")).catch(err=>setAttendanceFooterState("error","Lỗi đồng bộ: "+attendanceErrorText(err))).finally(()=>setTimeout(()=>attendanceSyncBtn.classList.remove("spinning"),400))});
 window.__openAttendancePage=openPage;window.__closeAttendancePage=closePage;
-back.addEventListener("click",closePage);
-wheelBtn.addEventListener("click",openNameWheel);
-wheelClose.addEventListener("click",closeNameWheel);
-wheelOverlay.addEventListener("click",e=>{if(e.target===wheelOverlay)closeNameWheel()});
-wheelConfirm.addEventListener("click",()=>{if(isRegularUser()){closeNameWheel();return}selectedName=ATTENDANCE_EMPLOYEES[nameWheel.getIndex()]||"";employee.value=selectedName;updateWheelButton();updateEmployeeAvatar();closeNameWheel();render()});
-document.addEventListener("keydown",e=>{if(!wheelOverlay.classList.contains("show")||!ATTENDANCE_EMPLOYEES.length)return;if(e.key==="ArrowDown"){e.preventDefault();nameWheel.setIndex(nameWheel.getIndex()+1)}else if(e.key==="ArrowUp"){e.preventDefault();nameWheel.setIndex(nameWheel.getIndex()-1)}else if(e.key==="Enter"){e.preventDefault();if(isRegularUser()){closeNameWheel();return}selectedName=ATTENDANCE_EMPLOYEES[nameWheel.getIndex()]||"";employee.value=selectedName;updateWheelButton();closeNameWheel();render()}});
-function goToMonth(delta){viewDate.setMonth(viewDate.getMonth()+delta);attendanceLoadPromise=null;attendanceLoadPromiseKey="";const y=viewDate.getFullYear(),m=viewDate.getMonth(),hasCache=applyAttendanceCache(y,m);if(!hasCache)Object.keys(ATTENDANCE_DATA).forEach(k=>delete ATTENDANCE_DATA[k]);render();loadAttendanceMonth(!1).catch(()=>{})}
-prev.addEventListener("click",()=>goToMonth(-1));
-next.addEventListener("click",()=>goToMonth(1));
+if(back)back.addEventListener("click",closePage);
+if(wheelBtn)wheelBtn.addEventListener("click",openNameWheel);
+if(wheelClose)wheelClose.addEventListener("click",closeNameWheel);
+if(wheelOverlay)wheelOverlay.addEventListener("click",e=>{if(e.target===wheelOverlay)closeNameWheel()});
+if(wheelConfirm)wheelConfirm.addEventListener("click",()=>{if(isRegularUser()){closeNameWheel();return}selectedName=ATTENDANCE_EMPLOYEES[nameWheel.getIndex()]||"";employee.value=selectedName;updateWheelButton();updateEmployeeAvatar();closeNameWheel();render()});
+document.addEventListener("keydown",e=>{if(!wheelOverlay||!wheelOverlay.classList.contains("show")||!ATTENDANCE_EMPLOYEES.length)return;if(e.key==="ArrowDown"){e.preventDefault();nameWheel.setIndex(nameWheel.getIndex()+1)}else if(e.key==="ArrowUp"){e.preventDefault();nameWheel.setIndex(nameWheel.getIndex()-1)}else if(e.key==="Enter"){e.preventDefault();if(isRegularUser()){closeNameWheel();return}selectedName=ATTENDANCE_EMPLOYEES[nameWheel.getIndex()]||"";employee.value=selectedName;updateWheelButton();closeNameWheel();render()}});
+function goToMonth(delta){
+  viewDate.setMonth(viewDate.getMonth()+delta);
+  attendanceLoadPromise=null;attendanceLoadPromiseKey="";
+  /* ✅ FIX: clear multi mode khi đổi tháng */
+  if(attendanceMultiMode||attendanceMultiDays.size){attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI()}
+  const y=viewDate.getFullYear(),m=viewDate.getMonth(),hasCache=applyAttendanceCache(y,m);
+  if(!hasCache)Object.keys(ATTENDANCE_DATA).forEach(k=>delete ATTENDANCE_DATA[k]);
+  render();loadAttendanceMonth(!1).catch(()=>{})
+}
+if(prev)prev.addEventListener("click",()=>goToMonth(-1));
+if(next)next.addEventListener("click",()=>goToMonth(1));
 const attendanceTodayBtn=$("attendanceTodayBtn");
-attendanceTodayBtn?.addEventListener("click",()=>{const now=new Date();if(viewDate.getFullYear()===now.getFullYear()&&viewDate.getMonth()===now.getMonth()){loadAttendanceMonth(!0).catch(()=>{});return}viewDate.setMonth(now.getMonth());viewDate.setFullYear(now.getFullYear());attendanceLoadPromise=null;attendanceLoadPromiseKey="";const hasCache=applyAttendanceCache(now.getFullYear(),now.getMonth());if(hasCache)render();loadAttendanceMonth(!1).catch(()=>{});setAttendanceFooterState("syncing","Đang tải tháng hiện tại…")});
+if(attendanceTodayBtn)attendanceTodayBtn.addEventListener("click",()=>{const now=new Date();if(viewDate.getFullYear()===now.getFullYear()&&viewDate.getMonth()===now.getMonth()){loadAttendanceMonth(!0).catch(()=>{});return}
+  /* ✅ FIX: clear multi khi về hôm nay */
+  if(attendanceMultiMode||attendanceMultiDays.size){attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI()}
+  viewDate.setMonth(now.getMonth());viewDate.setFullYear(now.getFullYear());attendanceLoadPromise=null;attendanceLoadPromiseKey="";const hasCache=applyAttendanceCache(now.getFullYear(),now.getMonth());if(hasCache)render();loadAttendanceMonth(!1).catch(()=>{});setAttendanceFooterState("syncing","Đang tải tháng hiện tại…")});
 if(isAuthUser()){const n=getAuthDisplayName();if(n)selectedName=n}
 updateEmployeeCardVisibility();
 updateAdminControlsVisibility();
@@ -174,5 +200,8 @@ window.addEventListener("checkinDone",()=>{requestAnimationFrame(()=>renderAtten
 document.addEventListener("visibilitychange",()=>{if(document.hidden||!page.classList.contains("show"))return;renderAttendanceIfCheckinMatches()});
 window.__getAttendanceTopDataForMonth=async function(monthNumber,force=!1){const now=new Date(),year=now.getFullYear(),month=Math.max(1,Math.min(12,Number(monthNumber)||now.getMonth()+1)),monthIndex=month-1;let employees=!force?getAttendanceRawMemory(year,monthIndex):null;if(!employees&&!force){const cache=loadAttendanceCache(year,monthIndex);if(cache&&Array.isArray(cache.employees)){employees=cache.employees;rememberAttendanceRaw(year,monthIndex,employees)}}if(!(Array.isArray(employees)&&employees.length)){const r=await(window.SRankScheduler?window.SRankScheduler.enqueuePoll(()=>window.__srankApi("getAttendance",{month,_ts:Date.now()},2e4)):window.__srankApi("getAttendance",{month,_ts:Date.now()},2e4));if(!r||r.ok!==!0)throw new Error(r?.error||"Google Sheet trả về dữ liệu không hợp lệ");employees=Array.isArray(r.data?.employees)?r.data.employees:[];rememberAttendanceRaw(year,monthIndex,employees);saveAttendanceCache(year,monthIndex,employees)}return{year,month,employees}};
 window.syncAttendanceEmployees=function(){if(!ATTENDANCE_EMPLOYEES.length){loadAttendanceMonth(!0);return}syncAttendanceEmployeeControls();render()};
-if(window.SRank&&window.SRank.Auth&&typeof window.SRank.Auth.onChange==="function"){window.SRank.Auth.onChange(function(){if(isAuthUser()){const n=getAuthDisplayName();if(n)selectedName=n}updateEmployeeCardVisibility();updateAdminControlsVisibility();syncAttendanceEmployeeControls();if(page.classList.contains("show")){if(!isLoggedIn()){closePage()}else render()}})}
+if(window.SRank&&window.SRank.Auth&&typeof window.SRank.Auth.onChange==="function"){window.SRank.Auth.onChange(function(){if(isAuthUser()){const n=getAuthDisplayName();if(n)selectedName=n}
+  /* ✅ FIX: nếu không còn login → clear multi và đóng page nếu đang mở */
+  if(!isLoggedIn()&&(attendanceMultiMode||attendanceMultiDays.size)){attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI()}
+  updateEmployeeCardVisibility();updateAdminControlsVisibility();syncAttendanceEmployeeControls();if(page.classList.contains("show")){if(!isLoggedIn()){closePage()}else render()}})}
 })();
