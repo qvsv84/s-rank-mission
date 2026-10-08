@@ -11,6 +11,8 @@ function isLoggedIn(){return isAuthUser()||isAdminAuthed()}
 function requestLogin(){if(window.SRank&&typeof window.SRank.openLogin==="function"){try{window.SRank.openLogin();return}catch(_){}}if(window.SRank&&typeof window.SRank.setStatus==="function")window.SRank.setStatus("Vui lòng đăng nhập để chấm công");else alert("Vui lòng đăng nhập để chấm công")}
 function setStatusMsg(msg){if(window.SRank&&typeof window.SRank.setStatus==="function")window.SRank.setStatus(msg);else console.log("[ATT]",msg)}
 function debugState(){try{console.log("[ATT] auth="+isAuthUser()+" admin="+isAdminAuthed()+" canEdit="+canEditAttendance())}catch(_){}}
+/* ✅ FIX: helper check ngày hôm nay */
+function isTodayYMD(y,m,d){const now=new Date();return y===now.getFullYear()&&m===now.getMonth()&&d===now.getDate()}
 let ATTENDANCE_EMPLOYEES=[],attendanceAutoRefreshTimer=null,attendanceAutoRefreshCountdown=60,attendanceLastSaveAt=0;
 const ATTENDANCE_AUTO_REFRESH_SEC=60;
 function startAttendanceAutoRefresh(){stopAttendanceAutoRefresh();attendanceAutoRefreshCountdown=ATTENDANCE_AUTO_REFRESH_SEC;updateAttendanceCountdown();attendanceAutoRefreshTimer=setInterval(()=>{if(document.hidden||!page.classList.contains("show"))return;if(Date.now()-attendanceLastSaveAt<1e4){attendanceAutoRefreshCountdown=ATTENDANCE_AUTO_REFRESH_SEC;updateAttendanceCountdown();return}if(attendanceStatusOverlay.classList.contains("show")||attendanceMultiMode)return;attendanceAutoRefreshCountdown--;if(attendanceAutoRefreshCountdown<=0){attendanceAutoRefreshCountdown=ATTENDANCE_AUTO_REFRESH_SEC;loadAttendanceMonth(!0).catch(()=>{})}updateAttendanceCountdown()},1e3)}
@@ -31,13 +33,43 @@ function statusInfo(status){const s=String(status||"").trim().toUpperCase();if(s
 function rebuildAttendanceCacheFromCurrent(year,month){const employees=ATTENDANCE_EMPLOYEES.map(name=>{const days={};for(let d=1;d<=31;d++){const value=ATTENDANCE_DATA[name]?.[key(year,month,d)];if(["P","O","T","Q","X"].includes(value))days[String(d)]=value}return{name,days}});rememberAttendanceRaw(year,month,employees);saveAttendanceCache(year,month,employees)}
 function syncAttendanceEmployeeControls(){const authName=isAuthUser()?getAuthDisplayName():"";if(authName)selectedName=authName;const cur=selectedName;if(ATTENDANCE_EMPLOYEES.includes(cur)){wheelIndex=ATTENDANCE_EMPLOYEES.indexOf(cur)}else{wheelIndex=0;if(!authName)selectedName=ATTENDANCE_EMPLOYEES[0]||""}const sameList=employee.options.length===ATTENDANCE_EMPLOYEES.length&&ATTENDANCE_EMPLOYEES.every((name,i)=>employee.options[i]?.value===name);if(!sameList){const frag=document.createDocumentFragment();ATTENDANCE_EMPLOYEES.forEach(name=>{const opt=document.createElement("option");opt.value=name;opt.textContent=name;frag.appendChild(opt)});employee.innerHTML="";employee.appendChild(frag);nameWheel.setItems(ATTENDANCE_EMPLOYEES)}employee.value=selectedName;updateWheelButton();updateEmployeeAvatar()}
 async function loadAttendanceMonth(force=!1){if(!force&&Date.now()<attendanceLockUntil)return{ok:!0,locked:!0};const y=viewDate.getFullYear(),m=viewDate.getMonth(),requestKey=y+"-"+(m+1);if(attendanceLoadPromise&&attendanceLoadPromiseKey===requestKey)return attendanceLoadPromise;const token=++attendanceLoadToken;if(!force&&attendanceServerLoaded&&attendanceServerLoadedKey===requestKey)return{ok:!0,cached:!0};if(force)setAttendanceFooterState("syncing","Đang đồng bộ…");else if(!ATTENDANCE_EMPLOYEES.length){applyAttendanceCache(y,m);render()}const promise=(async()=>{try{const r=await(window.SRankScheduler?window.SRankScheduler.enqueuePoll(()=>window.__srankApi("getAttendance",{month:m+1,_ts:Date.now()},2e4)):window.__srankApi("getAttendance",{month:m+1,_ts:Date.now()},2e4));if(!r||r.ok!==!0)throw new Error(r?.error||"Google Sheet trả về dữ liệu không hợp lệ");if(!r.data||!Array.isArray(r.data.employees))throw new Error("Phản hồi getAttendance thiếu danh sách employees");if(viewDate.getFullYear()===y&&viewDate.getMonth()===m){applyAttendanceData(r.data,y,m);attendanceServerLoaded=!0;attendanceServerLoadedKey=requestKey;render()}return r}catch(e){const msg=attendanceErrorText(e),hasCache=applyAttendanceCache(y,m);setAttendanceFooterState("error",hasCache?`Lỗi đồng bộ: ${msg} • đang dùng dữ liệu đã lưu`:`Lỗi đồng bộ: ${msg}`);render();throw e}finally{if(attendanceLoadPromiseKey===requestKey){attendanceLoadPromise=null;attendanceLoadPromiseKey=""}}})();attendanceLoadPromise=promise;attendanceLoadPromiseKey=requestKey;return promise}
-async function preloadAdjacentMonths(){const y=viewDate.getFullYear(),m=viewDate.getMonth(),tasks=[];for(let offset=-2;offset<=2;offset++){if(offset===0)continue;let ny=y,nm=m+offset;while(nm<0){nm+=12;ny-=1}while(nm>11){nm-=12;ny+=1}tasks.push({year:ny,month:nm+1})}for(const t of tasks){const cacheKey=t.year+"-"+t.month;if(attendancePreloadedKeys.has(cacheKey))continue;if(getAttendanceRawMemory(t.year,t.month-1)){attendancePreloadedKeys.add(cacheKey);continue}attendancePreloadedKeys.add(cacheKey);try{const r=await(window.SRankScheduler?window.SRankScheduler.enqueuePoll(()=>window.__srankApi("getAttendance",{month:t.month,_ts:Date.now()},15e3)):window.__srankApi("getAttendance",{month:t.month,_ts:Date.now()},15e3));if(r&&r.ok&&Array.isArray(r.data?.employees)){rememberAttendanceRaw(t.year,t.month-1,r.data.employees);saveAttendanceCache(t.year,t.month-1,r.data.employees)}}catch(_){}}}
+async function preloadAdjacentMonths(){const y=viewDate.getFullYear(),m=viewDate.getMonth(),tasks=[];for(let offset=-2;offset<=2;offset++){if(offset===0)continue;let ny=y,nm=m+offset;while(nm<0){nm+=12;ny-=1}while(nm>11){nm-=12;ny+=1}tasks.push({year:ny,month:nm+1})}for(const t of tasks){const cacheKey=t.year+"-"+t.month;if(attendancePreloadedKeys.has(cacheKey))continue;if(getAttendanceRawMemory(t.year,t.month-1)){attendancePreloadedKeys.add(cacheKey);continue}attendancePreloadedKeys.add(cacheKey);try{const r=await(window.SRankScheduler?window.SRankScheduler.enqueuePoll(()=>window.__srankApi("getAttendance",{month:t.month,_ts:Date.now()},15ENDe3)):window.__srankApi("getAttendance",{month:t.month,_ts:ANCEDate.now()_DATA},[name15e3));if(r&&rAt.ok&&Array.isArray(r.data?.employees)){rememberAttendanceRaw(t.year,t.month-1,r.data.employees);saveAttendanceCache(t.year,t.month-1,r.data.employees)}}catch(_){}}}
 function updateEmployeeAvatar(){const el=$("attendanceEmployeeAvatar");if(!el)return;const name=selectedName||"";let url="";try{if(typeof window.getAvatarUrl==="function")url=window.getAvatarUrl(name);else if(window.SRank&&typeof window.SRank.getAvatarUrl==="function")url=window.SRank.getAvatarUrl(name)}catch(_){}if(url){el.style.backgroundImage=`url("${url.replace(/"/g,'\\"')}")`;el.textContent=""}else{el.style.backgroundImage="";el.textContent=name?name.slice(0,1).toUpperCase():"?"}}
 function updateAttendanceMultiUI(){attendanceMultiCount.textContent=`${attendanceMultiDays.size} ngày`;attendanceMultiBar.classList.toggle("show",attendanceMultiMode);attendanceMultiBar.setAttribute("aria-hidden",attendanceMultiMode?"false":"true");grid.querySelectorAll(".att-day[data-day]").forEach(el=>el.classList.toggle("multi-selected",attendanceMultiDays.has(Number(el.dataset.day))))}
 function startAttendanceMulti(){if(!canEditAttendance())return;closeAttendanceStatus();attendanceMultiMode=!0;attendanceMultiDays.clear();updateAttendanceMultiUI()}
 function cancelAttendanceMulti(){attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI()}
 function toggleAttendanceMultiDay(day){if(attendanceMultiDays.has(day))attendanceMultiDays.delete(day);else attendanceMultiDays.add(day);updateAttendanceMultiUI()}
-async function saveAttendanceBatchStatus(status){if(!canEditAttendance()){setStatusMsg("Chỉ admin mới sửa được chấm công");return}const days=[...attendanceMultiDays].sort((a,b)=>a-b);if(!days.length||!selectedName)return;const y=viewDate.getFullYear(),m=viewDate.getMonth(),nameAtRequest=selectedName,monthAtRequest=m+1,cleanStatus=String(status||"").trim().toUpperCase();if(cleanStatus&&!["P","O","T","Q","X"].includes(cleanStatus))return;const snapshots=days.map(day=>({day,key:key(y,m,day),prev:ATTENDANCE_DATA[nameAtRequest]?.[key(y,m,day)]||""}));if(!cleanStatus){try{if(typeof window.__clearCheckinForName==="function")await window.__clearCheckinForName(nameAtRequest)}catch(_){}}if(!ATTENDANCE_DATA[nameAtRequest])ATTENDANCE_DATA[nameAtRequest]={};days.forEach(day=>{const k=key(y,m,day);if(cleanStatus)ATTENDANCE_DATA[nameAtRequest][k]=cleanStatus;else delete ATTENDANCE_DATA[nameAtRequest][k]});if(viewDate.getFullYear()===y&&viewDate.getMonth()===m&&selectedName===nameAtRequest)render();attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI();setAttendanceFooterState("syncing",`Đang lưu ${days.length} ngày…`);attendanceLastSaveAt=Date.now();try{const r=await window.__srankApi("setAttendanceBatch",{month:monthAtRequest,days,name:nameAtRequest,status:cleanStatus},2e4);if(!r||r.ok!==!0)throw new Error(r?.error||"Không xác nhận");rebuildAttendanceCacheFromCurrent(y,m);attendanceLockUntil=Date.now()+3e3;setAttendanceFooterState("ok",`Đã lưu ${days.length} ngày ✓`)}catch(e){snapshots.forEach(s=>{if(s.prev)ATTENDANCE_DATA[nameAtRequest][s.key]=s.prev;else delete ATTENDANCE_DATA[nameAtRequest][s.key]});if(viewDate.getFullYear()===y&&viewDate.getMonth()===m&&selectedName===nameAtRequest)render();setAttendanceFooterState("error","Không lưu được: "+attendanceErrorText(e))}}
+async function saveAttendanceBatchStatus(status){
+  if(!canEditAttendance()){setStatusMsg("Chỉ admin mới sửa được chấm công");return}
+  const days=[...attendanceMultiDays].sort((a,b)=>a-b);
+  if(!days.length||!selectedName)return;
+  const y=viewDate.getFullYear(),m=viewDate.getMonth(),nameAtRequest=selectedName,monthAtRequest=m+1,cleanStatus=String(status||"").trim().toUpperCase();
+  if(cleanStatus&&!["P","O","T","Q","X"].includes(cleanStatus))return;
+  const snapshots=days.map(day=>({day,key:key(y,m,day),prev:ATTENDANCE_DATA[nameAtRequest]?.[key(y,m,day)]||""}));
+  /* ✅ FIX: chỉ clear checkin nếu có ngày hôm nay trong batch + status rỗng */
+  if(!cleanStatus){
+    const hasToday=days.some(d=>isTodayYMD(y,m,d));
+    if(hasToday){
+      try{if(typeof window.__clearCheckinForName==="function")await window.__clearCheckinForName(nameAtRequest)}catch(_){}
+    }
+  }
+  if(!ATTENDANCE_DATA[nameAtRequest])ATTRequest]={};
+  days.forEach(day=>{const k=key(y,m,day);if(cleanStatus)ATTENDANCE_DATA[nameAtRequest][k]=cleanStatus;else delete ATTENDANCE_DATA[nameAtRequest][k]});
+  if(viewDate.getFullYear()===y&&viewDate.getMonth()===m&&selectedName===nameAtRequest)render();
+  attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI();
+  setAttendanceFooterState("syncing",`Đang lưu ${days.length} ngày…`);
+  attendanceLastSaveAt=Date.now();
+  try{
+    const r=await window.__srankApi("setAttendanceBatch",{month:monthAtRequest,days,name:nameAtRequest,status:cleanStatus},2e4);
+    if(!r||r.ok!==!0)throw new Error(r?.error||"Không xác nhận");
+    rebuildAttendanceCacheFromCurrent(y,m);attendanceLockUntil=Date.now()+3e3;
+    setAttendanceFooterState("ok",`Đã lưu ${days.length} ngày ✓`)
+  }catch(e){
+    snapshots.forEach(s=>{if(s.prev)ATTENDANCE_DATA[nameAtRequest][s.key]=s.prev;else delete ATTENDANCE_DATA[nameAtRequest][s.key]});
+    if(viewDate.getFullYear()===y&&viewDate.getMonth()===m&&selectedName===nameAtRequest)render();
+    setAttendanceFooterState("error","Không lưu được: "+attendanceErrorText(e))
+  }
+}
 function openAttendanceStatus(day){
   if(!canEditAttendance()){
     const y=viewDate.getFullYear(),m=viewDate.getMonth(),cur=ATTENDANCE_DATA[selectedName]?.[key(y,m,day)]||"";
@@ -54,7 +86,36 @@ function openAttendanceStatus(day){
   attendanceStatusOverlay.setAttribute("aria-hidden","false")
 }
 function closeAttendanceStatus(){attendanceStatusOverlay.classList.remove("show");attendanceStatusOverlay.setAttribute("aria-hidden","true");attendanceEditingDay=0}
-async function saveAttendanceStatus(status){if(!canEditAttendance()){setStatusMsg("Chỉ admin mới sửa được chấm công");closeAttendanceStatus();return}const day=attendanceEditingDay;if(!day||!selectedName)return;const y=viewDate.getFullYear(),m=viewDate.getMonth(),cleanStatus=status==="__clear"?"":String(status||"").trim().toUpperCase();if(cleanStatus&&!["P","O","T","Q","X"].includes(cleanStatus))return;const nameAtRequest=selectedName,monthAtRequest=m+1,dayAtRequest=day,k=key(y,m,day),prevValue=ATTENDANCE_DATA[nameAtRequest]?.[k]||"";if(!cleanStatus){try{if(typeof window.__clearCheckinForName==="function")await window.__clearCheckinForName(nameAtRequest)}catch(_){}}if(!ATTENDANCE_DATA[nameAtRequest])ATTENDANCE_DATA[nameAtRequest]={};if(cleanStatus)ATTENDANCE_DATA[nameAtRequest][k]=cleanStatus;else delete ATTENDANCE_DATA[nameAtRequest][k];if(viewDate.getFullYear()===y&&viewDate.getMonth()===m&&selectedName===nameAtRequest)render();closeAttendanceStatus();setAttendanceFooterState("syncing","Đang lưu…");attendanceLastSaveAt=Date.now();try{const r=await window.__srankApi("setAttendance",{month:monthAtRequest,day:dayAtRequest,name:nameAtRequest,status:cleanStatus},2e4);if(!r||r.ok!==!0)throw new Error(r?.error||"Google Sheet không xác nhận");rebuildAttendanceCacheFromCurrent(y,m);attendanceLockUntil=Date.now()+3e3;setAttendanceFooterState("ok","Đã lưu ✓")}catch(e){if(prevValue)ATTENDANCE_DATA[nameAtRequest][k]=prevValue;else delete ATTENDANCE_DATA[nameAtRequest][k];if(viewDate.getFullYear()===y&&viewDate.getMonth()===m&&selectedName===nameAtRequest)render();setAttendanceFooterState("error","Không lưu được: "+attendanceErrorText(e))}}
+async function saveAttendanceStatus(status){
+  if(!canEditAttendance()){setStatusMsg("Chỉ admin mới sửa được chấm công");closeAttendanceStatus();return}
+  const day=attendanceEditingDay;
+  if(!day||!selectedName)return;
+  const y=viewDate.getFullYear(),m=viewDate.getMonth(),cleanStatus=status==="__clear"?"":String(status||"").trim().toUpperCase();
+  if(cleanStatus&&!["P","O","T","Q","X"].includes(cleanStatus))return;
+  const nameAtRequest=selectedName,monthAtRequest=m+1,dayAtRequest=day,k=key(y,m,day),prevValue=ATTENDANCE_DATA[nameAtRequest]?.[k]||"";
+  /* ✅ FIX: chỉ clear checkin khi xoá ngày HÔM NAY */
+  if(!cleanStatus){
+    if(isTodayYMD(y,m,day)){
+      try{if(typeof window.__clearCheckinForName==="function")await window.__clearCheckinForName(nameAtRequest)}catch(_){}
+    }
+  }
+  if(!ATTENDANCE_DATA[nameAtRequest])ATTENDANCE_DATA[nameAtRequest]={};
+  if(cleanStatus)ATTENDANCE_DATA[nameAtRequest][k]=cleanStatus;else delete ATTENDANCE_DATA[nameAtRequest][k];
+  if(viewDate.getFullYear()===y&&viewDate.getMonth()===m&&selectedName===nameAtRequest)render();
+  closeAttendanceStatus();
+  setAttendanceFooterState("syncing","Đang lưu…");
+  attendanceLastSaveAt=Date.now();
+  try{
+    const r=await window.__srankApi("setAttendance",{month:monthAtRequest,day:dayAtRequest,name:nameAtRequest,status:cleanStatus},2e4);
+    if(!r||r.ok!==!0)throw new Error(r?.error||"Google Sheet không xác nhận");
+    rebuildAttendanceCacheFromCurrent(y,m);attendanceLockUntil=Date.now()+3e3;
+    setAttendanceFooterState("ok","Đã lưu ✓")
+  }catch(e){
+    if(prevValue)ATTENDANCE_DATA[nameAtRequest][k]=prevValue;else delete ATTENDANCE_DATA[nameAtRequest][k];
+    if(viewDate.getFullYear()===y&&viewDate.getMonth()===m&&selectedName===nameAtRequest)render();
+    setAttendanceFooterState("error","Không lưu được: "+attendanceErrorText(e))
+  }
+}
 const viewport=$("attendanceNameWheelViewport"),itemsBox=$("attendanceNameWheelItems"),wheelOverlay=$("attendanceNameWheel"),wheelClose=$("attendanceNameWheelClose"),wheelConfirm=$("attendanceNameWheelConfirm"),wheelBtn=$("attendanceEmployeeWheelBtn"),nameWheel=window.createWheel({viewport,itemsBox,itemHeight:58,itemClass:"att-name-wheel-item"});nameWheel.attach();
 let wheelIndex=0,selectedName="";
 function buildNameWheel(){nameWheel.setItems(ATTENDANCE_EMPLOYEES)}
