@@ -1,6 +1,14 @@
 /* =========================================================
    ATTENDANCE TOP3 — 🥇🥈🥉 cho top 3 check sớm nhất
    Load SAU attendance.js
+   ---------------------------------------------------------
+   FIX v1.1:
+   - Rank 3 dùng class `att-top3rd` (đúng CSS), không phải `att-top3`
+   - Cache TTL 60s (tránh stale data)
+   - Race-condition guard (patchToken)
+   - Skip patch khi page ẩn
+   - Invalidate cache khi checkinDone
+   - Expose window.__attTop3.refresh() để force update
    ========================================================= */
 (function(){
   "use strict";
@@ -8,7 +16,11 @@
   window.__attendanceTop3Loaded = true;
 
   const CACHE = {};
+  const CACHE_TTL = 60000;
   const MEDALS = { "1": "🥇", "2": "🥈", "3": "🥉" };
+  const RANK_CLASS = { "1": "att-top1", "2": "att-top2", "3": "att-top3rd" };
+
+  let _patchToken = 0;
 
   function getApi() {
     if (window.__srankApi) return window.__srankApi;
@@ -27,25 +39,34 @@
     const lbl = document.getElementById('attendanceMonthLabel');
     if (!lbl) return 0;
     const m = String(lbl.textContent || '').match(/\d+/);
-    return m ? Number(m[0]) : 0;
+    const n = m ? Number(m[0]) : 0;
+    return (n >= 1 && n <= 12) ? n : 0;
   }
 
-  async function fetchTop3(month) {
-    if (CACHE[month]) return CACHE[month];
+  async function fetchTop3(month, force) {
+    const now = Date.now();
+    const cached = CACHE[month];
+    if (!force && cached && (now - cached.ts) < CACHE_TTL) return cached.data;
+
     const api = getApi();
     if (!api) return null;
+
     try {
       const r = await api('getAttendance', { month: month }, 12000);
       if (!r || !r.ok || !r.data || !Array.isArray(r.data.employees)) return null;
+
       const map = {};
       r.data.employees.forEach(function(e) {
-        if (e.top3Ranks && Object.keys(e.top3Ranks).length) {
+        if (e && e.top3Ranks && typeof e.top3Ranks === 'object' && Object.keys(e.top3Ranks).length) {
           map[e.name] = e.top3Ranks;
         }
       });
-      CACHE[month] = map;
+
+      CACHE[month] = { ts: now, data: map };
       return map;
-    } catch (_) { return null; }
+    } catch (_) {
+      return null;
+    }
   }
 
   function clearBadges() {
@@ -58,28 +79,41 @@
   async function patch() {
     const grid = document.getElementById('attendanceGrid');
     if (!grid) return;
+
+    const page = document.getElementById('attendancePage');
+    if (page && !page.classList.contains('show')) return;
+
     const name = getSelectedName();
     const month = getCurrentMonth();
     if (!name || !month) return;
 
-    const map = await fetchTop3(month);
+    const token = ++_patchToken;
+
+    const map = await fetchTop3(month, false);
+    if (token !== _patchToken) return;   // có patch mới hơn → bỏ
     if (!map) return;
 
     clearBadges();
+
     const ranks = map[name];
-    if (!ranks) return;
+    if (!ranks || typeof ranks !== 'object') return;
 
     grid.querySelectorAll('.att-day[data-day]').forEach(function(cell) {
       const day = String(cell.dataset.day);
       const rank = ranks[day];
       if (!rank) return;
-      const medal = MEDALS[String(rank)];
-      if (!medal) return;
 
-      cell.classList.add('att-top3', 'att-top' + rank);
+      const rankKey = String(rank);
+      const medal = MEDALS[rankKey];
+      const rankClass = RANK_CLASS[rankKey];
+      if (!medal || !rankClass) return;
+
+      cell.classList.add('att-top3', rankClass);
+
       const badge = document.createElement('span');
       badge.className = 'att-top3-badge';
       badge.textContent = medal;
+      badge.setAttribute('aria-hidden', 'true');
       cell.appendChild(badge);
     });
   }
@@ -92,6 +126,10 @@
       scheduled = false;
       patch().catch(function(){});
     });
+  }
+
+  function invalidateCache() {
+    Object.keys(CACHE).forEach(function(k) { delete CACHE[k]; });
   }
 
   function injectCss() {
@@ -128,9 +166,26 @@
     const page = document.getElementById('attendancePage');
     if (page) new MutationObserver(schedule).observe(page, { attributes: true, attributeFilter: ['class'] });
 
+    // Khi tab visible lại → refresh
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden) schedule();
+    });
+
+    // Khi checkin hoặc admin đổi dữ liệu → invalidate cache
+    window.addEventListener('checkinDone', function() {
+      invalidateCache();
+      schedule();
+    });
+
     setTimeout(schedule, 500);
     setTimeout(schedule, 1500);
     setTimeout(schedule, 3000);
+
+    // Expose để debug / manual refresh
+    window.__attTop3 = {
+      refresh: function() { invalidateCache(); schedule(); },
+      patch: patch
+    };
   }
 
   if (document.readyState === 'loading') {
