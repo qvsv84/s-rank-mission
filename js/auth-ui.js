@@ -1,8 +1,11 @@
 /* =========================================================
-   SRANK AUTH UI — v4
-   - FIX: khi login → ẩn v1.07, hiện nút logout (góc trái dưới)
-   - Khi logout → ẩn nút logout, hiện lại v1.07
-   - Expose SRank.openLogin cho các module khác
+   SRANK AUTH UI — v5
+   ---------------------------------------------------------
+   FIX v5:
+   - Kill animation của .landing-cta sau khi set xong state
+     (chặn nháy xanh khi main.js re-render mỗi 15s auto-sync)
+   - Set state = "done" → khoá animation vĩnh viễn cho element đó
+   - Set state = "idle" → cho phép animation chạy (lần đầu)
    ========================================================= */
 (function(){
   "use strict";
@@ -27,6 +30,29 @@
   let currentUser = null;
   let submitting = false;
 
+  /* ============ INJECT CSS KILL ANIMATION ============ */
+  function injectCtaFixCss(){
+    if (document.getElementById('authCtaFixCss')) return;
+    const s = document.createElement('style');
+    s.id = 'authCtaFixCss';
+    s.textContent = `
+      /* Khi CTA ở trạng thái "đã chấm" → tắt hết animation/transition */
+      .landing-cta[data-auth-state="done"],
+      .landing-cta[data-auth-state="login"] {
+        animation: none !important;
+        transition: none !important;
+      }
+      /* Khi ở trạng thái idle → cho animation chạy */
+      .landing-cta[data-auth-state="idle"] {
+        animation: inherit;
+        transition: inherit;
+      }
+    `;
+    document.head.appendChild(s);
+  }
+  injectCtaFixCss();
+
+  /* ============ HELPERS ============ */
   function isChecklistLocked(){
     try {
       const p = new Intl.DateTimeFormat("en-US",{
@@ -50,37 +76,46 @@
 
   function getCtaInfo(){
     if (isChecklistLocked()){
-      return { text: "🔒 Tạm khoá Checklist", action: "none", disabled: true };
+      return { text: "🔒 Tạm khoá Checklist", action: "none", disabled: true, state: "done" };
     }
     if (!currentUser){
-      return { text: "🔐 Đăng nhập", action: "login", disabled: false };
+      return { text: "🔐 Đăng nhập", action: "login", disabled: false, state: "login" };
     }
     const idx = findUserIndex(currentUser.displayName);
     if (idx < 0){
-      return { text: "⚠ Tên không khớp checklist", action: "none", disabled: true };
+      return { text: "⚠ Tên không khớp checklist", action: "none", disabled: true, state: "done" };
     }
     try {
       const st = window.SRank.getCurrentState ? window.SRank.getCurrentState() : null;
       if (st && st.checked && st.checked[idx] && st.times && st.times[idx]){
-        return { text: "✓ Đã chấm công (" + st.times[idx] + ")", action: "none", disabled: true };
+        return { text: "✓ Đã chấm công (" + st.times[idx] + ")", action: "none", disabled: true, state: "done" };
       }
     } catch(_) {}
-    return { text: "⏰ Chấm công", action: "checkin", disabled: false };
+    return { text: "⏰ Chấm công", action: "checkin", disabled: false, state: "idle" };
   }
 
+  /* ============ CTA UPDATE ============ */
   function updateCta(){
     const cta = question.querySelector(".landing-cta");
     if (!cta) return false;
     const info = getCtaInfo();
+
+    // Set data-attr TRƯỚC để CSS kill animation ngay frame đầu
+    // (tránh flash khi element mới được tạo lại)
+    if (cta.dataset.authState !== info.state) {
+      cta.dataset.authState = info.state;
+    }
+
     if (cta.textContent !== info.text) cta.textContent = info.text;
+
     if (info.disabled){
       if (!cta.classList.contains("locked")) cta.classList.add("locked");
-      cta.setAttribute("aria-disabled", "true");
-      cta.setAttribute("tabindex", "-1");
+      if (cta.getAttribute("aria-disabled") !== "true") cta.setAttribute("aria-disabled", "true");
+      if (cta.getAttribute("tabindex") !== "-1") cta.setAttribute("tabindex", "-1");
     } else {
       cta.classList.remove("locked");
       cta.removeAttribute("aria-disabled");
-      cta.setAttribute("tabindex", "0");
+      if (cta.getAttribute("tabindex") !== "0") cta.setAttribute("tabindex", "0");
     }
     return true;
   }
@@ -95,7 +130,10 @@
     });
   }
 
-  updateCta();
+  // Set state "login" mặc định ngay từ đầu để CSS kill animation
+  // (tránh nháy animation CLICK HERE trước khi auth-ui set)
+  setTimeout(updateCta, 0);
+
   let retryCount = 0;
   const retryTimer = setInterval(function(){
     retryCount++;
@@ -103,12 +141,29 @@
     if (retryCount >= 10) clearInterval(retryTimer);
   }, 150);
 
+  // MutationObserver — bắt mọi lần main.js tạo lại CTA
   try {
-    new MutationObserver(scheduleUpdate).observe(question, {
-      childList: true, subtree: true, characterData: true
-    });
+    new MutationObserver(function(mutations){
+      // Nếu CTA vừa bị tạo lại → set state ngay
+      let ctaJustAdded = false;
+      for (const m of mutations){
+        if (m.addedNodes && m.addedNodes.length){
+          for (const n of m.addedNodes){
+            if (n.nodeType === 1 && (n.classList?.contains?.("landing-cta") || n.querySelector?.(".landing-cta"))){
+              ctaJustAdded = true;
+              break;
+            }
+          }
+        }
+        if (ctaJustAdded) break;
+      }
+      // Set ngay không qua RAF để chặn animation frame đầu
+      if (ctaJustAdded) updateCta();
+      else scheduleUpdate();
+    }).observe(question, { childList: true, subtree: true, characterData: true });
   } catch(_) {}
 
+  /* ============ LOGIN FORM ============ */
   function openLoginForm(){
     overlay.classList.add("show");
     overlay.setAttribute("aria-hidden", "false");
@@ -145,15 +200,10 @@
 
     try {
       await Auth.login(u, p);
-
-      // Clear admin session cũ để user mới vào chế độ user thường
       try {
-        if (window.AdminSession && typeof window.AdminSession.clear === "function") {
-          window.AdminSession.clear();
-        }
+        if (window.AdminSession && typeof window.AdminSession.clear === "function") window.AdminSession.clear();
         localStorage.removeItem("srank_admin_pwd_v1");
       } catch(_) {}
-
       setMsg("Đăng nhập thành công ✓", true);
       setTimeout(closeLoginForm, 350);
     } catch(err){
@@ -167,6 +217,7 @@
     }
   }
 
+  /* ============ BURST ============ */
   function miniBurst(){
     const space = document.getElementById("space");
     if (!space) return;
@@ -191,6 +242,7 @@
     setTimeout(function(){ for (const h of hearts) h.remove(); }, 1600);
   }
 
+  /* ============ CHECKIN ============ */
   async function handleCheckin(){
     if (!currentUser) return;
     const idx = findUserIndex(currentUser.displayName);
@@ -231,6 +283,7 @@
     intercept(e);
   }, true);
 
+  /* ============ LOGIN OVERLAY EVENTS ============ */
   closeBtn.addEventListener("click", closeLoginForm);
   overlay.addEventListener("click", function(e){
     if (e.target === overlay) closeLoginForm();
@@ -251,16 +304,15 @@
     }
   }, true);
 
+  /* ============ LOGOUT BTN ============ */
   function updateLogoutBtn(){
     if (currentUser){
       if (logoutBtn) logoutBtn.hidden = false;
       if (logoutName) logoutName.textContent = currentUser.displayName || currentUser.username || "";
-      // ✅ Ẩn v1.07 khi có nút logout
       if (appVersion) appVersion.style.display = "none";
     } else {
       if (logoutBtn) logoutBtn.hidden = true;
       if (logoutName) logoutName.textContent = "";
-      // ✅ Hiện lại v1.07 khi chưa login
       if (appVersion) appVersion.style.display = "";
     }
   }
@@ -272,12 +324,11 @@
 
   if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
 
+  /* ============ AUTH CHANGE ============ */
   Auth.onChange(function(user){
     if (user){
       try {
-        if (window.AdminSession && typeof window.AdminSession.clear === "function") {
-          window.AdminSession.clear();
-        }
+        if (window.AdminSession && typeof window.AdminSession.clear === "function") window.AdminSession.clear();
         localStorage.removeItem("srank_admin_pwd_v1");
       } catch(_) {}
     }
@@ -290,12 +341,13 @@
   updateLogoutBtn();
   updateCta();
 
+  // Poll update nhẹ (để cập nhật khi checkinDone / data thay đổi)
   setInterval(function(){
     if (!document.hidden) updateCta();
-  }, 1500);
+  }, 2000);
 
-  // Expose login form cho các module khác
+  /* ============ EXPOSE ============ */
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v4");
+  console.log("[AUTH-UI] ready ✓ v5");
 })();
