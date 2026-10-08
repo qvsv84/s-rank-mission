@@ -1,6 +1,11 @@
+/* =========================================================
+   SRANK AUTH UI — v3
+   - FIX: khi login user mới, clear admin session cũ
+   - Expose SRank.openLogin cho các module khác
+   ========================================================= */
 (function(){
   "use strict";
-  
+
   const Auth = window.SRank && window.SRank.Auth;
   if (!Auth) { console.error("[AUTH-UI] SRank.Auth chưa load"); return; }
 
@@ -19,8 +24,6 @@
 
   let currentUser = null;
   let submitting = false;
-
-  /* ---------- Helpers ---------- */
 
   function isChecklistLocked(){
     try {
@@ -63,7 +66,22 @@
     return { text: "⏰ Chấm công", action: "checkin", disabled: false };
   }
 
-  /* ---------- CTA update ---------- */
+  function updateCta(){
+    const cta = question.querySelector(".landing-cta");
+    if (!cta) return false;
+    const info = getCtaInfo();
+    if (cta.textContent !== info.text) cta.textContent = info.text;
+    if (info.disabled){
+      if (!cta.classList.contains("locked")) cta.classList.add("locked");
+      cta.setAttribute("aria-disabled", "true");
+      cta.setAttribute("tabindex", "-1");
+    } else {
+      cta.classList.remove("locked");
+      cta.removeAttribute("aria-disabled");
+      cta.setAttribute("tabindex", "0");
+    }
+    return true;
+  }
 
   let _updateScheduled = false;
   function scheduleUpdate(){
@@ -75,30 +93,19 @@
     });
   }
 
-  function updateCta(){
-    const cta = question.querySelector(".landing-cta");
-    if (!cta) return;
-    const info = getCtaInfo();
-
-    if (cta.textContent !== info.text) cta.textContent = info.text;
-
-    cta.classList.toggle("locked", info.disabled);
-    if (info.disabled){
-      cta.setAttribute("aria-disabled", "true");
-      cta.setAttribute("tabindex", "-1");
-    } else {
-      cta.removeAttribute("aria-disabled");
-      cta.setAttribute("tabindex", "0");
-    }
-  }
+  updateCta();
+  let retryCount = 0;
+  const retryTimer = setInterval(function(){
+    retryCount++;
+    updateCta();
+    if (retryCount >= 10) clearInterval(retryTimer);
+  }, 150);
 
   try {
     new MutationObserver(scheduleUpdate).observe(question, {
       childList: true, subtree: true, characterData: true
     });
   } catch(_) {}
-
-  /* ---------- Login form ---------- */
 
   function openLoginForm(){
     overlay.classList.add("show");
@@ -136,6 +143,15 @@
 
     try {
       await Auth.login(u, p);
+
+      // ✅ CLEAR admin session cũ để user mới vào chế độ user thường
+      try {
+        if (window.AdminSession && typeof window.AdminSession.clear === "function") {
+          window.AdminSession.clear();
+        }
+        localStorage.removeItem("srank_admin_pwd_v1");
+      } catch(_) {}
+
       setMsg("Đăng nhập thành công ✓", true);
       setTimeout(closeLoginForm, 350);
     } catch(err){
@@ -149,8 +165,6 @@
     }
   }
 
-  /* ---------- Burst animation ---------- */
-
   function miniBurst(){
     const space = document.getElementById("space");
     if (!space) return;
@@ -158,7 +172,6 @@
     f.className = "flash";
     space.appendChild(f);
     setTimeout(function(){ f.remove(); }, 700);
-
     const hearts = [];
     for (let i = 0; i < 20; i++){
       const h = document.createElement("div");
@@ -176,8 +189,6 @@
     setTimeout(function(){ for (const h of hearts) h.remove(); }, 1600);
   }
 
-  /* ---------- Checkin ---------- */
-
   async function handleCheckin(){
     if (!currentUser) return;
     const idx = findUserIndex(currentUser.displayName);
@@ -189,9 +200,7 @@
       if (window.SRank.setStatus) window.SRank.setStatus("Chức năng chưa sẵn sàng");
       return;
     }
-
     miniBurst();
-
     try {
       await window.SRank.requestCheckin(currentUser.displayName);
       if (window.SRank.rerenderLanding) window.SRank.rerenderLanding();
@@ -201,19 +210,14 @@
     }
   }
 
-  /* ---------- Intercept CTA events ---------- */
-
   function intercept(e){
     const cta = e.target && e.target.closest ? e.target.closest(".landing-cta") : null;
     if (!cta) return;
-
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
-
     const info = getCtaInfo();
     if (info.disabled) return;
-
     if (info.action === "login") openLoginForm();
     else if (info.action === "checkin") handleCheckin();
   }
@@ -224,8 +228,6 @@
     if (e.key !== "Enter" && e.key !== " ") return;
     intercept(e);
   }, true);
-
-  /* ---------- Login overlay events ---------- */
 
   closeBtn.addEventListener("click", closeLoginForm);
   overlay.addEventListener("click", function(e){
@@ -247,8 +249,6 @@
     }
   }, true);
 
-  /* ---------- Logout button ---------- */
-
   function updateLogoutBtn(){
     if (currentUser){
       logoutBtn.hidden = false;
@@ -266,25 +266,31 @@
 
   logoutBtn.addEventListener("click", handleLogout);
 
-  /* ---------- React to auth changes ---------- */
-
   Auth.onChange(function(user){
+    if (user){
+      // Clear admin session khi có user mới login
+      try {
+        if (window.AdminSession && typeof window.AdminSession.clear === "function") {
+          window.AdminSession.clear();
+        }
+        localStorage.removeItem("srank_admin_pwd_v1");
+      } catch(_) {}
+    }
     currentUser = user;
     updateLogoutBtn();
-    scheduleUpdate();
+    updateCta();
   });
 
   currentUser = Auth.getCurrentUser();
   updateLogoutBtn();
-  scheduleUpdate();
+  updateCta();
 
-  // Cập nhật định kỳ (để reflect trạng thái đã checkin)
   setInterval(function(){
-    if (!document.hidden) scheduleUpdate();
-  }, 3000);
+    if (!document.hidden) updateCta();
+  }, 1500);
 
-  // Expose login form cho các module khác (attendance.js gọi khi chưa login)
+  // Expose login form cho các module khác
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v2");
+  console.log("[AUTH-UI] ready ✓ v3");
 })();
