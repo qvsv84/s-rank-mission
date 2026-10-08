@@ -1,11 +1,3 @@
-/* =========================================================
-   SRANK AUTH UI — Login form + CTA + Logout
-   ---------------------------------------------------------
-   - Chạy SAU main.js (cần SRank.requestCheckin / getCurrentState)
-   - Không sửa DOM tĩnh — chỉ hook vào CTA động của main.js
-   - Dùng MutationObserver update CTA khi main.js render
-   - Intercept click/pointerup/keydown trên #question (capture)
-   ========================================================= */
 (function(){
   "use strict";
 
