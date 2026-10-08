@@ -999,7 +999,7 @@
       <div class="bd-modal-panel" role="dialog" aria-modal="true">
         <div class="bd-modal-handle"></div>
         <div class="bd-modal-title">Gửi lời chúc 🎂</div>
-        <div class="bd-modal-sub">Cho ${esc(RECIPIENT)} — sinh nhật 7/10</div>
+        <div class="bd-modal-sub">Cho ${esc(RECIPIENT)} — sinh nhật 8/10</div>
         ${presetHtml}
         <div class="bd-group-label">Hoặc tự viết</div>
         <textarea class="bd-textarea" id="bdCustomMsg" maxlength="500" placeholder="Viết lời chúc từ trái tim bạn..."></textarea>
