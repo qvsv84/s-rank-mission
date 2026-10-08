@@ -1,12 +1,11 @@
 /* =========================================================
-   SRANK AUTH UI — v7.3 (CTA + kicker wave animation)
+   SRANK AUTH UI — v7.4 (CTA + sequential wave kicker)
    ---------------------------------------------------------
-   NEW v7.3:
-   - Kicker "🕶️ BOSS TỔ CHỨC ÁO ĐEN" có hiệu ứng wave
-     · Mỗi ký tự nổi lên / lặn xuống tuần tự từ trái qua phải
-     · Dùng Intl.Segmenter để tách grapheme đúng (emoji không bị vỡ)
-     · Tôn trọng prefers-reduced-motion
-   - Hook mới: window.__getKickerRender() trả về { html, text, version }
+   FIX v7.4:
+   - Wave animation TUẦN TỰ: mỗi chữ chạy xong mới đến chữ sau
+     · duration: 0.5s (CSS)
+     · step: 500ms (JS) — khớp duration → không overlap
+   - Chỉ 1 chữ động tại 1 thời điểm
    ========================================================= */
 (function(){
   "use strict";
@@ -31,7 +30,7 @@
   let currentUser = null;
   let submitting = false;
 
-  /* ============ CSS WAVE ANIMATION ============ */
+  /* ============ CSS WAVE ANIMATION — TUẦN TỰ ============ */
   function injectKickerCss(){
     if (document.getElementById('bossKickerCss')) return;
     const s = document.createElement('style');
@@ -43,15 +42,14 @@
       }
       .landing-kicker .boss-wave .bw-c {
         display: inline-block;
-        animation: bossWave 1.8s ease-in-out infinite;
+        animation: bossWave 0.5s ease-in-out infinite;
         will-change: transform;
         transform-origin: center bottom;
       }
       @keyframes bossWave {
         0%, 100% { transform: translateY(0) scale(1); }
-        20%      { transform: translateY(-6px) scale(1.12); }
-        50%      { transform: translateY(0) scale(1); }
-        70%      { transform: translateY(3px) scale(0.96); }
+        30%      { transform: translateY(-8px) scale(1.15); }
+        60%      { transform: translateY(4px) scale(0.92); }
       }
       @media (prefers-reduced-motion: reduce) {
         .landing-kicker .boss-wave .bw-c { animation: none; }
@@ -135,7 +133,8 @@
     } catch(_) {
       chars = Array.from(text);
     }
-    const step = 80;
+    /* ✅ TUẦN TỰ: step = duration = 500ms → mỗi lúc 1 chữ động */
+    const step = 500;
     const inner = chars.map((c, i) => {
       const delay = i * step;
       const ch = (c === ' ') ? '&nbsp;' : c
@@ -347,5 +346,5 @@
 
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v7.3 — CTA + wave kicker");
+  console.log("[AUTH-UI] ready ✓ v7.4 — CTA + sequential wave");
 })();
