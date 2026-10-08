@@ -1,6 +1,12 @@
 /* =========================================================
    SRANK AUTH UI — v7.1 (main.js owns CTA)
    ---------------------------------------------------------
+   ARCHITECTURE:
+   - main.js render CTA, hỏi auth qua window.__getCtaInfo()
+   - auth-ui.js CHỈ: expose hook, login form, logout
+   - Không override DOM, không MutationObserver cho CTA
+   - Khi auth đổi → gọi SRank.rerenderLanding() để main.js re-render
+   ---------------------------------------------------------
    FIX v7.1:
    - Thêm isChecklistLocked() check trong getCtaInfo()
    - Khi lock → trả {locked:true} để block click
@@ -51,11 +57,8 @@
   }
 
   /* ============ HOOK cho main.js ============ */
-  // main.js gọi function này để lấy text/state của CTA
-  // - locked=true: nút bị disable (đã chấm, tên không khớp, hoặc đã khoá)
-  // - locked=false: nút clickable
   function getCtaInfo(){
-    // ✅ v7.1: check lock trước tiên
+    // Check lock trước tiên
     if (isChecklistLocked()){
       return { text: "🔒 Tạm khoá Checklist", locked: true };
     }
@@ -75,7 +78,6 @@
     return { text: "⏰ Chấm công", locked: false };
   }
 
-  // Expose ngay để main.js dùng được
   window.__getCtaInfo = getCtaInfo;
 
   /* ============ CTA CLICK HANDLER ============ */
@@ -250,7 +252,6 @@
     currentUser = user;
     updateLogoutBtn();
 
-    // ✅ Yêu cầu main.js re-render CTA — main.js sẽ hỏi lại __getCtaInfo()
     if (window.SRank && typeof window.SRank.rerenderLanding === "function"){
       try { window.SRank.rerenderLanding(); } catch(_) {}
     }
@@ -260,7 +261,6 @@
   currentUser = Auth.getCurrentUser();
   updateLogoutBtn();
 
-  // Trigger re-render lần đầu để main.js dùng hook
   if (window.SRank && typeof window.SRank.rerenderLanding === "function"){
     try { window.SRank.rerenderLanding(); } catch(_) {}
   }
