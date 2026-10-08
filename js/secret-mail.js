@@ -1,812 +1,786 @@
 /* =========================================================
-   SECRET CHAT — Realtime version
-   - Realtime qua WebSocket, fallback polling 30s
-   - Optimistic UI khi gửi
-   - Auto-scroll + scroll-lock
-   - Grouping tin nhắn liên tiếp
-   - Avatar từ getAvatarUrl
+   BIRTHDAY CHAT — v4.2 (Auth + Scroll + Lock Zoom)
+   ---------------------------------------------------------
+   FIX v4.2:
+   - Lock zoom trong phạm vi #bdPage / #bdModal / #bdCelebration
+   - Chặn: pinch-zoom, double-tap zoom, gesturestart iOS
+   - Vẫn cho scroll dọc bình thường
    ========================================================= */
 (function(){
   "use strict";
+  if (window.__birthdayChatLoaded) return;
+  window.__birthdayChatLoaded = true;
 
-  if (window.__secretChatLoaded) return;
-  window.__secretChatLoaded = true;
+  const CFG = window.__SRANK_CONFIG || {};
+  const RECIPIENT = CFG.BIRTHDAY_RECIPIENT || 'Mỹ Dung';
+  const OWNER_PASSWORD = '0810';
+  const POLL_MS = (CFG.SYNC && CFG.SYNC.BIRTHDAY_POLL) || 5000;
+  const MAX_WISHES = (CFG.CACHE && CFG.CACHE.MAX_WISHES) || 300;
+  const LAST_PICKED_KEY = 'srank_last_picked_name_v1';
+  const UNREAD_KEY = 'srank_birthday_unread_v1';
+  const OWNER_KEY = 'srank_birthday_owner_v1';
 
-  const FALLBACK_POLL_MS   = 30000;
-  const MAX_MESSAGES       = 200;
-  const GROUP_WINDOW_MS    = 60000;
-  const LAST_PICKED_KEY    = "srank_last_picked_name_v1";
-  const UNREAD_KEY         = "srank_chat_unread_v1";
-  const MAX_TEXT_LENGTH    = 1000;
+  function getAuthUser(){try{return(window.SRank&&window.SRank.Auth&&typeof window.SRank.Auth.getCurrentUser==="function"&&window.SRank.Auth.getCurrentUser())||null}catch(_){return null}}
+  function isAdminAuthed(){try{return!!(window.AdminSession&&typeof window.AdminSession.isValid==="function"&&window.AdminSession.isValid())}catch(_){return false}}
+  function isAuthUser(){return!!getAuthUser()}
+  function canEditBirthday(){return isAuthUser()&&isAdminAuthed()}
+  function isRegularUser(){return isAuthUser()&&!canEditBirthday()}
+  function getAuthDisplayName(){const u=getAuthUser();return u?String(u.displayName||u.username||"").trim():""}
+  function isLoggedIn(){return isAuthUser()||isAdminAuthed()}
+  function isRecipientLogin(){const n=getAuthDisplayName();return!!n&&n===RECIPIENT}
+  function requestLogin(){if(window.SRank&&typeof window.SRank.openLogin==="function"){try{window.SRank.openLogin();return}catch(_){}}if(window.SRank&&typeof window.SRank.setStatus==="function")window.SRank.setStatus("Vui lòng đăng nhập");else alert("Vui lòng đăng nhập")}
 
-  const state = {
-    messages: [],
-    lastTs: 0,
-    myName: "",
-    pageOpen: false,
-    pollTimer: null,
-    pollInFlight: false,
-    isAtBottom: true,
-    unread: 0,
-    pendingSends: new Map(),
-  };
+  const PRESET_WISHES = [
+    { group: '🌸 Yêu thương', text: 'Chúc Mỹ Dung sinh nhật vui vẻ, luôn xinh đẹp và hạnh phúc 🎂' },
+    { group: '🌸 Yêu thương', text: 'Happy birthday Mỹ Dung! Tuổi mới ngập tràn yêu thương và niềm vui' },
+    { group: '🌸 Yêu thương', text: 'Chúc Mỹ Dung tuổi mới an nhiên, bình yên và tràn đầy yêu thương 🌸' },
+    { group: '🌸 Yêu thương', text: 'Chúc mừng sinh nhật! Mong Mỹ Dung mãi tỏa sáng như ánh nến lung linh ✨' },
+    { group: '😄 Vui vẻ', text: 'Sinh nhật vui vẻ! Chúc Mỹ Dung mãi mãi 18 tuổi nha 😆' },
+    { group: '😄 Vui vẻ', text: 'Happy birthday! Tuổi mới ngày càng giàu, ngày càng xinh 💖' },
+    { group: '😄 Vui vẻ', text: 'Chúc Mỹ Dung sinh nhật vui vẻ, cười tươi cả ngày nha 🥳' },
+    { group: '😄 Vui vẻ', text: 'Chúc mừng sinh nhật! Chúc Mỹ Dung năm nay đạt được mọi điều ước 🎁' },
+    { group: '💪 Ý nghĩa', text: 'Chúc Mỹ Dung tuổi mới thật nhiều sức khỏe, thành công trong công việc' },
+    { group: '💪 Ý nghĩa', text: 'Happy birthday! Mong Mỹ Dung luôn vững vàng và tỏa sáng trên mọi hành trình' },
+    { group: '💪 Ý nghĩa', text: 'Chúc mừng sinh nhật! Mong mọi điều tốt đẹp nhất sẽ đến với Mỹ Dung' },
+    { group: '💪 Ý nghĩa', text: 'Tuổi mới, chúc Mỹ Dung gặp nhiều may mắn và niềm vui bất ngờ 🍀' }
+  ];
+
+  const S = { wishes: [], lastTs: 0, myName: '', pageOpen: false, pollTimer: null, pollInFlight: false, unread: 0, sending: false, booted: false, isOwner: false, inlineReplyToId: null, inlineSending: false, seenIds: new Set() };
 
   const $ = id => document.getElementById(id);
-  const escapeHtml = s => String(s ?? "")
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const log = (...a) => console.log('[BD]', ...a);
+  const pad = n => String(n).padStart(2,'0');
+  const getInitial = n => { const s = String(n || '').trim(); return s ? s.slice(0,1).toUpperCase() : '?'; };
+  const formatTime = ts => { const d = new Date(ts); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const formatDay = ts => { const d = new Date(ts), now = new Date(); const day = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); const diff = Math.round((today - day) / 86400000); if (diff === 0) return 'Hôm nay'; if (diff === 1) return 'Hôm qua'; return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit' }).format(d); };
+  const sameDay = (a, b) => { const da = new Date(a), db = new Date(b); return da.getFullYear()===db.getFullYear() && da.getMonth()===db.getMonth() && da.getDate()===db.getDate(); };
+  const getAvatarUrl = n => { try { if (typeof window.getAvatarUrl === 'function') return window.getAvatarUrl(n) || ''; } catch(_){} return ''; };
+  const getAllNames = () => { try { const s = window.__getChecklistState && window.__getChecklistState(); if (s && Array.isArray(s.names) && s.names.length) return s.names.slice(); } catch(_){} return []; };
+  const loadMyName = () => { const authName = getAuthDisplayName(); if (authName) return authName; try { const v = String(localStorage.getItem(LAST_PICKED_KEY) || '').trim(); if (v) return v; } catch(_){} const n = getAllNames(); return n.length ? n[0] : ''; };
+  const saveMyName = n => { S.myName = String(n || '').trim(); try { localStorage.setItem(LAST_PICKED_KEY, S.myName); } catch(_){} };
+  const shortName = n => { const arr = String(n || '').trim().split(/\s+/); return arr[arr.length - 1] || 'bạn'; };
 
-  function pad(n){ return String(n).padStart(2, "0"); }
-  function formatTime(ts){
-    const d = new Date(ts);
-    return pad(d.getHours()) + ":" + pad(d.getMinutes());
-  }
-  function formatDay(ts){
-    const d = new Date(ts), now = new Date();
-    const day = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const diff = Math.round((today - day) / 86400000);
-    if (diff === 0) return "Hôm nay";
-    if (diff === 1) return "Hôm qua";
-    return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit" }).format(d);
-  }
-  function sameDay(a, b){
-    const da = new Date(a), db = new Date(b);
-    return da.getFullYear() === db.getFullYear()
-        && da.getMonth() === db.getMonth()
-        && da.getDate() === db.getDate();
-  }
-  function getInitial(name){
-    const s = String(name || "").trim();
-    return s ? s.slice(0, 1).toUpperCase() : "?";
-  }
-  function getAvatar(name){
-    try{
-      if (typeof window.getAvatarUrl === "function") return window.getAvatarUrl(name) || "";
-      if (window.SRank && typeof window.SRank.getAvatarUrl === "function") return window.SRank.getAvatarUrl(name) || "";
-    }catch(_){}
-    return "";
-  }
-  function getApi(){
-    return window.__srankApi || (window.SRank && window.SRank.api) || null;
-  }
+  /* ============ ZOOM LOCK ============ */
+  function lockZoom(scope) {
+    if (!scope || scope.__zoomLocked) return;
+    scope.__zoomLocked = true;
+    const prevent = (e) => { if (e.cancelable) e.preventDefault(); };
 
-  function loadMyName(){
-    try{
-      const saved = String(localStorage.getItem(LAST_PICKED_KEY) || "").trim();
-      if (saved) return saved;
-    }catch(_){}
-    try{
-      const s = window.__getChecklistState && window.__getChecklistState();
-      if (s && Array.isArray(s.names) && s.names.length) return s.names[0];
-    }catch(_){}
-    return "";
-  }
-  function saveMyName(name){
-    state.myName = String(name || "").trim();
-    try{ localStorage.setItem(LAST_PICKED_KEY, state.myName); }catch(_){}
-    updateComposerAvatar();
-  }
-  function getAllNames(){
-    try{
-      const s = window.__getChecklistState && window.__getChecklistState();
-      if (s && Array.isArray(s.names) && s.names.length) return s.names.slice();
-    }catch(_){}
-    return [];
+    // iOS Safari gestures (pinch qua gesture events)
+    scope.addEventListener('gesturestart', prevent, { passive: false });
+    scope.addEventListener('gesturechange', prevent, { passive: false });
+    scope.addEventListener('gestureend', prevent, { passive: false });
+
+    // Pinch bằng 2 ngón
+    scope.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 1) prevent(e);
+    }, { passive: false });
+
+    // Double-tap zoom
+    let lastTouchEnd = 0;
+    scope.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) prevent(e);
+      lastTouchEnd = now;
+    }, { passive: false });
   }
 
-  function loadUnread(){
-    try{ state.unread = Math.max(0, Number(localStorage.getItem(UNREAD_KEY) || 0) || 0); }
-    catch(_){ state.unread = 0; }
-  }
-  function saveUnread(){
-    try{ localStorage.setItem(UNREAD_KEY, String(state.unread)); }catch(_){}
-    updateFabBadge();
-  }
-  function updateFabBadge(){
-    const fab = $("secretMailBtn");
-    if (!fab) return;
-    let badge = fab.querySelector(".sc-fab-badge");
-    if (state.unread > 0 && !state.pageOpen){
-      if (!badge){
-        badge = document.createElement("span");
-        badge.className = "sc-fab-badge";
-        fab.appendChild(badge);
-      }
-      badge.textContent = state.unread > 99 ? "99+" : String(state.unread);
-    } else if (badge){
-      badge.remove();
-    }
-  }
-  function markAllSeen(){
-    if (state.unread === 0) return;
-    state.unread = 0;
-    saveUnread();
+  async function rpc(name, params, timeout) {
+    const api = window.__srankApi || (window.SRank && window.SRank.api);
+    if (!api) throw new Error('API chưa sẵn sàng');
+    if (name === 'rpc_get_birthday_wishes') { const r = await api('getBirthdayWishes', { since: params.p_since || 0 }, timeout || 12000); if (!r || !r.ok) throw new Error(r && r.error || 'Không tải được lời chúc'); const d = r.data || {}; return Array.isArray(d) ? { wishes: d } : (d.wishes ? d : { wishes: [] }); }
+    if (name === 'rpc_send_birthday_wish') { const r = await api('sendBirthdayWish', { sender: params.p_sender || '', message: params.p_message || '', isFromRecipient: !!params.p_is_from_recipient, replyToId: params.p_reply_to_id || null }, timeout || 15000); if (!r || !r.ok) throw new Error(r && r.error || 'Không gửi được'); return r.data || {}; }
+    throw new Error('RPC không hỗ trợ qua adapter: ' + name);
   }
 
-  /* ===== CSS ===== */
-  function injectStyles(){
-    if ($("secretChatStyles")) return;
-    const style = document.createElement("style");
-    style.id = "secretChatStyles";
+  /* ============ CSS ============ */
+  function injectStyles() {
+    if ($('bdStyles')) return;
+
+    const oldStyle = document.createElement('style');
+    oldStyle.id = 'bdHideOldChat';
+    oldStyle.textContent = '#secretMailBtn{display:none !important;visibility:hidden !important;pointer-events:none !important;opacity:0 !important;}';
+    document.head.appendChild(oldStyle);
+
+    const style = document.createElement('style');
+    style.id = 'bdStyles';
     style.textContent = `
-.sc-fab-badge{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:linear-gradient(135deg,#e05b9e,#f07fb5);color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(216,91,158,.42);animation:scBadgePop .32s cubic-bezier(.16,.9,.25,1)}
-@keyframes scBadgePop{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
-.secret-chat-page{position:fixed;inset:0;z-index:20500;display:none;flex-direction:column;background:radial-gradient(circle at 15% 0%,rgba(255,214,232,.5),transparent 42%),radial-gradient(circle at 88% 100%,rgba(197,240,220,.45),transparent 44%),radial-gradient(circle at 50% 50%,rgba(232,220,255,.25),transparent 60%),linear-gradient(180deg,#fffbf7 0%,#fdf6ff 50%,#f5fffa 100%);color:#3d4a58;font-family:var(--font, ui-rounded, system-ui);overflow:hidden}
-.secret-chat-page.show{display:flex}
-.sc-header{flex:0 0 auto;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;background:rgba(255,255,255,.94);backdrop-filter:blur(20px) saturate(120%);-webkit-backdrop-filter:blur(20px) saturate(120%);border-bottom:1px solid rgba(255,158,199,.22);box-shadow:0 4px 20px rgba(255,120,180,.06);z-index:10}
-.sc-header-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,158,199,.3);border-radius:14px;background:rgba(255,255,255,.9);color:#c04a90;font-size:20px;font-weight:900;cursor:pointer;transition:transform .15s ease,background .15s ease}
-.sc-header-btn:active{transform:scale(.94);background:#fff}
-.sc-header-center{display:flex;align-items:center;gap:10px;min-width:0}
-.sc-header-avatar{position:relative;width:40px;height:40px;border-radius:50%;flex:0 0 auto;background:linear-gradient(135deg,#ffd6e8,#e8dcff);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;overflow:hidden;border:2px solid #fff;box-shadow:0 3px 10px rgba(216,91,158,.18)}
-.sc-header-avatar img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
-.sc-header-avatar .sc-online-dot{position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;background:#5cbd91;border:2px solid #fff;box-shadow:0 0 8px #5cbd91;animation:scPulse 2s ease-in-out infinite}
-@keyframes scPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.7}}
-.sc-header-info{min-width:0;display:flex;flex-direction:column;gap:1px}
-.sc-header-title{font-size:15px;font-weight:950;color:#c04a90;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sc-header-sub{font-size:10.5px;font-weight:800;color:#8fb7a3;display:flex;align-items:center;gap:4px}
-.sc-header-sub .dot{width:5px;height:5px;border-radius:50%;background:#5cbd91;animation:scPulse 2s ease-in-out infinite}
-.sc-list{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:14px 12px 8px;display:flex;flex-direction:column;gap:2px;scroll-behavior:smooth}
-.sc-list::-webkit-scrollbar{width:4px}
-.sc-list::-webkit-scrollbar-thumb{background:rgba(255,158,199,.35);border-radius:2px}
-.sc-day-divider{align-self:center;margin:14px 0 10px;padding:4px 14px;background:rgba(255,255,255,.75);border:1px solid rgba(255,158,199,.25);border-radius:999px;color:#8a9a91;font-size:10.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.sc-row{display:flex;gap:8px;align-items:flex-end;margin-top:8px;animation:scMsgIn .28s cubic-bezier(.16,.9,.25,1) both}
-.sc-row.me{flex-direction:row-reverse}
-.sc-row.compact{margin-top:2px}
-@keyframes scMsgIn{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
-.sc-avatar{width:32px;height:32px;border-radius:50%;flex:0 0 auto;background:linear-gradient(135deg,#ffd6e8,#e8dcff);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;overflow:hidden;border:2px solid #fff;box-shadow:0 3px 8px rgba(216,91,158,.15);align-self:flex-start;margin-top:18px}
-.sc-row.compact .sc-avatar{visibility:hidden}
-.sc-row.me .sc-avatar{display:none}
-.sc-avatar img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
-.sc-bubble-wrap{display:flex;flex-direction:column;max-width:72%;min-width:0}
-.sc-row.me .sc-bubble-wrap{align-items:flex-end}
-.sc-meta{display:flex;align-items:baseline;gap:6px;padding:0 4px 3px;font-size:10px;color:#b7a8b8;font-weight:800}
-.sc-row.me .sc-meta{flex-direction:row-reverse}
-.sc-sender{font-size:11.5px;font-weight:900;color:#5cbd91;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
-.sc-time{font-variant-numeric:tabular-nums}
-.sc-row.compact .sc-meta{display:none}
-.sc-bubble{position:relative;padding:10px 14px;border-radius:20px 20px 20px 4px;background:#fff;border:1.5px solid rgba(255,158,199,.22);color:#3d4a58;font-size:15px;font-weight:650;line-height:1.45;word-break:break-word;white-space:pre-wrap;box-shadow:0 3px 12px -4px rgba(255,120,180,.15);transition:transform .15s ease}
-.sc-row.me .sc-bubble{background:linear-gradient(135deg,#ffa5d0,#ff7db5);border-color:transparent;color:#fff;border-radius:20px 20px 4px 20px;box-shadow:0 4px 14px -4px rgba(255,120,180,.45);text-shadow:0 1px 1px rgba(180,60,120,.15)}
-.sc-bubble.pending{opacity:.72}
-.sc-bubble.failed{border-color:rgba(216,91,158,.55)!important;background:linear-gradient(135deg,#ffe0ef,#ffd0e5)!important;color:#a04070!important}
-.sc-bubble.failed::after{content:"⚠ Gửi lỗi • chạm để thử lại";display:block;margin-top:4px;font-size:10px;font-weight:800;color:#d9663f;letter-spacing:.02em}
-.sc-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:60px 24px;text-align:center;color:#b7a8b8}
-.sc-empty-emoji{font-size:64px;opacity:.6;filter:drop-shadow(0 4px 10px rgba(255,158,199,.3))}
-.sc-empty-title{font-size:16px;font-weight:900;color:#8a9a91}
-.sc-empty-sub{font-size:12px;font-weight:700;color:#b7a8b8;line-height:1.5}
-.sc-jump-btn{position:absolute;right:16px;bottom:88px;z-index:5;width:40px;height:40px;border-radius:50%;border:1.5px solid rgba(255,158,199,.4);background:rgba(255,255,255,.97);color:#c04a90;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 22px -6px rgba(216,91,158,.3);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
-.sc-jump-btn.show{opacity:1;pointer-events:auto}
-.sc-jump-btn:active{transform:scale(.92)}
-.sc-composer{flex:0 0 auto;display:flex;gap:8px;align-items:flex-end;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);backdrop-filter:blur(20px) saturate(120%);-webkit-backdrop-filter:blur(20px) saturate(120%);border-top:1px solid rgba(255,158,199,.2);box-shadow:0 -4px 24px rgba(255,120,180,.06);z-index:10}
-.sc-composer-avatar{width:40px;height:40px;border-radius:50%;flex:0 0 auto;cursor:pointer;background:linear-gradient(135deg,#ffd6e8,#e8dcff);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;overflow:hidden;border:2px solid #fff;box-shadow:0 3px 10px rgba(216,91,158,.18);transition:transform .15s ease}
-.sc-composer-avatar:active{transform:scale(.9)}
-.sc-composer-avatar img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
-.sc-composer-input{flex:1 1 auto;min-height:40px;max-height:120px;padding:10px 14px;border:1.5px solid rgba(255,158,199,.28);border-radius:20px;background:#fff;color:#3d4a58;font-family:inherit;font-size:15px;font-weight:650;line-height:1.4;outline:none;resize:none;overflow-y:auto;transition:border-color .2s,box-shadow .2s}
-.sc-composer-input:focus{border-color:#ff9ec7;box-shadow:0 0 0 4px rgba(255,158,199,.15)}
-.sc-composer-input::placeholder{color:#c9b8c4}
-.sc-send-btn{width:40px;height:40px;flex:0 0 auto;border:0;border-radius:50%;background:linear-gradient(135deg,#ffa5d0,#ff7db5);color:#fff;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px -4px rgba(255,120,180,.5);transition:transform .15s ease,opacity .2s,box-shadow .2s}
-.sc-send-btn:active{transform:scale(.92)}
-.sc-send-btn:disabled{opacity:.4;pointer-events:none;box-shadow:none}
-.sc-picker-overlay{position:fixed;inset:0;z-index:20600;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(17,52,45,.42);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.sc-picker-overlay.show{display:flex;animation:scFade .22s ease}
-@keyframes scFade{from{opacity:0}to{opacity:1}}
-.sc-picker-panel{width:min(92vw,380px);padding:18px 14px 16px;border:1.5px solid rgba(255,214,232,.75);border-radius:26px;background:#fff8fd;box-shadow:0 24px 70px rgba(180,100,150,.28);animation:scSheetPop .28s cubic-bezier(.16,.9,.25,1)}
-@keyframes scSheetPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
-.sc-picker-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.sc-picker-title{font-size:16px;font-weight:900;color:#c04a90}
-.sc-picker-close{width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,214,232,.5);color:#c04a90;font-size:20px;cursor:pointer}
-.sc-picker-list{display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow-y:auto;padding:2px;scrollbar-width:thin}
-.sc-picker-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid rgba(255,158,199,.2);border-radius:14px;background:#fff;cursor:pointer;font-family:inherit;transition:transform .15s ease,background .15s ease,border-color .15s ease}
-.sc-picker-item:active{transform:scale(.98)}
-.sc-picker-item:hover{border-color:rgba(255,158,199,.5);background:#fffafd}
-.sc-picker-item.active{background:linear-gradient(135deg,#fff0f8,#ffe0f0);border-color:#ff9ec7}
-.sc-picker-avatar{width:34px;height:34px;border-radius:50%;flex:0 0 auto;background:linear-gradient(135deg,#ffd6e8,#e8dcff);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;overflow:hidden;border:2px solid #fff;box-shadow:0 2px 6px rgba(216,91,158,.15)}
-.sc-picker-avatar img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
-.sc-picker-name{flex:1;min-width:0;font-size:13.5px;font-weight:850;color:#3d4a58;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sc-picker-check{color:#ff7db5;font-size:18px;font-weight:900}
-@media (max-width: 420px){.sc-bubble{font-size:14.5px;padding:9px 13px}.sc-bubble-wrap{max-width:76%}.sc-sender{max-width:110px}}
+@keyframes bdFlameRotate { from { --bd-angle: 0deg; } to { --bd-angle: 360deg; } }
+@property --bd-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes bdFlameShift { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+@keyframes bdFade { from { opacity: 0 } to { opacity: 1 } }
+@keyframes bdCardIn { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+@keyframes bdReplyIn { 0% { opacity: 0; transform: translateX(-6px); } 100% { opacity: 1; transform: translateX(0); } }
+@keyframes bdShine { to { transform: translateX(100%); } }
+@keyframes bdSlideUp { to { transform: translateY(0); } }
+@keyframes bdPop { 0% { opacity: 0; transform: scale(.94); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes bdCakeBob { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-6px) rotate(3deg); } }
+@keyframes bdConfettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+
+#bdFab { position: fixed; right: 18px; bottom: max(24px, calc(18px + env(safe-area-inset-bottom))); z-index: 20600; min-width: 116px; height: 52px; padding: 0 18px 0 14px; border: 0; border-radius: 26px; background: linear-gradient(135deg, #ff4d94 0%, #b1005c 100%); color: #fff; font-family: inherit; font-size: 13px; font-weight: 800; letter-spacing: .01em; display: flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 0 0 1px rgba(255,120,180,.4), 0 8px 24px -6px rgba(255,77,148,.5); transition: transform .15s ease; touch-action: manipulation; }
+#bdFab:active { transform: scale(.96); }
+#bdFab.hidden { display: none !important; }
+#bdFab .bd-fab-icon { font-size: 20px; line-height: 1; }
+#bdFab .bd-fab-badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: #fff; color: #b1005c; font-size: 11px; font-weight: 800; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+#bdFab .bd-fab-badge.show { display: flex; }
+
+/* ===== ZOOM LOCK CSS ===== */
+#bdPage, #bdModal, #bdCelebration {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+#bdPage .bd-body, #bdModal .bd-modal-panel {
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* Cho phép select text ở bubble + input */
+.bd-bubble, .bd-reply-text, .bd-reply-body, .bd-modal-title, .bd-modal-sub, .bd-head-title, .bd-head-sub, .bd-preset, .bd-name, .bd-reply-name, .bd-sender-readonly, .bd-modal-msg, .bd-hint {
+  -webkit-user-select: text;
+  user-select: text;
+}
+.bd-input, .bd-reply-input, .bd-textarea {
+  -webkit-user-select: text;
+  user-select: text;
+  touch-action: manipulation;
+}
+.bd-head-btn, .bd-btn, .bd-preset, .bd-gift-btn, .bd-send-btn, .bd-reply-send, .bd-reply-cancel, .bd-reply-link, .bd-cele-btn, .bd-head-avatar {
+  touch-action: manipulation;
+}
+
+#bdPage { position: fixed; inset: 0; z-index: 20900; display: none; flex-direction: column; background: #0f0508; color: #fff0f5; font-family: var(--font, ui-rounded, system-ui); overflow: hidden; padding: 5px; box-sizing: border-box; }
+#bdPage.show { display: flex; }
+#bdPage::before { content: ''; position: absolute; inset: 0; border-radius: 18px; padding: 2px; background: conic-gradient(from var(--bd-angle), rgba(255,77,148,0) 0deg, rgba(255,77,148,.15) 40deg, rgba(255,120,180,.45) 90deg, rgba(255,180,210,.7) 130deg, rgba(255,220,235,.85) 160deg, rgba(255,180,210,.7) 190deg, rgba(255,120,180,.45) 240deg, rgba(255,77,148,.15) 300deg, rgba(255,77,148,0) 360deg); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: bdFlameRotate 6s linear infinite; pointer-events: none; z-index: 1; filter: drop-shadow(0 0 8px rgba(255,120,180,.35)); will-change: transform; }
+.bd-shell { position: relative; flex: 1; display: flex; flex-direction: column; background: linear-gradient(180deg, #1a0812 0%, #0f0508 100%); border-radius: 14px; overflow: hidden; z-index: 2; box-shadow: inset 0 0 40px rgba(255,77,148,.06); }
+.bd-head { flex: 0 0 auto; position: relative; display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 10px; padding: calc(14px + env(safe-area-inset-top)) 14px 14px; background: linear-gradient(135deg, #1f0a14 0%, #2a0f1a 100%); border-bottom: 1px solid rgba(255,120,180,.15); z-index: 10; }
+.bd-head::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, rgba(255,77,148,0), rgba(255,77,148,.35) 20%, rgba(255,150,195,.65) 50%, rgba(255,77,148,.35) 80%, rgba(255,77,148,0)); background-size: 200% 100%; animation: bdFlameShift 4s linear infinite; box-shadow: 0 0 8px rgba(255,120,180,.4); }
+.bd-head-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,120,180,.3); border-radius: 50%; background: rgba(255,120,180,.08); color: #ffb8d1; font-size: 18px; font-weight: 700; cursor: pointer; transition: transform .15s ease, background .15s ease, border-color .15s ease; position: relative; z-index: 2; }
+.bd-head-btn:active { transform: scale(.92); background: rgba(255,120,180,.18); border-color: rgba(255,120,180,.5); }
+.bd-head-center { min-width: 0; display: flex; align-items: center; gap: 12px; position: relative; z-index: 2; }
+.bd-head-avatar { position: relative; width: 46px; height: 46px; border-radius: 50%; flex: 0 0 auto; background: linear-gradient(135deg, #ff4d94, #b1005c); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; overflow: hidden; box-shadow: 0 0 0 2px #1a0812, 0 0 0 3px rgba(255,120,180,.7), 0 0 12px rgba(255,77,148,.45); }
+.bd-head-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bd-head-info { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.bd-head-title { font-size: 22px; font-weight: 950; letter-spacing: -.01em; line-height: 1.15; background: linear-gradient(90deg, #ff4d94 0%, #ffb8d1 25%, #ffffff 50%, #ffb8d1 75%, #ff4d94 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: bdFlameShift 5s linear infinite; filter: drop-shadow(0 0 6px rgba(255,120,180,.4)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bd-head-sub { font-size: 12.5px; font-weight: 700; color: #d1759a; line-height: 1.3; letter-spacing: .01em; }
+
+.bd-body { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 14px 12px 130px; display: flex; flex-direction: column; gap: 10px; position: relative; z-index: 2; contain: layout style paint; transform: translateZ(0); }
+.bd-body::-webkit-scrollbar { width: 3px; }
+.bd-body::-webkit-scrollbar-thumb { background: rgba(255,120,180,.35); border-radius: 2px; }
+.bd-body > * { flex-shrink: 0; }
+
+.bd-day-divider { align-self: center; margin: 14px 0 6px; padding: 4px 14px; background: rgba(255,120,180,.08); border: 1px solid rgba(255,120,180,.2); border-radius: 999px; color: #ff9ec7; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.bd-empty { padding: 80px 24px; text-align: center; color: #b08899; }
+.bd-empty-emoji { font-size: 56px; margin-bottom: 14px; opacity: .6; filter: drop-shadow(0 4px 8px rgba(255,77,148,.3)); }
+.bd-empty-title { font-size: 15.5px; font-weight: 800; color: #ffb8d1; margin-bottom: 6px; }
+.bd-empty-sub { font-size: 13px; font-weight: 500; line-height: 1.55; color: #a08090; }
+.bd-card { display: flex; flex-direction: column; gap: 4px; animation: bdCardIn .4s cubic-bezier(.16,.9,.25,1) both; position: relative; contain: layout style; }
+.bd-card.me { align-items: flex-end; }
+.bd-main { display: flex; align-items: flex-start; gap: 8px; max-width: 82%; min-width: 0; }
+.bd-card.me .bd-main { flex-direction: row-reverse; align-self: flex-end; }
+.bd-av { width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto; background: linear-gradient(135deg, #ff4d94, #b1005c); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; overflow: hidden; box-shadow: 0 0 0 2px #1a0812, 0 0 0 3px rgba(255,120,180,.5), 0 2px 8px rgba(255,77,148,.25); margin-top: 2px; }
+.bd-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bd-card.me .bd-av { display: none; }
+.bd-bubble-wrap { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.bd-card.me .bd-bubble-wrap { align-items: flex-end; }
+.bd-name-row { display: flex; align-items: baseline; gap: 6px; padding: 0 4px 4px 4px; min-width: 0; }
+.bd-card.me .bd-name-row { flex-direction: row-reverse; }
+.bd-name { font-size: 12.5px; font-weight: 800; color: #ff7fb0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+.bd-time-inline { font-size: 10.5px; font-weight: 600; color: #a08090; flex-shrink: 0; }
+.bd-bubble { position: relative; padding: 10px 14px; border-radius: 20px 20px 20px 6px; background: #1f0d16; color: #fff0f5; font-size: 14.5px; font-weight: 500; line-height: 1.5; white-space: pre-wrap; word-break: break-word; border: 1px solid rgba(255,120,180,.18); box-shadow: 0 2px 8px rgba(0,0,0,.2); overflow: hidden; }
+.bd-card.me .bd-bubble { padding: 11px 16px; border-radius: 20px 20px 6px 20px; background: linear-gradient(135deg, #ff4d94 0%, #b1005c 100%); color: #fff; font-weight: 600; border: 1px solid rgba(255,150,195,.6); text-shadow: 0 1px 1px rgba(90,0,45,.25); box-shadow: 0 4px 16px -2px rgba(255,77,148,.45); }
+.bd-card.me .bd-bubble.shine::after { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 100%; background: linear-gradient(100deg, transparent 0%, transparent 30%, rgba(255,255,255,.45) 50%, transparent 70%, transparent 100%); transform: translateX(-100%); animation: bdShine .9s ease-out .12s; pointer-events: none; }
+.bd-replies { display: flex; flex-direction: column; gap: 6px; margin-left: 42px; margin-top: 4px; max-width: 82%; }
+.bd-card.me .bd-replies { margin-left: 0; align-self: flex-end; }
+.bd-reply-inline { display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; border-radius: 14px; background: rgba(255,120,180,.08); border: 1px solid rgba(255,120,180,.2); animation: bdReplyIn .35s cubic-bezier(.16,.9,.25,1) both; }
+.bd-card.me .bd-reply-inline { background: rgba(255,77,148,.14); border-color: rgba(255,120,180,.3); }
+.bd-reply-av { width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto; background: linear-gradient(135deg, #ff4d94, #b1005c); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; overflow: hidden; box-shadow: 0 0 0 1.5px #1a0812, 0 0 0 2.5px rgba(255,120,180,.5); margin-top: 1px; }
+.bd-reply-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bd-reply-body { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 500; line-height: 1.5; color: #ffe0ec; word-break: break-word; }
+.bd-reply-name { font-weight: 800; color: #ff80b0; margin-right: 4px; }
+.bd-reply-time { display: inline-block; font-size: 10px; font-weight: 600; color: #a08090; margin-left: 6px; }
+.bd-reply-input-row { display: flex; align-items: flex-start; gap: 8px; padding: 6px 6px 6px 10px; border-radius: 14px; background: rgba(255,240,245,.08); border: 1.5px solid rgba(255,120,180,.5); box-shadow: 0 0 12px rgba(255,77,148,.25); animation: bdReplyIn .25s cubic-bezier(.16,.9,.25,1) both; }
+.bd-reply-input-av { width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto; background: linear-gradient(135deg, #ff4d94, #b1005c); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; overflow: hidden; margin-top: 4px; }
+.bd-reply-input-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bd-reply-input { flex: 1; min-height: 24px; max-height: 80px; padding: 6px 0; border: 0; background: transparent; color: #fff0f5; font-family: inherit; font-size: 13.5px; font-weight: 500; line-height: 1.4; outline: none; resize: none; overflow-y: auto; }
+.bd-reply-input::placeholder { color: #a08090; }
+.bd-reply-send { width: 28px; height: 28px; flex: 0 0 auto; border: 0; border-radius: 50%; background: linear-gradient(135deg, #ff4d94, #b1005c); color: #fff; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform .15s ease, opacity .15s ease; box-shadow: 0 3px 10px -2px rgba(255,77,148,.5); margin-top: 2px; }
+.bd-reply-send:active { transform: scale(.9); }
+.bd-reply-send:disabled { opacity: .35; pointer-events: none; box-shadow: none; }
+.bd-reply-cancel { width: 24px; height: 24px; flex: 0 0 auto; border: 0; border-radius: 50%; background: rgba(255,120,180,.15); color: #d1759a; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s ease; margin-top: 2px; }
+.bd-reply-cancel:active { background: rgba(255,120,180,.3); }
+.bd-reply-error { margin-top: 4px; font-size: 11px; font-weight: 600; color: #ff6b8a; padding: 0 6px; }
+.bd-reply-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; margin-left: 42px; padding: 4px 10px; border: 0; background: rgba(255,120,180,.12); color: #ff9ec7; font-family: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; border-radius: 999px; transition: background .15s ease, transform .15s ease; }
+.bd-card.me .bd-reply-link { margin-left: 0; }
+.bd-reply-link:active { background: rgba(255,120,180,.25); transform: scale(.96); }
+.bd-reply-link .bd-rl-icon { font-size: 11px; }
+.bd-composer { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: 44px 1fr; gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: linear-gradient(180deg, #1f0a14 0%, #16060d 100%); box-shadow: 0 -4px 20px rgba(0,0,0,.3); }
+.bd-composer::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1.5px; background: linear-gradient(90deg, rgba(255,77,148,0), rgba(255,77,148,.35) 20%, rgba(255,150,195,.7) 50%, rgba(255,77,148,.35) 80%, rgba(255,77,148,0)); background-size: 200% 100%; animation: bdFlameShift 4s linear infinite; box-shadow: 0 0 8px rgba(255,120,180,.4); }
+.bd-gift-btn { width: 44px; height: 44px; border: 0; border-radius: 50%; background: linear-gradient(135deg, #ff4d94, #b1005c); color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 1px rgba(255,150,195,.5), 0 6px 16px -4px rgba(255,77,148,.5); transition: transform .15s ease; }
+.bd-gift-btn:active { transform: scale(.92); }
+.bd-composer-inner { display: flex; align-items: flex-end; gap: 8px; }
+.bd-input { flex: 1; min-height: 44px; max-height: 100px; padding: 10px 16px; border: 1.5px solid rgba(255,120,180,.3); border-radius: 22px; background: rgba(255,240,245,.08); color: #fff0f5; font-family: inherit; font-size: 14.5px; font-weight: 500; line-height: 1.4; outline: none; resize: none; overflow-y: auto; transition: border-color .15s ease, box-shadow .15s ease, background .15s ease; }
+.bd-input:focus { border-color: #ff7fb0; background: rgba(255,240,245,.12); box-shadow: 0 0 0 4px rgba(255,120,180,.15); }
+.bd-input::placeholder { color: #a08090; }
+.bd-send-btn { width: 44px; height: 44px; flex: 0 0 auto; border: 0; border-radius: 50%; background: linear-gradient(135deg, #ff4d94, #b1005c); color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 1px rgba(255,150,195,.5), 0 6px 16px -4px rgba(255,77,148,.5); transition: transform .15s ease, opacity .15s ease; }
+.bd-send-btn:active { transform: scale(.92) rotate(-8deg); }
+.bd-send-btn:disabled { opacity: .35; pointer-events: none; box-shadow: none; }
+#bdModal { position: fixed; inset: 0; z-index: 21100; display: none; align-items: flex-end; justify-content: center; background: rgba(15,5,8,.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+#bdModal.show { display: flex; animation: bdFade .2s ease; }
+.bd-modal-panel { width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 20px calc(24px + env(safe-area-inset-bottom)); background: linear-gradient(180deg, #1a0812 0%, #0f0508 100%); border-top: 1px solid rgba(255,120,180,.3); border-radius: 24px 24px 0 0; animation: bdSlideUp .28s cubic-bezier(.16,.9,.25,1) forwards; transform: translateY(100%); box-shadow: 0 -20px 60px rgba(255,77,148,.15); contain: layout style; }
+.bd-modal-handle { width: 36px; height: 4px; border-radius: 99px; background: rgba(255,120,180,.3); margin: 0 auto 20px; }
+.bd-modal-title { font-size: 20px; font-weight: 950; background: linear-gradient(90deg, #ff4d94, #ffb8d1, #ffffff, #ffb8d1, #ff4d94); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: bdFlameShift 5s linear infinite; margin-bottom: 6px; }
+.bd-modal-sub { font-size: 13px; font-weight: 600; color: #d1759a; margin-bottom: 20px; }
+.bd-group-label { font-size: 11px; font-weight: 800; color: #d1759a; letter-spacing: .1em; text-transform: uppercase; margin: 18px 0 8px 0; }
+.bd-preset { display: block; width: 100%; text-align: left; padding: 11px 14px; margin-bottom: 6px; border: 1.5px solid rgba(255,120,180,.2); border-radius: 12px; background: rgba(255,240,245,.05); color: #ffe0ec; font-family: inherit; font-size: 14px; font-weight: 500; line-height: 1.45; cursor: pointer; transition: all .15s ease; }
+.bd-preset:active { transform: scale(.98); }
+.bd-preset.selected { border-color: #ff7fb0; background: rgba(255,77,148,.15); color: #fff; font-weight: 700; }
+.bd-textarea { width: 100%; min-height: 80px; padding: 12px 14px; border: 1.5px solid rgba(255,120,180,.25); border-radius: 12px; background: rgba(255,240,245,.06); color: #fff0f5; font-family: inherit; font-size: 14.5px; font-weight: 500; line-height: 1.5; outline: none; resize: vertical; transition: border-color .15s ease, box-shadow .15s ease, background .15s ease; box-sizing: border-box; }
+.bd-textarea:focus { border-color: #ff7fb0; background: rgba(255,240,245,.1); box-shadow: 0 0 0 4px rgba(255,120,180,.15); }
+.bd-textarea::placeholder { color: #a08090; }
+.bd-field-row { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+.bd-field-label { font-size: 13px; font-weight: 800; color: #ffb8d1; white-space: nowrap; }
+.bd-select { flex: 1; height: 44px; padding: 0 12px; border: 1.5px solid rgba(255,120,180,.25); border-radius: 12px; background: rgba(255,240,245,.06); color: #fff0f5; font-family: inherit; font-size: 14px; font-weight: 700; outline: none; transition: border-color .15s ease; }
+.bd-select:focus { border-color: #ff7fb0; }
+.bd-select option { background: #1a0812; color: #fff0f5; }
+.bd-sender-readonly { flex: 1; height: 44px; padding: 0 12px; border: 1.5px solid rgba(255,120,180,.25); border-radius: 12px; background: rgba(255,77,148,.1); color: #fff; font-size: 14px; font-weight: 700; display: flex; align-items: center; }
+.bd-hint { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,77,148,.12); border: 1px solid rgba(255,120,180,.3); font-size: 12px; font-weight: 700; color: #ff9ec7; text-align: center; line-height: 1.5; display: none; }
+.bd-hint.show { display: block; }
+.bd-modal-actions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; margin-top: 20px; }
+.bd-btn { min-height: 46px; padding: 12px 16px; border-radius: 14px; font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer; border: 1.5px solid rgba(255,120,180,.25); background: rgba(255,240,245,.06); color: #ffb8d1; transition: transform .15s ease, background .15s ease; }
+.bd-btn:active { transform: scale(.98); }
+.bd-btn.primary { background: linear-gradient(135deg, #ff4d94, #b1005c); color: #fff; border-color: transparent; box-shadow: 0 0 0 1px rgba(255,150,195,.4), 0 8px 20px -6px rgba(255,77,148,.5); }
+.bd-btn:disabled { opacity: .5; pointer-events: none; }
+.bd-modal-msg { min-height: 18px; margin-top: 12px; text-align: center; font-size: 13px; font-weight: 700; color: #ff9ec7; }
+.bd-confetti { position: fixed; top: -20px; z-index: 21400; font-size: 22px; pointer-events: none; animation: bdConfettiFall linear forwards; }
+#bdCelebration { position: fixed; inset: 0; z-index: 21300; display: none; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, rgba(255,77,148,.35), transparent 50%), radial-gradient(circle at 70% 70%, rgba(177,0,92,.5), transparent 50%), linear-gradient(135deg, #1a0812 0%, #0f0508 100%); text-align: center; }
+#bdCelebration.show { display: flex; animation: bdFade .3s ease; }
+.bd-cele-inner { padding: 24px; animation: bdPop .5s cubic-bezier(.16,.9,.25,1); }
+.bd-cele-cake { font-size: 72px; margin-bottom: 12px; animation: bdCakeBob 1.8s ease-in-out infinite; filter: drop-shadow(0 8px 20px rgba(255,77,148,.5)); }
+.bd-cele-title { font-size: 20px; font-weight: 500; color: #ff9ec7; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 10px; }
+.bd-cele-name { font-size: 34px; font-weight: 800; background: linear-gradient(135deg, #ff4d94, #ffb8d1, #ff4d94); background-size: 200% 200%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: bdFlameShift 3s linear infinite; letter-spacing: -.02em; margin-bottom: 14px; }
+.bd-cele-sub { font-size: 14px; font-weight: 600; color: #d1759a; margin-bottom: 28px; line-height: 1.5; }
+.bd-cele-btn { padding: 12px 28px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #ff4d94, #b1005c); color: #fff; font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer; box-shadow: 0 0 0 1px rgba(255,150,195,.4), 0 10px 24px -8px rgba(255,77,148,.6); transition: transform .15s ease; }
+.bd-cele-btn:active { transform: scale(.96); }
 `;
     document.head.appendChild(style);
   }
 
-  function ensureFab(){
-    let fab = $("secretMailBtn");
+  /* ============ FAB ============ */
+  function ensureFab() {
+    let fab = $('bdFab');
     if (fab) return fab;
-    fab = document.createElement("button");
-    fab.id = "secretMailBtn";
-    fab.type = "button";
-    fab.className = "sm-fab";
-    fab.setAttribute("aria-label", "Mở Chat nhóm");
-    fab.innerHTML = `
-      <span class="sm-fab-icon" aria-hidden="true">🐱</span>
-      <span class="sm-fab-text">Chat nhóm</span>
-      <span class="sm-fab-shine" aria-hidden="true"></span>`;
+    fab = document.createElement('button');
+    fab.id = 'bdFab';
+    fab.type = 'button';
+    fab.setAttribute('aria-label', 'Chúc mừng sinh nhật Mỹ Dung');
+    fab.innerHTML = `<span class="bd-fab-icon">🎂</span><span class="bd-fab-text">Chúc mừng SN</span><span class="bd-fab-badge" id="bdFabBadge"></span>`;
+    fab.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); openPage(); });
     document.body.appendChild(fab);
     return fab;
   }
 
-  function buildPage(){
-    let page = $("secretMailPage");
+  function updateFabBadge() {
+    const badge = $('bdFabBadge');
+    if (!badge) return;
+    if (S.unread > 0 && !S.pageOpen) { badge.textContent = S.unread > 99 ? '99+' : String(S.unread); badge.classList.add('show'); }
+    else { badge.classList.remove('show'); }
+  }
+
+  function syncFabVisibility() {
+    const fab = $('bdFab');
+    if (!fab) return;
+    const otherOpen = $('lunchPage')?.classList.contains('show') || $('quizOverlay')?.classList.contains('show') || $('liveFeedOverlay')?.classList.contains('show') || $('attendancePage')?.classList.contains('show') || $('adminPage')?.classList.contains('show') || $('monitorOverlay')?.classList.contains('show') || $('checklistPanel')?.classList.contains('show') || $('loginOverlay')?.classList.contains('show') || window.BXH?.isOpen?.();
+    fab.classList.toggle('hidden', !!otherOpen);
+  }
+
+  /* ============ PAGE ============ */
+  function ensurePage() {
+    let page = $('bdPage');
     if (page) return page;
-    page = document.createElement("section");
-    page.id = "secretMailPage";
-    page.className = "secret-chat-page";
-    page.setAttribute("aria-hidden", "true");
+    page = document.createElement('section');
+    page.id = 'bdPage';
+    page.setAttribute('aria-hidden', 'true');
     page.innerHTML = `
-      <header class="sc-header">
-        <button type="button" class="sc-header-btn" id="scBackBtn" aria-label="Quay lại">←</button>
-        <div class="sc-header-center">
-          <div class="sc-header-avatar">
-            <span id="scHeaderAvatarFallback">🐱</span>
-            <img id="scHeaderAvatarImg" alt="" style="display:none">
-            <span class="sc-online-dot"></span>
+      <div class="bd-shell">
+        <header class="bd-head">
+          <button type="button" class="bd-head-btn" id="bdBack" aria-label="Quay lại">←</button>
+          <div class="bd-head-center">
+            <div class="bd-head-avatar">
+              <span id="bdHeadAvatar">🎂</span>
+              <img id="bdHeadAvatarImg" alt="" style="display:none">
+            </div>
+            <div class="bd-head-info">
+              <span class="bd-head-title" id="bdHeadTitle">Sinh nhật ${esc(RECIPIENT)} 🎂</span>
+              <span class="bd-head-sub" id="bdWishCount">0 lời chúc</span>
+            </div>
           </div>
-          <div class="sc-header-info">
-            <span class="sc-header-title">Chat nhóm Đảo Mèo</span>
-            <span class="sc-header-sub">
-              <span class="dot"></span>
-              <span id="scHeaderSub">Đang hoạt động</span>
-            </span>
+          <button type="button" class="bd-head-btn" id="bdOwnerBtn" aria-label="Đăng nhập chính chủ" style="display:none">👑</button>
+        </header>
+        <div class="bd-body" id="bdBody"></div>
+        <div class="bd-composer">
+          <button type="button" class="bd-gift-btn" id="bdGiftBtn" aria-label="Gửi lời chúc">🎁</button>
+          <div class="bd-composer-inner">
+            <textarea class="bd-input" id="bdInput" rows="1" maxlength="500" placeholder="Nhắn tin với ${esc(RECIPIENT)}..." autocomplete="off"></textarea>
+            <button type="button" class="bd-send-btn" id="bdSendBtn" disabled>➤</button>
           </div>
         </div>
-        <button type="button" class="sc-header-btn" id="scMenuBtn" aria-label="Tuỳ chọn">⋯</button>
-      </header>
-      <div class="sc-list" id="scList"></div>
-      <button type="button" class="sc-jump-btn" id="scJumpBtn" aria-label="Xuống cuối">↓</button>
-      <div class="sc-composer">
-        <button type="button" class="sc-composer-avatar" id="scComposerAvatar" aria-label="Đổi danh tính">
-          <span id="scComposerAvatarFallback">?</span>
-          <img id="scComposerAvatarImg" alt="" style="display:none">
-        </button>
-        <textarea class="sc-composer-input" id="scInput" rows="1" maxlength="${MAX_TEXT_LENGTH}" placeholder="Nhập tin nhắn…" autocomplete="off"></textarea>
-        <button type="button" class="sc-send-btn" id="scSendBtn" aria-label="Gửi" disabled>➤</button>
-      </div>
-      <div class="sc-picker-overlay" id="scPickerOverlay" aria-hidden="true">
-        <div class="sc-picker-panel" role="dialog" aria-modal="true">
-          <div class="sc-picker-head">
-            <span class="sc-picker-title">Bạn là ai?</span>
-            <button type="button" class="sc-picker-close" id="scPickerClose">×</button>
-          </div>
-          <div class="sc-picker-list" id="scPickerList"></div>
-        </div>
-      </div>
-    `;
+      </div>`;
     document.body.appendChild(page);
+    lockZoom(page);
+
+    page.querySelector('#bdBack').addEventListener('click', closePage);
+    page.querySelector('#bdGiftBtn').addEventListener('click', openModal);
+    page.querySelector('#bdOwnerBtn').addEventListener('click', loginOwner);
+
+    const input = page.querySelector('#bdInput');
+    const sendBtn = page.querySelector('#bdSendBtn');
+    const refresh = () => { sendBtn.disabled = input.value.trim().length === 0 || S.sending; input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 100) + 'px'; };
+    input.addEventListener('input', refresh);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); if (input.value.trim()) { sendChat(input.value); input.value = ''; refresh(); } } });
+    sendBtn.addEventListener('click', () => { if (input.value.trim()) { sendChat(input.value); input.value = ''; refresh(); } });
+    refresh();
+    log('Page created ✓');
     return page;
   }
 
-  let _lastRenderSig = "";
-
-  function messageSig(m){
-    return `${m.id}|${m.name}|${m.text}|${m.ts}|${m.pending ? 1 : 0}|${m.failed ? 1 : 0}`;
+  function updateHeadAvatar() {
+    const img = $('bdHeadAvatarImg'), fallback = $('bdHeadAvatar');
+    if (!img || !fallback) return;
+    const url = getAvatarUrl(RECIPIENT);
+    if (url) { img.src = url; img.style.display = ''; fallback.style.display = 'none'; img.onerror = () => { img.style.display = 'none'; fallback.style.display = ''; fallback.textContent = getInitial(RECIPIENT); }; }
+    else { img.style.display = 'none'; fallback.style.display = ''; fallback.textContent = getInitial(RECIPIENT); }
   }
-  function computeSig(){
-    return state.messages.map(messageSig).join("::");
+
+  function updateOwnerBtn() {
+    const btn = $('bdOwnerBtn');
+    if (!btn) return;
+    const canShowOwner = isRecipientLogin() || canEditBirthday();
+    if (!canShowOwner){ btn.style.display = 'none'; return; }
+    btn.style.display = '';
+    if (S.isOwner) { btn.style.background = 'linear-gradient(135deg, #ff4d94, #b1005c)'; btn.style.color = '#fff'; btn.style.borderColor = 'transparent'; btn.style.boxShadow = '0 0 0 1px rgba(255,150,195,.5), 0 0 10px rgba(255,77,148,.5)'; }
+    else { btn.style.background = 'rgba(255,120,180,.08)'; btn.style.color = '#ffb8d1'; btn.style.borderColor = 'rgba(255,120,180,.3)'; btn.style.boxShadow = ''; }
   }
 
-  function renderMessages(force = false){
-    const list = $("scList");
-    if (!list) return;
-    const sig = computeSig();
-    if (!force && sig === _lastRenderSig) return;
+  function loginOwner() {
+    if (!(isRecipientLogin() || canEditBirthday())){ if (window.SRank && window.SRank.setStatus) window.SRank.setStatus('Không có quyền'); return; }
+    if (S.isOwner) { if (confirm('👑 Bạn đang đăng nhập chính chủ.\n\nĐăng xuất khỏi chế độ này?')) { S.isOwner = false; S.inlineReplyToId = null; try { localStorage.removeItem(OWNER_KEY); } catch(_){} updateOwnerBtn(); render(); } return; }
+    const pwd = prompt('👑 Nhập mật khẩu chính chủ:');
+    if (pwd === null) return;
+    if (String(pwd).trim() === OWNER_PASSWORD) { S.isOwner = true; try { localStorage.setItem(OWNER_KEY, '1'); } catch(_){} updateOwnerBtn(); render(); fireConfetti(30); alert('👑 Đã đăng nhập chính chủ!\n\nBây giờ bạn có thể:\n• Bấm ↩ để trả lời lời chúc\n• Gõ chat → tin nhắn tự động là lời chúc đặc biệt'); }
+    else { alert('❌ Mật khẩu không đúng'); }
+  }
+
+  function toggleInlineReply(wishId) {
+    if (S.inlineReplyToId === wishId) S.inlineReplyToId = null;
+    else S.inlineReplyToId = wishId;
+    _lastRenderSig = '';
+    render();
+    if (S.inlineReplyToId) {
+      setTimeout(() => { const input = document.querySelector('.bd-reply-input[data-id="' + S.inlineReplyToId + '"]'); if (input) { input.focus(); try { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(_){} } }, 100);
+    }
+  }
+
+  function cancelInlineReply() { S.inlineReplyToId = null; _lastRenderSig = ''; render(); }
+
+  async function sendInlineReply(wishId, text) {
+    const msg = String(text || '').trim();
+    if (!msg) return;
+    if (S.inlineSending) return;
+    if (!S.isOwner) return;
+    S.inlineSending = true;
+    const sendBtn = document.querySelector('.bd-reply-send[data-id="' + wishId + '"]');
+    if (sendBtn) sendBtn.disabled = true;
+    try {
+      await sendWish(RECIPIENT, msg, true, wishId);
+      S.inlineReplyToId = null;
+      _lastRenderSig = '';
+      render();
+    } catch (e) {
+      log('Reply error:', e);
+      const inputEl = document.querySelector('.bd-reply-input[data-id="' + wishId + '"]');
+      if (inputEl) {
+        let errEl = document.querySelector('.bd-reply-error[data-id="' + wishId + '"]');
+        if (!errEl) { errEl = document.createElement('div'); errEl.className = 'bd-reply-error'; errEl.dataset.id = wishId; inputEl.closest('.bd-reply-input-row')?.parentNode?.appendChild(errEl); }
+        errEl.textContent = 'Lỗi: ' + (e.message || e);
+      }
+      if (sendBtn) sendBtn.disabled = false;
+    } finally { S.inlineSending = false; }
+  }
+
+  function buildAvatarEl(name, size) {
+    const av = document.createElement('div');
+    av.className = size === 'sm' ? 'bd-reply-av' : (size === 'input' ? 'bd-reply-input-av' : 'bd-av');
+    const avUrl = getAvatarUrl(name);
+    if (avUrl) { const img = document.createElement('img'); img.src = avUrl; img.alt = ''; img.loading = 'lazy'; img.onerror = () => { img.remove(); av.textContent = getInitial(name); }; av.appendChild(img); }
+    else { av.textContent = getInitial(name); }
+    return av;
+  }
+
+  function buildThreadsMap() {
+    const topWishes = [], repliesByParent = {};
+    for (const w of S.wishes) { if (w.replyToId) { if (!repliesByParent[w.replyToId]) repliesByParent[w.replyToId] = []; repliesByParent[w.replyToId].push(w); } else { topWishes.push(w); } }
+    topWishes.sort((a, b) => a.ts - b.ts);
+    Object.keys(repliesByParent).forEach(k => { repliesByParent[k].sort((a, b) => a.ts - b.ts); });
+    return { topWishes, repliesByParent };
+  }
+
+  function renderReplyInline(r) {
+    const row = document.createElement('div');
+    row.className = 'bd-reply-inline';
+    row.dataset.id = r.id;
+    row.appendChild(buildAvatarEl(r.sender, 'sm'));
+    const body = document.createElement('div');
+    body.className = 'bd-reply-body';
+    const nameEl = document.createElement('span'); nameEl.className = 'bd-reply-name'; nameEl.textContent = (r.sender || RECIPIENT) + ':';
+    const textEl = document.createElement('span'); textEl.className = 'bd-reply-text'; textEl.textContent = r.message;
+    const timeEl = document.createElement('span'); timeEl.className = 'bd-reply-time'; timeEl.textContent = formatTime(r.ts);
+    body.append(nameEl, document.createTextNode(' '), textEl, timeEl);
+    row.appendChild(body);
+    return row;
+  }
+
+  function renderReplyInput(w) {
+    const row = document.createElement('div');
+    row.className = 'bd-reply-input-row';
+    row.appendChild(buildAvatarEl(RECIPIENT, 'input'));
+    const input = document.createElement('textarea');
+    input.className = 'bd-reply-input'; input.dataset.id = w.id; input.rows = 1; input.maxLength = 500;
+    input.placeholder = 'Trả lời ' + shortName(w.sender) + '...';
+    input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 80) + 'px'; const btn = document.querySelector('.bd-reply-send[data-id="' + w.id + '"]'); if (btn) btn.disabled = input.value.trim().length === 0; });
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); if (input.value.trim()) sendInlineReply(w.id, input.value); } else if (e.key === 'Escape') { e.preventDefault(); cancelInlineReply(); } });
+    const sendBtn = document.createElement('button');
+    sendBtn.type = 'button'; sendBtn.className = 'bd-reply-send'; sendBtn.dataset.id = w.id; sendBtn.disabled = true; sendBtn.textContent = '➤';
+    sendBtn.addEventListener('click', (e) => { e.stopPropagation(); if (input.value.trim()) sendInlineReply(w.id, input.value); });
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button'; cancelBtn.className = 'bd-reply-cancel'; cancelBtn.textContent = '×';
+    cancelBtn.addEventListener('click', (e) => { e.stopPropagation(); cancelInlineReply(); });
+    row.append(input, sendBtn, cancelBtn);
+    return row;
+  }
+
+  function renderCard(w, replies) {
+    const isMe = !!w.isFromRecipient;
+    const isNew = !S.seenIds.has(w.id);
+    const card = document.createElement('div');
+    card.className = 'bd-card' + (isMe ? ' me' : '');
+    card.dataset.id = w.id;
+    const main = document.createElement('div');
+    main.className = 'bd-main';
+    if (!isMe) main.appendChild(buildAvatarEl(w.sender, 'md'));
+    const wrap = document.createElement('div');
+    wrap.className = 'bd-bubble-wrap';
+    const nameRow = document.createElement('div');
+    nameRow.className = 'bd-name-row';
+    const nameEl = document.createElement('span'); nameEl.className = 'bd-name'; nameEl.textContent = w.sender || 'Ẩn danh';
+    const timeEl = document.createElement('span'); timeEl.className = 'bd-time-inline'; timeEl.textContent = formatTime(w.ts);
+    nameRow.append(nameEl, timeEl);
+    wrap.appendChild(nameRow);
+    const bubble = document.createElement('div');
+    bubble.className = 'bd-bubble' + (isMe && isNew ? ' shine' : '');
+    bubble.textContent = w.message;
+    wrap.appendChild(bubble);
+    main.appendChild(wrap);
+    card.appendChild(main);
+    const hasReplies = replies && replies.length > 0;
+    const isReplying = S.inlineReplyToId === w.id;
+    if (hasReplies || isReplying) {
+      const repliesBlock = document.createElement('div');
+      repliesBlock.className = 'bd-replies';
+      if (hasReplies) replies.forEach(r => repliesBlock.appendChild(renderReplyInline(r)));
+      if (isReplying) repliesBlock.appendChild(renderReplyInput(w));
+      card.appendChild(repliesBlock);
+    }
+    if (S.isOwner && !isMe && !isReplying) {
+      const link = document.createElement('button');
+      link.type = 'button'; link.className = 'bd-reply-link';
+      link.innerHTML = '<span class="bd-rl-icon">↩</span><span>Trả lời</span>';
+      link.addEventListener('click', (e) => { e.stopPropagation(); toggleInlineReply(w.id); });
+      card.appendChild(link);
+    }
+    return card;
+  }
+
+  let _lastRenderSig = '';
+  function render() {
+    const body = $('bdBody');
+    const countEl = $('bdWishCount');
+    if (!body) return;
+    const sig = S.wishes.map(w => `${w.id}|${w.ts}|${w.isFromRecipient?1:0}|${w.replyToId||''}`).join('::') + '|' + (S.isOwner ? 'O' : 'U') + '|' + (S.inlineReplyToId || '');
+    if (sig === _lastRenderSig) return;
     _lastRenderSig = sig;
-
-    const sorted = state.messages.slice().sort((a, b) => a.ts - b.ts);
-
-    if (sorted.length === 0){
-      list.innerHTML = `
-        <div class="sc-empty">
-          <div class="sc-empty-emoji">🐱</div>
-          <div class="sc-empty-title">Chưa có tin nhắn nào</div>
-          <div class="sc-empty-sub">Hãy là người đầu tiên gửi lời chào<br>đến cả nhà Đảo Mèo nhé!</div>
-        </div>`;
-      _lastRenderSig = sig;
+    if (countEl) countEl.textContent = S.wishes.length + ' lời chúc';
+    if (!S.wishes.length) {
+      body.innerHTML = `<div class="bd-empty"><div class="bd-empty-emoji">🎂</div><div class="bd-empty-title">Chưa có lời chúc nào</div><div class="bd-empty-sub">Hãy là người đầu tiên gửi lời chúc<br>đến ${esc(RECIPIENT)} nhé!</div></div>`;
       return;
     }
-
+    const { topWishes, repliesByParent } = buildThreadsMap();
     const frag = document.createDocumentFragment();
     let lastTs = 0;
-    let lastSender = "";
-    let lastMsgTime = 0;
-
-    for (let i = 0; i < sorted.length; i++){
-      const m = sorted[i];
-
-      if (!lastTs || !sameDay(lastTs, m.ts)){
-        const div = document.createElement("div");
-        div.className = "sc-day-divider";
-        div.textContent = formatDay(m.ts);
-        frag.appendChild(div);
-        lastSender = "";
-        lastMsgTime = 0;
-      }
-
-      const isMe = String(m.name || "").trim() === state.myName && state.myName;
-      const isSameSender = m.name === lastSender;
-      const withinWindow = (m.ts - lastMsgTime) < GROUP_WINDOW_MS;
-      const compact = isSameSender && withinWindow && !isMe;
-
-      const row = document.createElement("div");
-      row.className = "sc-row" + (isMe ? " me" : "") + (compact ? " compact" : "");
-      row.dataset.id = m.id;
-
-      const av = document.createElement("div");
-      av.className = "sc-avatar";
-      const avUrl = getAvatar(m.name);
-      if (avUrl){
-        av.innerHTML = `<img src="${escapeHtml(avUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none';this.parentNode.textContent='${escapeHtml(getInitial(m.name))}'">`;
-      } else {
-        av.textContent = getInitial(m.name);
-      }
-
-      const wrap = document.createElement("div");
-      wrap.className = "sc-bubble-wrap";
-
-      const meta = document.createElement("div");
-      meta.className = "sc-meta";
-      meta.innerHTML = `<span class="sc-sender">${escapeHtml(m.name || "Ẩn danh")}</span><span class="sc-time">${formatTime(m.ts)}</span>`;
-
-      const bubble = document.createElement("div");
-      bubble.className = "sc-bubble" + (m.pending ? " pending" : "") + (m.failed ? " failed" : "");
-      bubble.textContent = m.text;
-
-      if (m.failed && isMe){
-        bubble.style.cursor = "pointer";
-        bubble.addEventListener("click", () => retrySend(m.id), { once: true });
-      }
-
-      wrap.append(meta, bubble);
-      row.append(av, wrap);
-      frag.appendChild(row);
-
-      lastTs = m.ts;
-      lastSender = m.name;
-      lastMsgTime = m.ts;
+    for (const w of topWishes) {
+      if (!lastTs || !sameDay(lastTs, w.ts)) { const d = document.createElement('div'); d.className = 'bd-day-divider'; d.textContent = formatDay(w.ts); frag.appendChild(d); }
+      const replies = repliesByParent[w.id] || [];
+      frag.appendChild(renderCard(w, replies));
+      lastTs = w.ts;
+      S.seenIds.add(w.id);
     }
-
-    list.innerHTML = "";
-    list.appendChild(frag);
+    body.innerHTML = '';
+    body.appendChild(frag);
+    requestAnimationFrame(() => { if (!S.inlineReplyToId) body.scrollTop = body.scrollHeight; });
   }
 
-  function scrollToBottom(smooth = true){
-    const list = $("scList");
-    if (!list) return;
-    list.scrollTo({ top: list.scrollHeight, behavior: smooth ? "smooth" : "auto" });
-  }
-  function updateJumpBtn(){
-    const btn = $("scJumpBtn");
-    if (!btn) return;
-    btn.classList.toggle("show", !state.isAtBottom && state.messages.length > 0);
-  }
-
-  function startFallbackPolling(){
-    stopFallbackPolling();
-    const tick = async () => {
-      state.pollTimer = setTimeout(tick, FALLBACK_POLL_MS);
-      if (state.pollInFlight) return;
-      if (!state.pageOpen && document.hidden) return;
-      await fetchMessages();
-    };
-    tick();
-  }
-  function stopFallbackPolling(){
-    if (state.pollTimer){ clearTimeout(state.pollTimer); state.pollTimer = null; }
-  }
-
-  async function fetchMessages(){
-    const api = getApi();
-    if (!api) return;
-    state.pollInFlight = true;
-    try{
-      const since = state.lastTs > 0 ? state.lastTs - 1000 : 0;
-      const r = await api("getSecretMessages", { since, _ts: Date.now() }, 12000);
-      if (!r || !r.ok) return;
-      const arr = Array.isArray(r.data && r.data.messages) ? r.data.messages : [];
-      let added = 0;
-      let newest = 0;
-      for (const raw of arr){
-        const id = String(raw && raw.id || "").trim();
-        const text = String(raw && raw.text || "").trim();
-        if (!id || !text) continue;
-        if (state.messages.some(m => m.id === id)) continue;
-        const name = String(raw && raw.name || "").trim() || "Ẩn danh";
-        const ts = Number(raw && raw.ts) || Date.now();
-        state.messages.push({ id, name, text, ts });
+  async function fetchWishes(force) {
+    if (S.pollInFlight && !force) return;
+    S.pollInFlight = true;
+    try {
+      const since = force ? 0 : (S.lastTs > 0 ? S.lastTs - 1000 : 0);
+      const r = await rpc('rpc_get_birthday_wishes', { p_since: since }, 12000);
+      const arr = Array.isArray(r.wishes) ? r.wishes : [];
+      let added = 0, newest = 0;
+      if (force) { S.wishes = []; S.seenIds.clear(); }
+      for (const raw of arr) {
+        const id = String(raw.id || '').trim();
+        if (!id) continue;
+        if (S.wishes.some(w => w.id === id)) continue;
+        const ts = Number(raw.ts) || Date.now();
+        const replyToId = raw.replyToId ? String(raw.replyToId) : null;
+        S.wishes.push({ id, sender: String(raw.sender || '').trim() || 'Ẩn danh', message: String(raw.message || ''), isFromRecipient: !!raw.isFromRecipient, replyToId, ts });
         added++;
         if (ts > newest) newest = ts;
       }
-      if (newest > state.lastTs) state.lastTs = newest;
-      if (state.messages.length > MAX_MESSAGES){
-        state.messages = state.messages.slice(-MAX_MESSAGES);
-        _lastRenderSig = "";
-      }
-      if (added > 0){
-        if (!state.pageOpen){
-          for (const raw of arr){
-            const name = String(raw && raw.name || "").trim() || "Ẩn danh";
-            if (name !== state.myName) state.unread++;
-          }
-          saveUnread();
-        }
-        const wasAtBottom = state.isAtBottom;
-        renderMessages();
-        if (wasAtBottom || state.pageOpen === false){
-          requestAnimationFrame(() => scrollToBottom(true));
-        } else {
-          updateJumpBtn();
-        }
-        if (state.pageOpen) markAllSeen();
-      } else {
-        renderMessages();
-      }
-    } catch(_){}
-    finally{ state.pollInFlight = false; }
+      if (newest > S.lastTs) S.lastTs = newest;
+      if (S.wishes.length > MAX_WISHES) S.wishes = S.wishes.slice(-MAX_WISHES);
+      if (added > 0 && !S.pageOpen) { S.unread += added; try { localStorage.setItem(UNREAD_KEY, String(S.unread)); } catch(_){} }
+      if (added > 0 || force) { _lastRenderSig = ''; render(); }
+      updateFabBadge();
+    } catch (e) { log('fetch lỗi:', e && e.message); }
+    finally { S.pollInFlight = false; }
   }
 
-  /* ===== REALTIME: nhận message mới qua WebSocket ===== */
-  function handleRealtimeMessage(row){
-    if (!row) return;
-    const id = String(row.id || "").trim();
-    const text = String(row.message || "").trim();
-    if (!id || !text) return;
-    if (state.messages.some(m => m.id === id)) return;
+  async function sendWish(sender, message, isFromRecipient, replyToId) {
+    if (S.sending) return null;
+    S.sending = true;
+    try {
+      const params = { p_sender: sender, p_message: message, p_is_from_recipient: !!isFromRecipient };
+      if (replyToId) params.p_reply_to_id = replyToId;
+      const data = await rpc('rpc_send_birthday_wish', params, 15000);
+      const w = { id: String(data.id || ''), sender: String(data.sender || sender), message: String(data.message || message), isFromRecipient: !!data.isFromRecipient, replyToId: data.replyToId ? String(data.replyToId) : null, ts: Number(data.ts) || Date.now() };
+      S.wishes.push(w);
+      S.lastTs = Math.max(S.lastTs, w.ts);
+      _lastRenderSig = '';
+      render();
+      if (data.isFromRecipient) { fireConfetti(40); if (!data.replyToId) showCelebration(); }
+      else { fireConfetti(30); }
+      return w;
+    } finally { S.sending = false; }
+  }
 
-    const name = String(row.name || "").trim() || "Ẩn danh";
-    const ts = row.created_at ? new Date(row.created_at).getTime() : Date.now();
+  async function sendChat(text) {
+    const msg = String(text || '').trim();
+    if (!msg) return;
+    if (!isLoggedIn()){ requestLogin(); return; }
+    let sender, isFromRecipient;
+    if (S.isOwner){ sender = RECIPIENT; isFromRecipient = true; }
+    else if (isRegularUser()){ sender = getAuthDisplayName(); if (!sender){ if (window.SRank && window.SRank.setStatus) window.SRank.setStatus('Không tìm thấy tên tài khoản'); return; } isFromRecipient = false; }
+    else { if (!S.myName) S.myName = loadMyName(); if (!S.myName){ if (window.SRank && window.SRank.setStatus) window.SRank.setStatus('Chưa có tên người gửi'); return; } sender = S.myName; isFromRecipient = sender === RECIPIENT; }
+    try { await sendWish(sender, msg, isFromRecipient, null); }
+    catch (e) { alert('Gửi lỗi: ' + (e.message || e)); }
+  }
 
-    state.messages.push({ id, name, text, ts });
-    if (ts > state.lastTs) state.lastTs = ts;
-    if (state.messages.length > MAX_MESSAGES){
-      state.messages = state.messages.slice(-MAX_MESSAGES);
-      _lastRenderSig = "";
+  function fireConfetti(count) {
+    const emojis = ['🎊','🎉','🌸','💖','✨','🎂','🎁','🌟','💝','🌺'];
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = 'bd-confetti';
+      el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      el.style.left = (Math.random() * 100) + 'vw';
+      const duration = 2.2 + Math.random() * 1.5, delay = Math.random() * 0.6;
+      el.style.animationDuration = duration + 's';
+      el.style.animationDelay = delay + 's';
+      el.style.fontSize = (16 + Math.random() * 20) + 'px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), (duration + delay + 0.5) * 1000);
     }
+  }
 
-    if (!state.pageOpen && name !== state.myName){
-      state.unread++;
-      saveUnread();
+  function showCelebration() {
+    let el = $('bdCelebration');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'bdCelebration';
+      el.innerHTML = `<div class="bd-cele-inner"><div class="bd-cele-cake">🎂</div><div class="bd-cele-title">Happy Birthday</div><div class="bd-cele-name">${esc(RECIPIENT)}</div><div class="bd-cele-sub">Mọi người yêu thương bạn!</div><button type="button" class="bd-cele-btn" id="bdCeleClose">Tiếp tục</button></div>`;
+      document.body.appendChild(el);
+      lockZoom(el);
+      el.querySelector('#bdCeleClose').addEventListener('click', () => { el.classList.remove('show'); });
+      el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
     }
+    el.classList.add('show');
+    fireConfetti(100);
+  }
 
-    const wasAtBottom = state.isAtBottom;
-    renderMessages();
-    if (wasAtBottom || state.pageOpen === false){
-      requestAnimationFrame(() => scrollToBottom(true));
+  function buildModal() {
+    let modal = $('bdModal');
+    if (modal) modal.remove();
+    modal = document.createElement('div');
+    modal.id = 'bdModal';
+    modal.setAttribute('aria-hidden', 'true');
+    const groups = {};
+    PRESET_WISHES.forEach(w => { if (!groups[w.group]) groups[w.group] = []; groups[w.group].push(w.text); });
+    let presetHtml = '';
+    Object.keys(groups).forEach(g => {
+      presetHtml += `<div class="bd-group-label">${esc(g)}</div>`;
+      groups[g].forEach((t) => { presetHtml += `<button type="button" class="bd-preset" data-text="${esc(t)}">${esc(t)}</button>`; });
+    });
+    const canPickSender = canEditBirthday();
+    let senderRowHtml;
+    if (canPickSender){
+      const names = getAllNames().filter(n => S.isOwner || n !== RECIPIENT);
+      const namesOpts = names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+      senderRowHtml = `<div class="bd-field-row"><span class="bd-field-label">Gửi với tên:</span><select class="bd-select" id="bdSenderSelect">${namesOpts}</select></div>`;
     } else {
-      updateJumpBtn();
+      const myName = getAuthDisplayName() || S.myName || '—';
+      senderRowHtml = `<div class="bd-field-row"><span class="bd-field-label">Gửi với tên:</span><div class="bd-sender-readonly" id="bdSenderReadonly">${esc(myName)}</div></div>`;
     }
-    if (state.pageOpen) markAllSeen();
+    modal.innerHTML = `<div class="bd-modal-panel" role="dialog" aria-modal="true"><div class="bd-modal-handle"></div><div class="bd-modal-title">Gửi lời chúc 🎂</div><div class="bd-modal-sub">Cho ${esc(RECIPIENT)} — sinh nhật 7/10</div>${presetHtml}<div class="bd-group-label">Hoặc tự viết</div><textarea class="bd-textarea" id="bdCustomMsg" maxlength="500" placeholder="Viết lời chúc từ trái tim bạn..."></textarea>${senderRowHtml}<div class="bd-hint" id="bdHint">Bạn đang gửi thay mặt ${esc(RECIPIENT)} — sẽ có hiệu ứng đặc biệt</div><div class="bd-modal-msg" id="bdModalMsg"></div><div class="bd-modal-actions"><button type="button" class="bd-btn" id="bdModalCancel">Huỷ</button><button type="button" class="bd-btn primary" id="bdModalSend">Gửi chúc</button></div></div>`;
+    document.body.appendChild(modal);
+    lockZoom(modal);
+    let selectedPreset = '';
+    modal.querySelectorAll('.bd-preset').forEach(btn => {
+      btn.addEventListener('click', () => { modal.querySelectorAll('.bd-preset').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); selectedPreset = btn.dataset.text; modal.querySelector('#bdCustomMsg').value = ''; });
+    });
+    const hintEl = modal.querySelector('#bdHint');
+    let getSenderValue;
+    if (canPickSender){
+      const senderSel = modal.querySelector('#bdSenderSelect');
+      if (S.isOwner) senderSel.value = RECIPIENT;
+      else senderSel.value = getAuthDisplayName() || S.myName || (getAllNames()[0] || '');
+      const checkSender = () => { hintEl.classList.toggle('show', senderSel.value.trim() === RECIPIENT); };
+      senderSel.addEventListener('change', checkSender);
+      checkSender();
+      getSenderValue = () => senderSel.value.trim();
+    } else {
+      const ro = modal.querySelector('#bdSenderReadonly');
+      getSenderValue = () => ro.textContent.trim();
+      hintEl.classList.remove('show');
+    }
+    const close = () => { modal.classList.remove('show'); modal.setAttribute('aria-hidden', 'true'); modal.querySelector('#bdModalMsg').textContent = ''; selectedPreset = ''; modal.querySelectorAll('.bd-preset').forEach(b => b.classList.remove('selected')); modal.querySelector('#bdCustomMsg').value = ''; setTimeout(() => { if (modal.parentNode) modal.remove(); }, 300); };
+    modal.querySelector('#bdModalCancel').addEventListener('click', close);
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    modal.querySelector('#bdModalSend').addEventListener('click', async () => {
+      const custom = modal.querySelector('#bdCustomMsg').value.trim();
+      const msg = custom || selectedPreset;
+      const sender = getSenderValue();
+      const msgEl = modal.querySelector('#bdModalMsg');
+      if (!msg) { msgEl.textContent = 'Chọn 1 lời chúc hoặc tự viết nhé!'; return; }
+      if (!sender) { msgEl.textContent = 'Chọn tên người gửi'; return; }
+      const isFromRecipient = sender === RECIPIENT;
+      const btn = modal.querySelector('#bdModalSend');
+      btn.disabled = true; btn.textContent = 'Đang gửi…'; msgEl.textContent = '';
+      try {
+        await sendWish(sender, msg, isFromRecipient, null);
+        msgEl.textContent = 'Đã gửi ✓';
+        if (canPickSender) saveMyName(sender);
+        setTimeout(close, 800);
+      } catch (e) { msgEl.textContent = 'Lỗi: ' + (e.message || e); }
+      finally { btn.disabled = false; btn.textContent = 'Gửi chúc'; }
+    });
+    return modal;
   }
 
-  function makeLocalId(){
-    return "local_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+  function openModal() {
+    if (!isLoggedIn()){ requestLogin(); return; }
+    const old = $('bdModal');
+    if (old) old.remove();
+    const modal = buildModal();
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
   }
 
-  async function sendMessage(text){
-    const raw = String(text || "").trim();
-    if (!raw) return;
-    if (!state.myName){
-      openPicker();
-      return;
-    }
-    if (raw.length > MAX_TEXT_LENGTH) return;
+  function openPage() {
+    if (!isLoggedIn()){ requestLogin(); return; }
+    const page = $('bdPage');
+    if (!page) return;
+    if (!S.myName) S.myName = loadMyName();
+    if (isRecipientLogin()){ S.isOwner = true; try { localStorage.setItem(OWNER_KEY, '1'); } catch(_){} }
+    page.classList.add('show');
+    page.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    S.pageOpen = true;
+    updateHeadAvatar();
+    updateOwnerBtn();
+    S.unread = 0;
+    try { localStorage.setItem(UNREAD_KEY, '0'); } catch(_){}
+    updateFabBadge();
+    syncFabVisibility();
+    _lastRenderSig = '';
+    render();
+    fetchWishes(true);
+  }
 
-    const localId = makeLocalId();
-    const now = Date.now();
-    const pending = {
-      id: localId, name: state.myName, text: raw, ts: now,
-      pending: true, failed: false,
+  function closePage() {
+    const page = $('bdPage');
+    if (!page) return;
+    page.classList.remove('show');
+    page.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    S.pageOpen = false;
+    S.inlineReplyToId = null;
+    syncFabVisibility();
+  }
+
+  function startPolling() {
+    stopPolling();
+    const tick = () => {
+      S.pollTimer = setTimeout(tick, POLL_MS);
+      if (document.hidden) return;
+      if (!S.pageOpen && S.wishes.length === 0) return;
+      if (S.inlineReplyToId) return;
+      fetchWishes(false);
     };
-    state.messages.push(pending);
-    state.pendingSends.set(localId, { text: raw, name: state.myName });
-    renderMessages();
-    requestAnimationFrame(() => scrollToBottom(true));
-
-    await doSend(localId, raw, state.myName);
+    tick();
   }
 
-  async function doSend(localId, text, name){
-    const api = getApi();
-    if (!api){
-      markSendFailed(localId);
-      return;
-    }
-    try{
-      const r = await api("sendSecretMessage", {
-        text,
-        name,
-        clientTs: String(Date.now()),
-      }, 15000);
-      if (!r || !r.ok){
-        markSendFailed(localId);
-        return;
-      }
-      const official = r.data || {};
-      const idx = state.messages.findIndex(m => m.id === localId);
-      if (idx >= 0){
-        const realId = String(official.id || localId);
-        const realTs = Number(official.ts) || state.messages[idx].ts;
-        state.messages[idx] = {
-          id: realId, name, text,
-          ts: realTs,
-          pending: false, failed: false,
-        };
-        if (realTs > state.lastTs) state.lastTs = realTs;
-      }
-      state.pendingSends.delete(localId);
-      _lastRenderSig = "";
-      renderMessages();
-    } catch(_){
-      markSendFailed(localId);
-    }
-  }
+  function stopPolling() { if (S.pollTimer) { clearTimeout(S.pollTimer); S.pollTimer = null; } }
 
-  function markSendFailed(localId){
-    const idx = state.messages.findIndex(m => m.id === localId);
-    if (idx < 0) return;
-    state.messages[idx].pending = false;
-    state.messages[idx].failed = true;
-    _lastRenderSig = "";
-    renderMessages();
-  }
-
-  function retrySend(localId){
-    const info = state.pendingSends.get(localId);
-    const idx = state.messages.findIndex(m => m.id === localId);
-    if (idx < 0) return;
-    const m = state.messages[idx];
-    const text = info && info.text || m.text;
-    const name = info && info.name || m.name;
-    m.pending = true;
-    m.failed = false;
-    _lastRenderSig = "";
-    renderMessages();
-    doSend(localId, text, name);
-  }
-
-  function openPicker(){
-    const overlay = $("scPickerOverlay");
-    const list = $("scPickerList");
-    if (!overlay || !list) return;
-    const names = getAllNames();
-    if (names.length === 0){
-      list.innerHTML = `<div style="text-align:center;padding:20px;color:#b7a8b8;font-size:12px">Chưa có danh sách thành viên</div>`;
-    } else {
-      list.innerHTML = "";
-      names.forEach(n => {
-        const item = document.createElement("button");
-        item.type = "button";
-        item.className = "sc-picker-item" + (n === state.myName ? " active" : "");
-        const avUrl = getAvatar(n);
-        const av = avUrl
-          ? `<img src="${escapeHtml(avUrl)}" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.textContent='${escapeHtml(getInitial(n))}'">`
-          : escapeHtml(getInitial(n));
-        item.innerHTML = `
-          <span class="sc-picker-avatar">${av}</span>
-          <span class="sc-picker-name">${escapeHtml(n)}</span>
-          ${n === state.myName ? '<span class="sc-picker-check">✓</span>' : ""}`;
-        item.addEventListener("click", () => {
-          saveMyName(n);
-          closePicker();
-          renderMessages(true);
-          updateHeaderSub();
-        });
-        list.appendChild(item);
-      });
-    }
-    overlay.classList.add("show");
-    overlay.setAttribute("aria-hidden", "false");
-  }
-  function closePicker(){
-    const overlay = $("scPickerOverlay");
-    if (!overlay) return;
-    overlay.classList.remove("show");
-    overlay.setAttribute("aria-hidden", "true");
-  }
-
-  function updateComposerAvatar(){
-    const fallback = $("scComposerAvatarFallback");
-    const img = $("scComposerAvatarImg");
-    if (!fallback || !img) return;
-    if (!state.myName){
-      fallback.style.display = "";
-      fallback.textContent = "?";
-      img.style.display = "none";
-      return;
-    }
-    const url = getAvatar(state.myName);
-    if (url){
-      img.src = url;
-      img.style.display = "";
-      img.onerror = () => {
-        img.style.display = "none";
-        fallback.style.display = "";
-        fallback.textContent = getInitial(state.myName);
-      };
-      fallback.style.display = "none";
-    } else {
-      img.style.display = "none";
-      fallback.style.display = "";
-      fallback.textContent = getInitial(state.myName);
-    }
-  }
-
-  function updateHeaderSub(){
-    const sub = $("scHeaderSub");
-    if (!sub) return;
-    const names = getAllNames();
-    if (names.length > 0){
-      sub.textContent = names.length + " thành viên";
-    } else {
-      sub.textContent = "Đang hoạt động";
-    }
-  }
-
-  function openPage(){
-    const page = $("secretMailPage");
-    if (!page) return;
-    if (!state.myName) state.myName = loadMyName();
-    page.classList.add("show");
-    page.setAttribute("aria-hidden", "false");
-    state.pageOpen = true;
-    document.body.style.overflow = "hidden";
-
-    updateComposerAvatar();
-    updateHeaderSub();
-    renderMessages(true);
-    markAllSeen();
-    startFallbackPolling();
-    fetchMessages();
-    requestAnimationFrame(() => scrollToBottom(false));
-
-    if (typeof window.syncQuickTools === "function") window.syncQuickTools();
-  }
-  function closePage(){
-    const page = $("secretMailPage");
-    if (!page) return;
-    page.classList.remove("show");
-    page.setAttribute("aria-hidden", "true");
-    state.pageOpen = false;
-    document.body.style.overflow = "";
-    if (typeof window.syncQuickTools === "function") window.syncQuickTools();
-  }
-
-  function bindEvents(){
-    const fab = $("secretMailBtn");
-    if (fab){
-      fab.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openPage();
-      });
-    }
-    const backBtn = $("scBackBtn");
-    if (backBtn) backBtn.addEventListener("click", closePage);
-    const composerAv = $("scComposerAvatar");
-    if (composerAv) composerAv.addEventListener("click", openPicker);
-    const pickerClose = $("scPickerClose");
-    if (pickerClose) pickerClose.addEventListener("click", closePicker);
-    const pickerOverlay = $("scPickerOverlay");
-    if (pickerOverlay){
-      pickerOverlay.addEventListener("click", (e) => {
-        if (e.target && e.target.id === "scPickerOverlay") closePicker();
-      });
-    }
-
-    const input = $("scInput");
-    const sendBtn = $("scSendBtn");
-    if (input && sendBtn){
-      const refreshSendState = () => {
-        const has = input.value.trim().length > 0;
-        sendBtn.disabled = !has;
-        input.style.height = "auto";
-        input.style.height = Math.min(input.scrollHeight, 120) + "px";
-      };
-      input.addEventListener("input", refreshSendState);
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey && !e.isComposing){
-          e.preventDefault();
-          if (input.value.trim()){
-            sendMessage(input.value);
-            input.value = "";
-            refreshSendState();
-          }
-        }
-      });
-      sendBtn.addEventListener("click", () => {
-        if (input.value.trim()){
-          sendMessage(input.value);
-          input.value = "";
-          refreshSendState();
-        }
-      });
-      refreshSendState();
-    }
-
-    const list = $("scList");
-    if (list){
-      list.addEventListener("scroll", () => {
-        const distanceFromBottom = list.scrollHeight - list.scrollTop - list.clientHeight;
-        state.isAtBottom = distanceFromBottom < 60;
-        updateJumpBtn();
-      }, { passive: true });
-    }
-    const jumpBtn = $("scJumpBtn");
-    if (jumpBtn){
-      jumpBtn.addEventListener("click", () => {
-        state.isAtBottom = true;
-        scrollToBottom(true);
-        updateJumpBtn();
-      });
-    }
-    const menuBtn = $("scMenuBtn");
-    if (menuBtn){
-      menuBtn.addEventListener("click", () => {
-        const choice = confirm("Xoá lịch sử chat trên thiết bị này?\n(Tin nhắn trên server vẫn còn)");
-        if (choice){
-          state.messages = [];
-          state.lastTs = 0;
-          _lastRenderSig = "";
-          renderMessages(true);
-        }
-      });
-    }
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key !== "Escape") return;
-      const picker = $("scPickerOverlay");
-      if (picker && picker.classList.contains("show")){
-        closePicker();
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        return;
-      }
-      if (state.pageOpen){
-        closePage();
-        e.preventDefault();
-        e.stopImmediatePropagation();
-      }
-    });
-
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && state.pageOpen){
-        fetchMessages();
-        if (typeof window.syncQuickTools === "function") window.syncQuickTools();
-      }
-    });
-
-    window.addEventListener("checkinDone", (e) => {
-      const name = e && e.detail && e.detail.name;
-      if (name && name !== state.myName){
-        saveMyName(name);
-      }
-    });
-
-    /* REALTIME listener */
-    window.addEventListener("sb:chat:new", (e) => {
-      handleRealtimeMessage(e.detail);
-    });
-  }
-
-  function init(){
+  function boot() {
+    if (S.booted) return;
+    S.booted = true;
     injectStyles();
     ensureFab();
-    buildPage();
-    state.myName = loadMyName();
-    loadUnread();
-
-    setTimeout(() => {
-      fetchMessages();
-      updateFabBadge();
-    }, 800);
-
-    bindEvents();
-    updateComposerAvatar();
-    updateHeaderSub();
+    ensurePage();
+    S.myName = loadMyName();
+    try { S.unread = Math.max(0, Number(localStorage.getItem(UNREAD_KEY) || 0) || 0); S.isOwner = localStorage.getItem(OWNER_KEY) === '1' || isRecipientLogin(); } catch(_){}
     updateFabBadge();
+    updateOwnerBtn();
+    const origSync = window.syncQuickTools;
+    if (typeof origSync === 'function') { window.syncQuickTools = function() { try { origSync(); } catch(_){} syncFabVisibility(); }; }
+    setInterval(syncFabVisibility, 800);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && !S.inlineReplyToId) fetchWishes(false); });
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      if (S.inlineReplyToId) { cancelInlineReply(); e.preventDefault(); e.stopImmediatePropagation(); return; }
+      const modal = $('bdModal');
+      if (modal && modal.classList.contains('show')) { modal.querySelector('#bdModalCancel')?.click(); e.preventDefault(); e.stopImmediatePropagation(); return; }
+      if (S.pageOpen) { closePage(); e.preventDefault(); e.stopImmediatePropagation(); }
+    });
+    if (window.SRank && window.SRank.Auth && typeof window.SRank.Auth.onChange === 'function'){
+      window.SRank.Auth.onChange(function(){
+        const authName = getAuthDisplayName();
+        if (authName) S.myName = authName;
+        if (isRecipientLogin()){ S.isOwner = true; try { localStorage.setItem(OWNER_KEY, '1'); } catch(_){} }
+        else if (!canEditBirthday()){ S.isOwner = false; }
+        updateOwnerBtn();
+        if (S.pageOpen && !isLoggedIn()){ closePage(); }
+      });
+    }
+    setTimeout(startPolling, 3000);
+    setTimeout(() => fetchWishes(false), 1500);
+    log('v4.2 ready ✓');
   }
 
-  if (document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", init, { once: true });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 200), { once: true });
   } else {
-    init();
+    setTimeout(boot, 200);
   }
 })();
