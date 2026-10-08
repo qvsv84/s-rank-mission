@@ -28,6 +28,80 @@
 <link rel="preload" href="css/main.css" as="style">
 <link rel="preload" href="js/main.js" as="script">
 <link rel="stylesheet" href="css/main.css">
+
+<style>
+/* ===== AUTH UI ===== */
+#loginOverlay{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(15,30,20,.5);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+#loginOverlay.show{display:flex}
+#loginPanel{
+  width:min(92vw,380px);
+  background:linear-gradient(160deg,#ffffff,#f4faf3 60%,#edf6eb);
+  border-radius:24px;padding:26px 22px 22px;
+  box-shadow:0 24px 70px rgba(20,45,28,.35);
+  animation:loginPop .28s cubic-bezier(.16,1,.3,1);
+}
+@keyframes loginPop{
+  from{opacity:0;transform:scale(.9) translateY(18px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+#loginHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+#loginTitle{font-size:19px;font-weight:800;color:#2c4a33;letter-spacing:-.3px}
+#loginClose{
+  background:transparent;border:0;font-size:26px;line-height:1;
+  color:#6b7d70;cursor:pointer;padding:2px 8px;border-radius:50%;
+  transition:background .15s;
+}
+#loginClose:hover{background:#eef4ec}
+.login-label{display:block;font-size:13px;font-weight:700;color:#4a6b52;margin:14px 0 6px;letter-spacing:.2px}
+#loginUsername,#loginPassword{
+  width:100%;box-sizing:border-box;
+  padding:13px 15px;font-size:16px;
+  border:1.5px solid #cbdcc9;border-radius:14px;
+  background:#fff;color:#2c4a33;outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  font-family:inherit;
+}
+#loginUsername:focus,#loginPassword:focus{border-color:#ff70b9;box-shadow:0 0 0 3px rgba(255,112,185,.15)}
+#loginMsg{
+  min-height:20px;font-size:13px;color:#d64545;
+  margin:12px 0 4px;text-align:center;font-weight:600;
+  transition:color .2s;
+}
+#loginMsg.ok{color:#2e8b57}
+#loginSubmit{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,#ff3c91,#ff70b9);
+  color:#fff;font-size:15px;font-weight:800;
+  border:0;border-radius:14px;cursor:pointer;
+  margin-top:4px;letter-spacing:.3px;
+  box-shadow:0 6px 18px rgba(255,60,145,.35);
+  transition:transform .12s,box-shadow .12s;
+  font-family:inherit;
+}
+#loginSubmit:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(255,60,145,.45)}
+#loginSubmit:active{transform:translateY(0)}
+#loginSubmit:disabled{opacity:.6;cursor:wait;transform:none}
+#logoutBtn{
+  position:fixed;top:10px;right:10px;z-index:999;
+  padding:7px 12px;font-size:12px;font-weight:700;
+  background:rgba(255,255,255,.9);
+  border:1px solid #cbdcc9;border-radius:999px;
+  color:#2c4a33;cursor:pointer;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  display:inline-flex;gap:6px;align-items:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.08);
+  font-family:inherit;
+  transition:background .15s,transform .12s;
+}
+#logoutBtn[hidden]{display:none}
+#logoutBtn:hover{background:#fff;transform:translateY(-1px)}
+#logoutBtn .lb-name{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
 </head>
 <body>
 <noscript>
@@ -175,6 +249,29 @@
 
 <div id="hint" aria-hidden="true" hidden></div>
 </main>
+
+<!-- ===== NÚT ĐĂNG XUẤT (chỉ hiện khi đã login) ===== -->
+<button id="logoutBtn" type="button" aria-label="Đăng xuất" hidden>
+  <span aria-hidden="true">🚪</span>
+  <span class="lb-name" id="logoutName"></span>
+</button>
+
+<!-- ===== LOGIN OVERLAY ===== -->
+<div id="loginOverlay" aria-hidden="true">
+  <section id="loginPanel" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <div id="loginHead">
+      <div id="loginTitle">🔐 Đăng nhập</div>
+      <button id="loginClose" type="button" aria-label="Đóng">×</button>
+    </div>
+    <label class="login-label" for="loginUsername">Tên đăng nhập</label>
+    <input id="loginUsername" type="text" inputmode="text" autocomplete="username"
+           placeholder="VD: tienloi" maxlength="60" autocapitalize="none" spellcheck="false">
+    <label class="login-label" for="loginPassword">Mật khẩu</label>
+    <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••">
+    <div id="loginMsg"></div>
+    <button id="loginSubmit" type="button">Đăng nhập</button>
+  </section>
+</div>
 
 <section id="attendancePage" aria-label="Lịch chấm công">
   <div class="att-page-inner">
@@ -353,6 +450,9 @@
 <script src="js/scheduler.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-adapter.js" defer></script>
+
+<!-- Auth (phải sau supabase-adapter.js — cần window.__sb) -->
+<script src="js/auth.js" defer></script>
 
 <!-- App core -->
 <script src="js/main.js" defer></script>
