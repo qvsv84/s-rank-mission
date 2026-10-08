@@ -1,11 +1,11 @@
 /* =========================================================
-   SRANK AUTH UI — v7.4 (CTA + sequential wave kicker)
+   SRANK AUTH UI — v7.5 (CTA + TRUE sequential wave)
    ---------------------------------------------------------
-   FIX v7.4:
-   - Wave animation TUẦN TỰ: mỗi chữ chạy xong mới đến chữ sau
-     · duration: 0.5s (CSS)
-     · step: 500ms (JS) — khớp duration → không overlap
-   - Chỉ 1 chữ động tại 1 thời điểm
+   FIX v7.5:
+   - Mỗi chữ có KEYFRAME RIÊNG, chỉ active trong 1/N cycle
+   - Chạy xong → tĩnh ngay (không loop cá nhân)
+   - Loop lại cả chuỗi khi hết chu kỳ tổng
+   - Space được bỏ qua, không tính vào thời gian
    ========================================================= */
 (function(){
   "use strict";
@@ -30,8 +30,8 @@
   let currentUser = null;
   let submitting = false;
 
-  /* ============ CSS WAVE ANIMATION — TUẦN TỰ ============ */
-  function injectKickerCss(){
+  /* ============ CSS BASE ============ */
+  function injectBaseCss(){
     if (document.getElementById('bossKickerCss')) return;
     const s = document.createElement('style');
     s.id = 'bossKickerCss';
@@ -42,22 +42,53 @@
       }
       .landing-kicker .boss-wave .bw-c {
         display: inline-block;
-        animation: bossWave 0.5s ease-in-out infinite;
         will-change: transform;
         transform-origin: center bottom;
-      }
-      @keyframes bossWave {
-        0%, 100% { transform: translateY(0) scale(1); }
-        30%      { transform: translateY(-8px) scale(1.15); }
-        60%      { transform: translateY(4px) scale(0.92); }
+        transform: translateY(0) scale(1);
       }
       @media (prefers-reduced-motion: reduce) {
-        .landing-kicker .boss-wave .bw-c { animation: none; }
+        .landing-kicker .boss-wave .bw-c { animation: none !important; }
       }
     `;
     document.head.appendChild(s);
   }
-  injectKickerCss();
+  injectBaseCss();
+
+  /* ============ DYNAMIC KEYFRAMES (dựa vào số chữ) ============ */
+  const STEP_MS = 350;  // thời gian mỗi chữ chạy
+  let _waveStyleEl = null;
+  let _waveCount = 0;
+
+  function ensureWaveKeyframes(count){
+    if (_waveStyleEl && _waveCount === count) return;
+
+    // Xoá style cũ
+    if (_waveStyleEl && _waveStyleEl.parentNode) _waveStyleEl.remove();
+
+    _waveStyleEl = document.createElement('style');
+    _waveStyleEl.id = 'bossWaveKeyframes';
+
+    const rules = [];
+    for (let i = 0; i < count; i++){
+      const startPct = (i / count) * 100;
+      const endPct = ((i + 1) / count) * 100;
+      const peakPct = (startPct + endPct) / 2;
+
+      rules.push(`@keyframes bwW_${i} {`);
+      if (startPct === 0){
+        rules.push(`  0% { transform: translateY(0) scale(1); }`);
+      } else {
+        rules.push(`  0%, ${startPct.toFixed(4)}% { transform: translateY(0) scale(1); }`);
+      }
+      rules.push(`  ${peakPct.toFixed(4)}% { transform: translateY(-8px) scale(1.15); }`);
+      rules.push(`  ${endPct.toFixed(4)}%, 100% { transform: translateY(0) scale(1); }`);
+      rules.push(`}`);
+    }
+
+    _waveStyleEl.textContent = rules.join('\n');
+    document.head.appendChild(_waveStyleEl);
+    _waveCount = count;
+  }
 
   /* ============ HELPERS ============ */
   function isChecklistLocked(){
@@ -121,26 +152,41 @@
     return false;
   }
 
-  function buildWaveHtml(text){
-    let chars;
+  function splitGraphemes(text){
     try {
       if (typeof Intl !== 'undefined' && Intl.Segmenter){
         const seg = new Intl.Segmenter('vi', { granularity: 'grapheme' });
-        chars = Array.from(seg.segment(text), s => s.segment);
-      } else {
-        chars = Array.from(text);
+        return Array.from(seg.segment(text), s => s.segment);
       }
-    } catch(_) {
-      chars = Array.from(text);
+    } catch(_) {}
+    return Array.from(text);
+  }
+
+  function buildWaveHtml(text){
+    const chars = splitGraphemes(text);
+
+    // Đếm số ký tự KHÔNG phải space (bỏ qua space khỏi timing)
+    let visibleCount = 0;
+    for (const c of chars){
+      if (c.trim() !== '' && c !== '\u00A0') visibleCount++;
     }
-    /* ✅ TUẦN TỰ: step = duration = 500ms → mỗi lúc 1 chữ động */
-    const step = 500;
-    const inner = chars.map((c, i) => {
-      const delay = i * step;
-      const ch = (c === ' ') ? '&nbsp;' : c
+
+    ensureWaveKeyframes(visibleCount);
+
+    const totalMs = visibleCount * STEP_MS;
+    let animIdx = 0;
+
+    const inner = chars.map((c) => {
+      // Space: không tính vào animation
+      if (c.trim() === '' || c === '\u00A0'){
+        return `<span class="bw-c" style="animation:none">&nbsp;</span>`;
+      }
+      const i = animIdx++;
+      const safe = c
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      return `<span class="bw-c" style="animation-delay:${delay}ms">${ch}</span>`;
+      return `<span class="bw-c" style="animation: bwW_${i} ${totalMs}ms ease-in-out infinite">${safe}</span>`;
     }).join('');
+
     const safeLabel = text.replace(/"/g, '&quot;');
     return `<span class="boss-wave" aria-label="${safeLabel}">${inner}</span>`;
   }
@@ -346,5 +392,5 @@
 
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v7.4 — CTA + sequential wave");
+  console.log("[AUTH-UI] ready ✓ v7.5 — sequential wave");
 })();
