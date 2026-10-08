@@ -16,11 +16,8 @@
 <meta name="application-name" content="Đảo Mèo">
 <meta name="description" content="Đảo Mèo — Daily Mission, Checklist, Chấm công & BXH TOP">
 
-<!-- CDN preconnect -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-
-<!-- Supabase project: yodvujkylnvzjybvgika -->
 <link rel="preconnect" href="https://yodvujkylnvzjybvgika.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="https://yodvujkylnvzjybvgika.supabase.co">
 
@@ -86,8 +83,13 @@
 #loginSubmit:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(255,60,145,.45)}
 #loginSubmit:active{transform:translateY(0)}
 #loginSubmit:disabled{opacity:.6;cursor:wait;transform:none}
+
+/* ===== LOGOUT BTN — góc trái dưới ===== */
 #logoutBtn{
-  position:fixed;top:10px;right:10px;z-index:999;
+  position:fixed;
+  left:12px;
+  bottom:calc(12px + env(safe-area-inset-bottom));
+  z-index:999;
   padding:7px 12px;font-size:12px;font-weight:700;
   background:rgba(255,255,255,.9);
   border:1px solid #cbdcc9;border-radius:999px;
@@ -97,10 +99,11 @@
   box-shadow:0 4px 14px rgba(0,0,0,.08);
   font-family:inherit;
   transition:background .15s,transform .12s;
+  max-width:min(60vw,220px);
 }
 #logoutBtn[hidden]{display:none}
 #logoutBtn:hover{background:#fff;transform:translateY(-1px)}
-#logoutBtn .lb-name{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#logoutBtn .lb-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -250,7 +253,7 @@
 <div id="hint" aria-hidden="true" hidden></div>
 </main>
 
-<!-- ===== NÚT ĐĂNG XUẤT (chỉ hiện khi đã login) ===== -->
+<!-- ===== NÚT ĐĂNG XUẤT — góc trái dưới (chỉ hiện khi login) ===== -->
 <button id="logoutBtn" type="button" aria-label="Đăng xuất" hidden>
   <span aria-hidden="true">🚪</span>
   <span class="lb-name" id="logoutName"></span>
