@@ -1,6 +1,6 @@
 (function(){
   "use strict";
-
+  
   const Auth = window.SRank && window.SRank.Auth;
   if (!Auth) { console.error("[AUTH-UI] SRank.Auth chưa load"); return; }
 
