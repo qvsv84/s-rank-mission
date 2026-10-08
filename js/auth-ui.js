@@ -283,5 +283,8 @@
     if (!document.hidden) scheduleUpdate();
   }, 3000);
 
-  console.log("[AUTH-UI] ready ✓");
+  // Expose login form cho các module khác (attendance.js gọi khi chưa login)
+  window.SRank.openLogin = openLoginForm;
+
+  console.log("[AUTH-UI] ready ✓ v2");
 })();
