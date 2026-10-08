@@ -36,16 +36,15 @@
     const s = document.createElement('style');
     s.id = 'authCtaFixCss';
     s.textContent = `
-      /* Khi CTA ở trạng thái "đã chấm" → tắt hết animation/transition */
+      /* Khi CTA ở trạng thái "đã chấm" hoặc "login" → kill animation,
+         nhưng PHẢI force opacity + visibility để nút không biến mất */
       .landing-cta[data-auth-state="done"],
       .landing-cta[data-auth-state="login"] {
         animation: none !important;
         transition: none !important;
-      }
-      /* Khi ở trạng thái idle → cho animation chạy */
-      .landing-cta[data-auth-state="idle"] {
-        animation: inherit;
-        transition: inherit;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
       }
     `;
     document.head.appendChild(s);
