@@ -1,11 +1,12 @@
 /* =========================================================
-   SRANK AUTH UI — v5
+   SRANK AUTH UI — v6 (Reverse thinking)
    ---------------------------------------------------------
-   FIX v5:
-   - Kill animation của .landing-cta sau khi set xong state
-     (chặn nháy xanh khi main.js re-render mỗi 15s auto-sync)
-   - Set state = "done" → khoá animation vĩnh viễn cho element đó
-   - Set state = "idle" → cho phép animation chạy (lần đầu)
+   TƯ DUY NGƯỢC:
+   - Không kill animation (mất state cuối → mất nút)
+   - Skip animation tới cuối bằng animation-delay: -999s
+   - Pause tại state cuối bằng animation-play-state: paused
+   - CSS thuần → apply trước paint → không nháy, không phụ
+     thuộc timing JS/MutationObserver
    ========================================================= */
 (function(){
   "use strict";
@@ -30,21 +31,28 @@
   let currentUser = null;
   let submitting = false;
 
-  /* ============ INJECT CSS KILL ANIMATION ============ */
+  /* ============================================================
+     CSS — TƯ DUY NGƯỢC
+     ------------------------------------------------------------
+     Mọi .landing-cta ngay khi vào DOM → skip animation tới cuối
+     → hiện tĩnh, không nháy. Chỉ idle mới cho animation chạy.
+     ============================================================ */
   function injectCtaFixCss(){
     if (document.getElementById('authCtaFixCss')) return;
     const s = document.createElement('style');
     s.id = 'authCtaFixCss';
     s.textContent = `
-      /* Khi CTA ở trạng thái "đã chấm" hoặc "login" → kill animation,
-         nhưng PHẢI force opacity + visibility để nút không biến mất */
-      .landing-cta[data-auth-state="done"],
-      .landing-cta[data-auth-state="login"] {
-        animation: none !important;
-        transition: none !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        transform: none !important;
+      /* MẶC ĐỊNH: mọi CTA → skip animation tới cuối + pause
+         → element luôn visible ngay frame đầu, không nháy */
+      .landing-cta {
+        animation-delay: -999s !important;
+        animation-play-state: paused !important;
+      }
+
+      /* Chỉ khi ở trạng thái idle (⏰ Chấm công) → cho animation chạy */
+      .landing-cta[data-auth-state="idle"] {
+        animation-delay: 0s !important;
+        animation-play-state: running !important;
       }
     `;
     document.head.appendChild(s);
@@ -99,8 +107,7 @@
     if (!cta) return false;
     const info = getCtaInfo();
 
-    // Set data-attr TRƯỚC để CSS kill animation ngay frame đầu
-    // (tránh flash khi element mới được tạo lại)
+    // Set data-attr TRƯỚC — CSS dựa vào attr này để quyết định
     if (cta.dataset.authState !== info.state) {
       cta.dataset.authState = info.state;
     }
@@ -109,12 +116,12 @@
 
     if (info.disabled){
       if (!cta.classList.contains("locked")) cta.classList.add("locked");
-      if (cta.getAttribute("aria-disabled") !== "true") cta.setAttribute("aria-disabled", "true");
-      if (cta.getAttribute("tabindex") !== "-1") cta.setAttribute("tabindex", "-1");
+      cta.setAttribute("aria-disabled", "true");
+      cta.setAttribute("tabindex", "-1");
     } else {
       cta.classList.remove("locked");
       cta.removeAttribute("aria-disabled");
-      if (cta.getAttribute("tabindex") !== "0") cta.setAttribute("tabindex", "0");
+      cta.setAttribute("tabindex", "0");
     }
     return true;
   }
@@ -129,8 +136,7 @@
     });
   }
 
-  // Set state "login" mặc định ngay từ đầu để CSS kill animation
-  // (tránh nháy animation CLICK HERE trước khi auth-ui set)
+  // Set state mặc định ngay khi init
   setTimeout(updateCta, 0);
 
   let retryCount = 0;
@@ -140,26 +146,12 @@
     if (retryCount >= 10) clearInterval(retryTimer);
   }, 150);
 
-  // MutationObserver — bắt mọi lần main.js tạo lại CTA
+  // MutationObserver — chủ yếu để set data-attr sớm nhất có thể
+  // (CSS đã tự xử lý animation, observer chỉ để cập nhật text/state)
   try {
-    new MutationObserver(function(mutations){
-      // Nếu CTA vừa bị tạo lại → set state ngay
-      let ctaJustAdded = false;
-      for (const m of mutations){
-        if (m.addedNodes && m.addedNodes.length){
-          for (const n of m.addedNodes){
-            if (n.nodeType === 1 && (n.classList?.contains?.("landing-cta") || n.querySelector?.(".landing-cta"))){
-              ctaJustAdded = true;
-              break;
-            }
-          }
-        }
-        if (ctaJustAdded) break;
-      }
-      // Set ngay không qua RAF để chặn animation frame đầu
-      if (ctaJustAdded) updateCta();
-      else scheduleUpdate();
-    }).observe(question, { childList: true, subtree: true, characterData: true });
+    new MutationObserver(scheduleUpdate).observe(question, {
+      childList: true, subtree: true, characterData: true
+    });
   } catch(_) {}
 
   /* ============ LOGIN FORM ============ */
@@ -340,7 +332,6 @@
   updateLogoutBtn();
   updateCta();
 
-  // Poll update nhẹ (để cập nhật khi checkinDone / data thay đổi)
   setInterval(function(){
     if (!document.hidden) updateCta();
   }, 2000);
@@ -348,5 +339,5 @@
   /* ============ EXPOSE ============ */
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v5");
+  console.log("[AUTH-UI] ready ✓ v6");
 })();
