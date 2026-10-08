@@ -104,6 +104,29 @@
 #logoutBtn[hidden]{display:none}
 #logoutBtn:hover{background:#fff;transform:translateY(-1px)}
 #logoutBtn .lb-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ===== AVATAR UPLOAD BTN ===== */
+#avatarBtn{
+  position:fixed;
+  left:12px;
+  bottom:calc(58px + env(safe-area-inset-bottom));
+  z-index:999;
+  width:42px;height:42px;
+  border-radius:50%;
+  background:rgba(255,255,255,.9);
+  border:1px solid #cbdcc9;
+  color:#2c4a33;
+  font-size:20px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.08);
+  transition:transform .12s,background .15s;
+  font-family:inherit;
+}
+#avatarBtn[hidden]{display:none !important}
+#avatarBtn:hover{background:#fff}
+#avatarBtn:active{transform:scale(.94)}
+#avatarBtn:disabled{opacity:.55;cursor:wait}
 </style>
 </head>
 <body>
@@ -253,7 +276,11 @@
 <div id="hint" aria-hidden="true" hidden></div>
 </main>
 
-<!-- ===== NÚT ĐĂNG XUẤT — góc trái dưới (chỉ hiện khi login) ===== -->
+<!-- ===== NÚT UPLOAD AVATAR (chỉ hiện khi đã login) ===== -->
+<button id="avatarBtn" type="button" aria-label="Đổi avatar" hidden>📷</button>
+<input id="avatarFileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+
+<!-- ===== NÚT ĐĂNG XUẤT (chỉ hiện khi đã login) ===== -->
 <button id="logoutBtn" type="button" aria-label="Đăng xuất" hidden>
   <span aria-hidden="true">🚪</span>
   <span class="lb-name" id="logoutName"></span>
@@ -460,6 +487,7 @@
 <!-- App core -->
 <script src="js/main.js" defer></script>
 <script src="js/auth-ui.js" defer></script>
+<script src="js/avatar-upload.js" defer></script>
 <script src="js/checklist-ui.js?v=6.3" defer></script>
 <script src="js/attendance.js" defer></script>
 <script src="js/attendance-top3.js" defer></script>
