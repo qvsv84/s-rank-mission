@@ -1,11 +1,12 @@
 /* =========================================================
-   SRANK AUTH UI — v7.2 (main.js owns CTA + kicker hook)
+   SRANK AUTH UI — v7.3 (CTA + kicker wave animation)
    ---------------------------------------------------------
-   FIX v7.2:
-   - Thêm getKickerText() hook cho main.js
-     · User trong whitelist (5 người) → "🕶️ BOSS TỔ CHỨC ÁO ĐEN"
-     · Admin (pass 8516) → "🕶️ BOSS TỔ CHỨC ÁO ĐEN"
-     · Còn lại → "🐱 DAILY TEAM HUB"
+   NEW v7.3:
+   - Kicker "🕶️ BOSS TỔ CHỨC ÁO ĐEN" có hiệu ứng wave
+     · Mỗi ký tự nổi lên / lặn xuống tuần tự từ trái qua phải
+     · Dùng Intl.Segmenter để tách grapheme đúng (emoji không bị vỡ)
+     · Tôn trọng prefers-reduced-motion
+   - Hook mới: window.__getKickerRender() trả về { html, text, version }
    ========================================================= */
 (function(){
   "use strict";
@@ -29,6 +30,36 @@
 
   let currentUser = null;
   let submitting = false;
+
+  /* ============ CSS WAVE ANIMATION ============ */
+  function injectKickerCss(){
+    if (document.getElementById('bossKickerCss')) return;
+    const s = document.createElement('style');
+    s.id = 'bossKickerCss';
+    s.textContent = `
+      .landing-kicker .boss-wave {
+        display: inline-block;
+        white-space: nowrap;
+      }
+      .landing-kicker .boss-wave .bw-c {
+        display: inline-block;
+        animation: bossWave 1.8s ease-in-out infinite;
+        will-change: transform;
+        transform-origin: center bottom;
+      }
+      @keyframes bossWave {
+        0%, 100% { transform: translateY(0) scale(1); }
+        20%      { transform: translateY(-6px) scale(1.12); }
+        50%      { transform: translateY(0) scale(1); }
+        70%      { transform: translateY(3px) scale(0.96); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .landing-kicker .boss-wave .bw-c { animation: none; }
+      }
+    `;
+    document.head.appendChild(s);
+  }
+  injectKickerCss();
 
   /* ============ HELPERS ============ */
   function isChecklistLocked(){
@@ -74,27 +105,59 @@
   }
   window.__getCtaInfo = getCtaInfo;
 
-  /* ============ HOOK: KICKER ============ */
+  /* ============ HOOK: KICKER + WAVE ============ */
   const BOSS_WHITELIST = ['tienloi', 'mydung', 'quynhtrang', 'phamkimchi', 'minhthuy'];
   const KICKER_DEFAULT = '🐱 DAILY TEAM HUB';
   const KICKER_BOSS = '🕶️ BOSS TỔ CHỨC ÁO ĐEN';
 
-  function getKickerText(){
-    // Admin pass → BOSS
+  function isBossMode(){
     try {
       if (window.AdminSession && typeof window.AdminSession.isValid === "function" && window.AdminSession.isValid()){
-        return KICKER_BOSS;
+        return true;
       }
     } catch(_) {}
-
-    // User login + username trong whitelist → BOSS
     if (currentUser){
       const un = String(currentUser.username || '').trim().toLowerCase();
-      if (un && BOSS_WHITELIST.indexOf(un) >= 0) return KICKER_BOSS;
+      if (un && BOSS_WHITELIST.indexOf(un) >= 0) return true;
     }
-
-    return KICKER_DEFAULT;
+    return false;
   }
+
+  function buildWaveHtml(text){
+    let chars;
+    try {
+      if (typeof Intl !== 'undefined' && Intl.Segmenter){
+        const seg = new Intl.Segmenter('vi', { granularity: 'grapheme' });
+        chars = Array.from(seg.segment(text), s => s.segment);
+      } else {
+        chars = Array.from(text);
+      }
+    } catch(_) {
+      chars = Array.from(text);
+    }
+    const step = 80;
+    const inner = chars.map((c, i) => {
+      const delay = i * step;
+      const ch = (c === ' ') ? '&nbsp;' : c
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return `<span class="bw-c" style="animation-delay:${delay}ms">${ch}</span>`;
+    }).join('');
+    const safeLabel = text.replace(/"/g, '&quot;');
+    return `<span class="boss-wave" aria-label="${safeLabel}">${inner}</span>`;
+  }
+
+  function getKickerRender(){
+    if (isBossMode()){
+      return { html: buildWaveHtml(KICKER_BOSS), text: KICKER_BOSS, version: 'boss' };
+    }
+    return { html: null, text: KICKER_DEFAULT, version: 'default' };
+  }
+
+  function getKickerText(){
+    return isBossMode() ? KICKER_BOSS : KICKER_DEFAULT;
+  }
+
+  window.__getKickerRender = getKickerRender;
   window.__getKickerText = getKickerText;
 
   /* ============ CTA CLICK HANDLER ============ */
@@ -284,5 +347,5 @@
 
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v7.2 — main.js owns CTA + kicker hook");
+  console.log("[AUTH-UI] ready ✓ v7.3 — CTA + wave kicker");
 })();
