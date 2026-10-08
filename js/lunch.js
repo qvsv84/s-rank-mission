@@ -1,7 +1,15 @@
 /* =========================================================
-   LUNCH — Bữa trưa ăn gì? (v1.0.1)
-   FIX: bug shadowing biến trong runSpinAnimation()
-        → nút kẹt "ĐANG QUAY..." và không push Live Feed
+   LUNCH — Bữa trưa ăn gì? (v1.1)
+   ---------------------------------------------------------
+   FIX v1.1:
+   - Tích hợp SRank.Auth:
+     · Chưa login → mở form login (giống attendance)
+     · Đã login → tên lấy từ display_name (không dùng localStorage nữa)
+     · Logout khi đang mở → tự đóng page
+   - Fix bug bữa trưa push lên LiveFeed với tên người khác
+   ---------------------------------------------------------
+   FIX v1.0.1 (giữ nguyên):
+   - Shadowing biến trong runSpinAnimation()
    ========================================================= */
 (function(){
   "use strict";
@@ -70,6 +78,28 @@
     window.__srankApi ? window.__srankApi
     : (window.SRank && window.SRank.api ? window.SRank.api : null);
 
+  /* ============ AUTH HELPERS ============ */
+  function getAuthUser(){
+    try {
+      return (window.SRank && window.SRank.Auth && typeof window.SRank.Auth.getCurrentUser === "function" && window.SRank.Auth.getCurrentUser()) || null;
+    } catch(_) { return null; }
+  }
+  function isAdminAuthed(){
+    try { return !!(window.AdminSession && typeof window.AdminSession.isValid === "function" && window.AdminSession.isValid()); } catch(_) { return false; }
+  }
+  function isAuthUser(){ return !!getAuthUser(); }
+  function getAuthDisplayName(){
+    const u = getAuthUser();
+    return u ? String(u.displayName || u.username || "").trim() : "";
+  }
+  function isLoggedIn(){ return isAuthUser() || isAdminAuthed(); }
+  function requestLogin(){
+    if (window.SRank && typeof window.SRank.openLogin === "function"){
+      try { window.SRank.openLogin(); return; } catch(_){}
+    }
+    notify("Vui lòng đăng nhập", "error");
+  }
+
   const isAdmin = () => {
     try {
       if (window.__srankIsAdmin === true) return true;
@@ -123,7 +153,13 @@
     return a;
   }
 
+  /* ============ FIX: getMyName dùng auth ============ */
   function getMyName() {
+    // ✅ Ưu tiên auth displayName
+    const authName = getAuthDisplayName();
+    if (authName) return authName;
+
+    // Fallback chỉ dùng khi guest (mà guest không vào được page do check login)
     try { return String(localStorage.getItem(LAST_PICKED_NAME_KEY) || "").trim() || "Ẩn danh"; }
     catch (_) { return "Ẩn danh"; }
   }
@@ -749,7 +785,6 @@
     text.textContent = label || "QUAY NGAY";
   }
 
-  /* FIX: đổi tên biến nội bộ để không shadow biến ngoài */
   function runSpinAnimation(pool, finalDish) {
     return new Promise(function(resolve) {
       const hero = $("lcHero");
@@ -795,6 +830,7 @@
 
   async function spin() {
     if (state.spinning || state.sending) return;
+    if (!isLoggedIn()) { requestLogin(); return; }
     if (state.currentMode === "special") {
       notify("Tab Đặc biệt chỉ để xem — quay ở 'Cả 3' để có cơ hội trúng 👑", "info");
       return;
@@ -869,6 +905,7 @@
 
   function openAddSheet() {
     if (state.spinning || state.sending) return;
+    if (!isLoggedIn()) { requestLogin(); return; }
     state.pendingAddCategory = state.currentMode === "all" ? "home" : state.currentMode === "special" ? "special" : state.currentMode;
     showSheet(buildAddContent(), "add");
     setTimeout(function() {
@@ -952,6 +989,7 @@
 
   function openEditSheet(dish) {
     if (state.spinning || state.sending) return;
+    if (!isLoggedIn()) { requestLogin(); return; }
     state.editingDish = dish;
     showSheet(buildEditContent(dish), "edit");
     setTimeout(function() {
@@ -1085,7 +1123,9 @@
     }, 320);
   }
 
+  /* ============ FIX: check login trước khi mở page ============ */
   async function openPage() {
+    if (!isLoggedIn()) { requestLogin(); return; }
     const page = $("lunchPage");
     if (!page) return;
     page.classList.add("show");
@@ -1183,6 +1223,16 @@
     buildPage();
     bindEvents();
     render();
+
+    /* ✅ React khi auth thay đổi */
+    if (window.SRank && window.SRank.Auth && typeof window.SRank.Auth.onChange === "function"){
+      window.SRank.Auth.onChange(function(){
+        // Nếu đang mở page mà logout → đóng page
+        if (state.pageOpen && !isLoggedIn()){
+          closePage();
+        }
+      });
+    }
   }
 
   if (document.readyState === "loading") {
