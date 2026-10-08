@@ -11,6 +11,7 @@ function isLoggedIn(){return isAuthUser()||isAdminAuthed()}
 function requestLogin(){if(window.SRank&&typeof window.SRank.openLogin==="function"){try{window.SRank.openLogin();return}catch(_){}}if(window.SRank&&typeof window.SRank.setStatus==="function")window.SRank.setStatus("Vui lòng đăng nhập để chấm công");else alert("Vui lòng đăng nhập để chấm công")}
 function setStatusMsg(msg){if(window.SRank&&typeof window.SRank.setStatus==="function")window.SRank.setStatus(msg);else console.log("[ATT]",msg)}
 function isTodayYMD(y,m,d){const now=new Date();return y===now.getFullYear()&&m===now.getMonth()&&d===now.getDate()}
+function debugState(){try{const u=getAuthUser();console.log("[ATT] state: auth="+isAuthUser()+" admin="+isAdminAuthed()+" regular="+isRegularUser()+" user="+(u?(u.displayName||u.username):"null"))}catch(_){}}
 let ATTENDANCE_EMPLOYEES=[],attendanceAutoRefreshTimer=null,attendanceAutoRefreshCountdown=60,attendanceLastSaveAt=0;
 const ATTENDANCE_AUTO_REFRESH_SEC=60;
 function startAttendanceAutoRefresh(){stopAttendanceAutoRefresh();attendanceAutoRefreshCountdown=ATTENDANCE_AUTO_REFRESH_SEC;updateAttendanceCountdown();attendanceAutoRefreshTimer=setInterval(()=>{if(document.hidden||!page.classList.contains("show"))return;if(Date.now()-attendanceLastSaveAt<1e4){attendanceAutoRefreshCountdown=ATTENDANCE_AUTO_REFRESH_SEC;updateAttendanceCountdown();return}if(attendanceStatusOverlay.classList.contains("show")||attendanceMultiMode)return;attendanceAutoRefreshCountdown--;if(attendanceAutoRefreshCountdown<=0){attendanceAutoRefreshCountdown=ATTENDANCE_AUTO_REFRESH_SEC;loadAttendanceMonth(!0).catch(()=>{})}updateAttendanceCountdown()},1e3)}
@@ -130,9 +131,41 @@ const viewport=$("attendanceNameWheelViewport"),itemsBox=$("attendanceNameWheelI
 let wheelIndex=0,selectedName="";
 function buildNameWheel(){nameWheel.setItems(ATTENDANCE_EMPLOYEES)}
 function updateWheelButton(){const value=wheelBtn?.querySelector(".wheel-value");if(value)value.textContent=selectedName||"Chọn kiểm duyệt viên"}
-function updateEmployeeCardVisibility(){if(!wheelBtn)return;wheelBtn.style.display=isRegularUser()?"none":""}
+
+/* ✅ FIX: ẩn card mạnh hơn — dùng display:none + pointer-events + aria-hidden + disabled + class */
+function updateEmployeeCardVisibility(){
+  if(!wheelBtn)return;
+  const hide=isRegularUser();
+  if(hide){
+    wheelBtn.style.display="none";
+    wheelBtn.style.pointerEvents="none";
+    wheelBtn.setAttribute("aria-hidden","true");
+    wheelBtn.setAttribute("tabindex","-1");
+    wheelBtn.disabled=true;
+    wheelBtn.classList.add("att-card-hidden");
+  } else {
+    wheelBtn.style.display="";
+    wheelBtn.style.pointerEvents="";
+    wheelBtn.setAttribute("aria-hidden","false");
+    wheelBtn.removeAttribute("tabindex");
+    wheelBtn.disabled=false;
+    wheelBtn.classList.remove("att-card-hidden");
+  }
+}
 function updateAdminControlsVisibility(){const mb=$("attendanceMultiBtn");if(mb)mb.style.display=canEditAttendance()?"":"none"}
-function openNameWheel(){if(isRegularUser())return;if(!ATTENDANCE_EMPLOYEES.length){setAttendanceFooterState("syncing","Đang tải danh sách…");loadAttendanceMonth(!0).then(()=>{if(ATTENDANCE_EMPLOYEES.length)openNameWheel();else setAttendanceFooterState("error","Chưa có danh sách kiểm duyệt viên")}).catch(()=>{});return}nameWheel.setIndex(Math.max(0,ATTENDANCE_EMPLOYEES.indexOf(selectedName)));wheelOverlay.classList.add("show");wheelOverlay.setAttribute("aria-hidden","false");nameWheel.schedule();requestAnimationFrame(()=>{nameWheel.schedule();requestAnimationFrame(()=>nameWheel.schedule())});if(typeof window.syncQuickTools==="function")window.syncQuickTools()}
+
+/* ✅ FIX: openNameWheel check kỹ hơn */
+function openNameWheel(){
+  debugState();
+  if(isRegularUser()){console.log("[ATT] openNameWheel blocked — user thường");return}
+  if(!isLoggedIn()){requestLogin();return}
+  if(!ATTENDANCE_EMPLOYEES.length){setAttendanceFooterState("syncing","Đang tải danh sách…");loadAttendanceMonth(!0).then(()=>{if(ATTENDANCE_EMPLOYEES.length)openNameWheel();else setAttendanceFooterState("error","Chưa có danh sách kiểm duyệt viên")}).catch(()=>{});return}
+  nameWheel.setIndex(Math.max(0,ATTENDANCE_EMPLOYEES.indexOf(selectedName)));
+  wheelOverlay.classList.add("show");wheelOverlay.setAttribute("aria-hidden","false");
+  nameWheel.schedule();
+  requestAnimationFrame(()=>{nameWheel.schedule();requestAnimationFrame(()=>nameWheel.schedule())});
+  if(typeof window.syncQuickTools==="function")window.syncQuickTools()
+}
 function closeNameWheel(){wheelOverlay.classList.remove("show");wheelOverlay.setAttribute("aria-hidden","true");if(typeof window.syncQuickTools==="function")window.syncQuickTools()}
 let viewDate=new Date();viewDate.setDate(1);
 function dataFor(date){const y=date.getFullYear(),m=date.getMonth(),d=date.getDate(),raw=String(ATTENDANCE_DATA[selectedName]?.[key(y,m,d)]||"").trim().toUpperCase();if(["P","O","T","Q","X"].includes(raw))return{status:raw};const state=typeof window.__getChecklistState==="function"?window.__getChecklistState():null;if(state&&Array.isArray(state.names)){const idx=state.names.indexOf(selectedName);if(idx>=0&&state.checked[idx]===!0&&state.times[idx]){const today=new Date(),isToday=y===today.getFullYear()&&m===today.getMonth()&&d===today.getDate();if(isToday){const dow=date.getDay();if(dow===0)return{status:"T"};return{status:"V"}}}}const now=new Date(),isPast=date<new Date(now.getFullYear(),now.getMonth(),now.getDate()),isSunday=date.getDay()===0;if(isPast&&!isSunday)return{status:"U"};return null}
@@ -146,6 +179,7 @@ document.querySelectorAll("[data-multi-status]").forEach(btn=>btn.addEventListen
 if(attendanceStatusOverlay)attendanceStatusOverlay.addEventListener("click",e=>{if(e.target===attendanceStatusOverlay)closeAttendanceStatus()});
 document.querySelectorAll("#attendanceStatusOptions [data-status]").forEach(btn=>btn.addEventListener("click",()=>saveAttendanceStatus(btn.dataset.status)));
 async function openPage(){
+  debugState();
   if(!isLoggedIn()){requestLogin();return}
   if(isAuthUser()){const n=getAuthDisplayName();if(n)selectedName=n}
   updateEmployeeCardVisibility();
@@ -161,7 +195,6 @@ async function openPage(){
 function closePage(){
   page.classList.remove("show");
   stopAttendanceAutoRefresh();
-  /* ✅ FIX: clear multi mode khi đóng page */
   if(attendanceMultiMode||attendanceMultiDays.size){attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI()}
   if(typeof window.syncQuickTools==="function")window.syncQuickTools()
 }
@@ -169,7 +202,14 @@ if(attendanceBtn)attendanceBtn.addEventListener("click",e=>{e.preventDefault();e
 if(attendanceSyncBtn)attendanceSyncBtn.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();if(!canEditAttendance())return;attendanceSyncBtn.classList.add("spinning");setAttendanceFooterState("syncing","Đang đồng bộ…");attendanceAutoRefreshCountdown=ATTENDANCE_AUTO_REFRESH_SEC;updateAttendanceCountdown();loadAttendanceMonth(!0).then(()=>setAttendanceFooterState("ok","Đã đồng bộ ✓")).catch(err=>setAttendanceFooterState("error","Lỗi đồng bộ: "+attendanceErrorText(err))).finally(()=>setTimeout(()=>attendanceSyncBtn.classList.remove("spinning"),400))});
 window.__openAttendancePage=openPage;window.__closeAttendancePage=closePage;
 if(back)back.addEventListener("click",closePage);
-if(wheelBtn)wheelBtn.addEventListener("click",openNameWheel);
+
+/* ✅ FIX: listener click có double-check isRegularUser */
+if(wheelBtn)wheelBtn.addEventListener("click",e=>{
+  debugState();
+  if(isRegularUser()){console.log("[ATT] card click blocked — user thường");e.preventDefault();e.stopPropagation();return}
+  if(!isLoggedIn()){requestLogin();return}
+  openNameWheel();
+});
 if(wheelClose)wheelClose.addEventListener("click",closeNameWheel);
 if(wheelOverlay)wheelOverlay.addEventListener("click",e=>{if(e.target===wheelOverlay)closeNameWheel()});
 if(wheelConfirm)wheelConfirm.addEventListener("click",()=>{if(isRegularUser()){closeNameWheel();return}selectedName=ATTENDANCE_EMPLOYEES[nameWheel.getIndex()]||"";employee.value=selectedName;updateWheelButton();updateEmployeeAvatar();closeNameWheel();render()});
@@ -177,7 +217,6 @@ document.addEventListener("keydown",e=>{if(!wheelOverlay||!wheelOverlay.classLis
 function goToMonth(delta){
   viewDate.setMonth(viewDate.getMonth()+delta);
   attendanceLoadPromise=null;attendanceLoadPromiseKey="";
-  /* ✅ FIX: clear multi mode khi đổi tháng */
   if(attendanceMultiMode||attendanceMultiDays.size){attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI()}
   const y=viewDate.getFullYear(),m=viewDate.getMonth(),hasCache=applyAttendanceCache(y,m);
   if(!hasCache)Object.keys(ATTENDANCE_DATA).forEach(k=>delete ATTENDANCE_DATA[k]);
@@ -187,7 +226,6 @@ if(prev)prev.addEventListener("click",()=>goToMonth(-1));
 if(next)next.addEventListener("click",()=>goToMonth(1));
 const attendanceTodayBtn=$("attendanceTodayBtn");
 if(attendanceTodayBtn)attendanceTodayBtn.addEventListener("click",()=>{const now=new Date();if(viewDate.getFullYear()===now.getFullYear()&&viewDate.getMonth()===now.getMonth()){loadAttendanceMonth(!0).catch(()=>{});return}
-  /* ✅ FIX: clear multi khi về hôm nay */
   if(attendanceMultiMode||attendanceMultiDays.size){attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI()}
   viewDate.setMonth(now.getMonth());viewDate.setFullYear(now.getFullYear());attendanceLoadPromise=null;attendanceLoadPromiseKey="";const hasCache=applyAttendanceCache(now.getFullYear(),now.getMonth());if(hasCache)render();loadAttendanceMonth(!1).catch(()=>{});setAttendanceFooterState("syncing","Đang tải tháng hiện tại…")});
 if(isAuthUser()){const n=getAuthDisplayName();if(n)selectedName=n}
@@ -200,8 +238,23 @@ window.addEventListener("checkinDone",()=>{requestAnimationFrame(()=>renderAtten
 document.addEventListener("visibilitychange",()=>{if(document.hidden||!page.classList.contains("show"))return;renderAttendanceIfCheckinMatches()});
 window.__getAttendanceTopDataForMonth=async function(monthNumber,force=!1){const now=new Date(),year=now.getFullYear(),month=Math.max(1,Math.min(12,Number(monthNumber)||now.getMonth()+1)),monthIndex=month-1;let employees=!force?getAttendanceRawMemory(year,monthIndex):null;if(!employees&&!force){const cache=loadAttendanceCache(year,monthIndex);if(cache&&Array.isArray(cache.employees)){employees=cache.employees;rememberAttendanceRaw(year,monthIndex,employees)}}if(!(Array.isArray(employees)&&employees.length)){const r=await(window.SRankScheduler?window.SRankScheduler.enqueuePoll(()=>window.__srankApi("getAttendance",{month,_ts:Date.now()},2e4)):window.__srankApi("getAttendance",{month,_ts:Date.now()},2e4));if(!r||r.ok!==!0)throw new Error(r?.error||"Google Sheet trả về dữ liệu không hợp lệ");employees=Array.isArray(r.data?.employees)?r.data.employees:[];rememberAttendanceRaw(year,monthIndex,employees);saveAttendanceCache(year,monthIndex,employees)}return{year,month,employees}};
 window.syncAttendanceEmployees=function(){if(!ATTENDANCE_EMPLOYEES.length){loadAttendanceMonth(!0);return}syncAttendanceEmployeeControls();render()};
-if(window.SRank&&window.SRank.Auth&&typeof window.SRank.Auth.onChange==="function"){window.SRank.Auth.onChange(function(){if(isAuthUser()){const n=getAuthDisplayName();if(n)selectedName=n}
-  /* ✅ FIX: nếu không còn login → clear multi và đóng page nếu đang mở */
-  if(!isLoggedIn()&&(attendanceMultiMode||attendanceMultiDays.size)){attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI()}
-  updateEmployeeCardVisibility();updateAdminControlsVisibility();syncAttendanceEmployeeControls();if(page.classList.contains("show")){if(!isLoggedIn()){closePage()}else render()}})}
+
+/* ✅ FIX: Auth.onChange + poll định kỳ để cập nhật visibility */
+if(window.SRank&&window.SRank.Auth&&typeof window.SRank.Auth.onChange==="function"){
+  window.SRank.Auth.onChange(function(){
+    debugState();
+    if(isAuthUser()){const n=getAuthDisplayName();if(n)selectedName=n}
+    updateEmployeeCardVisibility();
+    updateAdminControlsVisibility();
+    syncAttendanceEmployeeControls();
+    if(page.classList.contains("show")){if(!isLoggedIn()){closePage()}else render()}
+  });
+}
+
+/* ✅ FIX: poll auth mỗi 1.5s — phòng onChange miss */
+setInterval(function(){
+  if(document.hidden)return;
+  updateEmployeeCardVisibility();
+},1500);
+
 })();
