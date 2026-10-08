@@ -1,15 +1,11 @@
 /* =========================================================
-   SRANK AUTH UI — v7.1 (main.js owns CTA)
+   SRANK AUTH UI — v7.2 (main.js owns CTA + kicker hook)
    ---------------------------------------------------------
-   ARCHITECTURE:
-   - main.js render CTA, hỏi auth qua window.__getCtaInfo()
-   - auth-ui.js CHỈ: expose hook, login form, logout
-   - Không override DOM, không MutationObserver cho CTA
-   - Khi auth đổi → gọi SRank.rerenderLanding() để main.js re-render
-   ---------------------------------------------------------
-   FIX v7.1:
-   - Thêm isChecklistLocked() check trong getCtaInfo()
-   - Khi lock → trả {locked:true} để block click
+   FIX v7.2:
+   - Thêm getKickerText() hook cho main.js
+     · User trong whitelist (5 người) → "🕶️ BOSS TỔ CHỨC ÁO ĐEN"
+     · Admin (pass 8516) → "🕶️ BOSS TỔ CHỨC ÁO ĐEN"
+     · Còn lại → "🐱 DAILY TEAM HUB"
    ========================================================= */
 (function(){
   "use strict";
@@ -56,9 +52,8 @@
     } catch(_) { return -1; }
   }
 
-  /* ============ HOOK cho main.js ============ */
+  /* ============ HOOK: CTA ============ */
   function getCtaInfo(){
-    // Check lock trước tiên
     if (isChecklistLocked()){
       return { text: "🔒 Tạm khoá Checklist", locked: true };
     }
@@ -77,8 +72,30 @@
     } catch(_) {}
     return { text: "⏰ Chấm công", locked: false };
   }
-
   window.__getCtaInfo = getCtaInfo;
+
+  /* ============ HOOK: KICKER ============ */
+  const BOSS_WHITELIST = ['tienloi', 'mydung', 'quynhtrang', 'phamkimchi', 'minhthuy'];
+  const KICKER_DEFAULT = '🐱 DAILY TEAM HUB';
+  const KICKER_BOSS = '🕶️ BOSS TỔ CHỨC ÁO ĐEN';
+
+  function getKickerText(){
+    // Admin pass → BOSS
+    try {
+      if (window.AdminSession && typeof window.AdminSession.isValid === "function" && window.AdminSession.isValid()){
+        return KICKER_BOSS;
+      }
+    } catch(_) {}
+
+    // User login + username trong whitelist → BOSS
+    if (currentUser){
+      const un = String(currentUser.username || '').trim().toLowerCase();
+      if (un && BOSS_WHITELIST.indexOf(un) >= 0) return KICKER_BOSS;
+    }
+
+    return KICKER_DEFAULT;
+  }
+  window.__getKickerText = getKickerText;
 
   /* ============ CTA CLICK HANDLER ============ */
   function miniBurst(){
@@ -201,15 +218,15 @@
     }
   }
 
-  closeBtn.addEventListener("click", closeLoginForm);
+  if (closeBtn) closeBtn.addEventListener("click", closeLoginForm);
   overlay.addEventListener("click", function(e){
     if (e.target === overlay) closeLoginForm();
   });
-  submitBtn.addEventListener("click", handleLoginSubmit);
-  passInput.addEventListener("keydown", function(e){
+  if (submitBtn) submitBtn.addEventListener("click", handleLoginSubmit);
+  if (passInput) passInput.addEventListener("keydown", function(e){
     if (e.key === "Enter") handleLoginSubmit();
   });
-  userInput.addEventListener("keydown", function(e){
+  if (userInput) userInput.addEventListener("keydown", function(e){
     if (e.key === "Enter") passInput.focus();
   });
 
@@ -267,5 +284,5 @@
 
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v7.1 — main.js owns CTA");
+  console.log("[AUTH-UI] ready ✓ v7.2 — main.js owns CTA + kicker hook");
 })();
