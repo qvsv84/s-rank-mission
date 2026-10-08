@@ -1,12 +1,9 @@
 /* =========================================================
-   SRANK AUTH UI — v6 (Reverse thinking)
+   SRANK AUTH UI — v7.1 (main.js owns CTA)
    ---------------------------------------------------------
-   TƯ DUY NGƯỢC:
-   - Không kill animation (mất state cuối → mất nút)
-   - Skip animation tới cuối bằng animation-delay: -999s
-   - Pause tại state cuối bằng animation-play-state: paused
-   - CSS thuần → apply trước paint → không nháy, không phụ
-     thuộc timing JS/MutationObserver
+   FIX v7.1:
+   - Thêm isChecklistLocked() check trong getCtaInfo()
+   - Khi lock → trả {locked:true} để block click
    ========================================================= */
 (function(){
   "use strict";
@@ -15,7 +12,6 @@
   if (!Auth) { console.error("[AUTH-UI] SRank.Auth chưa load"); return; }
 
   const $ = id => document.getElementById(id);
-  const question = $("question");
   const overlay = $("loginOverlay");
   const closeBtn = $("loginClose");
   const userInput = $("loginUsername");
@@ -25,39 +21,12 @@
   const logoutBtn = $("logoutBtn");
   const logoutName = $("logoutName");
   const appVersion = $("appVersion");
+  const question = $("question");
 
-  if (!question || !overlay) { console.warn("[AUTH-UI] thiếu DOM"); return; }
+  if (!overlay) { console.warn("[AUTH-UI] thiếu DOM"); return; }
 
   let currentUser = null;
   let submitting = false;
-
-  /* ============================================================
-     CSS — TƯ DUY NGƯỢC
-     ------------------------------------------------------------
-     Mọi .landing-cta ngay khi vào DOM → skip animation tới cuối
-     → hiện tĩnh, không nháy. Chỉ idle mới cho animation chạy.
-     ============================================================ */
-  function injectCtaFixCss(){
-    if (document.getElementById('authCtaFixCss')) return;
-    const s = document.createElement('style');
-    s.id = 'authCtaFixCss';
-    s.textContent = `
-      /* MẶC ĐỊNH: mọi CTA → skip animation tới cuối + pause
-         → element luôn visible ngay frame đầu, không nháy */
-      .landing-cta {
-        animation-delay: -999s !important;
-        animation-play-state: paused !important;
-      }
-
-      /* Chỉ khi ở trạng thái idle (⏰ Chấm công) → cho animation chạy */
-      .landing-cta[data-auth-state="idle"] {
-        animation-delay: 0s !important;
-        animation-play-state: running !important;
-      }
-    `;
-    document.head.appendChild(s);
-  }
-  injectCtaFixCss();
 
   /* ============ HELPERS ============ */
   function isChecklistLocked(){
@@ -81,78 +50,100 @@
     } catch(_) { return -1; }
   }
 
+  /* ============ HOOK cho main.js ============ */
+  // main.js gọi function này để lấy text/state của CTA
+  // - locked=true: nút bị disable (đã chấm, tên không khớp, hoặc đã khoá)
+  // - locked=false: nút clickable
   function getCtaInfo(){
+    // ✅ v7.1: check lock trước tiên
     if (isChecklistLocked()){
-      return { text: "🔒 Tạm khoá Checklist", action: "none", disabled: true, state: "done" };
+      return { text: "🔒 Tạm khoá Checklist", locked: true };
     }
     if (!currentUser){
-      return { text: "🔐 Đăng nhập", action: "login", disabled: false, state: "login" };
+      return { text: "🔐 Đăng nhập", locked: false };
     }
     const idx = findUserIndex(currentUser.displayName);
     if (idx < 0){
-      return { text: "⚠ Tên không khớp checklist", action: "none", disabled: true, state: "done" };
+      return { text: "⚠ Tên không khớp checklist", locked: true };
     }
     try {
-      const st = window.SRank.getCurrentState ? window.SRank.getCurrentState() : null;
+      const st = window.SRank && window.SRank.getCurrentState ? window.SRank.getCurrentState() : null;
       if (st && st.checked && st.checked[idx] && st.times && st.times[idx]){
-        return { text: "✓ Đã chấm công (" + st.times[idx] + ")", action: "none", disabled: true, state: "done" };
+        return { text: "✓ Đã chấm công (" + st.times[idx] + ")", locked: true };
       }
     } catch(_) {}
-    return { text: "⏰ Chấm công", action: "checkin", disabled: false, state: "idle" };
+    return { text: "⏰ Chấm công", locked: false };
   }
 
-  /* ============ CTA UPDATE ============ */
-  function updateCta(){
-    const cta = question.querySelector(".landing-cta");
-    if (!cta) return false;
+  // Expose ngay để main.js dùng được
+  window.__getCtaInfo = getCtaInfo;
+
+  /* ============ CTA CLICK HANDLER ============ */
+  function miniBurst(){
+    const space = document.getElementById("space");
+    if (!space) return;
+    const f = document.createElement("div");
+    f.className = "flash";
+    space.appendChild(f);
+    setTimeout(function(){ f.remove(); }, 700);
+    const hearts = [];
+    for (let i = 0; i < 20; i++){
+      const h = document.createElement("div");
+      h.className = "heart";
+      h.textContent = (i % 5 === 0) ? "💗" : "♥";
+      const a = Math.PI * 2 * i / 20, r = 80 + Math.random() * 200;
+      h.style.setProperty("--x", Math.cos(a) * r + "px");
+      h.style.setProperty("--y", Math.sin(a) * r + "px");
+      h.style.setProperty("--r", (Math.random() * 120 - 60) + "deg");
+      h.style.setProperty("--s", (0.7 + Math.random() * 1.3).toFixed(2));
+      h.style.setProperty("--time", (0.7 + Math.random() * 0.6).toFixed(2) + "s");
+      space.appendChild(h);
+      hearts.push(h);
+    }
+    setTimeout(function(){ for (const h of hearts) h.remove(); }, 1600);
+  }
+
+  async function handleCheckin(){
+    if (!currentUser) return;
+    const idx = findUserIndex(currentUser.displayName);
+    if (idx < 0){
+      if (window.SRank.setStatus) window.SRank.setStatus("Tên không khớp checklist");
+      return;
+    }
+    if (typeof window.SRank.requestCheckin !== "function"){
+      if (window.SRank.setStatus) window.SRank.setStatus("Chức năng chưa sẵn sàng");
+      return;
+    }
+    miniBurst();
+    try {
+      await window.SRank.requestCheckin(currentUser.displayName);
+    } catch(err){
+      console.error("[AUTH-UI] checkin error:", err);
+    }
+  }
+
+  function intercept(e){
+    const cta = e.target && e.target.closest ? e.target.closest(".landing-cta") : null;
+    if (!cta) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
     const info = getCtaInfo();
+    if (info.locked) return;
 
-    // Set data-attr TRƯỚC — CSS dựa vào attr này để quyết định
-    if (cta.dataset.authState !== info.state) {
-      cta.dataset.authState = info.state;
-    }
-
-    if (cta.textContent !== info.text) cta.textContent = info.text;
-
-    if (info.disabled){
-      if (!cta.classList.contains("locked")) cta.classList.add("locked");
-      cta.setAttribute("aria-disabled", "true");
-      cta.setAttribute("tabindex", "-1");
-    } else {
-      cta.classList.remove("locked");
-      cta.removeAttribute("aria-disabled");
-      cta.setAttribute("tabindex", "0");
-    }
-    return true;
+    if (!currentUser) openLoginForm();
+    else handleCheckin();
   }
 
-  let _updateScheduled = false;
-  function scheduleUpdate(){
-    if (_updateScheduled) return;
-    _updateScheduled = true;
-    requestAnimationFrame(function(){
-      _updateScheduled = false;
-      updateCta();
-    });
+  if (question){
+    question.addEventListener("click", intercept, true);
+    question.addEventListener("pointerup", intercept, true);
+    question.addEventListener("keydown", function(e){
+      if (e.key !== "Enter" && e.key !== " ") return;
+      intercept(e);
+    }, true);
   }
-
-  // Set state mặc định ngay khi init
-  setTimeout(updateCta, 0);
-
-  let retryCount = 0;
-  const retryTimer = setInterval(function(){
-    retryCount++;
-    updateCta();
-    if (retryCount >= 10) clearInterval(retryTimer);
-  }, 150);
-
-  // MutationObserver — chủ yếu để set data-attr sớm nhất có thể
-  // (CSS đã tự xử lý animation, observer chỉ để cập nhật text/state)
-  try {
-    new MutationObserver(scheduleUpdate).observe(question, {
-      childList: true, subtree: true, characterData: true
-    });
-  } catch(_) {}
 
   /* ============ LOGIN FORM ============ */
   function openLoginForm(){
@@ -208,73 +199,6 @@
     }
   }
 
-  /* ============ BURST ============ */
-  function miniBurst(){
-    const space = document.getElementById("space");
-    if (!space) return;
-    const f = document.createElement("div");
-    f.className = "flash";
-    space.appendChild(f);
-    setTimeout(function(){ f.remove(); }, 700);
-    const hearts = [];
-    for (let i = 0; i < 20; i++){
-      const h = document.createElement("div");
-      h.className = "heart";
-      h.textContent = (i % 5 === 0) ? "💗" : "♥";
-      const a = Math.PI * 2 * i / 20, r = 80 + Math.random() * 200;
-      h.style.setProperty("--x", Math.cos(a) * r + "px");
-      h.style.setProperty("--y", Math.sin(a) * r + "px");
-      h.style.setProperty("--r", (Math.random() * 120 - 60) + "deg");
-      h.style.setProperty("--s", (0.7 + Math.random() * 1.3).toFixed(2));
-      h.style.setProperty("--time", (0.7 + Math.random() * 0.6).toFixed(2) + "s");
-      space.appendChild(h);
-      hearts.push(h);
-    }
-    setTimeout(function(){ for (const h of hearts) h.remove(); }, 1600);
-  }
-
-  /* ============ CHECKIN ============ */
-  async function handleCheckin(){
-    if (!currentUser) return;
-    const idx = findUserIndex(currentUser.displayName);
-    if (idx < 0){
-      if (window.SRank.setStatus) window.SRank.setStatus("Tên không khớp checklist");
-      return;
-    }
-    if (typeof window.SRank.requestCheckin !== "function"){
-      if (window.SRank.setStatus) window.SRank.setStatus("Chức năng chưa sẵn sàng");
-      return;
-    }
-    miniBurst();
-    try {
-      await window.SRank.requestCheckin(currentUser.displayName);
-      if (window.SRank.rerenderLanding) window.SRank.rerenderLanding();
-      scheduleUpdate();
-    } catch(err){
-      console.error("[AUTH-UI] checkin error:", err);
-    }
-  }
-
-  function intercept(e){
-    const cta = e.target && e.target.closest ? e.target.closest(".landing-cta") : null;
-    if (!cta) return;
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    const info = getCtaInfo();
-    if (info.disabled) return;
-    if (info.action === "login") openLoginForm();
-    else if (info.action === "checkin") handleCheckin();
-  }
-
-  question.addEventListener("click", intercept, true);
-  question.addEventListener("pointerup", intercept, true);
-  question.addEventListener("keydown", function(e){
-    if (e.key !== "Enter" && e.key !== " ") return;
-    intercept(e);
-  }, true);
-
-  /* ============ LOGIN OVERLAY EVENTS ============ */
   closeBtn.addEventListener("click", closeLoginForm);
   overlay.addEventListener("click", function(e){
     if (e.target === overlay) closeLoginForm();
@@ -295,7 +219,7 @@
     }
   }, true);
 
-  /* ============ LOGOUT BTN ============ */
+  /* ============ LOGOUT ============ */
   function updateLogoutBtn(){
     if (currentUser){
       if (logoutBtn) logoutBtn.hidden = false;
@@ -325,19 +249,23 @@
     }
     currentUser = user;
     updateLogoutBtn();
-    updateCta();
+
+    // ✅ Yêu cầu main.js re-render CTA — main.js sẽ hỏi lại __getCtaInfo()
+    if (window.SRank && typeof window.SRank.rerenderLanding === "function"){
+      try { window.SRank.rerenderLanding(); } catch(_) {}
+    }
   });
 
+  /* ============ INIT ============ */
   currentUser = Auth.getCurrentUser();
   updateLogoutBtn();
-  updateCta();
 
-  setInterval(function(){
-    if (!document.hidden) updateCta();
-  }, 2000);
+  // Trigger re-render lần đầu để main.js dùng hook
+  if (window.SRank && typeof window.SRank.rerenderLanding === "function"){
+    try { window.SRank.rerenderLanding(); } catch(_) {}
+  }
 
-  /* ============ EXPOSE ============ */
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v6");
+  console.log("[AUTH-UI] ready ✓ v7.1 — main.js owns CTA");
 })();
