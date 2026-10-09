@@ -977,7 +977,6 @@ body.menu-open{overflow:hidden}
     function getRoleInfo(){
       const candidates = [];
 
-      // 1. SRank.Auth.getCurrentUser()
       try {
         const auth = window.SRank && window.SRank.Auth;
         if (auth && typeof auth.getCurrentUser === 'function'){
@@ -988,7 +987,6 @@ body.menu-open{overflow:hidden}
         }
       } catch(e){}
 
-      // 2. localStorage sb-*-auth-token → user.app_metadata.role
       try {
         const u = readAuthSessionFromStorage();
         if (u){
@@ -998,7 +996,6 @@ body.menu-open{overflow:hidden}
         }
       } catch(e){}
 
-      // 3. Quét mọi localStorage key có "role"
       try {
         for (let i = 0; i < localStorage.length; i++){
           const k = localStorage.key(i);
@@ -1025,7 +1022,6 @@ body.menu-open{overflow:hidden}
 
       log('role candidates:', candidates);
 
-      // Chuẩn hoá
       for (let i = 0; i < candidates.length; i++){
         const r = String(candidates[i] || '').trim().toLowerCase();
         if (!r) continue;
@@ -1154,10 +1150,17 @@ body.menu-open{overflow:hidden}
           return;
         }
         menuCard.hidden = false;
-        const name = ((realName && realName.textContent) || '').trim() || 'Thành viên';
-        if (menuNameEl.textContent !== name) menuNameEl.textContent = name;
-        applyRole(menuRoleEl);
-        applyAvatarUrl(extractAvatarUrl());
+
+        /* Mỗi bước độc lập — 1 bước lỗi không kéo bước khác */
+        try {
+          const name = ((realName && realName.textContent) || '').trim() || 'Thành viên';
+          if (menuNameEl.textContent !== name) menuNameEl.textContent = name;
+        } catch(e){}
+
+        try { applyRole(menuRoleEl); } catch(e){ console.error('[Menu] applyRole:', e); }
+
+        try { applyAvatarUrl(extractAvatarUrl()); } catch(e){ console.error('[Menu] avatar:', e); }
+
       } finally { isSyncing = false; }
     }
 
@@ -1205,13 +1208,17 @@ body.menu-open{overflow:hidden}
 
     function openMenu(){
       if (isLoginShowing()) return;
-      syncUserCard();
-      startAutoSync();
-      applyStagger();
+
+      /* MỞ MENU TRƯỚC — đảm bảo luôn mở dù syncUserCard có lỗi */
       overlay.classList.add('open');
       overlay.setAttribute('aria-hidden', 'false');
       btn.setAttribute('aria-expanded', 'true');
       document.body.classList.add('menu-open');
+
+      /* Rồi mới đồng bộ — mỗi bước bọc try riêng */
+      try { syncUserCard(); }   catch(e){ console.error('[Menu] syncUserCard:', e); }
+      try { startAutoSync(); }  catch(e){ console.error('[Menu] autoSync:', e); }
+      try { applyStagger(); }   catch(e){ console.error('[Menu] stagger:', e); }
     }
     function closeMenu(){
       stopAutoSync();
