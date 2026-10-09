@@ -1,854 +1,3 @@
-<!doctype html>
-<html lang="vi">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f3f8f1">
-<meta name="color-scheme" content="light">
-<meta name="format-detection" content="telephone=no">
-<link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg">
-<link rel="apple-touch-icon" href="/icon.svg">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Đảo Mèo">
-<meta name="application-name" content="Đảo Mèo">
-<meta name="description" content="Đảo Mèo — Daily Mission, Checklist, Chấm công & BXH TOP">
-
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-<link rel="preconnect" href="https://yodvujkylnvzjybvgika.supabase.co" crossorigin>
-<link rel="dns-prefetch" href="https://yodvujkylnvzjybvgika.supabase.co">
-
-<title>S Rank — Daily Mission</title>
-<link rel="preload" href="css/main.css" as="style">
-<link rel="preload" href="js/main.js" as="script">
-<link rel="stylesheet" href="css/main.css">
-
-<style>
-/* ================= AUTH UI ================= */
-#loginOverlay{
-  position:fixed;inset:0;z-index:1000;
-  background:rgba(15,30,20,.5);
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-  display:none;align-items:center;justify-content:center;padding:20px;
-}
-#loginOverlay.show{display:flex}
-#loginPanel{
-  width:min(92vw,380px);
-  background:linear-gradient(160deg,#ffffff,#f4faf3 60%,#edf6eb);
-  border-radius:24px;padding:26px 22px 22px;
-  box-shadow:0 24px 70px rgba(20,45,28,.35);
-  animation:loginPop .28s cubic-bezier(.16,1,.3,1);
-}
-@keyframes loginPop{
-  from{opacity:0;transform:scale(.9) translateY(18px)}
-  to{opacity:1;transform:scale(1) translateY(0)}
-}
-#loginHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-#loginTitle{font-size:19px;font-weight:800;color:#2c4a33;letter-spacing:-.3px}
-#loginClose{
-  background:transparent;border:0;font-size:26px;line-height:1;
-  color:#6b7d70;cursor:pointer;padding:2px 8px;border-radius:50%;
-  transition:background .15s;
-}
-#loginClose:hover{background:#eef4ec}
-.login-label{display:block;font-size:13px;font-weight:700;color:#4a6b52;margin:14px 0 6px;letter-spacing:.2px}
-#loginUsername,#loginPassword{
-  width:100%;box-sizing:border-box;
-  padding:13px 15px;font-size:16px;
-  border:1.5px solid #cbdcc9;border-radius:14px;
-  background:#fff;color:#2c4a33;outline:none;
-  transition:border-color .15s,box-shadow .15s;
-  font-family:inherit;
-}
-#loginUsername:focus,#loginPassword:focus{border-color:#ff70b9;box-shadow:0 0 0 3px rgba(255,112,185,.15)}
-#loginMsg{
-  min-height:20px;font-size:13px;color:#d64545;
-  margin:12px 0 4px;text-align:center;font-weight:600;
-  transition:color .2s;
-}
-#loginMsg.ok{color:#2e8b57}
-#loginSubmit{
-  width:100%;padding:14px;
-  background:linear-gradient(135deg,#ff3c91,#ff70b9);
-  color:#fff;font-size:15px;font-weight:800;
-  border:0;border-radius:14px;cursor:pointer;
-  margin-top:4px;letter-spacing:.3px;
-  box-shadow:0 6px 18px rgba(255,60,145,.35);
-  transition:transform .12s,box-shadow .12s;
-  font-family:inherit;
-}
-#loginSubmit:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(255,60,145,.45)}
-#loginSubmit:active{transform:translateY(0)}
-#loginSubmit:disabled{opacity:.6;cursor:wait;transform:none}
-
-/* ================= ẨN NAV GỐC (vẫn click được) ================= */
-#bottomNav, #secondaryNav{
-  position:absolute !important;
-  visibility:hidden !important;
-  pointer-events:none !important;
-  width:1px;height:1px;overflow:hidden;
-  left:-9999px;top:-9999px;
-}
-
-/* Nút avatar/logout gốc — sr-only, JS proxy click */
-#avatarBtn, #logoutBtn{
-  position:absolute !important;
-  left:-9999px !important;top:-9999px !important;
-  width:1px !important;height:1px !important;
-  padding:0 !important;margin:0 !important;
-  overflow:hidden !important;
-  clip:rect(0,0,0,0) !important;
-  clip-path:inset(50%) !important;
-  white-space:nowrap !important;
-  border:0 !important;
-  opacity:0 !important;
-  pointer-events:none !important;
-}
-
-/* ================= NÚT 3 GẠCH (KÉO ĐƯỢC) ================= */
-#menuToggle{
-  position:fixed;
-  left:12px;
-  bottom:calc(12px + env(safe-area-inset-bottom));
-  z-index:999;
-  width:52px;height:52px;
-  border-radius:18px;
-  background:linear-gradient(135deg,#ff9ecb 0%,#ff70b9 45%,#ff3c91 100%);
-  border:2px solid rgba(255,255,255,.75);
-  cursor:pointer;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  gap:5px;
-  box-shadow:
-    0 8px 20px rgba(255,60,145,.38),
-    inset 0 1px 0 rgba(255,255,255,.55);
-  transition:transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s, opacity .25s;
-  font-family:inherit;
-  padding:0;
-  touch-action:none;
-  user-select:none;-webkit-user-select:none;
-  -webkit-tap-highlight-color:transparent;
-}
-#menuToggle:hover{box-shadow:0 10px 26px rgba(255,60,145,.5), inset 0 1px 0 rgba(255,255,255,.55)}
-#menuToggle:active{transform:scale(.9)}
-/* dragging PHẢI đứng sau :active trong CSS để thắng khi cần thiết */
-#menuToggle.dragging{cursor:grabbing;transition:none}
-#menuToggle.dragging:active{transform:scale(1.12) rotate(6deg)}
-#menuToggle.hidden{opacity:0;pointer-events:none;transform:scale(.5)}
-#menuToggle span{
-  display:block;height:2.5px;
-  background:#fff;border-radius:2px;
-  transition:transform .3s cubic-bezier(.16,1,.3,1),opacity .2s,width .25s;
-  pointer-events:none;
-  box-shadow:0 1px 2px rgba(180,20,90,.18);
-}
-#menuToggle span:nth-child(1){width:22px;align-self:center;margin:0 auto}
-#menuToggle span:nth-child(2){width:16px;align-self:center;margin:0 auto}
-#menuToggle span:nth-child(3){width:11px;align-self:center;margin:0 auto}
-
-/* ================= MENU FULL-PAGE OVERLAY ================= */
-#menuOverlay{
-  position:fixed;inset:0;z-index:1100;
-  background:
-    radial-gradient(circle at 15% 8%, rgba(255,192,220,.75), transparent 42%),
-    radial-gradient(circle at 85% 88%, rgba(255,220,235,.85), transparent 45%),
-    radial-gradient(circle at 50% 55%, rgba(255,240,248,.6), transparent 60%),
-    linear-gradient(160deg,#fff8fb 0%,#ffe9f3 45%,#ffdcec 100%);
-  overflow-y:auto;overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-  transition:opacity .32s ease, visibility 0s .32s;
-}
-#menuOverlay.open{
-  opacity:1;visibility:visible;pointer-events:auto;
-  transition:opacity .32s ease, visibility 0s;
-}
-#menuOverlayInner{
-  position:relative;
-  min-height:100%;
-  padding:calc(22px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom));
-  box-sizing:border-box;
-  max-width:520px;margin:0 auto;
-  transform:translateY(24px);
-  opacity:0;
-  transition:transform .45s cubic-bezier(.16,1,.3,1), opacity .35s;
-}
-#menuOverlay.open #menuOverlayInner{
-  transform:translateY(0);opacity:1;
-  transition-delay:.06s;
-}
-
-.menu-float{
-  position:absolute;
-  font-size:22px;
-  opacity:.6;
-  pointer-events:none;
-  filter:drop-shadow(0 4px 8px rgba(255,112,185,.28));
-  animation:floatY 6s ease-in-out infinite;
-}
-.menu-float.small{font-size:16px;opacity:.45}
-@keyframes floatY{
-  0%,100%{transform:translateY(0) rotate(-6deg)}
-  50%{transform:translateY(-14px) rotate(6deg)}
-}
-
-.menu-header{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:20px;
-}
-.menu-brand{display:flex;align-items:center;gap:12px}
-.menu-brand-logo{
-  width:52px;height:52px;border-radius:18px;
-  background:linear-gradient(135deg,#ffd5e8,#ffb8d9);
-  display:flex;align-items:center;justify-content:center;
-  font-size:28px;
-  border:2px solid rgba(255,255,255,.95);
-  box-shadow:
-    0 6px 16px rgba(255,112,185,.3),
-    inset 0 1px 0 rgba(255,255,255,.9);
-  animation:brandWiggle 4s ease-in-out infinite;
-}
-@keyframes brandWiggle{
-  0%,100%{transform:rotate(-4deg)}
-  50%{transform:rotate(5deg)}
-}
-.menu-brand-name{
-  font-size:21px;font-weight:900;
-  letter-spacing:-.4px;line-height:1;margin-bottom:5px;
-  background:linear-gradient(135deg,#ff3c91,#c73b8a);
-  -webkit-background-clip:text;background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
-.menu-brand-sub{
-  font-size:11px;font-weight:800;
-  color:#c37aa0;
-  letter-spacing:1.6px;text-transform:uppercase;
-}
-.menu-close{
-  width:44px;height:44px;border-radius:50%;
-  background:rgba(255,255,255,.9);
-  border:2px solid rgba(255,255,255,.95);
-  color:#c73b8a;font-size:20px;font-weight:800;line-height:1;
-  cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 6px 14px rgba(255,112,185,.24);
-  transition:transform .25s cubic-bezier(.34,1.56,.64,1), background .15s, box-shadow .2s;
-  font-family:inherit;
-  -webkit-tap-highlight-color:transparent;
-}
-.menu-close:hover{background:#fff;transform:rotate(90deg) scale(1.05)}
-.menu-close:active{transform:scale(.9) rotate(90deg)}
-
-.menu-user-card{
-  display:flex;align-items:center;gap:14px;
-  padding:14px 16px;
-  background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,245,250,.85));
-  border:2px solid rgba(255,255,255,.95);
-  border-radius:22px;
-  box-shadow:
-    0 12px 30px rgba(255,112,185,.2),
-    inset 0 1px 0 rgba(255,255,255,.9);
-  margin-bottom:22px;
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-  animation:userCardIn .5s cubic-bezier(.16,1,.3,1) both;
-}
-@keyframes userCardIn{
-  from{opacity:0;transform:translateY(12px) scale(.96)}
-  to{opacity:1;transform:translateY(0) scale(1)}
-}
-.menu-user-card[hidden]{display:none !important}
-.menu-user-avatar{
-  width:52px;height:52px;border-radius:50%;
-  background:linear-gradient(135deg,#ffb8d9,#ff85bf);
-  background-size:cover;background-position:center;
-  display:flex;align-items:center;justify-content:center;
-  color:#fff;font-size:22px;font-weight:800;
-  border:3px solid #fff;
-  box-shadow:0 4px 12px rgba(255,60,145,.3);
-  flex-shrink:0;
-}
-.menu-user-info{flex:1;min-width:0}
-.menu-user-name{
-  font-size:15px;font-weight:800;color:#8a2e5c;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  line-height:1.2;margin-bottom:4px;
-}
-.menu-user-sub{
-  font-size:11px;font-weight:800;color:#c37aa0;
-  letter-spacing:.6px;text-transform:uppercase;
-}
-.menu-user-action,
-.menu-user-logout{
-  width:40px;height:40px;border-radius:50%;
-  border:0;background:rgba(255,255,255,.92);
-  color:#c73b8a;font-size:18px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 12px rgba(255,112,185,.22);
-  transition:transform .2s, background .15s;
-  flex-shrink:0;font-family:inherit;
-  -webkit-tap-highlight-color:transparent;
-}
-.menu-user-action:hover,
-.menu-user-logout:hover{background:#fff;transform:scale(1.1)}
-.menu-user-action:active,
-.menu-user-logout:active{transform:scale(.9)}
-.menu-user-logout{
-  background:linear-gradient(135deg,#ffd5e8,#ffb8d9);
-  color:#fff;
-}
-
-.menu-section{margin-bottom:22px}
-.menu-section-title{
-  display:flex;align-items:center;gap:8px;
-  font-size:12px;font-weight:900;color:#a24b7a;
-  letter-spacing:1.4px;text-transform:uppercase;
-  margin-bottom:12px;padding-left:4px;
-}
-.menu-section-title span{
-  font-size:16px;
-  filter:drop-shadow(0 2px 4px rgba(255,112,185,.35));
-}
-.menu-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;
-}
-.menu-item{
-  --delay:0s;
-  position:relative;
-  background:linear-gradient(160deg,rgba(255,255,255,.96),rgba(255,248,252,.9));
-  border:2px solid rgba(255,255,255,.95);
-  border-radius:20px;
-  padding:16px 6px 12px;
-  cursor:pointer;
-  display:flex;flex-direction:column;
-  align-items:center;gap:8px;
-  box-shadow:
-    0 8px 20px rgba(255,112,185,.16),
-    inset 0 1px 0 rgba(255,255,255,.9);
-  font-family:inherit;
-  color:#8a2e5c;
-  -webkit-tap-highlight-color:transparent;
-  overflow:hidden;
-  opacity:0;
-  transform:translateY(14px) scale(.94);
-  transition:
-    transform .45s cubic-bezier(.16,1,.3,1) var(--delay),
-    opacity .35s ease var(--delay),
-    box-shadow .25s,
-    background .2s;
-}
-#menuOverlay.open .menu-item{
-  opacity:1;
-  transform:translateY(0) scale(1);
-}
-.menu-item::before{
-  content:'';
-  position:absolute;inset:0;border-radius:inherit;
-  background:linear-gradient(135deg,rgba(255,112,185,.15),transparent 60%);
-  opacity:0;transition:opacity .25s;pointer-events:none;
-}
-.menu-item:hover::before,
-.menu-item:active::before{opacity:1}
-.menu-item:hover{
-  transform:translateY(-3px) scale(1.04);
-  box-shadow:
-    0 12px 26px rgba(255,60,145,.3),
-    inset 0 1px 0 rgba(255,255,255,.9);
-  transition-delay:0s;
-}
-.menu-item:active{
-  transform:translateY(-1px) scale(.97);
-  transition-delay:0s;
-}
-.menu-item-icon{
-  width:42px;height:42px;border-radius:14px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:22px;
-  background:linear-gradient(135deg,#ffe4f0,#ffcbe3);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.9),
-    0 4px 10px rgba(255,112,185,.18);
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
-  pointer-events:none;
-}
-.menu-item:hover .menu-item-icon{
-  transform:rotate(-8deg) scale(1.12);
-}
-.menu-item-label{
-  font-size:12px;font-weight:800;
-  letter-spacing:.2px;text-align:center;line-height:1.2;
-  color:#8a2e5c;
-  pointer-events:none;
-}
-.menu-item *{pointer-events:none}
-
-.menu-footer{
-  text-align:center;
-  margin-top:26px;padding-top:16px;
-  font-size:11px;font-weight:800;color:#c37aa0;
-  letter-spacing:.9px;
-}
-
-/* Khoá scroll body khi menu mở */
-body.menu-open{overflow:hidden}
-</style>
-</head>
-<body>
-<noscript>
-  <div style="padding:24px;font-family:system-ui,-apple-system,sans-serif;text-align:center;background:#f3f8f1;color:#333">
-    <h2 style="margin:0 0 8px">⚠️ Cần bật JavaScript</h2>
-    <p style="margin:0">Trang này yêu cầu JavaScript để hoạt động. Vui lòng bật JavaScript và tải lại trang.</p>
-  </div>
-</noscript>
-
-<main id="space">
-<div id="status"></div>
-<div id="appVersion" aria-label="Phiên bản">v1.07</div>
-
-<div id="homeStack">
-  <div id="questionWrap">
-    <div id="counter">CÂU 1</div>
-    <div id="question"></div>
-  </div>
-</div>
-
-<div id="wheelArea">
-  <div id="wheelViewport" class="wheel-viewport">
-    <div class="wheel-selection"></div>
-    <div id="items" class="wheel-items"></div>
-  </div>
-  <div id="wheelHint">Vuốt lên / xuống để chọn</div>
-  <button id="confirm" type="button">Xác nhận ❤️</button>
-</div>
-
-<div id="message"></div>
-
-<section id="checklistPanel">
-  <div id="checklistScroll"><table id="checklist">
-    <thead><tr><th>Kiểm duyệt viên</th><th>Giờ</th><th>Hoàn thành</th></tr></thead><tbody></tbody>
-  </table></div>
-  <div id="checklistActions"><button id="captureBtn" type="button">📸 Chụp checklist</button><button id="syncBtn" type="button">↻ Đồng bộ lại</button></div>
-</section>
-
-<section id="topPanel" aria-hidden="true">
-  <div id="topTitle">🏆 BXH TOP THÁNG 9</div>
-  <div id="topSub">Xếp hạng theo điểm chấm công</div>
-  <div id="topMonthBar"><select id="topMonthSelect" aria-label="Chọn tháng BXH TOP"></select></div>
-  <div id="topScroll"><table id="topTable">
-    <thead><tr><th>#</th><th>Tên</th><th>⭐ Điểm</th><th>Rank</th></tr></thead><tbody></tbody>
-  </table></div>
-  <div id="topActions"><button id="topCaptureBtn" type="button">📸 Chụp BXH</button><button id="topCloseBtn" type="button">Đóng</button></div>
-</section>
-
-<!-- NAV GỐC — ẨN, DÙNG PROXY -->
-<nav id="bottomNav" aria-label="Điều hướng chính">
-  <button id="homeBtn" type="button" aria-label="Về trang chủ">⌂ Home</button>
-  <button id="adminBtn" type="button" aria-label="Mở cài đặt admin">⚙ Admin</button>
-  <button id="monitorBtn" type="button" aria-label="Mở bảng giám sát">👁 Giám sát</button>
-  <button id="topBtn" type="button" aria-label="Mở bảng xếp hạng">🏆 BXH TOP</button>
-  <button id="checklistBtn" type="button" aria-label="Mở checklist" aria-expanded="false">☑ Checklist</button>
-</nav>
-<nav id="secondaryNav" aria-label="Công cụ">
-  <button id="kdvRulesBtn" type="button" aria-label="Mở Luật KDV">📜 Luật KDV</button>
-  <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?">🍜 Bữa trưa ăn gì?</button>
-  <button id="attendanceBtn" type="button" aria-label="Mở Chấm công">🗓 Chấm công</button>
-  <button id="quizBtn" type="button" aria-label="Bài kiểm tra">📝 Bài KT</button>
-</nav>
-
-<div id="monitorOverlay" aria-hidden="true">
-  <section id="monitorPanel" role="dialog" aria-modal="true">
-    <div id="monitorTitle">👁 Giám sát</div>
-    <div id="monitorSub">Bấm CHECK để mở Facebook của từng người</div>
-    <div id="monitorScroll">
-      <table id="monitorTable">
-        <thead><tr><th>Kiểm duyệt viên</th><th>Thao tác</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-    <button id="monitorCloseBtn" type="button" aria-label="Đóng">×</button>
-  </section>
-</div>
-
-<div id="linkEditorOverlay" aria-hidden="true">
-  <section id="linkEditorPanel" role="dialog" aria-modal="true">
-    <div id="linkEditorTitle">🔗 Gán liên kết</div>
-    <div id="linkEditorName"></div>
-    <input id="linkEditorInput" type="url" inputmode="url" autocomplete="off" placeholder="https://facebook.com/ten-nguoi">
-    <div id="linkEditorHint">Mỗi người có thể dùng một liên kết riêng. Liên kết được lưu trên thiết bị này.</div>
-    <div id="linkEditorActions">
-      <button id="linkEditorCancel" type="button">Huỷ</button>
-      <button id="linkEditorClear" type="button">Xoá link</button>
-      <button id="linkEditorSave" type="button">Lưu</button>
-    </div>
-  </section>
-</div>
-
-<div id="adminPasswordOverlay" aria-hidden="true">
-  <section id="adminPasswordBox">
-    <div id="adminPasswordTitle">🔐 Admin</div>
-    <div id="adminPasswordSub">Nhập mật khẩu để mở cài đặt</div>
-    <input id="adminPasswordInput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••">
-    <div id="adminPasswordMsg"></div>
-    <div id="adminPasswordActions"><button id="adminPasswordCancel" type="button">Huỷ</button><button id="adminPasswordOk" type="button">Xác nhận</button></div>
-  </section>
-</div>
-
-<section id="adminPage" aria-label="Cài đặt Admin">
-  <header id="adminPageHeader">
-    <button id="adminPageBack" type="button" aria-label="Quay lại">←</button>
-    <div id="adminPageTitle"><span class="admin-page-kicker">HỆ THỐNG</span><span class="admin-page-name">Cài đặt Admin</span></div>
-    <button id="adminPageLogout" type="button" aria-label="Đăng xuất admin">🚪</button>
-  </header>
-  <div id="adminPageBody">
-    <nav id="adminPageNav" aria-label="Mục cài đặt">
-      <button class="admin-tab active" data-admin-tab="schedule" type="button"><span class="admin-tab-icon">⚙</span><span class="admin-tab-label">Giờ</span></button>
-      <button class="admin-tab" data-admin-tab="checklist" type="button"><span class="admin-tab-icon">☑</span><span class="admin-tab-label">Checklist</span></button>
-      <button class="admin-tab" data-admin-tab="stats" type="button"><span class="admin-tab-icon">📊</span><span class="admin-tab-label">Thống kê</span></button>
-    </nav>
-    <div id="adminPageContent">
-      <div class="admin-panel-view active" data-admin-view="schedule">
-        <h2 class="admin-section-title">Khung giờ hoạt động</h2>
-        <div class="admin-card">
-          <div class="admin-card-row"><div class="admin-card-icon">🔄</div><div class="admin-card-info"><label for="resetTimeInput">Giờ reset mỗi ngày</label><p>Checklist tự động làm mới vào lúc này</p></div><input id="resetTimeInput" type="text" value="00:00" inputmode="numeric" maxlength="5" placeholder="00:00" autocomplete="off"></div>
-          <div class="admin-card-row"><div class="admin-card-icon">🔒</div><div class="admin-card-info"><label for="checklistLockTimeInput">Giờ khoá Checklist</label><p>Sau giờ này, nút Checklist sẽ tạm khoá</p></div><input id="checklistLockTimeInput" type="text" value="21:00" inputmode="numeric" maxlength="5" placeholder="21:00" autocomplete="off"></div>
-        </div>
-        <div class="admin-note"><span class="admin-note-icon">💡</span><span>Ví dụ: reset <b>00:00</b>, khoá <b>21:00</b> → Checklist mở từ 0h đến 21h mỗi ngày.</span></div>
-        <div id="adminStatus" class="admin-status"></div>
-        <div class="admin-actions"><button id="adminSaveBtn" type="button">💾 Lưu cài đặt</button></div>
-      </div>
-      <div class="admin-panel-view" data-admin-view="checklist">
-        <h2 class="admin-section-title">Quản lý Checklist hôm nay</h2>
-        <div class="admin-toolbar"><input id="adminChecklistSearch" type="text" placeholder="🔍 Tìm tên..." autocomplete="off"><div class="admin-filters"><button class="admin-filter-btn active" data-filter="all" type="button">Tất cả</button><button class="admin-filter-btn" data-filter="checked" type="button">✓ Đã</button><button class="admin-filter-btn" data-filter="unchecked" type="button">○ Chưa</button></div></div>
-        <div id="adminChecklistStats" class="admin-stats-bar"></div>
-        <div id="adminChecklistRows" class="admin-list"></div>
-      </div>
-      <div class="admin-panel-view" data-admin-view="stats">
-        <h2 class="admin-section-title">Thống kê hôm nay</h2>
-        <div class="admin-stats-grid">
-          <div class="admin-stat-card"><div class="admin-stat-icon">👥</div><div id="adminStatTotal" class="admin-stat-value">0</div><div class="admin-stat-label">Tổng số</div></div>
-          <div class="admin-stat-card success"><div class="admin-stat-icon">✅</div><div id="adminStatChecked" class="admin-stat-value">0</div><div class="admin-stat-label">Đã check</div></div>
-          <div class="admin-stat-card warn"><div class="admin-stat-icon">⭕</div><div id="adminStatUnchecked" class="admin-stat-value">0</div><div class="admin-stat-label">Chưa check</div></div>
-        </div>
-        <h3 class="admin-section-subtitle">⏰ Top 3 check sớm nhất</h3>
-        <div id="adminStatTop3" class="admin-list"></div>
-        <h3 class="admin-section-subtitle">📈 Bảng xếp hạng tháng</h3>
-        <div class="admin-note"><span class="admin-note-icon">ℹ</span><span>Xem chi tiết ở trang <b>BXH TOP</b> ngoài Home.</span></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div id="hint" aria-hidden="true" hidden></div>
-</main>
-
-<button id="avatarBtn" type="button" aria-label="Đổi avatar" hidden>📷</button>
-<input id="avatarFileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
-
-<button id="logoutBtn" type="button" aria-label="Đăng xuất" hidden>
-  <span aria-hidden="true">🚪</span>
-  <span class="lb-name" id="logoutName"></span>
-</button>
-
-<div id="loginOverlay" aria-hidden="true">
-  <section id="loginPanel" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
-    <div id="loginHead">
-      <div id="loginTitle">🔐 Đăng nhập</div>
-      <button id="loginClose" type="button" aria-label="Đóng">×</button>
-    </div>
-    <label class="login-label" for="loginUsername">Tên đăng nhập</label>
-    <input id="loginUsername" type="text" inputmode="text" autocomplete="username"
-           placeholder="VD: tienloi" maxlength="60" autocapitalize="none" spellcheck="false">
-    <label class="login-label" for="loginPassword">Mật khẩu</label>
-    <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••">
-    <div id="loginMsg"></div>
-    <button id="loginSubmit" type="button">Đăng nhập</button>
-  </section>
-</div>
-
-<section id="attendancePage" aria-label="Lịch chấm công">
-  <div class="att-page-inner">
-    <div class="att-shell">
-      <header class="att-head">
-        <button id="attendanceBack" class="att-icon-btn" type="button" aria-label="Quay lại">←</button>
-        <div class="att-head-title"><span class="att-kicker">HỆ THỐNG 02</span><span class="att-title">Chấm công</span></div>
-        <div class="att-head-actions">
-          <button id="attendanceTodayBtn" class="att-icon-btn" type="button" aria-label="Về tháng hiện tại">📅</button>
-          <button id="attendanceSyncBtn" class="att-icon-btn" type="button" aria-label="Đồng bộ">⟳</button>
-        </div>
-      </header>
-      <button id="attendanceEmployeeWheelBtn" class="att-employee-card" type="button">
-        <span class="att-employee-avatar" id="attendanceEmployeeAvatar">?</span>
-        <span class="att-employee-info"><span class="att-employee-label">Kiểm Duyệt Viên</span><span class="wheel-value">Đang tải…</span></span>
-        <span class="att-employee-chevron">⌄</span>
-      </button>
-      <select id="attendanceEmployee" aria-hidden="true" tabindex="-1"></select>
-      <div class="att-month-nav">
-        <button id="attendancePrev" type="button" aria-label="Tháng trước">‹</button>
-        <div class="att-month-label"><span id="attendanceMonthLabel">Tháng 9</span><span id="attendanceYearLabel">2026</span></div>
-        <button id="attendanceNext" type="button" aria-label="Tháng sau">›</button>
-      </div>
-      <div class="att-inline-stats">
-        <div class="att-inline-stat work"><span class="att-inline-stat-icon">✓</span><span class="att-inline-stat-value" id="attendanceWorkCount">0</span><span class="att-inline-stat-label">làm</span></div>
-        <div class="att-inline-stat off"><span class="att-inline-stat-icon">—</span><span class="att-inline-stat-value" id="attendanceOffCount">0</span><span class="att-inline-stat-label">nghỉ</span></div>
-        <div class="att-inline-stat leave"><span class="att-inline-stat-icon">🌴</span><span class="att-inline-stat-value" id="attendanceLeaveCount">0</span><span class="att-inline-stat-label">phép</span></div>
-      </div>
-      <section class="att-card att-calendar-card">
-        <div class="att-week" aria-hidden="true"><div>T2</div><div>T3</div><div>T4</div><div>T5</div><div>T6</div><div>T7</div><div>CN</div></div>
-        <div id="attendanceGrid" class="att-grid"></div>
-      </section>
-      <div class="att-footer-status">
-        <div id="attendanceSyncStatus" class="att-footer-line" aria-live="polite"><span class="att-footer-dot"></span><span class="att-footer-text">Chưa đồng bộ</span></div>
-        <div id="attendanceAutoStatus" class="att-footer-line muted"><span>⟳</span><span class="att-footer-text">Tự động làm mới sau <b id="attendanceCountdown">60</b>s</span></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div id="attendanceNameWheel" aria-hidden="true">
-  <section class="att-name-wheel-panel" role="dialog" aria-modal="true">
-    <div class="att-name-wheel-head"><div class="att-name-wheel-title">Chọn kiểm duyệt viên</div><button id="attendanceNameWheelClose" type="button" aria-label="Đóng">×</button></div>
-    <div id="attendanceNameWheelViewport" class="att-name-wheel-viewport wheel-viewport"><div class="wheel-selection"></div><div id="attendanceNameWheelItems" class="wheel-items"></div></div>
-    <div class="att-name-wheel-hint">Vuốt lên / xuống để chọn</div>
-    <button id="attendanceNameWheelConfirm" type="button">Xác nhận</button>
-  </section>
-</div>
-
-<div id="attendanceStatusOverlay" aria-hidden="true">
-  <section id="attendanceStatusPanel" role="dialog" aria-modal="true">
-    <div class="att-sheet-handle" aria-hidden="true"></div>
-    <div id="attendanceStatusHead">
-      <div><div id="attendanceStatusTitle">Cập nhật chấm công</div><div id="attendanceStatusSub"></div></div>
-      <button id="attendanceStatusClose" type="button" aria-label="Đóng">×</button>
-    </div>
-    <div id="attendanceStatusOptions">
-      <button class="att-status-option work" type="button" data-status=""><span class="att-status-icon">✓</span><span class="att-status-label">Đi làm</span></button>
-      <button class="att-status-option leave" type="button" data-status="P"><span class="att-status-icon">🌴</span><span class="att-status-label">Phép</span></button>
-      <button class="att-status-option off" type="button" data-status="O"><span class="att-status-icon">—</span><span class="att-status-label">OFF</span></button>
-      <button class="att-status-option ot" type="button" data-status="T"><span class="att-status-icon">⚡</span><span class="att-status-label">OT</span></button>
-      <button class="att-status-option q" type="button" data-status="Q"><span class="att-status-icon">❓</span><span class="att-status-label">Quên</span></button>
-      <button class="att-status-option x" type="button" data-status="X"><span class="att-status-icon">⚠️</span><span class="att-status-label">Không phép</span></button>
-      <button id="attendanceMultiBtn" class="att-status-option multi" type="button"><span class="att-status-icon">☷</span><span class="att-status-label">Chọn nhiều</span></button>
-      <button class="att-status-option clear" type="button" data-status="__clear"><span class="att-status-icon">🗑</span><span class="att-status-label">Xoá</span></button>
-    </div>
-    <div id="attendanceStatusSaving"></div>
-  </section>
-</div>
-
-<div id="attendanceMultiBar" aria-hidden="true">
-  <button class="att-multi-action cancel" id="attendanceMultiCancel" type="button">Hủy</button>
-  <div id="attendanceMultiCount">0 ngày</div>
-  <button class="att-multi-action p" data-multi-status="P" type="button">Phép</button>
-  <button class="att-multi-action o" data-multi-status="O" type="button">OFF</button>
-  <button class="att-multi-action t" data-multi-status="T" type="button">OT</button>
-  <button class="att-multi-action q" data-multi-status="Q" type="button">Quên</button>
-  <button class="att-multi-action x" data-multi-status="X" type="button">X</button>
-  <button class="att-multi-action clear" data-multi-status="" type="button">Xóa</button>
-</div>
-
-<div id="quizOverlay" aria-hidden="true">
-  <section id="quizPanel" role="dialog" aria-modal="true">
-    <div id="quizHead">
-      <div id="quizTitle"><span class="quiz-kicker">ĐẢO MÈO</span><span class="quiz-name">📝 Bài kiểm tra</span></div>
-      <button id="quizClose" type="button" aria-label="Đóng">×</button>
-    </div>
-
-    <nav id="quizModeTabs" hidden>
-      <button class="quiz-mode-tab active" data-quiz-mode="user" type="button">📝 Làm bài</button>
-      <button class="quiz-mode-tab" data-quiz-mode="create" type="button">➕ Tạo câu hỏi</button>
-      <button class="quiz-mode-tab" data-quiz-mode="results" type="button">📊 Kết quả</button>
-    </nav>
-
-    <div id="quizBody">
-      <div class="quiz-view active" data-quiz-view="user">
-        <div id="quizUserStart">
-          <div class="quiz-hero-emoji">📝</div>
-          <div class="quiz-hero-title">Bài kiểm tra nội bộ</div>
-          <div class="quiz-hero-sub">Nhập tên để bắt đầu</div>
-          <input id="quizUserNameInput" type="text" placeholder="Tên của bạn" autocomplete="off" maxlength="60">
-          <button id="quizStartBtn" type="button">Bắt đầu làm bài</button>
-          <div id="quizUserStartMsg"></div>
-        </div>
-
-        <div id="quizUserRun" hidden>
-          <div id="quizRunHeader">
-            <div id="quizGreeting"></div>
-            <div id="quizProgress">
-              <span id="quizProgressText">Câu 1/1</span>
-              <div id="quizProgressBar"><div id="quizProgressFill"></div></div>
-            </div>
-          </div>
-          <div id="quizQuestionCard"></div>
-          <div id="quizNavBar">
-            <button id="quizPrevBtn" type="button">‹ Câu trước</button>
-            <button id="quizNextBtn" type="button">Câu tiếp ›</button>
-          </div>
-        </div>
-
-        <div id="quizUserResult" hidden>
-          <div class="quiz-result-card">
-            <div id="quizResultEmoji" class="quiz-result-emoji">🎉</div>
-            <div id="quizResultScore" class="quiz-result-score">0/0</div>
-            <div id="quizResultLabel" class="quiz-result-label"></div>
-            <div id="quizResultDetail" class="quiz-result-detail"></div>
-          </div>
-          <div class="quiz-result-actions">
-            <button id="quizRetryBtn" type="button">Làm lại</button>
-            <button id="quizExitBtn" type="button">Đóng</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="quiz-view" data-quiz-view="create">
-        <div class="quiz-section-title">✏️ Tạo / sửa câu hỏi</div>
-        <div class="quiz-create-form">
-          <label class="quiz-field-label">Câu hỏi</label>
-          <textarea id="quizQuestionInput" rows="2" maxlength="500" placeholder="Nhập nội dung câu hỏi…"></textarea>
-
-          <label class="quiz-field-label">Đáp án <span class="quiz-hint">(chọn ô tròn để đánh dấu đáp án đúng)</span></label>
-          <div id="quizAnswersList"></div>
-          <button id="quizAddAnswerBtn" type="button">＋ Thêm đáp án</button>
-
-          <div id="quizFormMsg"></div>
-          <div class="quiz-create-actions">
-            <button id="quizSaveBtn" type="button">Thêm câu hỏi</button>
-            <button id="quizCancelEditBtn" type="button" hidden>Huỷ</button>
-          </div>
-        </div>
-        <div class="quiz-section-title" style="margin-top:22px">📚 Danh sách câu hỏi (<span id="quizCountLabel">0</span>)</div>
-        <div id="quizQuestionList"></div>
-      </div>
-
-      <div class="quiz-view" data-quiz-view="results">
-        <div class="quiz-section-title">📊 Kết quả bài kiểm tra</div>
-        <div id="quizResultsList"></div>
-      </div>
-    </div>
-  </section>
-</div>
-
-<button id="liveFeedBtn" type="button" aria-label="Mở Live Feed"><span aria-hidden="true">🔔</span><span id="liveFeedBadge" hidden></span></button>
-<div id="liveFeedOverlay" aria-hidden="true">
-  <section id="liveFeedPanel" role="dialog" aria-modal="true">
-    <div id="liveFeedHead"><div id="liveFeedTitle"><span class="live-pulse"></span>Live Feed</div><button id="liveFeedClose" type="button" aria-label="Đóng">×</button></div>
-    <div id="liveFeedList"></div>
-    <div id="liveFeedFoot"><span id="liveFeedCount"></span> · <button id="liveFeedClear" type="button">Xoá lịch sử</button></div>
-  </section>
-</div>
-
-<script src="js/config.js"></script>
-<script src="js/scheduler.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-adapter.js" defer></script>
-<script src="js/auth.js" defer></script>
-<script src="js/main.js" defer></script>
-<script src="js/auth-ui.js" defer></script>
-<script src="js/avatar-upload.js" defer></script>
-<script src="js/checklist-ui.js?v=6.3" defer></script>
-<script src="js/attendance.js" defer></script>
-<script src="js/attendance-top3.js" defer></script>
-<script src="js/lunch.js" defer></script>
-<script src="js/kdv-rules.js" defer></script>
-<script src="js/secret-mail.js" defer></script>
-<script src="js/realtime.js" defer></script>
-<script src="js/bxh-top.js" defer></script>
-<script src="js/quiz.js" defer></script>
-<script src="js/birthday-chat.js?v=1.9" defer></script>
-
-<button id="menuToggle" type="button" aria-label="Mở menu" aria-expanded="false">
-  <span></span><span></span><span></span>
-</button>
-
-<div id="menuOverlay" aria-hidden="true">
-  <div id="menuOverlayInner">
-
-    <div class="menu-float"      style="top:6%;left:6%;animation-delay:0s">🌸</div>
-    <div class="menu-float small" style="top:14%;right:10%;animation-delay:.7s">✨</div>
-    <div class="menu-float"      style="top:42%;left:3%;animation-delay:1.4s">💗</div>
-    <div class="menu-float small" style="top:58%;right:5%;animation-delay:.3s">🎀</div>
-    <div class="menu-float"      style="bottom:14%;left:12%;animation-delay:1s">🐾</div>
-    <div class="menu-float small" style="bottom:22%;right:14%;animation-delay:1.7s">✨</div>
-    <div class="menu-float small" style="top:78%;left:8%;animation-delay:.5s">🌸</div>
-    <div class="menu-float small" style="top:30%;right:20%;animation-delay:2s">💕</div>
-
-    <header class="menu-header">
-      <div class="menu-brand">
-        <div class="menu-brand-logo">🐱</div>
-        <div class="menu-brand-text">
-          <div class="menu-brand-name">Đảo Mèo</div>
-          <div class="menu-brand-sub">Daily Mission</div>
-        </div>
-      </div>
-      <button class="menu-close" type="button" aria-label="Đóng menu">✕</button>
-    </header>
-
-    <div id="menuUserCard" class="menu-user-card" hidden>
-      <div class="menu-user-avatar" id="menuUserAvatar">?</div>
-      <div class="menu-user-info">
-        <div class="menu-user-name" id="menuUserName">Khách</div>
-        <div class="menu-user-sub">Thành viên</div>
-      </div>
-      <button class="menu-user-action" id="menuAvatarBtn" type="button" aria-label="Đổi avatar">📷</button>
-      <button class="menu-user-logout" id="menuLogoutBtn" type="button" aria-label="Đăng xuất">🚪</button>
-    </div>
-
-    <div class="menu-section">
-      <div class="menu-section-title"><span>✨</span> Chính</div>
-      <div class="menu-grid">
-        <button class="menu-item" data-target="homeBtn" type="button">
-          <span class="menu-item-icon">⌂</span>
-          <span class="menu-item-label">Home</span>
-        </button>
-        <button class="menu-item" data-target="adminBtn" type="button">
-          <span class="menu-item-icon">⚙</span>
-          <span class="menu-item-label">Admin</span>
-        </button>
-        <button class="menu-item" data-target="monitorBtn" type="button">
-          <span class="menu-item-icon">👁</span>
-          <span class="menu-item-label">Giám sát</span>
-        </button>
-        <button class="menu-item" data-target="topBtn" type="button">
-          <span class="menu-item-icon">🏆</span>
-          <span class="menu-item-label">BXH TOP</span>
-        </button>
-        <button class="menu-item" data-target="checklistBtn" type="button">
-          <span class="menu-item-icon">☑</span>
-          <span class="menu-item-label">Checklist</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="menu-section">
-      <div class="menu-section-title"><span>🎀</span> Công cụ</div>
-      <div class="menu-grid">
-        <button class="menu-item" data-target="kdvRulesBtn" type="button">
-          <span class="menu-item-icon">📜</span>
-          <span class="menu-item-label">Luật KDV</span>
-        </button>
-        <button class="menu-item" data-target="lunchBtn" type="button">
-          <span class="menu-item-icon">🍜</span>
-          <span class="menu-item-label">Bữa trưa</span>
-        </button>
-        <button class="menu-item" data-target="attendanceBtn" type="button">
-          <span class="menu-item-icon">🗓</span>
-          <span class="menu-item-label">Chấm công</span>
-        </button>
-        <button class="menu-item" data-target="quizBtn" type="button">
-          <span class="menu-item-icon">📝</span>
-          <span class="menu-item-label">Bài KT</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="menu-footer">Made with 💗 · v1.07</div>
-  </div>
-</div>
-
 <script>
 (function(){
   'use strict';
@@ -860,6 +9,7 @@ body.menu-open{overflow:hidden}
   const realLogout  = document.getElementById('logoutBtn');
   const realName    = document.getElementById('logoutName');
   const realAvatar  = document.getElementById('avatarBtn');
+  const avatarInput = document.getElementById('avatarFileInput');
   const STORAGE_KEY = 'menuBtnPos';
 
   /* ============================================================
@@ -892,7 +42,7 @@ body.menu-open{overflow:hidden}
       applyPos(saved.x, saved.y);
     } else {
       const h = btn.offsetHeight || 52;
-      applyPos(12, window.innerHeight - h - 12);   // góc dưới trái
+      applyPos(12, window.innerHeight - h - 12);
     }
   });
   window.addEventListener('resize', () => {
@@ -907,35 +57,132 @@ body.menu-open{overflow:hidden}
   });
 
   /* ============================================================
-     2) SYNC USER CARD
+     2) TRÍCH XUẤT URL AVATAR — 7 LỚP FALLBACK
      ============================================================ */
-  function isLoggedIn(){
-    if (!realLogout) return false;
-    if (realLogout.hidden) return false;
-    // fallback: nếu offsetParent null do sr-only, kiểm tra getClientRects
-    if (realLogout.getClientRects && realLogout.getClientRects().length === 0){
-      // vẫn có thể do sr-only, miễn là hidden=false thì coi là đã login
-    }
-    return true;
+  function isImageUrl(s){
+    return typeof s === 'string' && (/^https?:/i.test(s) || /^data:image\//i.test(s) || /^blob:/i.test(s));
+  }
+  function toCssUrl(s){
+    if (!s) return '';
+    // đã là url("...") hoặc url(...)
+    if (/^url\(/i.test(s)) return s;
+    return `url("${s}")`;
   }
 
   function extractAvatarUrl(){
-    if (!realAvatar) return '';
-    // 1. <img> con
-    const innerImg = realAvatar.querySelector('img');
-    if (innerImg && innerImg.src) return `url("${innerImg.src}")`;
-    // 2. inline style
-    const inline = realAvatar.style && realAvatar.style.backgroundImage;
-    if (inline && inline !== 'none') return inline;
-    // 3. computed style
+    /* --- Lớp 1: <img> con của #avatarBtn --- */
+    if (realAvatar){
+      const innerImg = realAvatar.querySelector('img');
+      if (innerImg && isImageUrl(innerImg.src)) return toCssUrl(innerImg.src);
+
+      /* --- Lớp 2: inline style --- */
+      const inline = realAvatar.style && realAvatar.style.backgroundImage;
+      if (inline && inline !== 'none' && isImageUrl(inline.replace(/^url\(["']?/, '').replace(/["']?\)$/, ''))){
+        return inline;
+      }
+
+      /* --- Lớp 3: computed style --- */
+      try {
+        const cs = getComputedStyle(realAvatar).backgroundImage;
+        if (cs && cs !== 'none'){
+          const raw = cs.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+          if (isImageUrl(raw)) return cs;
+        }
+      } catch(e){}
+
+      /* --- Lớp 4: data-avatar --- */
+      const da = realAvatar.getAttribute && realAvatar.getAttribute('data-avatar');
+      if (isImageUrl(da)) return toCssUrl(da);
+    }
+
+    /* --- Lớp 5: quét DOM các element có class/id chứa "avatar" --- */
     try {
-      const cs = getComputedStyle(realAvatar).backgroundImage;
-      if (cs && cs !== 'none') return cs;
+      const nodes = document.querySelectorAll(
+        'img[class*="avatar" i], img[id*="avatar" i], ' +
+        '[class*="avatar" i] img, [id*="avatar" i] img, ' +
+        '[class*="avatar" i][style*="background-image"], ' +
+        '[id*="avatar" i][style*="background-image"]'
+      );
+      for (const el of nodes){
+        if (el.tagName === 'IMG'){
+          if (el.src && isImageUrl(el.src) && el !== realAvatar) {
+            // bỏ qua icon svg mặc định
+            if (!/\.svg(\?|$)/i.test(el.src) && !/^data:image\/svg/i.test(el.src)){
+              return toCssUrl(el.src);
+            }
+          }
+        } else {
+          const bg = el.style && el.style.backgroundImage;
+          if (bg && bg !== 'none'){
+            const raw = bg.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+            if (isImageUrl(raw)) return bg;
+          }
+        }
+      }
     } catch(e){}
-    // 4. data-attr (một số app lưu URL trong data-avatar)
-    const da = realAvatar.getAttribute && realAvatar.getAttribute('data-avatar');
-    if (da) return `url("${da}")`;
+
+    /* --- Lớp 6: localStorage --- */
+    const commonKeys = [
+      'avatar','avatarUrl','avatar_url','userAvatar','user_avatar',
+      'meow_avatar','profileAvatar','profile_avatar','user_avatar_url'
+    ];
+    for (const k of commonKeys){
+      try {
+        const v = localStorage.getItem(k);
+        if (!v) continue;
+        if (isImageUrl(v)) return toCssUrl(v);
+        if (v.trim().startsWith('{')){
+          const j = JSON.parse(v);
+          const u = j.url || j.avatar || j.avatarUrl || j.avatar_url || j.data;
+          if (isImageUrl(u)) return toCssUrl(u);
+        }
+      } catch(e){}
+    }
+    // quét toàn bộ key có chữ 'avatar'
+    try {
+      for (let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        if (!k || !/avatar/i.test(k)) continue;
+        const v = localStorage.getItem(k);
+        if (!v) continue;
+        if (isImageUrl(v)) return toCssUrl(v);
+        if (v.trim().startsWith('{')){
+          try {
+            const j = JSON.parse(v);
+            const u = j.url || j.avatar || j.avatarUrl || j.avatar_url || j.data;
+            if (isImageUrl(u)) return toCssUrl(u);
+          } catch(e){}
+        }
+      }
+    } catch(e){}
+
+    /* --- Lớp 7: sessionStorage --- */
+    try {
+      for (let i = 0; i < sessionStorage.length; i++){
+        const k = sessionStorage.key(i);
+        if (!k || !/avatar/i.test(k)) continue;
+        const v = sessionStorage.getItem(k);
+        if (!v) continue;
+        if (isImageUrl(v)) return toCssUrl(v);
+        if (v.trim().startsWith('{')){
+          try {
+            const j = JSON.parse(v);
+            const u = j.url || j.avatar || j.avatarUrl || j.avatar_url || j.data;
+            if (isImageUrl(u)) return toCssUrl(u);
+          } catch(e){}
+        }
+      }
+    } catch(e){}
+
     return '';
+  }
+
+  /* ============================================================
+     3) SYNC USER CARD
+     ============================================================ */
+  function isLoggedIn(){
+    if (!realLogout) return false;
+    return !realLogout.hidden;
   }
 
   function syncUserCard(){
@@ -956,16 +203,31 @@ body.menu-open{overflow:hidden}
     const url = extractAvatarUrl();
     if (url){
       avatarEl.style.backgroundImage = url;
-      avatarEl.textContent = '';
+      avatarEl.textContent = '';           // xoá chữ cái nếu có
     } else {
+      // Không có avatar → icon mèo mặc định (KHÔNG dùng chữ cái)
       avatarEl.style.backgroundImage = '';
-      avatarEl.textContent = (name.charAt(0) || '?').toUpperCase();
+      avatarEl.textContent = '🐱';
     }
   }
 
   /* ============================================================
-     3) MỞ / ĐÓNG MENU
+     4) MỞ / ĐÓNG MENU
      ============================================================ */
+  let autoSyncTimer = null;
+  function startAutoSync(){
+    stopAutoSync();
+    syncUserCard();
+    let n = 0;
+    autoSyncTimer = setInterval(() => {
+      syncUserCard();
+      if (++n >= 6) stopAutoSync();       // 6 lần x 300ms = ~1.8s
+    }, 300);
+  }
+  function stopAutoSync(){
+    if (autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer = null; }
+  }
+
   function applyStagger(){
     const items = overlay.querySelectorAll('.menu-item');
     items.forEach((el, i) => {
@@ -981,8 +243,9 @@ body.menu-open{overflow:hidden}
   }
 
   function openMenu(){
-    if (isLoginShowing()) return;          // không cho mở menu khi đang login
+    if (isLoginShowing()) return;
     syncUserCard();
+    startAutoSync();                       // tiếp tục sync sau khi mở
     applyStagger();
     overlay.classList.add('open');
     overlay.setAttribute('aria-hidden', 'false');
@@ -990,6 +253,7 @@ body.menu-open{overflow:hidden}
     document.body.classList.add('menu-open');
   }
   function closeMenu(){
+    stopAutoSync();
     overlay.classList.remove('open');
     overlay.setAttribute('aria-hidden', 'true');
     btn.setAttribute('aria-expanded', 'false');
@@ -1000,12 +264,12 @@ body.menu-open{overflow:hidden}
   }
 
   /* ============================================================
-     4) POINTER: KÉO + TAP (đã fix giật)
+     5) POINTER: KÉO + TAP
      ============================================================ */
   let pointerId = null;
   let startX = 0, startY = 0, startLeft = 0, startTop = 0;
   let moved = false;
-  const DRAG_THRESHOLD = 8;   // px
+  const DRAG_THRESHOLD = 8;
 
   btn.addEventListener('pointerdown', (e) => {
     if (e.button !== undefined && e.button !== 0) return;
@@ -1015,7 +279,6 @@ body.menu-open{overflow:hidden}
     startX = e.clientX; startY = e.clientY;
     startLeft = r.left; startTop = r.top;
     moved = false;
-    // KHÔNG thêm .dragging ở đây — chỉ khi thật sự kéo
   });
 
   btn.addEventListener('pointermove', (e) => {
@@ -1025,7 +288,7 @@ body.menu-open{overflow:hidden}
     if (!moved){
       if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
       moved = true;
-      btn.classList.add('dragging');   // chỉ add khi bắt đầu kéo
+      btn.classList.add('dragging');
     }
     applyPos(startLeft + dx, startTop + dy);
   });
@@ -1041,14 +304,12 @@ body.menu-open{overflow:hidden}
       applyPos(r.left, r.top);
       savePos();
     } else {
-      // coi như tap
       toggleMenu();
     }
     moved = false;
   }
   btn.addEventListener('pointerup', endPointer);
   btn.addEventListener('pointercancel', (e) => {
-    // trường hợp hệ thống cancel
     if (e.pointerId !== pointerId) return;
     try { btn.releasePointerCapture(pointerId); } catch(err){}
     btn.classList.remove('dragging');
@@ -1057,19 +318,18 @@ body.menu-open{overflow:hidden}
   });
 
   /* ============================================================
-     5) ĐÓNG MENU
+     6) ĐÓNG MENU
      ============================================================ */
   closeBtn.addEventListener('click', closeMenu);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && overlay.classList.contains('open')) closeMenu();
   });
-  // click ra ngoài inner (vào vùng trống overlay) → đóng
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) closeMenu();
   });
 
   /* ============================================================
-     6) PROXY CLICK MENU ITEM → NÚT GỐC
+     7) PROXY CLICK MENU ITEM → NÚT GỐC
      ============================================================ */
   overlay.querySelectorAll('.menu-item').forEach(item => {
     item.addEventListener('click', (ev) => {
@@ -1079,7 +339,6 @@ body.menu-open{overflow:hidden}
       const real = id && document.getElementById(id);
       if (!real) return;
 
-      // hiệu ứng nảy
       if (item.animate){
         item.animate(
           [
@@ -1091,9 +350,7 @@ body.menu-open{overflow:hidden}
         );
       }
 
-      // đóng menu trước
       closeMenu();
-      // chờ 1 frame để overlay bắt đầu fade rồi mới click
       requestAnimationFrame(() => {
         setTimeout(() => {
           try { real.click(); } catch(e){}
@@ -1103,7 +360,7 @@ body.menu-open{overflow:hidden}
   });
 
   /* ============================================================
-     7) AVATAR + LOGOUT trong menu
+     8) AVATAR + LOGOUT trong menu
      ============================================================ */
   const menuAvatarBtn = document.getElementById('menuAvatarBtn');
   const menuLogoutBtn = document.getElementById('menuLogoutBtn');
@@ -1111,10 +368,7 @@ body.menu-open{overflow:hidden}
   if (menuAvatarBtn){
     menuAvatarBtn.addEventListener('click', (e) => {
       e.preventDefault(); e.stopPropagation();
-      if (realAvatar){
-        // gọi click đồng bộ để giữ user-gesture cho file picker
-        realAvatar.click();
-      }
+      if (realAvatar) realAvatar.click();
     });
   }
   if (menuLogoutBtn){
@@ -1130,7 +384,17 @@ body.menu-open{overflow:hidden}
   }
 
   /* ============================================================
-     8) LẮNG NGHE THAY ĐỔI ĐĂNG NHẬP → SYNC
+     9) SYNC KHI ĐỔI AVATAR
+     ============================================================ */
+  if (avatarInput){
+    avatarInput.addEventListener('change', () => {
+      // avatar-upload.js cần thời gian upload → sync nhiều mốc
+      [400, 1000, 1800, 3000].forEach(t => setTimeout(syncUserCard, t));
+    });
+  }
+
+  /* ============================================================
+     10) OBSERVER: LẮNG NGHE THAY ĐỔI AVATAR/LOGIN
      ============================================================ */
   if (window.MutationObserver){
     const mo = new MutationObserver(() => {
@@ -1143,10 +407,20 @@ body.menu-open{overflow:hidden}
       mo.observe(realName, { childList: true, characterData: true, subtree: true });
     }
     if (realAvatar){
-      mo.observe(realAvatar, { attributes: true, attributeFilter: ['style', 'class'] });
+      mo.observe(realAvatar, {
+        attributes: true,
+        attributeFilter: ['style', 'class', 'src', 'data-avatar'],
+        childList: true,
+        subtree: true
+      });
     }
+    // Observer toàn body để bắt <img class="avatar"> mới xuất hiện
+    mo.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
   }
-  // khi quay lại tab → sync lại
+
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && overlay.classList.contains('open')) syncUserCard();
   });
@@ -1155,7 +429,7 @@ body.menu-open{overflow:hidden}
   });
 
   /* ============================================================
-     9) ẨN NÚT MENU KHI Ở TRANG CON (Admin / Chấm công)
+     11) ẨN NÚT MENU KHI Ở TRANG CON (Admin / Chấm công)
      ============================================================ */
   const subPages = [
     document.getElementById('adminPage'),
@@ -1169,13 +443,9 @@ body.menu-open{overflow:hidden}
       return hasOpenClass || (cs.display !== 'none' && cs.visibility !== 'hidden' && parseFloat(cs.opacity || '1') > 0.5 && cs.pointerEvents !== 'none');
     });
   }
-
   function refreshBtnVisibility(){
-    if (isSubPageOpen() || isLoginShowing()){
-      btn.classList.add('hidden');
-    } else {
-      btn.classList.remove('hidden');
-    }
+    if (isSubPageOpen() || isLoginShowing()) btn.classList.add('hidden');
+    else btn.classList.remove('hidden');
   }
   refreshBtnVisibility();
 
@@ -1187,7 +457,13 @@ body.menu-open{overflow:hidden}
     if (loginOv) mo2.observe(loginOv, { attributes: true, attributeFilter: ['style', 'class'] });
   }
 
+  /* ============================================================
+     12) SYNC NGAY KHI LOAD XONG (nếu đã đăng nhập)
+     ============================================================ */
+  window.addEventListener('load', () => {
+    syncUserCard();
+    [500, 1500, 3000].forEach(t => setTimeout(syncUserCard, t));
+  });
+
 })();
 </script>
-</body>
-</html>
