@@ -84,11 +84,11 @@
 #loginSubmit:active{transform:translateY(0)}
 #loginSubmit:disabled{opacity:.6;cursor:wait;transform:none}
 
-/* ===== LOGOUT / AVATAR ===== */
+/* ===== LOGOUT / AVATAR — vẫn ở dưới-trái ===== */
 #logoutBtn{
   position:fixed;
   left:12px;
-  bottom:calc(122px + env(safe-area-inset-bottom));
+  bottom:calc(12px + env(safe-area-inset-bottom));
   z-index:999;
   padding:7px 12px;font-size:12px;font-weight:700;
   background:rgba(255,255,255,.9);
@@ -108,7 +108,7 @@
 #avatarBtn{
   position:fixed;
   left:12px;
-  bottom:calc(170px + env(safe-area-inset-bottom));
+  bottom:calc(60px + env(safe-area-inset-bottom));
   z-index:999;
   width:42px;height:42px;
   border-radius:50%;
@@ -128,29 +128,29 @@
 #avatarBtn:disabled{opacity:.55;cursor:wait}
 
 /* ============================================================
-   BOTTOM NAV — 2 DÒNG
-   Override main.css bằng html body prefix + !important
+   NAV — 2 DÒNG — Ở TRÊN CÙNG
+   Override mọi rule khác trong main.css
    ============================================================ */
 html body #bottomNav.bn-v2,
 html body nav#bottomNav.bn-v2{
   position:fixed !important;
-  top:auto !important;
+  top:0 !important;
+  bottom:auto !important;
   left:0 !important;
   right:0 !important;
-  bottom:0 !important;
   z-index:200 !important;
   display:flex !important;
   flex-direction:column !important;
-  background:linear-gradient(180deg,rgba(255,255,255,.94) 0%,rgba(255,255,255,.99) 100%) !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.99) 0%,rgba(255,255,255,.94) 100%) !important;
   -webkit-backdrop-filter:blur(14px) !important;
   backdrop-filter:blur(14px) !important;
-  border-top:1px solid rgba(200,220,201,.6) !important;
-  border-bottom:0 !important;
+  border-bottom:1px solid rgba(200,220,201,.6) !important;
+  border-top:0 !important;
   border-left:0 !important;
   border-right:0 !important;
   border-radius:0 !important;
-  box-shadow:0 -4px 20px rgba(60,90,70,.06) !important;
-  padding:0 0 env(safe-area-inset-bottom) 0 !important;
+  box-shadow:0 4px 20px rgba(60,90,70,.06) !important;
+  padding:env(safe-area-inset-top) 0 0 0 !important;
   margin:0 !important;
   height:auto !important;
   max-height:none !important;
@@ -249,7 +249,6 @@ html body #bottomNav.bn-v2 .bn-label{
 html body #bottomNav.bn-v2 .bn-row-1 .bn-label{
   font-size:10.5px !important;
 }
-/* Active state (giữ style xanh cho Home khi active) */
 html body #bottomNav.bn-v2 .bn-row > button.active,
 html body #bottomNav.bn-v2 .bn-row > button[aria-current="page"]{
   background:linear-gradient(135deg,#6da884,#4e8b5e) !important;
@@ -262,7 +261,6 @@ html body #bottomNav.bn-v2 .bn-row > button.active .bn-icon,
 html body #bottomNav.bn-v2 .bn-row > button[aria-current="page"] .bn-icon{
   color:#fff !important;
 }
-/* Nút Home mặc định active khi ở landing */
 html body #bottomNav.bn-v2 .bn-row > button#homeBtn:not(.inactive){
   background:linear-gradient(135deg,#6da884,#4e8b5e) !important;
   color:#fff !important;
@@ -271,6 +269,22 @@ html body #bottomNav.bn-v2 .bn-row > button#homeBtn:not(.inactive){
 html body #bottomNav.bn-v2 .bn-row > button#homeBtn:not(.inactive) .bn-label,
 html body #bottomNav.bn-v2 .bn-row > button#homeBtn:not(.inactive) .bn-icon{
   color:#fff !important;
+}
+
+/* ============================================================
+   ĐẨY CONTENT XUỐNG — tránh nav che
+   Nav cao ~110px (56 + 46 + border + safe-area-top)
+   ============================================================ */
+html body main#space{
+  padding-top:112px !important;
+  box-sizing:border-box !important;
+}
+html body #homeStack{
+  padding-top:0 !important;
+}
+/* Landing card vẫn phải hiển thị đúng */
+html body #questionWrap{
+  padding-top:0 !important;
 }
 
 /* ===== MORE SHEET ===== */
@@ -348,6 +362,38 @@ html body #bottomNav.bn-v2 .bn-row > button#homeBtn:not(.inactive) .bn-icon{
   </div>
 </noscript>
 
+<!-- ===== NAV 2 DÒNG — TRÊN CÙNG ===== -->
+<nav id="bottomNav" class="bn-v2" aria-label="Điều hướng chính">
+  <div class="bn-row bn-row-1">
+    <button id="homeBtn" type="button" aria-label="Về trang chủ">
+      <span class="bn-icon" aria-hidden="true">⌂</span>
+      <span class="bn-label">Home</span>
+    </button>
+    <button id="topBtn" type="button" aria-label="Mở bảng xếp hạng">
+      <span class="bn-icon" aria-hidden="true">🏆</span>
+      <span class="bn-label">BXH TOP</span>
+    </button>
+    <button id="checklistBtn" type="button" aria-label="Mở checklist" aria-expanded="false">
+      <span class="bn-icon" aria-hidden="true">☑</span>
+      <span class="bn-label">Checklist</span>
+    </button>
+  </div>
+  <div class="bn-row bn-row-2">
+    <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?">
+      <span class="bn-icon" aria-hidden="true">🍜</span>
+      <span class="bn-label">Bữa trưa</span>
+    </button>
+    <button id="attendanceBtn" type="button" aria-label="Mở Chấm công">
+      <span class="bn-icon" aria-hidden="true">🗓</span>
+      <span class="bn-label">Chấm công</span>
+    </button>
+    <button id="moreBtn" type="button" aria-label="Thêm công cụ">
+      <span class="bn-icon" aria-hidden="true">☰</span>
+      <span class="bn-label">Thêm</span>
+    </button>
+  </div>
+</nav>
+
 <main id="space">
 <div id="status"></div>
 <div id="appVersion" aria-label="Phiên bản">v1.07</div>
@@ -386,38 +432,6 @@ html body #bottomNav.bn-v2 .bn-row > button#homeBtn:not(.inactive) .bn-icon{
   </table></div>
   <div id="topActions"><button id="topCaptureBtn" type="button">📸 Chụp BXH</button><button id="topCloseBtn" type="button">Đóng</button></div>
 </section>
-
-<!-- ===== BOTTOM NAV — 2 DÒNG ===== -->
-<nav id="bottomNav" class="bn-v2" aria-label="Điều hướng chính">
-  <div class="bn-row bn-row-1">
-    <button id="homeBtn" type="button" aria-label="Về trang chủ">
-      <span class="bn-icon" aria-hidden="true">⌂</span>
-      <span class="bn-label">Home</span>
-    </button>
-    <button id="topBtn" type="button" aria-label="Mở bảng xếp hạng">
-      <span class="bn-icon" aria-hidden="true">🏆</span>
-      <span class="bn-label">BXH TOP</span>
-    </button>
-    <button id="checklistBtn" type="button" aria-label="Mở checklist" aria-expanded="false">
-      <span class="bn-icon" aria-hidden="true">☑</span>
-      <span class="bn-label">Checklist</span>
-    </button>
-  </div>
-  <div class="bn-row bn-row-2">
-    <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?">
-      <span class="bn-icon" aria-hidden="true">🍜</span>
-      <span class="bn-label">Bữa trưa</span>
-    </button>
-    <button id="attendanceBtn" type="button" aria-label="Mở Chấm công">
-      <span class="bn-icon" aria-hidden="true">🗓</span>
-      <span class="bn-label">Chấm công</span>
-    </button>
-    <button id="moreBtn" type="button" aria-label="Thêm công cụ">
-      <span class="bn-icon" aria-hidden="true">☰</span>
-      <span class="bn-label">Thêm</span>
-    </button>
-  </div>
-</nav>
 
 <!-- ===== MORE SHEET ===== -->
 <div id="moreOverlay" aria-hidden="true">
