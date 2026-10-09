@@ -28,330 +28,139 @@
 
 <style>
 /* ===== AUTH UI ===== */
-#loginOverlay{
-  position:fixed;inset:0;z-index:1000;
-  background:rgba(15,30,20,.5);
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-  display:none;align-items:center;justify-content:center;padding:20px;
-}
+#loginOverlay{position:fixed;inset:0;z-index:1000;background:rgba(15,30,20,.5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px}
 #loginOverlay.show{display:flex}
-#loginPanel{
-  width:min(92vw,380px);
-  background:linear-gradient(160deg,#ffffff,#f4faf3 60%,#edf6eb);
-  border-radius:24px;padding:26px 22px 22px;
-  box-shadow:0 24px 70px rgba(20,45,28,.35);
-  animation:loginPop .28s cubic-bezier(.16,1,.3,1);
-}
-@keyframes loginPop{
-  from{opacity:0;transform:scale(.9) translateY(18px)}
-  to{opacity:1;transform:scale(1) translateY(0)}
-}
+#loginPanel{width:min(92vw,380px);background:linear-gradient(160deg,#ffffff,#f4faf3 60%,#edf6eb);border-radius:24px;padding:26px 22px 22px;box-shadow:0 24px 70px rgba(20,45,28,.35);animation:loginPop .28s cubic-bezier(.16,1,.3,1)}
+@keyframes loginPop{from{opacity:0;transform:scale(.9) translateY(18px)}to{opacity:1;transform:scale(1) translateY(0)}}
 #loginHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 #loginTitle{font-size:19px;font-weight:800;color:#2c4a33;letter-spacing:-.3px}
-#loginClose{
-  background:transparent;border:0;font-size:26px;line-height:1;
-  color:#6b7d70;cursor:pointer;padding:2px 8px;border-radius:50%;
-  transition:background .15s;
-}
+#loginClose{background:transparent;border:0;font-size:26px;line-height:1;color:#6b7d70;cursor:pointer;padding:2px 8px;border-radius:50%;transition:background .15s}
 #loginClose:hover{background:#eef4ec}
 .login-label{display:block;font-size:13px;font-weight:700;color:#4a6b52;margin:14px 0 6px;letter-spacing:.2px}
-#loginUsername,#loginPassword{
-  width:100%;box-sizing:border-box;
-  padding:13px 15px;font-size:16px;
-  border:1.5px solid #cbdcc9;border-radius:14px;
-  background:#fff;color:#2c4a33;outline:none;
-  transition:border-color .15s,box-shadow .15s;
-  font-family:inherit;
-}
+#loginUsername,#loginPassword{width:100%;box-sizing:border-box;padding:13px 15px;font-size:16px;border:1.5px solid #cbdcc9;border-radius:14px;background:#fff;color:#2c4a33;outline:none;transition:border-color .15s,box-shadow .15s;font-family:inherit}
 #loginUsername:focus,#loginPassword:focus{border-color:#ff70b9;box-shadow:0 0 0 3px rgba(255,112,185,.15)}
-#loginMsg{
-  min-height:20px;font-size:13px;color:#d64545;
-  margin:12px 0 4px;text-align:center;font-weight:600;
-  transition:color .2s;
-}
+#loginMsg{min-height:20px;font-size:13px;color:#d64545;margin:12px 0 4px;text-align:center;font-weight:600;transition:color .2s}
 #loginMsg.ok{color:#2e8b57}
-#loginSubmit{
-  width:100%;padding:14px;
-  background:linear-gradient(135deg,#ff3c91,#ff70b9);
-  color:#fff;font-size:15px;font-weight:800;
-  border:0;border-radius:14px;cursor:pointer;
-  margin-top:4px;letter-spacing:.3px;
-  box-shadow:0 6px 18px rgba(255,60,145,.35);
-  transition:transform .12s,box-shadow .12s;
-  font-family:inherit;
-}
+#loginSubmit{width:100%;padding:14px;background:linear-gradient(135deg,#ff3c91,#ff70b9);color:#fff;font-size:15px;font-weight:800;border:0;border-radius:14px;cursor:pointer;margin-top:4px;letter-spacing:.3px;box-shadow:0 6px 18px rgba(255,60,145,.35);transition:transform .12s,box-shadow .12s;font-family:inherit}
 #loginSubmit:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(255,60,145,.45)}
 #loginSubmit:active{transform:translateY(0)}
 #loginSubmit:disabled{opacity:.6;cursor:wait;transform:none}
 
-/* ===== LOGOUT / AVATAR — vẫn ở dưới-trái ===== */
-#logoutBtn{
-  position:fixed;
-  left:12px;
-  bottom:calc(12px + env(safe-area-inset-bottom));
-  z-index:999;
-  padding:7px 12px;font-size:12px;font-weight:700;
-  background:rgba(255,255,255,.9);
-  border:1px solid #cbdcc9;border-radius:999px;
-  color:#2c4a33;cursor:pointer;
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-  display:inline-flex;gap:6px;align-items:center;
-  box-shadow:0 4px 14px rgba(0,0,0,.08);
-  font-family:inherit;
-  transition:background .15s,transform .12s;
-  max-width:min(60vw,220px);
-}
+/* ===== LOGOUT / AVATAR ===== */
+#logoutBtn{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:999;padding:7px 12px;font-size:12px;font-weight:700;background:rgba(255,255,255,.9);border:1px solid #cbdcc9;border-radius:999px;color:#2c4a33;cursor:pointer;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:inline-flex;gap:6px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.08);font-family:inherit;transition:background .15s,transform .12s;max-width:min(60vw,220px)}
 #logoutBtn[hidden]{display:none}
 #logoutBtn:hover{background:#fff;transform:translateY(-1px)}
 #logoutBtn .lb-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-#avatarBtn{
-  position:fixed;
-  left:12px;
-  bottom:calc(60px + env(safe-area-inset-bottom));
-  z-index:999;
-  width:42px;height:42px;
-  border-radius:50%;
-  background:rgba(255,255,255,.9);
-  border:1px solid #cbdcc9;
-  color:#2c4a33;
-  font-size:20px;
-  cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 14px rgba(0,0,0,.08);
-  transition:transform .12s,background .15s;
-  font-family:inherit;
-}
+#avatarBtn{position:fixed;left:12px;bottom:calc(60px + env(safe-area-inset-bottom));z-index:999;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.9);border:1px solid #cbdcc9;color:#2c4a33;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.08);transition:transform .12s,background .15s;font-family:inherit}
 #avatarBtn[hidden]{display:none !important}
 #avatarBtn:hover{background:#fff}
 #avatarBtn:active{transform:scale(.94)}
 #avatarBtn:disabled{opacity:.55;cursor:wait}
 
-/* ============================================================
-   NAV — 2 DÒNG — Ở TRÊN CÙNG
-   Override mọi rule khác trong main.css
-   ============================================================ */
+/* ===== NAV 2 DÒNG — TRÊN CÙNG ===== */
 html body #bottomNav.bn-v2,
 html body nav#bottomNav.bn-v2{
-  position:fixed !important;
-  top:0 !important;
-  bottom:auto !important;
-  left:0 !important;
-  right:0 !important;
-  z-index:200 !important;
-  display:flex !important;
-  flex-direction:column !important;
+  position:fixed !important;top:0 !important;bottom:auto !important;
+  left:0 !important;right:0 !important;z-index:200 !important;
+  display:flex !important;flex-direction:column !important;
   background:linear-gradient(180deg,rgba(255,255,255,.99) 0%,rgba(255,255,255,.94) 100%) !important;
-  -webkit-backdrop-filter:blur(14px) !important;
-  backdrop-filter:blur(14px) !important;
+  -webkit-backdrop-filter:blur(14px) !important;backdrop-filter:blur(14px) !important;
   border-bottom:1px solid rgba(200,220,201,.6) !important;
-  border-top:0 !important;
-  border-left:0 !important;
-  border-right:0 !important;
-  border-radius:0 !important;
-  box-shadow:0 4px 20px rgba(60,90,70,.06) !important;
+  border-top:0 !important;border-left:0 !important;border-right:0 !important;
+  border-radius:0 !important;box-shadow:0 4px 20px rgba(60,90,70,.06) !important;
   padding:env(safe-area-inset-top) 0 0 0 !important;
-  margin:0 !important;
-  height:auto !important;
-  max-height:none !important;
-  min-height:0 !important;
-  width:auto !important;
-  transform:none !important;
-  box-sizing:border-box !important;
-  overflow:visible !important;
-  gap:0 !important;
+  margin:0 !important;height:auto !important;max-height:none !important;
+  min-height:0 !important;width:auto !important;transform:none !important;
+  box-sizing:border-box !important;overflow:visible !important;gap:0 !important;
 }
 html body #bottomNav.bn-v2 .bn-row{
   display:flex !important;
   flex-direction:row !important;
   align-items:stretch !important;
-  justify-content:space-around !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  width:100% !important;
-  height:auto !important;
-  max-height:none !important;
-  min-height:0 !important;
-  position:static !important;
-  background:transparent !important;
-  border:0 !important;
-  padding:0 8px !important;
-  margin:0 !important;
-  transform:none !important;
-  box-sizing:border-box !important;
-  gap:4px !important;
+  justify-content:center !important;
+  visibility:visible !important;opacity:1 !important;
+  width:100% !important;height:auto !important;
+  max-height:none !important;min-height:0 !important;
+  position:relative !important;
+  background:transparent !important;border:0 !important;
+  padding:0 !important;margin:0 !important;
+  transform:none !important;box-sizing:border-box !important;gap:0 !important;
 }
 html body #bottomNav.bn-v2 .bn-row-1{
   min-height:56px !important;
-  padding-top:6px !important;
-  padding-bottom:4px !important;
+  padding-top:6px !important;padding-bottom:4px !important;
   border-bottom:1px solid rgba(200,220,201,.45) !important;
 }
 html body #bottomNav.bn-v2 .bn-row-2{
-  min-height:46px !important;
-  padding-top:3px !important;
-  padding-bottom:4px !important;
-  display:flex !important;
-  visibility:visible !important;
-  opacity:1 !important;
+  min-height:48px !important;
+  padding-top:3px !important;padding-bottom:4px !important;
 }
-html body #bottomNav.bn-v2 .bn-row > button{
+
+/* PAGE container trong mỗi row */
+html body #bottomNav.bn-v2 .bn-page{
+  display:none !important;
+  flex-direction:row !important;
+  align-items:stretch !important;
+  justify-content:space-around !important;
+  width:100% !important;
+  padding:0 6px !important;
+  box-sizing:border-box !important;
+  gap:4px !important;
+}
+html body #bottomNav.bn-v2 .bn-page.active{
+  display:flex !important;
+}
+
+html body #bottomNav.bn-v2 .bn-page > button{
   flex:1 1 0 !important;
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:center !important;
-  justify-content:center !important;
-  gap:2px !important;
-  background:transparent !important;
-  border:0 !important;
-  border-radius:12px !important;
-  color:#2c4a33 !important;
-  font-family:inherit !important;
-  cursor:pointer !important;
-  transition:background .15s,transform .12s !important;
-  padding:2px 4px !important;
-  min-width:0 !important;
-  min-height:0 !important;
-  max-height:none !important;
-  width:auto !important;
-  height:auto !important;
-  box-shadow:none !important;
-  text-align:center !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  position:static !important;
-  transform:none !important;
-  margin:0 !important;
+  display:flex !important;flex-direction:column !important;
+  align-items:center !important;justify-content:center !important;gap:2px !important;
+  background:transparent !important;border:0 !important;border-radius:12px !important;
+  color:#2c4a33 !important;font-family:inherit !important;cursor:pointer !important;
+  transition:background .15s,transform .12s !important;padding:2px 4px !important;
+  min-width:0 !important;min-height:0 !important;max-height:none !important;
+  width:auto !important;height:auto !important;box-shadow:none !important;
+  text-align:center !important;visibility:visible !important;opacity:1 !important;
+  position:static !important;transform:none !important;margin:0 !important;
 }
-html body #bottomNav.bn-v2 .bn-row > button:active{
+html body #bottomNav.bn-v2 .bn-page > button:active{
   background:rgba(120,180,140,.12) !important;
   transform:scale(.95) !important;
 }
 html body #bottomNav.bn-v2 .bn-icon{
-  font-size:18px !important;
-  line-height:1 !important;
-  display:block !important;
+  font-size:18px !important;line-height:1 !important;display:block !important;
 }
-html body #bottomNav.bn-v2 .bn-row-1 .bn-icon{
-  font-size:22px !important;
-}
+html body #bottomNav.bn-v2 .bn-row-1 .bn-icon{ font-size:22px !important; }
 html body #bottomNav.bn-v2 .bn-label{
-  font-size:10px !important;
-  font-weight:800 !important;
-  letter-spacing:.02em !important;
-  white-space:nowrap !important;
-  overflow:hidden !important;
-  text-overflow:ellipsis !important;
-  max-width:100% !important;
-  color:inherit !important;
-  display:block !important;
+  font-size:9.5px !important;font-weight:800 !important;letter-spacing:.02em !important;
+  white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;
+  max-width:100% !important;color:inherit !important;display:block !important;
 }
-html body #bottomNav.bn-v2 .bn-row-1 .bn-label{
-  font-size:10.5px !important;
-}
-html body #bottomNav.bn-v2 .bn-row > button.active,
-html body #bottomNav.bn-v2 .bn-row > button[aria-current="page"]{
+html body #bottomNav.bn-v2 .bn-row-1 .bn-label{ font-size:10.5px !important; }
+
+/* Active state */
+html body #bottomNav.bn-v2 .bn-page > button.active,
+html body #bottomNav.bn-v2 .bn-page > button[aria-current="page"]{
   background:linear-gradient(135deg,#6da884,#4e8b5e) !important;
   color:#fff !important;
   box-shadow:0 4px 12px -4px rgba(78,139,94,.45) !important;
 }
-html body #bottomNav.bn-v2 .bn-row > button.active .bn-label,
-html body #bottomNav.bn-v2 .bn-row > button[aria-current="page"] .bn-label,
-html body #bottomNav.bn-v2 .bn-row > button.active .bn-icon,
-html body #bottomNav.bn-v2 .bn-row > button[aria-current="page"] .bn-icon{
-  color:#fff !important;
-}
-html body #bottomNav.bn-v2 .bn-row > button#homeBtn:not(.inactive){
+html body #bottomNav.bn-v2 .bn-page > button.active .bn-label,
+html body #bottomNav.bn-v2 .bn-page > button.active .bn-icon,
+html body #bottomNav.bn-v2 .bn-page > button[aria-current="page"] .bn-label,
+html body #bottomNav.bn-v2 .bn-page > button[aria-current="page"] .bn-icon{ color:#fff !important; }
+html body #bottomNav.bn-v2 .bn-page > button#homeBtn:not(.inactive){
   background:linear-gradient(135deg,#6da884,#4e8b5e) !important;
   color:#fff !important;
   box-shadow:0 4px 12px -4px rgba(78,139,94,.45) !important;
 }
-html body #bottomNav.bn-v2 .bn-row > button#homeBtn:not(.inactive) .bn-label,
-html body #bottomNav.bn-v2 .bn-row > button#homeBtn:not(.inactive) .bn-icon{
-  color:#fff !important;
-}
+html body #bottomNav.bn-v2 .bn-page > button#homeBtn:not(.inactive) .bn-label,
+html body #bottomNav.bn-v2 .bn-page > button#homeBtn:not(.inactive) .bn-icon{ color:#fff !important; }
 
-/* ============================================================
-   ĐẨY CONTENT XUỐNG — tránh nav che
-   Nav cao ~110px (56 + 46 + border + safe-area-top)
-   ============================================================ */
-html body main#space{
-  padding-top:112px !important;
-  box-sizing:border-box !important;
-}
-html body #homeStack{
-  padding-top:0 !important;
-}
-/* Landing card vẫn phải hiển thị đúng */
-html body #questionWrap{
-  padding-top:0 !important;
-}
-
-/* ===== MORE SHEET ===== */
-#moreOverlay{
-  position:fixed;inset:0;
-  z-index:20800;
-  display:none;
-  align-items:flex-end;
-  justify-content:center;
-  background:rgba(20,40,25,.45);
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-}
-#moreOverlay.show{display:flex;animation:moreFade .2s ease}
-@keyframes moreFade{from{opacity:0}to{opacity:1}}
-#morePanel{
-  width:100%;max-width:520px;
-  background:linear-gradient(180deg,#ffffff 0%,#f4faf3 100%);
-  border-radius:24px 24px 0 0;
-  padding:12px 16px calc(20px + env(safe-area-inset-bottom));
-  box-shadow:0 -20px 60px rgba(20,45,28,.28);
-  transform:translateY(100%);
-  animation:moreSlideUp .3s cubic-bezier(.16,.9,.25,1) forwards;
-  box-sizing:border-box;
-}
-@keyframes moreSlideUp{to{transform:translateY(0)}}
-.more-handle{
-  width:40px;height:4px;
-  border-radius:99px;
-  background:rgba(120,160,130,.3);
-  margin:0 auto 14px;
-}
-.more-title{
-  font-size:13px;font-weight:900;color:#5a7a5f;
-  text-align:center;letter-spacing:.16em;
-  text-transform:uppercase;
-  margin-bottom:14px;
-}
-.more-list{
-  display:flex;flex-direction:column;gap:6px;
-  margin-bottom:14px;
-}
-.more-list button{
-  display:grid;
-  grid-template-columns:32px 1fr 20px;
-  gap:12px;align-items:center;
-  padding:12px 14px;min-height:52px;
-  border:1px solid rgba(200,220,201,.6);
-  border-radius:14px;
-  background:#fff;color:#2c4a33;
-  font-family:inherit;font-size:15px;font-weight:700;
-  text-align:left;cursor:pointer;
-  transition:transform .12s,background .15s,border-color .15s;
-}
-.more-list button:active{
-  transform:scale(.98);
-  background:#f4faf3;
-  border-color:#b8d4bc;
-}
-.more-list button .ml-icon{font-size:22px;line-height:1;text-align:center}
-.more-list button .ml-arrow{font-size:18px;color:#9bb8a0;text-align:right}
-#moreCloseBtn{
-  width:100%;padding:13px;border:0;border-radius:14px;
-  background:linear-gradient(135deg,#d8e8d5,#b8d4bc);
-  color:#2c4a33;font-family:inherit;font-size:14px;font-weight:800;
-  cursor:pointer;transition:transform .12s;
-}
-#moreCloseBtn:active{transform:scale(.98)}
+/* Đẩy content xuống dưới nav */
+html body main#space{ padding-top:112px !important; box-sizing:border-box !important; }
+html body #homeStack{ padding-top:0 !important; }
+html body #questionWrap{ padding-top:0 !important; }
 </style>
 </head>
 <body>
@@ -362,35 +171,67 @@ html body #questionWrap{
   </div>
 </noscript>
 
-<!-- ===== NAV 2 DÒNG — TRÊN CÙNG ===== -->
+<!-- ===== NAV 2 DÒNG — 2 TRANG ===== -->
 <nav id="bottomNav" class="bn-v2" aria-label="Điều hướng chính">
   <div class="bn-row bn-row-1">
-    <button id="homeBtn" type="button" aria-label="Về trang chủ">
-      <span class="bn-icon" aria-hidden="true">⌂</span>
-      <span class="bn-label">Home</span>
-    </button>
-    <button id="topBtn" type="button" aria-label="Mở bảng xếp hạng">
-      <span class="bn-icon" aria-hidden="true">🏆</span>
-      <span class="bn-label">BXH TOP</span>
-    </button>
-    <button id="checklistBtn" type="button" aria-label="Mở checklist" aria-expanded="false">
-      <span class="bn-icon" aria-hidden="true">☑</span>
-      <span class="bn-label">Checklist</span>
-    </button>
+    <!-- Trang A: Home / BXH / Checklist -->
+    <div class="bn-page bn-page-a active" data-page-a>
+      <button id="homeBtn" type="button" aria-label="Về trang chủ">
+        <span class="bn-icon" aria-hidden="true">⌂</span>
+        <span class="bn-label">Home</span>
+      </button>
+      <button id="topBtn" type="button" aria-label="Mở bảng xếp hạng">
+        <span class="bn-icon" aria-hidden="true">🏆</span>
+        <span class="bn-label">BXH TOP</span>
+      </button>
+      <button id="checklistBtn" type="button" aria-label="Mở checklist" aria-expanded="false">
+        <span class="bn-icon" aria-hidden="true">☑</span>
+        <span class="bn-label">Checklist</span>
+      </button>
+    </div>
+    <!-- Trang B: Admin / Giám sát / Luật KDV -->
+    <div class="bn-page bn-page-b" data-page-b>
+      <button id="adminBtn" type="button" aria-label="Cài đặt Admin">
+        <span class="bn-icon" aria-hidden="true">⚙</span>
+        <span class="bn-label">Admin</span>
+      </button>
+      <button id="monitorBtn" type="button" aria-label="Giám sát">
+        <span class="bn-icon" aria-hidden="true">👁</span>
+        <span class="bn-label">Giám sát</span>
+      </button>
+      <button id="kdvRulesBtn" type="button" aria-label="Luật KDV">
+        <span class="bn-icon" aria-hidden="true">📜</span>
+        <span class="bn-label">Luật KDV</span>
+      </button>
+    </div>
   </div>
   <div class="bn-row bn-row-2">
-    <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?">
-      <span class="bn-icon" aria-hidden="true">🍜</span>
-      <span class="bn-label">Bữa trưa</span>
-    </button>
-    <button id="attendanceBtn" type="button" aria-label="Mở Chấm công">
-      <span class="bn-icon" aria-hidden="true">🗓</span>
-      <span class="bn-label">Chấm công</span>
-    </button>
-    <button id="moreBtn" type="button" aria-label="Thêm công cụ">
-      <span class="bn-icon" aria-hidden="true">☰</span>
-      <span class="bn-label">Thêm</span>
-    </button>
+    <!-- Trang A: Bữa trưa / Chấm công / Thêm -->
+    <div class="bn-page bn-page-a active" data-page-a>
+      <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?">
+        <span class="bn-icon" aria-hidden="true">🍜</span>
+        <span class="bn-label">Bữa trưa</span>
+      </button>
+      <button id="attendanceBtn" type="button" aria-label="Mở Chấm công">
+        <span class="bn-icon" aria-hidden="true">🗓</span>
+        <span class="bn-label">Chấm công</span>
+      </button>
+      <button type="button" class="more-toggle" aria-label="Mở trang công cụ">
+        <span class="bn-icon" aria-hidden="true">☰</span>
+        <span class="bn-label">Thêm</span>
+      </button>
+    </div>
+    <!-- Trang B: Làm Ktra / Thêm -->
+    <div class="bn-page bn-page-b" data-page-b>
+      <button id="quizBtn" type="button" aria-label="Bài kiểm tra">
+        <span class="bn-icon" aria-hidden="true">📝</span>
+        <span class="bn-label">Làm Ktra</span>
+      </button>
+      <button type="button" class="more-toggle" aria-label="Quay lại trang chính">
+        <span class="bn-icon" aria-hidden="true">☰</span>
+        <span class="bn-label">Thêm</span>
+      </button>
+    </div>
   </div>
 </nav>
 
@@ -432,37 +273,6 @@ html body #questionWrap{
   </table></div>
   <div id="topActions"><button id="topCaptureBtn" type="button">📸 Chụp BXH</button><button id="topCloseBtn" type="button">Đóng</button></div>
 </section>
-
-<!-- ===== MORE SHEET ===== -->
-<div id="moreOverlay" aria-hidden="true">
-  <section id="morePanel" role="dialog" aria-modal="true" aria-labelledby="moreTitleTxt">
-    <div class="more-handle" aria-hidden="true"></div>
-    <div class="more-title" id="moreTitleTxt">Công cụ khác</div>
-    <div class="more-list">
-      <button id="kdvRulesBtn" type="button">
-        <span class="ml-icon" aria-hidden="true">📜</span>
-        <span>Luật KDV</span>
-        <span class="ml-arrow" aria-hidden="true">→</span>
-      </button>
-      <button id="quizBtn" type="button">
-        <span class="ml-icon" aria-hidden="true">📝</span>
-        <span>Bài kiểm tra</span>
-        <span class="ml-arrow" aria-hidden="true">→</span>
-      </button>
-      <button id="monitorBtn" type="button">
-        <span class="ml-icon" aria-hidden="true">👁</span>
-        <span>Giám sát</span>
-        <span class="ml-arrow" aria-hidden="true">→</span>
-      </button>
-      <button id="adminBtn" type="button">
-        <span class="ml-icon" aria-hidden="true">⚙</span>
-        <span>Admin</span>
-        <span class="ml-arrow" aria-hidden="true">→</span>
-      </button>
-    </div>
-    <button id="moreCloseBtn" type="button">Đóng</button>
-  </section>
-</div>
 
 <div id="monitorOverlay" aria-hidden="true">
   <section id="monitorPanel" role="dialog" aria-modal="true">
@@ -550,17 +360,14 @@ html body #questionWrap{
 <div id="hint" aria-hidden="true" hidden></div>
 </main>
 
-<!-- ===== NÚT UPLOAD AVATAR ===== -->
 <button id="avatarBtn" type="button" aria-label="Đổi avatar" hidden>📷</button>
 <input id="avatarFileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
 
-<!-- ===== NÚT ĐĂNG XUẤT ===== -->
 <button id="logoutBtn" type="button" aria-label="Đăng xuất" hidden>
   <span aria-hidden="true">🚪</span>
   <span class="lb-name" id="logoutName"></span>
 </button>
 
-<!-- ===== LOGIN OVERLAY ===== -->
 <div id="loginOverlay" aria-hidden="true">
   <section id="loginPanel" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
     <div id="loginHead">
@@ -663,13 +470,11 @@ html body #questionWrap{
       <div id="quizTitle"><span class="quiz-kicker">ĐẢO MÈO</span><span class="quiz-name">📝 Bài kiểm tra</span></div>
       <button id="quizClose" type="button" aria-label="Đóng">×</button>
     </div>
-
     <nav id="quizModeTabs" hidden>
       <button class="quiz-mode-tab active" data-quiz-mode="user" type="button">📝 Làm bài</button>
       <button class="quiz-mode-tab" data-quiz-mode="create" type="button">➕ Tạo câu hỏi</button>
       <button class="quiz-mode-tab" data-quiz-mode="results" type="button">📊 Kết quả</button>
     </nav>
-
     <div id="quizBody">
       <div class="quiz-view active" data-quiz-view="user">
         <div id="quizUserStart">
@@ -680,7 +485,6 @@ html body #questionWrap{
           <button id="quizStartBtn" type="button">Bắt đầu làm bài</button>
           <div id="quizUserStartMsg"></div>
         </div>
-
         <div id="quizUserRun" hidden>
           <div id="quizRunHeader">
             <div id="quizGreeting"></div>
@@ -695,7 +499,6 @@ html body #questionWrap{
             <button id="quizNextBtn" type="button">Câu tiếp ›</button>
           </div>
         </div>
-
         <div id="quizUserResult" hidden>
           <div class="quiz-result-card">
             <div id="quizResultEmoji" class="quiz-result-emoji">🎉</div>
@@ -709,17 +512,14 @@ html body #questionWrap{
           </div>
         </div>
       </div>
-
       <div class="quiz-view" data-quiz-view="create">
         <div class="quiz-section-title">✏️ Tạo / sửa câu hỏi</div>
         <div class="quiz-create-form">
           <label class="quiz-field-label">Câu hỏi</label>
           <textarea id="quizQuestionInput" rows="2" maxlength="500" placeholder="Nhập nội dung câu hỏi…"></textarea>
-
           <label class="quiz-field-label">Đáp án <span class="quiz-hint">(chọn ô tròn để đánh dấu đáp án đúng)</span></label>
           <div id="quizAnswersList"></div>
           <button id="quizAddAnswerBtn" type="button">＋ Thêm đáp án</button>
-
           <div id="quizFormMsg"></div>
           <div class="quiz-create-actions">
             <button id="quizSaveBtn" type="button">Thêm câu hỏi</button>
@@ -729,7 +529,6 @@ html body #questionWrap{
         <div class="quiz-section-title" style="margin-top:22px">📚 Danh sách câu hỏi (<span id="quizCountLabel">0</span>)</div>
         <div id="quizQuestionList"></div>
       </div>
-
       <div class="quiz-view" data-quiz-view="results">
         <div class="quiz-section-title">📊 Kết quả bài kiểm tra</div>
         <div id="quizResultsList"></div>
