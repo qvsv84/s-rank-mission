@@ -27,7 +27,19 @@
 <link rel="stylesheet" href="css/main.css">
 
 <style>
-/* ================= AUTH UI ================= */
+/* ═══════════ TOKENS ═══════════ */
+:root{
+  --p1:#ff9ecb; --p2:#ff70b9; --p3:#ff3c91;
+  --pd:#c73b8a; --pt:#8a2e5c; --ps:#c37aa0;
+  --bg1:#fff8fb; --bg2:#ffe9f3; --bg3:#ffdcec;
+  --white:#fff;
+  --grad:linear-gradient(135deg,var(--p1) 0%,var(--p2) 45%,var(--p3) 100%);
+  --grad-btn:linear-gradient(135deg,var(--p3),var(--p2));
+  --sh-btn:0 8px 20px rgba(255,60,145,.38);
+  --sh-card:0 8px 20px rgba(255,112,185,.16);
+}
+
+/* ═══════════ AUTH UI ═══════════ */
 #loginOverlay{
   position:fixed;inset:0;z-index:1000;
   background:rgba(15,30,20,.5);
@@ -37,255 +49,165 @@
 #loginOverlay.show{display:flex}
 #loginPanel{
   width:min(92vw,380px);
-  background:linear-gradient(160deg,#ffffff,#f4faf3 60%,#edf6eb);
+  background:linear-gradient(160deg,#fff,#f4faf3 60%,#edf6eb);
   border-radius:24px;padding:26px 22px 22px;
   box-shadow:0 24px 70px rgba(20,45,28,.35);
   animation:loginPop .28s cubic-bezier(.16,1,.3,1);
 }
-@keyframes loginPop{
-  from{opacity:0;transform:scale(.9) translateY(18px)}
-  to{opacity:1;transform:scale(1) translateY(0)}
-}
+@keyframes loginPop{from{opacity:0;transform:scale(.9) translateY(18px)}to{opacity:1;transform:scale(1) translateY(0)}}
 #loginHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 #loginTitle{font-size:19px;font-weight:800;color:#2c4a33;letter-spacing:-.3px}
-#loginClose{
-  background:transparent;border:0;font-size:26px;line-height:1;
-  color:#6b7d70;cursor:pointer;padding:2px 8px;border-radius:50%;
-  transition:background .15s;
-}
+#loginClose{background:transparent;border:0;font-size:26px;line-height:1;color:#6b7d70;cursor:pointer;padding:2px 8px;border-radius:50%;transition:background .15s;font-family:inherit}
 #loginClose:hover{background:#eef4ec}
 .login-label{display:block;font-size:13px;font-weight:700;color:#4a6b52;margin:14px 0 6px;letter-spacing:.2px}
-#loginUsername,#loginPassword{
-  width:100%;box-sizing:border-box;
-  padding:13px 15px;font-size:16px;
+:is(#loginUsername,#loginPassword){
+  width:100%;box-sizing:border-box;padding:13px 15px;font-size:16px;
   border:1.5px solid #cbdcc9;border-radius:14px;
-  background:#fff;color:#2c4a33;outline:none;
+  background:#fff;color:#2c4a33;outline:none;font-family:inherit;
   transition:border-color .15s,box-shadow .15s;
-  font-family:inherit;
 }
-#loginUsername:focus,#loginPassword:focus{border-color:#ff70b9;box-shadow:0 0 0 3px rgba(255,112,185,.15)}
-#loginMsg{
-  min-height:20px;font-size:13px;color:#d64545;
-  margin:12px 0 4px;text-align:center;font-weight:600;
-  transition:color .2s;
-}
+:is(#loginUsername,#loginPassword):focus{border-color:var(--p2);box-shadow:0 0 0 3px rgba(255,112,185,.15)}
+#loginMsg{min-height:20px;font-size:13px;color:#d64545;margin:12px 0 4px;text-align:center;font-weight:600;transition:color .2s}
 #loginMsg.ok{color:#2e8b57}
 #loginSubmit{
-  width:100%;padding:14px;
-  background:linear-gradient(135deg,#ff3c91,#ff70b9);
-  color:#fff;font-size:15px;font-weight:800;
-  border:0;border-radius:14px;cursor:pointer;
-  margin-top:4px;letter-spacing:.3px;
+  width:100%;padding:14px;background:var(--grad-btn);color:#fff;
+  font-size:15px;font-weight:800;border:0;border-radius:14px;cursor:pointer;
+  margin-top:4px;letter-spacing:.3px;font-family:inherit;
   box-shadow:0 6px 18px rgba(255,60,145,.35);
   transition:transform .12s,box-shadow .12s;
-  font-family:inherit;
 }
 #loginSubmit:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(255,60,145,.45)}
 #loginSubmit:active{transform:translateY(0)}
 #loginSubmit:disabled{opacity:.6;cursor:wait;transform:none}
 
-/* ================= ẨN NAV GỐC ================= */
-#bottomNav, #secondaryNav{
-  position:absolute !important;
-  width:1px !important;height:1px !important;
-  padding:0 !important;margin:-1px !important;
-  overflow:hidden !important;
-  clip:rect(0,0,0,0) !important;
-  clip-path:inset(50%) !important;
-  white-space:nowrap !important;
-  border:0 !important;
-  pointer-events:none !important;
-  left:0 !important;top:0 !important;
-}
-#avatarBtn, #logoutBtn{
-  position:absolute !important;
-  width:1px !important;height:1px !important;
-  padding:0 !important;margin:-1px !important;
-  overflow:hidden !important;
-  clip:rect(0,0,0,0) !important;
-  clip-path:inset(50%) !important;
-  white-space:nowrap !important;
-  border:0 !important;
-  pointer-events:none !important;
-  left:0 !important;top:0 !important;
+/* ═══════════ HIDDEN ORIGINAL NAV (proxy click) ═══════════ */
+:is(#bottomNav,#secondaryNav,#avatarBtn,#logoutBtn){
+  position:absolute !important;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);
+  white-space:nowrap;border:0;pointer-events:none;left:0;top:0;
 }
 
-/* ================= NÚT 3 GẠCH ================= */
+/* ═══════════ MENU TOGGLE (draggable) ═══════════ */
 #menuToggle{
-  position:fixed;
-  left:12px;
-  bottom:calc(12px + env(safe-area-inset-bottom));
-  z-index:999;
-  width:52px;height:52px;
-  border-radius:18px;
-  background:linear-gradient(135deg,#ff9ecb 0%,#ff70b9 45%,#ff3c91 100%);
-  border:2px solid rgba(255,255,255,.75);
-  cursor:pointer;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  gap:5px;
-  box-shadow:
-    0 8px 20px rgba(255,60,145,.38),
-    inset 0 1px 0 rgba(255,255,255,.55);
-  transition:transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s;
-  font-family:inherit;
-  padding:0;
-  touch-action:none;
-  user-select:none;-webkit-user-select:none;
-  -webkit-tap-highlight-color:transparent;
+  position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));
+  z-index:999;width:52px;height:52px;border-radius:18px;
+  background:var(--grad);border:2px solid rgba(255,255,255,.75);
+  cursor:pointer;padding:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  box-shadow:var(--sh-btn),inset 0 1px 0 rgba(255,255,255,.55);
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;
+  font-family:inherit;touch-action:none;
+  user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;
 }
-#menuToggle:hover{box-shadow:0 10px 26px rgba(255,60,145,.5), inset 0 1px 0 rgba(255,255,255,.55)}
+#menuToggle:hover{box-shadow:0 10px 26px rgba(255,60,145,.5),inset 0 1px 0 rgba(255,255,255,.55)}
 #menuToggle:active{transform:scale(.9)}
 #menuToggle.dragging{cursor:grabbing;transition:none;transform:scale(1.12) rotate(6deg)}
 #menuToggle span{
-  display:block;height:2.5px;
-  background:#fff;border-radius:2px;
+  display:block;height:2.5px;background:#fff;border-radius:2px;
+  pointer-events:none;box-shadow:0 1px 2px rgba(180,20,90,.18);
   transition:transform .3s cubic-bezier(.16,1,.3,1),opacity .2s,width .25s;
-  pointer-events:none;
-  box-shadow:0 1px 2px rgba(180,20,90,.18);
+  align-self:center;margin:0 auto;
 }
-#menuToggle span:nth-child(1){width:22px;align-self:center;margin:0 auto}
-#menuToggle span:nth-child(2){width:16px;align-self:center;margin:0 auto}
-#menuToggle span:nth-child(3){width:11px;align-self:center;margin:0 auto}
+#menuToggle span:nth-child(1){width:22px}
+#menuToggle span:nth-child(2){width:16px}
+#menuToggle span:nth-child(3){width:11px}
 
-/* ================= MENU FULL-PAGE ================= */
+/* ═══════════ MENU OVERLAY ═══════════ */
 #menuOverlay{
   position:fixed;inset:0;z-index:1100;
   background:
-    radial-gradient(circle at 15% 8%, rgba(255,192,220,.75), transparent 42%),
-    radial-gradient(circle at 85% 88%, rgba(255,220,235,.85), transparent 45%),
-    radial-gradient(circle at 50% 55%, rgba(255,240,248,.6), transparent 60%),
-    linear-gradient(160deg,#fff8fb 0%,#ffe9f3 45%,#ffdcec 100%);
-  overflow-y:auto;overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-  transition:opacity .32s ease, visibility 0s .32s;
+    radial-gradient(circle at 15% 8%,rgba(255,192,220,.75),transparent 42%),
+    radial-gradient(circle at 85% 88%,rgba(255,220,235,.85),transparent 45%),
+    radial-gradient(circle at 50% 55%,rgba(255,240,248,.6),transparent 60%),
+    linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 45%,var(--bg3) 100%);
+  overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .32s ease,visibility 0s .32s;
 }
-#menuOverlay.open{
-  opacity:1;visibility:visible;pointer-events:auto;
-  transition:opacity .32s ease, visibility 0s;
-}
+#menuOverlay.open{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .32s ease,visibility 0s}
 #menuOverlayInner{
-  position:relative;
-  min-height:100%;
+  position:relative;min-height:100%;max-width:520px;margin:0 auto;box-sizing:border-box;
   padding:calc(22px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom));
-  box-sizing:border-box;
-  max-width:520px;margin:0 auto;
-  transform:translateY(24px);
-  opacity:0;
-  transition:transform .45s cubic-bezier(.16,1,.3,1), opacity .35s;
+  transform:translateY(24px);opacity:0;
+  transition:transform .45s cubic-bezier(.16,1,.3,1),opacity .35s;
 }
-#menuOverlay.open #menuOverlayInner{
-  transform:translateY(0);opacity:1;
-  transition-delay:.06s;
-}
+#menuOverlay.open #menuOverlayInner{transform:translateY(0);opacity:1;transition-delay:.06s}
 
-.menu-float{
-  position:absolute;font-size:22px;opacity:.6;pointer-events:none;
-  filter:drop-shadow(0 4px 8px rgba(255,112,185,.28));
-  animation:floatY 6s ease-in-out infinite;
-}
+/* Floating decorations */
+.menu-float{position:absolute;font-size:22px;opacity:.6;pointer-events:none;filter:drop-shadow(0 4px 8px rgba(255,112,185,.28));animation:floatY 6s ease-in-out infinite}
 .menu-float.small{font-size:16px;opacity:.45}
-@keyframes floatY{
-  0%,100%{transform:translateY(0) rotate(-6deg)}
-  50%{transform:translateY(-14px) rotate(6deg)}
-}
+@keyframes floatY{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-14px) rotate(6deg)}}
 
+/* Header */
 .menu-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .menu-brand{display:flex;align-items:center;gap:12px}
 .menu-brand-logo{
   width:52px;height:52px;border-radius:18px;
   background:linear-gradient(135deg,#ffd5e8,#ffb8d9);
-  display:flex;align-items:center;justify-content:center;
-  font-size:28px;
+  display:flex;align-items:center;justify-content:center;font-size:28px;
   border:2px solid rgba(255,255,255,.95);
-  box-shadow:0 6px 16px rgba(255,112,185,.3), inset 0 1px 0 rgba(255,255,255,.9);
+  box-shadow:0 6px 16px rgba(255,112,185,.3),inset 0 1px 0 rgba(255,255,255,.9);
   animation:brandWiggle 4s ease-in-out infinite;
 }
 @keyframes brandWiggle{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}
 .menu-brand-name{
   font-size:21px;font-weight:900;letter-spacing:-.4px;line-height:1;margin-bottom:5px;
-  background:linear-gradient(135deg,#ff3c91,#c73b8a);
-  -webkit-background-clip:text;background-clip:text;
-  -webkit-text-fill-color:transparent;
+  background:linear-gradient(135deg,var(--p3),var(--pd));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
 }
-.menu-brand-sub{font-size:11px;font-weight:800;color:#c37aa0;letter-spacing:1.6px;text-transform:uppercase}
+.menu-brand-sub{font-size:11px;font-weight:800;color:var(--ps);letter-spacing:1.6px;text-transform:uppercase}
 .menu-close{
   width:44px;height:44px;border-radius:50%;
-  background:rgba(255,255,255,.9);
-  border:2px solid rgba(255,255,255,.95);
-  color:#c73b8a;font-size:20px;font-weight:800;line-height:1;
+  background:rgba(255,255,255,.9);border:2px solid rgba(255,255,255,.95);
+  color:var(--pd);font-size:20px;font-weight:800;line-height:1;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 6px 14px rgba(255,112,185,.24);
-  transition:transform .25s cubic-bezier(.34,1.56,.64,1), background .15s;
-  font-family:inherit;
+  box-shadow:0 6px 14px rgba(255,112,185,.24);font-family:inherit;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),background .15s;
   -webkit-tap-highlight-color:transparent;
 }
 .menu-close:hover{background:#fff;transform:rotate(90deg) scale(1.05)}
 .menu-close:active{transform:scale(.9) rotate(90deg)}
 
+/* User card */
 .menu-user-card{
-  display:flex;align-items:center;gap:14px;
-  padding:14px 16px;
+  display:flex;align-items:center;gap:14px;padding:14px 16px;
   background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,245,250,.85));
-  border:2px solid rgba(255,255,255,.95);
-  border-radius:22px;
-  box-shadow:0 12px 30px rgba(255,112,185,.2), inset 0 1px 0 rgba(255,255,255,.9);
-  margin-bottom:22px;
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  border:2px solid rgba(255,255,255,.95);border-radius:22px;
+  box-shadow:0 12px 30px rgba(255,112,185,.2),inset 0 1px 0 rgba(255,255,255,.9);
+  margin-bottom:22px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   animation:userCardIn .5s cubic-bezier(.16,1,.3,1) both;
 }
-@keyframes userCardIn{
-  from{opacity:0;transform:translateY(12px) scale(.96)}
-  to{opacity:1;transform:translateY(0) scale(1)}
-}
+@keyframes userCardIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 .menu-user-card[hidden]{display:none !important}
 .menu-user-avatar{
-  width:52px;height:52px;border-radius:50%;
+  width:52px;height:52px;border-radius:50%;flex-shrink:0;overflow:hidden;
   background-color:#ffd5e8;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>");
   background-size:cover;background-position:center;
   display:flex;align-items:center;justify-content:center;
   color:#fff;font-size:24px;font-weight:800;
-  border:3px solid #fff;
-  box-shadow:0 4px 12px rgba(255,60,145,.3);
-  flex-shrink:0;
-  overflow:hidden;
+  border:3px solid #fff;box-shadow:0 4px 12px rgba(255,60,145,.3);
 }
 .menu-user-info{flex:1;min-width:0}
-.menu-user-name{
-  font-size:15px;font-weight:800;color:#8a2e5c;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  line-height:1.2;margin-bottom:4px;
-}
-.menu-user-sub{
-  font-size:11px;font-weight:800;color:#c37aa0;
-  letter-spacing:.6px;text-transform:uppercase;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.menu-user-sub.role-admin{color:#d63384}
-.menu-user-sub.role-manager{color:#8f5cc7}
-.menu-user-sub.role-kdv{color:#e07a3c}
-.menu-user-sub.role-member{color:#c37aa0}
-.menu-user-action,
-.menu-user-logout{
-  width:40px;height:40px;border-radius:50%;
-  border:0;background:rgba(255,255,255,.92);
-  color:#c73b8a;font-size:18px;cursor:pointer;
+.menu-user-name{font-size:15px;font-weight:800;color:var(--pt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;margin-bottom:4px}
+.menu-user-sub{font-size:11px;font-weight:800;color:var(--ps);letter-spacing:.6px;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:is(.menu-user-sub.role-admin){color:#d63384}
+:is(.menu-user-sub.role-manager){color:#8f5cc7}
+:is(.menu-user-sub.role-kdv){color:#e07a3c}
+:is(.menu-user-sub.role-member){color:var(--ps)}
+:is(.menu-user-action,.menu-user-logout){
+  width:40px;height:40px;border-radius:50%;flex-shrink:0;
+  border:0;background:rgba(255,255,255,.92);color:var(--pd);
+  font-size:18px;cursor:pointer;font-family:inherit;
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 4px 12px rgba(255,112,185,.22);
-  transition:transform .2s, background .15s;
-  flex-shrink:0;font-family:inherit;
-  -webkit-tap-highlight-color:transparent;
+  transition:transform .2s,background .15s;-webkit-tap-highlight-color:transparent;
 }
-.menu-user-action:hover,
-.menu-user-logout:hover{background:#fff;transform:scale(1.1)}
-.menu-user-action:active,
-.menu-user-logout:active{transform:scale(.9)}
+:is(.menu-user-action,.menu-user-logout):hover{background:#fff;transform:scale(1.1)}
+:is(.menu-user-action,.menu-user-logout):active{transform:scale(.9)}
 .menu-user-logout{background:linear-gradient(135deg,#ffd5e8,#ffb8d9);color:#fff}
 
+/* Sections */
 .menu-section{margin-bottom:22px}
 .menu-section-title{
   display:flex;align-items:center;gap:8px;
@@ -295,28 +217,23 @@
 }
 .menu-section-title span{font-size:16px;filter:drop-shadow(0 2px 4px rgba(255,112,185,.35))}
 .menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+
+/* Menu items */
 .menu-item{
   --delay:0s;
-  position:relative;
+  position:relative;overflow:hidden;
   background:linear-gradient(160deg,rgba(255,255,255,.96),rgba(255,248,252,.9));
-  border:2px solid rgba(255,255,255,.95);
-  border-radius:20px;
-  padding:16px 6px 12px;
-  cursor:pointer;
-  display:flex;flex-direction:column;
-  align-items:center;gap:8px;
-  box-shadow:0 8px 20px rgba(255,112,185,.16), inset 0 1px 0 rgba(255,255,255,.9);
-  font-family:inherit;
-  color:#8a2e5c;
+  border:2px solid rgba(255,255,255,.95);border-radius:20px;
+  padding:16px 6px 12px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  box-shadow:var(--sh-card),inset 0 1px 0 rgba(255,255,255,.9);
+  font-family:inherit;color:var(--pt);
   -webkit-tap-highlight-color:transparent;
-  overflow:hidden;
-  opacity:0;
-  transform:translateY(14px) scale(.94);
+  opacity:0;transform:translateY(14px) scale(.94);
   transition:
     transform .45s cubic-bezier(.16,1,.3,1) var(--delay),
     opacity .35s ease var(--delay),
-    box-shadow .25s,
-    background .2s;
+    box-shadow .25s,background .2s;
 }
 #menuOverlay.open .menu-item{opacity:1;transform:translateY(0) scale(1)}
 .menu-item::before{
@@ -324,39 +241,27 @@
   background:linear-gradient(135deg,rgba(255,112,185,.15),transparent 60%);
   opacity:0;transition:opacity .25s;pointer-events:none;
 }
-.menu-item:hover::before,
-.menu-item:active::before{opacity:1}
+:is(.menu-item:hover,.menu-item:active)::before{opacity:1}
 .menu-item:hover{
   transform:translateY(-3px) scale(1.04);
-  box-shadow:0 12px 26px rgba(255,60,145,.3), inset 0 1px 0 rgba(255,255,255,.9);
+  box-shadow:0 12px 26px rgba(255,60,145,.3),inset 0 1px 0 rgba(255,255,255,.9);
   transition-delay:0s;
 }
 .menu-item:active{transform:translateY(-1px) scale(.97);transition-delay:0s}
 .menu-item-icon{
   width:42px;height:42px;border-radius:14px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:22px;
+  display:flex;align-items:center;justify-content:center;font-size:22px;
   background:linear-gradient(135deg,#ffe4f0,#ffcbe3);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 4px 10px rgba(255,112,185,.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 4px 10px rgba(255,112,185,.18);
   transition:transform .3s cubic-bezier(.34,1.56,.64,1);
   pointer-events:none;
 }
 .menu-item:hover .menu-item-icon{transform:rotate(-8deg) scale(1.12)}
-.menu-item-label{
-  font-size:12px;font-weight:800;
-  letter-spacing:.2px;text-align:center;line-height:1.2;
-  color:#8a2e5c;
-  pointer-events:none;
-}
+.menu-item-label{font-size:12px;font-weight:800;letter-spacing:.2px;text-align:center;line-height:1.2;color:var(--pt);pointer-events:none}
 .menu-item *{pointer-events:none}
 .menu-item[hidden]{display:none !important}
 
-.menu-footer{
-  text-align:center;
-  margin-top:26px;padding-top:16px;
-  font-size:11px;font-weight:800;color:#c37aa0;
-  letter-spacing:.9px;
-}
+.menu-footer{text-align:center;margin-top:26px;padding-top:16px;font-size:11px;font-weight:800;color:var(--ps);letter-spacing:.9px}
 body.menu-open{overflow:hidden}
 </style>
 </head>
@@ -369,142 +274,142 @@ body.menu-open{overflow:hidden}
 </noscript>
 
 <main id="space">
-<div id="status"></div>
-<div id="appVersion" aria-label="Phiên bản">v1.07</div>
+  <div id="status"></div>
+  <div id="appVersion" aria-label="Phiên bản">v1.07</div>
 
-<div id="homeStack">
-  <div id="questionWrap">
-    <div id="counter">CÂU 1</div>
-    <div id="question"></div>
-  </div>
-</div>
-
-<div id="wheelArea">
-  <div id="wheelViewport" class="wheel-viewport">
-    <div class="wheel-selection"></div>
-    <div id="items" class="wheel-items"></div>
-  </div>
-  <div id="wheelHint">Vuốt lên / xuống để chọn</div>
-  <button id="confirm" type="button">Xác nhận ❤️</button>
-</div>
-
-<div id="message"></div>
-
-<section id="checklistPanel">
-  <div id="checklistScroll"><table id="checklist">
-    <thead><tr><th>Kiểm duyệt viên</th><th>Giờ</th><th>Hoàn thành</th></tr></thead><tbody></tbody>
-  </table></div>
-  <div id="checklistActions"><button id="captureBtn" type="button">📸 Chụp checklist</button><button id="syncBtn" type="button">↻ Đồng bộ lại</button></div>
-</section>
-
-<section id="topPanel" aria-hidden="true">
-  <div id="topTitle">🏆 BXH TOP THÁNG 9</div>
-  <div id="topSub">Xếp hạng theo điểm chấm công</div>
-  <div id="topMonthBar"><select id="topMonthSelect" aria-label="Chọn tháng BXH TOP"></select></div>
-  <div id="topScroll"><table id="topTable">
-    <thead><tr><th>#</th><th>Tên</th><th>⭐ Điểm</th><th>Rank</th></tr></thead><tbody></tbody>
-  </table></div>
-  <div id="topActions"><button id="topCaptureBtn" type="button">📸 Chụp BXH</button><button id="topCloseBtn" type="button">Đóng</button></div>
-</section>
-
-<nav id="bottomNav" aria-label="Điều hướng chính">
-  <button id="homeBtn" type="button" aria-label="Về trang chủ">⌂ Home</button>
-  <button id="adminBtn" type="button" aria-label="Mở cài đặt admin">⚙ Admin</button>
-  <button id="monitorBtn" type="button" aria-label="Mở bảng giám sát">👁 Giám sát</button>
-  <button id="topBtn" type="button" aria-label="Mở bảng xếp hạng">🏆 BXH TOP</button>
-  <button id="checklistBtn" type="button" aria-label="Mở checklist" aria-expanded="false">☑ Checklist</button>
-</nav>
-<nav id="secondaryNav" aria-label="Công cụ">
-  <button id="kdvRulesBtn" type="button" aria-label="Mở Luật KDV">📜 Luật KDV</button>
-  <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?">🍜 Bữa trưa ăn gì?</button>
-  <button id="attendanceBtn" type="button" aria-label="Mở Chấm công">🗓 Chấm công</button>
-  <button id="quizBtn" type="button" aria-label="Bài kiểm tra" style="display:none">📝 Bài KT</button>
-</nav>
-
-<div id="monitorOverlay" aria-hidden="true">
-  <section id="monitorPanel" role="dialog" aria-modal="true">
-    <div id="monitorTitle">👁 Giám sát</div>
-    <div id="monitorSub">Bấm CHECK để mở Facebook của từng người</div>
-    <div id="monitorScroll">
-      <table id="monitorTable">
-        <thead><tr><th>Kiểm duyệt viên</th><th>Thao tác</th></tr></thead>
-        <tbody></tbody>
-      </table>
+  <div id="homeStack">
+    <div id="questionWrap">
+      <div id="counter">CÂU 1</div>
+      <div id="question"></div>
     </div>
-    <button id="monitorCloseBtn" type="button" aria-label="Đóng">×</button>
-  </section>
-</div>
+  </div>
 
-<div id="linkEditorOverlay" aria-hidden="true">
-  <section id="linkEditorPanel" role="dialog" aria-modal="true">
-    <div id="linkEditorTitle">🔗 Gán liên kết</div>
-    <div id="linkEditorName"></div>
-    <input id="linkEditorInput" type="url" inputmode="url" autocomplete="off" placeholder="https://facebook.com/ten-nguoi">
-    <div id="linkEditorHint">Mỗi người có thể dùng một liên kết riêng. Liên kết được lưu trên thiết bị này.</div>
-    <div id="linkEditorActions">
-      <button id="linkEditorCancel" type="button">Huỷ</button>
-      <button id="linkEditorClear" type="button">Xoá link</button>
-      <button id="linkEditorSave" type="button">Lưu</button>
+  <div id="wheelArea">
+    <div id="wheelViewport" class="wheel-viewport">
+      <div class="wheel-selection"></div>
+      <div id="items" class="wheel-items"></div>
     </div>
-  </section>
-</div>
+    <div id="wheelHint">Vuốt lên / xuống để chọn</div>
+    <button id="confirm" type="button">Xác nhận ❤️</button>
+  </div>
 
-<div id="adminPasswordOverlay" aria-hidden="true">
-  <section id="adminPasswordBox">
-    <div id="adminPasswordTitle">🔐 Admin</div>
-    <div id="adminPasswordSub">Nhập mật khẩu để mở cài đặt</div>
-    <input id="adminPasswordInput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••">
-    <div id="adminPasswordMsg"></div>
-    <div id="adminPasswordActions"><button id="adminPasswordCancel" type="button">Huỷ</button><button id="adminPasswordOk" type="button">Xác nhận</button></div>
-  </section>
-</div>
+  <div id="message"></div>
 
-<section id="adminPage" aria-label="Cài đặt Admin">
-  <header id="adminPageHeader">
-    <button id="adminPageBack" type="button" aria-label="Quay lại">←</button>
-    <div id="adminPageTitle"><span class="admin-page-kicker">HỆ THỐNG</span><span class="admin-page-name">Cài đặt Admin</span></div>
-    <button id="adminPageLogout" type="button" aria-label="Đăng xuất admin">🚪</button>
-  </header>
-  <div id="adminPageBody">
-    <nav id="adminPageNav" aria-label="Mục cài đặt">
-      <button class="admin-tab active" data-admin-tab="schedule" type="button"><span class="admin-tab-icon">⚙</span><span class="admin-tab-label">Giờ</span></button>
-      <button class="admin-tab" data-admin-tab="checklist" type="button"><span class="admin-tab-icon">☑</span><span class="admin-tab-label">Checklist</span></button>
-      <button class="admin-tab" data-admin-tab="stats" type="button"><span class="admin-tab-icon">📊</span><span class="admin-tab-label">Thống kê</span></button>
-    </nav>
-    <div id="adminPageContent">
-      <div class="admin-panel-view active" data-admin-view="schedule">
-        <h2 class="admin-section-title">Khung giờ hoạt động</h2>
-        <div class="admin-card">
-          <div class="admin-card-row"><div class="admin-card-icon">🔄</div><div class="admin-card-info"><label for="resetTimeInput">Giờ reset mỗi ngày</label><p>Checklist tự động làm mới vào lúc này</p></div><input id="resetTimeInput" type="text" value="00:00" inputmode="numeric" maxlength="5" placeholder="00:00" autocomplete="off"></div>
-          <div class="admin-card-row"><div class="admin-card-icon">🔒</div><div class="admin-card-info"><label for="checklistLockTimeInput">Giờ khoá Checklist</label><p>Sau giờ này, nút Checklist sẽ tạm khoá</p></div><input id="checklistLockTimeInput" type="text" value="21:00" inputmode="numeric" maxlength="5" placeholder="21:00" autocomplete="off"></div>
+  <section id="checklistPanel">
+    <div id="checklistScroll"><table id="checklist">
+      <thead><tr><th>Kiểm duyệt viên</th><th>Giờ</th><th>Hoàn thành</th></tr></thead><tbody></tbody>
+    </table></div>
+    <div id="checklistActions"><button id="captureBtn" type="button">📸 Chụp checklist</button><button id="syncBtn" type="button">↻ Đồng bộ lại</button></div>
+  </section>
+
+  <section id="topPanel" aria-hidden="true">
+    <div id="topTitle">🏆 BXH TOP THÁNG 9</div>
+    <div id="topSub">Xếp hạng theo điểm chấm công</div>
+    <div id="topMonthBar"><select id="topMonthSelect" aria-label="Chọn tháng BXH TOP"></select></div>
+    <div id="topScroll"><table id="topTable">
+      <thead><tr><th>#</th><th>Tên</th><th>⭐ Điểm</th><th>Rank</th></tr></thead><tbody></tbody>
+    </table></div>
+    <div id="topActions"><button id="topCaptureBtn" type="button">📸 Chụp BXH</button><button id="topCloseBtn" type="button">Đóng</button></div>
+  </section>
+
+  <nav id="bottomNav" aria-label="Điều hướng chính">
+    <button id="homeBtn" type="button">⌂ Home</button>
+    <button id="adminBtn" type="button">⚙ Admin</button>
+    <button id="monitorBtn" type="button">👁 Giám sát</button>
+    <button id="topBtn" type="button">🏆 BXH TOP</button>
+    <button id="checklistBtn" type="button" aria-expanded="false">☑ Checklist</button>
+  </nav>
+  <nav id="secondaryNav" aria-label="Công cụ">
+    <button id="kdvRulesBtn" type="button">📜 Luật KDV</button>
+    <button id="lunchBtn" type="button">🍜 Bữa trưa ăn gì?</button>
+    <button id="attendanceBtn" type="button">🗓 Chấm công</button>
+    <button id="quizBtn" type="button" style="display:none">📝 Bài KT</button>
+  </nav>
+
+  <div id="monitorOverlay" aria-hidden="true">
+    <section id="monitorPanel" role="dialog" aria-modal="true">
+      <div id="monitorTitle">👁 Giám sát</div>
+      <div id="monitorSub">Bấm CHECK để mở Facebook của từng người</div>
+      <div id="monitorScroll">
+        <table id="monitorTable">
+          <thead><tr><th>Kiểm duyệt viên</th><th>Thao tác</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <button id="monitorCloseBtn" type="button" aria-label="Đóng">×</button>
+    </section>
+  </div>
+
+  <div id="linkEditorOverlay" aria-hidden="true">
+    <section id="linkEditorPanel" role="dialog" aria-modal="true">
+      <div id="linkEditorTitle">🔗 Gán liên kết</div>
+      <div id="linkEditorName"></div>
+      <input id="linkEditorInput" type="url" inputmode="url" autocomplete="off" placeholder="https://facebook.com/ten-nguoi">
+      <div id="linkEditorHint">Mỗi người có thể dùng một liên kết riêng. Liên kết được lưu trên thiết bị này.</div>
+      <div id="linkEditorActions">
+        <button id="linkEditorCancel" type="button">Huỷ</button>
+        <button id="linkEditorClear" type="button">Xoá link</button>
+        <button id="linkEditorSave" type="button">Lưu</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="adminPasswordOverlay" aria-hidden="true">
+    <section id="adminPasswordBox">
+      <div id="adminPasswordTitle">🔐 Admin</div>
+      <div id="adminPasswordSub">Nhập mật khẩu để mở cài đặt</div>
+      <input id="adminPasswordInput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••">
+      <div id="adminPasswordMsg"></div>
+      <div id="adminPasswordActions"><button id="adminPasswordCancel" type="button">Huỷ</button><button id="adminPasswordOk" type="button">Xác nhận</button></div>
+    </section>
+  </div>
+
+  <section id="adminPage" aria-label="Cài đặt Admin">
+    <header id="adminPageHeader">
+      <button id="adminPageBack" type="button" aria-label="Quay lại">←</button>
+      <div id="adminPageTitle"><span class="admin-page-kicker">HỆ THỐNG</span><span class="admin-page-name">Cài đặt Admin</span></div>
+      <button id="adminPageLogout" type="button" aria-label="Đăng xuất admin">🚪</button>
+    </header>
+    <div id="adminPageBody">
+      <nav id="adminPageNav" aria-label="Mục cài đặt">
+        <button class="admin-tab active" data-admin-tab="schedule" type="button"><span class="admin-tab-icon">⚙</span><span class="admin-tab-label">Giờ</span></button>
+        <button class="admin-tab" data-admin-tab="checklist" type="button"><span class="admin-tab-icon">☑</span><span class="admin-tab-label">Checklist</span></button>
+        <button class="admin-tab" data-admin-tab="stats" type="button"><span class="admin-tab-icon">📊</span><span class="admin-tab-label">Thống kê</span></button>
+      </nav>
+      <div id="adminPageContent">
+        <div class="admin-panel-view active" data-admin-view="schedule">
+          <h2 class="admin-section-title">Khung giờ hoạt động</h2>
+          <div class="admin-card">
+            <div class="admin-card-row"><div class="admin-card-icon">🔄</div><div class="admin-card-info"><label for="resetTimeInput">Giờ reset mỗi ngày</label><p>Checklist tự động làm mới vào lúc này</p></div><input id="resetTimeInput" type="text" value="00:00" inputmode="numeric" maxlength="5" placeholder="00:00" autocomplete="off"></div>
+            <div class="admin-card-row"><div class="admin-card-icon">🔒</div><div class="admin-card-info"><label for="checklistLockTimeInput">Giờ khoá Checklist</label><p>Sau giờ này, nút Checklist sẽ tạm khoá</p></div><input id="checklistLockTimeInput" type="text" value="21:00" inputmode="numeric" maxlength="5" placeholder="21:00" autocomplete="off"></div>
+          </div>
+          <div class="admin-note"><span class="admin-note-icon">💡</span><span>Ví dụ: reset <b>00:00</b>, khoá <b>21:00</b> → Checklist mở từ 0h đến 21h mỗi ngày.</span></div>
+          <div id="adminStatus" class="admin-status"></div>
+          <div class="admin-actions"><button id="adminSaveBtn" type="button">💾 Lưu cài đặt</button></div>
         </div>
-        <div class="admin-note"><span class="admin-note-icon">💡</span><span>Ví dụ: reset <b>00:00</b>, khoá <b>21:00</b> → Checklist mở từ 0h đến 21h mỗi ngày.</span></div>
-        <div id="adminStatus" class="admin-status"></div>
-        <div class="admin-actions"><button id="adminSaveBtn" type="button">💾 Lưu cài đặt</button></div>
-      </div>
-      <div class="admin-panel-view" data-admin-view="checklist">
-        <h2 class="admin-section-title">Quản lý Checklist hôm nay</h2>
-        <div class="admin-toolbar"><input id="adminChecklistSearch" type="text" placeholder="🔍 Tìm tên..." autocomplete="off"><div class="admin-filters"><button class="admin-filter-btn active" data-filter="all" type="button">Tất cả</button><button class="admin-filter-btn" data-filter="checked" type="button">✓ Đã</button><button class="admin-filter-btn" data-filter="unchecked" type="button">○ Chưa</button></div></div>
-        <div id="adminChecklistStats" class="admin-stats-bar"></div>
-        <div id="adminChecklistRows" class="admin-list"></div>
-      </div>
-      <div class="admin-panel-view" data-admin-view="stats">
-        <h2 class="admin-section-title">Thống kê hôm nay</h2>
-        <div class="admin-stats-grid">
-          <div class="admin-stat-card"><div class="admin-stat-icon">👥</div><div id="adminStatTotal" class="admin-stat-value">0</div><div class="admin-stat-label">Tổng số</div></div>
-          <div class="admin-stat-card success"><div class="admin-stat-icon">✅</div><div id="adminStatChecked" class="admin-stat-value">0</div><div class="admin-stat-label">Đã check</div></div>
-          <div class="admin-stat-card warn"><div class="admin-stat-icon">⭕</div><div id="adminStatUnchecked" class="admin-stat-value">0</div><div class="admin-stat-label">Chưa check</div></div>
+        <div class="admin-panel-view" data-admin-view="checklist">
+          <h2 class="admin-section-title">Quản lý Checklist hôm nay</h2>
+          <div class="admin-toolbar"><input id="adminChecklistSearch" type="text" placeholder="🔍 Tìm tên..." autocomplete="off"><div class="admin-filters"><button class="admin-filter-btn active" data-filter="all" type="button">Tất cả</button><button class="admin-filter-btn" data-filter="checked" type="button">✓ Đã</button><button class="admin-filter-btn" data-filter="unchecked" type="button">○ Chưa</button></div></div>
+          <div id="adminChecklistStats" class="admin-stats-bar"></div>
+          <div id="adminChecklistRows" class="admin-list"></div>
         </div>
-        <h3 class="admin-section-subtitle">⏰ Top 3 check sớm nhất</h3>
-        <div id="adminStatTop3" class="admin-list"></div>
-        <h3 class="admin-section-subtitle">📈 Bảng xếp hạng tháng</h3>
-        <div class="admin-note"><span class="admin-note-icon">ℹ</span><span>Xem chi tiết ở trang <b>BXH TOP</b> ngoài Home.</span></div>
+        <div class="admin-panel-view" data-admin-view="stats">
+          <h2 class="admin-section-title">Thống kê hôm nay</h2>
+          <div class="admin-stats-grid">
+            <div class="admin-stat-card"><div class="admin-stat-icon">👥</div><div id="adminStatTotal" class="admin-stat-value">0</div><div class="admin-stat-label">Tổng số</div></div>
+            <div class="admin-stat-card success"><div class="admin-stat-icon">✅</div><div id="adminStatChecked" class="admin-stat-value">0</div><div class="admin-stat-label">Đã check</div></div>
+            <div class="admin-stat-card warn"><div class="admin-stat-icon">⭕</div><div id="adminStatUnchecked" class="admin-stat-value">0</div><div class="admin-stat-label">Chưa check</div></div>
+          </div>
+          <h3 class="admin-section-subtitle">⏰ Top 3 check sớm nhất</h3>
+          <div id="adminStatTop3" class="admin-list"></div>
+          <h3 class="admin-section-subtitle">📈 Bảng xếp hạng tháng</h3>
+          <div class="admin-note"><span class="admin-note-icon">ℹ</span><span>Xem chi tiết ở trang <b>BXH TOP</b> ngoài Home.</span></div>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<div id="hint" aria-hidden="true" hidden></div>
+  <div id="hint" aria-hidden="true" hidden></div>
 </main>
 
 <button id="avatarBtn" type="button" aria-label="Đổi avatar" hidden>📷</button>
@@ -522,8 +427,7 @@ body.menu-open{overflow:hidden}
       <button id="loginClose" type="button" aria-label="Đóng">×</button>
     </div>
     <label class="login-label" for="loginUsername">Tên đăng nhập</label>
-    <input id="loginUsername" type="text" inputmode="text" autocomplete="username"
-           placeholder="VD: tienloi" maxlength="60" autocapitalize="none" spellcheck="false">
+    <input id="loginUsername" type="text" inputmode="text" autocomplete="username" placeholder="VD: tienloi" maxlength="60" autocapitalize="none" spellcheck="false">
     <label class="login-label" for="loginPassword">Mật khẩu</label>
     <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••">
     <div id="loginMsg"></div>
@@ -532,42 +436,40 @@ body.menu-open{overflow:hidden}
 </div>
 
 <section id="attendancePage" aria-label="Lịch chấm công">
-  <div class="att-page-inner">
-    <div class="att-shell">
-      <header class="att-head">
-        <button id="attendanceBack" class="att-icon-btn" type="button" aria-label="Quay lại">←</button>
-        <div class="att-head-title"><span class="att-kicker">HỆ THỐNG 02</span><span class="att-title">Chấm công</span></div>
-        <div class="att-head-actions">
-          <button id="attendanceTodayBtn" class="att-icon-btn" type="button" aria-label="Về tháng hiện tại">📅</button>
-          <button id="attendanceSyncBtn" class="att-icon-btn" type="button" aria-label="Đồng bộ">⟳</button>
-        </div>
-      </header>
-      <button id="attendanceEmployeeWheelBtn" class="att-employee-card" type="button">
-        <span class="att-employee-avatar" id="attendanceEmployeeAvatar">?</span>
-        <span class="att-employee-info"><span class="att-employee-label">Kiểm Duyệt Viên</span><span class="wheel-value">Đang tải…</span></span>
-        <span class="att-employee-chevron">⌄</span>
-      </button>
-      <select id="attendanceEmployee" aria-hidden="true" tabindex="-1"></select>
-      <div class="att-month-nav">
-        <button id="attendancePrev" type="button" aria-label="Tháng trước">‹</button>
-        <div class="att-month-label"><span id="attendanceMonthLabel">Tháng 9</span><span id="attendanceYearLabel">2026</span></div>
-        <button id="attendanceNext" type="button" aria-label="Tháng sau">›</button>
+  <div class="att-page-inner"><div class="att-shell">
+    <header class="att-head">
+      <button id="attendanceBack" class="att-icon-btn" type="button" aria-label="Quay lại">←</button>
+      <div class="att-head-title"><span class="att-kicker">HỆ THỐNG 02</span><span class="att-title">Chấm công</span></div>
+      <div class="att-head-actions">
+        <button id="attendanceTodayBtn" class="att-icon-btn" type="button" aria-label="Về tháng hiện tại">📅</button>
+        <button id="attendanceSyncBtn" class="att-icon-btn" type="button" aria-label="Đồng bộ">⟳</button>
       </div>
-      <div class="att-inline-stats">
-        <div class="att-inline-stat work"><span class="att-inline-stat-icon">✓</span><span class="att-inline-stat-value" id="attendanceWorkCount">0</span><span class="att-inline-stat-label">làm</span></div>
-        <div class="att-inline-stat off"><span class="att-inline-stat-icon">—</span><span class="att-inline-stat-value" id="attendanceOffCount">0</span><span class="att-inline-stat-label">nghỉ</span></div>
-        <div class="att-inline-stat leave"><span class="att-inline-stat-icon">🌴</span><span class="att-inline-stat-value" id="attendanceLeaveCount">0</span><span class="att-inline-stat-label">phép</span></div>
-      </div>
-      <section class="att-card att-calendar-card">
-        <div class="att-week" aria-hidden="true"><div>T2</div><div>T3</div><div>T4</div><div>T5</div><div>T6</div><div>T7</div><div>CN</div></div>
-        <div id="attendanceGrid" class="att-grid"></div>
-      </section>
-      <div class="att-footer-status">
-        <div id="attendanceSyncStatus" class="att-footer-line" aria-live="polite"><span class="att-footer-dot"></span><span class="att-footer-text">Chưa đồng bộ</span></div>
-        <div id="attendanceAutoStatus" class="att-footer-line muted"><span>⟳</span><span class="att-footer-text">Tự động làm mới sau <b id="attendanceCountdown">60</b>s</span></div>
-      </div>
+    </header>
+    <button id="attendanceEmployeeWheelBtn" class="att-employee-card" type="button">
+      <span class="att-employee-avatar" id="attendanceEmployeeAvatar">?</span>
+      <span class="att-employee-info"><span class="att-employee-label">Kiểm Duyệt Viên</span><span class="wheel-value">Đang tải…</span></span>
+      <span class="att-employee-chevron">⌄</span>
+    </button>
+    <select id="attendanceEmployee" aria-hidden="true" tabindex="-1"></select>
+    <div class="att-month-nav">
+      <button id="attendancePrev" type="button" aria-label="Tháng trước">‹</button>
+      <div class="att-month-label"><span id="attendanceMonthLabel">Tháng 9</span><span id="attendanceYearLabel">2026</span></div>
+      <button id="attendanceNext" type="button" aria-label="Tháng sau">›</button>
     </div>
-  </div>
+    <div class="att-inline-stats">
+      <div class="att-inline-stat work"><span class="att-inline-stat-icon">✓</span><span class="att-inline-stat-value" id="attendanceWorkCount">0</span><span class="att-inline-stat-label">làm</span></div>
+      <div class="att-inline-stat off"><span class="att-inline-stat-icon">—</span><span class="att-inline-stat-value" id="attendanceOffCount">0</span><span class="att-inline-stat-label">nghỉ</span></div>
+      <div class="att-inline-stat leave"><span class="att-inline-stat-icon">🌴</span><span class="att-inline-stat-value" id="attendanceLeaveCount">0</span><span class="att-inline-stat-label">phép</span></div>
+    </div>
+    <section class="att-card att-calendar-card">
+      <div class="att-week" aria-hidden="true"><div>T2</div><div>T3</div><div>T4</div><div>T5</div><div>T6</div><div>T7</div><div>CN</div></div>
+      <div id="attendanceGrid" class="att-grid"></div>
+    </section>
+    <div class="att-footer-status">
+      <div id="attendanceSyncStatus" class="att-footer-line" aria-live="polite"><span class="att-footer-dot"></span><span class="att-footer-text">Chưa đồng bộ</span></div>
+      <div id="attendanceAutoStatus" class="att-footer-line muted"><span>⟳</span><span class="att-footer-text">Tự động làm mới sau <b id="attendanceCountdown">60</b>s</span></div>
+    </div>
+  </div></div>
 </section>
 
 <div id="attendanceNameWheel" aria-hidden="true">
@@ -645,12 +547,11 @@ body.menu-open{overflow:hidden}
 
 <div id="menuOverlay" aria-hidden="true">
   <div id="menuOverlayInner">
-
-    <div class="menu-float"      style="top:6%;left:6%;animation-delay:0s">🌸</div>
+    <div class="menu-float"       style="top:6%;left:6%;animation-delay:0s">🌸</div>
     <div class="menu-float small" style="top:14%;right:10%;animation-delay:.7s">✨</div>
-    <div class="menu-float"      style="top:42%;left:3%;animation-delay:1.4s">💗</div>
+    <div class="menu-float"       style="top:42%;left:3%;animation-delay:1.4s">💗</div>
     <div class="menu-float small" style="top:58%;right:5%;animation-delay:.3s">🎀</div>
-    <div class="menu-float"      style="bottom:14%;left:12%;animation-delay:1s">🐾</div>
+    <div class="menu-float"       style="bottom:14%;left:12%;animation-delay:1s">🐾</div>
     <div class="menu-float small" style="bottom:22%;right:14%;animation-delay:1.7s">✨</div>
     <div class="menu-float small" style="top:78%;left:8%;animation-delay:.5s">🌸</div>
     <div class="menu-float small" style="top:30%;right:20%;animation-delay:2s">💕</div>
@@ -679,44 +580,20 @@ body.menu-open{overflow:hidden}
     <div class="menu-section">
       <div class="menu-section-title"><span>✨</span> Chính</div>
       <div class="menu-grid">
-        <button class="menu-item" data-target="homeBtn" type="button">
-          <span class="menu-item-icon">⌂</span>
-          <span class="menu-item-label">Home</span>
-        </button>
-        <button class="menu-item" data-target="adminBtn" type="button" hidden>
-          <span class="menu-item-icon">⚙</span>
-          <span class="menu-item-label">Admin</span>
-        </button>
-        <button class="menu-item" data-target="monitorBtn" type="button">
-          <span class="menu-item-icon">👁</span>
-          <span class="menu-item-label">Giám sát</span>
-        </button>
-        <button class="menu-item" data-target="topBtn" type="button">
-          <span class="menu-item-icon">🏆</span>
-          <span class="menu-item-label">BXH TOP</span>
-        </button>
-        <button class="menu-item" data-target="checklistBtn" type="button">
-          <span class="menu-item-icon">☑</span>
-          <span class="menu-item-label">Checklist</span>
-        </button>
+        <button class="menu-item" data-target="homeBtn" type="button"><span class="menu-item-icon">⌂</span><span class="menu-item-label">Home</span></button>
+        <button class="menu-item" data-target="adminBtn" type="button" hidden><span class="menu-item-icon">⚙</span><span class="menu-item-label">Admin</span></button>
+        <button class="menu-item" data-target="monitorBtn" type="button"><span class="menu-item-icon">👁</span><span class="menu-item-label">Giám sát</span></button>
+        <button class="menu-item" data-target="topBtn" type="button"><span class="menu-item-icon">🏆</span><span class="menu-item-label">BXH TOP</span></button>
+        <button class="menu-item" data-target="checklistBtn" type="button"><span class="menu-item-icon">☑</span><span class="menu-item-label">Checklist</span></button>
       </div>
     </div>
 
     <div class="menu-section">
       <div class="menu-section-title"><span>🎀</span> Công cụ</div>
       <div class="menu-grid">
-        <button class="menu-item" data-target="kdvRulesBtn" type="button">
-          <span class="menu-item-icon">📜</span>
-          <span class="menu-item-label">Luật KDV</span>
-        </button>
-        <button class="menu-item" data-target="lunchBtn" type="button">
-          <span class="menu-item-icon">🍜</span>
-          <span class="menu-item-label">Bữa trưa</span>
-        </button>
-        <button class="menu-item" data-target="attendanceBtn" type="button">
-          <span class="menu-item-icon">🗓</span>
-          <span class="menu-item-label">Chấm công</span>
-        </button>
+        <button class="menu-item" data-target="kdvRulesBtn" type="button"><span class="menu-item-icon">📜</span><span class="menu-item-label">Luật KDV</span></button>
+        <button class="menu-item" data-target="lunchBtn" type="button"><span class="menu-item-icon">🍜</span><span class="menu-item-label">Bữa trưa</span></button>
+        <button class="menu-item" data-target="attendanceBtn" type="button"><span class="menu-item-icon">🗓</span><span class="menu-item-label">Chấm công</span></button>
       </div>
     </div>
 
@@ -725,118 +602,98 @@ body.menu-open{overflow:hidden}
 </div>
 
 <script>
-/* =========================================================
+/* ═══════════════════════════════════════════════════════════
    MENU 3 GẠCH — Avatar (Supabase Storage) + Role (app_metadata)
-   (Đã xoá Bài KT / quiz khỏi menu)
-   ========================================================= */
-(function(){
+   ═══════════════════════════════════════════════════════════ */
+(() => {
   'use strict';
   try {
-
-    const btn          = document.getElementById('menuToggle');
-    const overlay      = document.getElementById('menuOverlay');
-    const closeBtn     = overlay ? overlay.querySelector('.menu-close') : null;
-    const loginOv      = document.getElementById('loginOverlay');
-    const realLogout   = document.getElementById('logoutBtn');
-    const realName     = document.getElementById('logoutName');
-    const realAvatar   = document.getElementById('avatarBtn');
-    const avatarInput  = document.getElementById('avatarFileInput');
-    const menuCard     = document.getElementById('menuUserCard');
-    const menuNameEl   = document.getElementById('menuUserName');
-    const menuRoleEl   = document.getElementById('menuUserRole');
-    const menuAvatarEl = document.getElementById('menuUserAvatar');
-    const adminItemEl  = overlay ? overlay.querySelector('.menu-item[data-target="adminBtn"]') : null;
-    const STORAGE_KEY  = 'menuBtnPos';
-    const BUST_KEY     = 'srank_avatar_bust';
-    const DEBUG        = /[?&]debug=menu/.test(location.search);
-
+    const $ = id => document.getElementById(id);
+    const btn         = $('menuToggle');
+    const overlay     = $('menuOverlay');
     if (!btn || !overlay) return;
 
-    function log(){ if (DEBUG) console.log.apply(console, ['[Menu]'].concat([].slice.call(arguments))); }
+    const closeBtn    = overlay.querySelector('.menu-close');
+    const loginOv     = $('loginOverlay');
+    const realLogout  = $('logoutBtn');
+    const realName    = $('logoutName');
+    const realAvatar  = $('avatarBtn');
+    const avatarInput = $('avatarFileInput');
+    const menuCard    = $('menuUserCard');
+    const menuNameEl  = $('menuUserName');
+    const menuRoleEl  = $('menuUserRole');
+    const menuAvatarEl= $('menuUserAvatar');
+    const adminItemEl = overlay.querySelector('.menu-item[data-target="adminBtn"]');
+    const STORAGE_KEY = 'menuBtnPos';
+    const BUST_KEY    = 'srank_avatar_bust';
+    const DEBUG       = /[?&]debug=menu/.test(location.search);
+    const log         = (...a) => DEBUG && console.log('[Menu]', ...a);
 
-    function isImageUrl(s){
+    /* ───── utils ───── */
+    const isImg = s => {
       if (typeof s !== 'string' || !s) return false;
       if (!/^(https?:|data:image\/|blob:)/i.test(s)) return false;
       if (/gradient\(/i.test(s)) return false;
       if (/^data:image\/svg/i.test(s)) return false;
       if (/\.svg(\?|#|$)/i.test(s)) return false;
       return true;
-    }
-    function stripUrl(s){
-      if (!s) return '';
-      return String(s).replace(/^url\(["']?/, '').replace(/["']?\)$/, '').trim();
-    }
-    function toCssUrl(s){
-      if (!s) return '';
-      if (/^url\(/i.test(s)) return s;
-      return 'url("' + s + '")';
-    }
-
-    function clamp(x, y){
-      const w = btn.offsetWidth  || 52;
-      const h = btn.offsetHeight || 52;
-      const maxX = Math.max(4, window.innerWidth  - w - 4);
-      const maxY = Math.max(4, window.innerHeight - h - 4);
-      return { x: Math.max(4, Math.min(x, maxX)), y: Math.max(4, Math.min(y, maxY)) };
-    }
-    function applyPos(x, y){
+    };
+    const strip   = s => s ? String(s).replace(/^url\(["']?/, '').replace(/["']?\)$/, '').trim() : '';
+    const toUrl   = s => !s ? '' : /^url\(/i.test(s) ? s : `url("${s}")`;
+    const clamp   = (x, y) => {
+      const w = btn.offsetWidth || 52, h = btn.offsetHeight || 52;
+      return {
+        x: Math.max(4, Math.min(x, Math.max(4, window.innerWidth  - w - 4))),
+        y: Math.max(4, Math.min(y, Math.max(4, window.innerHeight - h - 4)))
+      };
+    };
+    const applyPos = (x, y) => {
       const c = clamp(x, y);
-      btn.style.left   = c.x + 'px';
-      btn.style.top    = c.y + 'px';
-      btn.style.right  = 'auto';
-      btn.style.bottom = 'auto';
+      Object.assign(btn.style, { left: c.x + 'px', top: c.y + 'px', right: 'auto', bottom: 'auto' });
       return c;
-    }
-    function savePos(){
+    };
+    const savePos = () => {
       const r = btn.getBoundingClientRect();
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ x: r.left, y: r.top })); } catch(e){}
-    }
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ x: r.left, y: r.top })); } catch(_){}
+    };
 
+    /* ───── restore position ───── */
     let saved = null;
-    try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e){}
-    requestAnimationFrame(function(){
-      if (saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)){
-        applyPos(saved.x, saved.y);
-      } else {
-        const h = btn.offsetHeight || 52;
-        applyPos(12, window.innerHeight - h - 12);
-      }
+    try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(_){}
+    requestAnimationFrame(() => {
+      if (saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)) applyPos(saved.x, saved.y);
+      else applyPos(12, window.innerHeight - (btn.offsetHeight || 52) - 12);
     });
-    window.addEventListener('resize', function(){
-      const r = btn.getBoundingClientRect();
-      applyPos(r.left, r.top);
-    });
-    window.addEventListener('orientationchange', function(){
-      setTimeout(function(){
-        const r = btn.getBoundingClientRect();
-        applyPos(r.left, r.top);
-      }, 150);
-    });
+    addEventListener('resize', () => { const r = btn.getBoundingClientRect(); applyPos(r.left, r.top); });
+    addEventListener('orientationchange', () => setTimeout(() => {
+      const r = btn.getBoundingClientRect(); applyPos(r.left, r.top);
+    }, 150));
 
-    let avatarBust = 0;
-    try { avatarBust = parseInt(localStorage.getItem(BUST_KEY) || '0', 10) || 0; } catch(e){}
+    /* ───── avatar bust ───── */
+    let bust = 0;
+    try { bust = parseInt(localStorage.getItem(BUST_KEY) || '0', 10) || 0; } catch(_){}
 
-    function getSupabaseUrl(){
+    /* ───── Supabase URL ───── */
+    const getSbUrl = () => {
       const tries = [
-        function(){ return window.SRank && window.SRank.config && (window.SRank.config.supabaseUrl || window.SRank.config.SUPABASE_URL); },
-        function(){ return window.SRANK_CONFIG && (window.SRANK_CONFIG.supabaseUrl || window.SRANK_CONFIG.SUPABASE_URL); },
-        function(){ return window.__sb && window.__sb.supabaseUrl; },
-        function(){ return window.__sb && window.__sb.rest && window.__sb.rest.url; },
-        function(){ return window.supabaseClient && window.supabaseClient.supabaseUrl; },
-        function(){ return window.supabase && window.supabase.supabaseUrl; }
+        () => window.SRank?.config?.supabaseUrl,
+        () => window.SRank?.config?.SUPABASE_URL,
+        () => window.SRANK_CONFIG?.supabaseUrl,
+        () => window.SRANK_CONFIG?.SUPABASE_URL,
+        () => window.__sb?.supabaseUrl,
+        () => window.__sb?.rest?.url,
+        () => window.supabaseClient?.supabaseUrl,
+        () => window.supabase?.supabaseUrl
       ];
-      for (let i = 0; i < tries.length; i++){
-        try {
-          let v = tries[i]();
-          if (typeof v === 'string' && /^https?:\/\//i.test(v)){
-            return v.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
-          }
-        } catch(e){}
+      for (const t of tries){
+        try { const v = t(); if (typeof v === 'string' && /^https?:\/\//i.test(v))
+          return v.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, ''); } catch(_){}
       }
       return 'https://yodvujkylnvzjybvgika.supabase.co';
-    }
+    };
 
-    function readAuthSessionFromStorage(){
+    /* ───── auth session ───── */
+    const readSession = () => {
       try {
         for (let i = 0; i < localStorage.length; i++){
           const k = localStorage.key(i);
@@ -845,343 +702,257 @@ body.menu-open{overflow:hidden}
           if (!v) continue;
           try {
             const j = JSON.parse(v);
-            const user =
-              (j && j.user) ||
-              (j && j.currentSession && j.currentSession.user) ||
-              (j && j.session && j.session.user);
-            if (user) return user;
-          } catch(e){}
+            const u = j?.user || j?.currentSession?.user || j?.session?.user;
+            if (u) return u;
+          } catch(_){}
         }
-      } catch(e){}
+      } catch(_){}
       return null;
-    }
+    };
+    const getUid = () => {
+      try { const u = window.SRank?.Auth?.getCurrentUser?.(); if (u?.id) return u.id; } catch(_){}
+      return readSession()?.id || '';
+    };
 
-    function getCurrentUid(){
-      try {
-        const auth = window.SRank && window.SRank.Auth;
-        if (auth && typeof auth.getCurrentUser === 'function'){
-          const u = auth.getCurrentUser();
-          if (u && u.id) return u.id;
-        }
-      } catch(e){}
-      const u = readAuthSessionFromStorage();
-      return (u && u.id) || '';
-    }
-
-    function buildAvatarUrlFromStorage(forceBust){
-      const base = getSupabaseUrl();
-      const uid = getCurrentUid();
+    /* ───── avatar URL builder ───── */
+    const buildAvatarUrl = (forceBust) => {
+      const base = getSbUrl(), uid = getUid();
       if (!base || !uid) return '';
-      const bust = (forceBust || avatarBust) ? ('?t=' + (forceBust || avatarBust)) : '';
-      return base + '/storage/v1/object/public/avatars/' + encodeURIComponent(uid) + '.jpg' + bust;
-    }
+      const b = forceBust || bust;
+      return `${base}/storage/v1/object/public/avatars/${encodeURIComponent(uid)}.jpg${b ? '?t=' + b : ''}`;
+    };
 
-    function getRoleInfo(){
-      const candidates = [];
-
+    /* ───── role resolver ───── */
+    const getRole = () => {
+      const cand = [];
       try {
-        const auth = window.SRank && window.SRank.Auth;
-        if (auth && typeof auth.getCurrentUser === 'function'){
-          const u = auth.getCurrentUser() || {};
-          if (u.app_metadata && u.app_metadata.role) candidates.push(u.app_metadata.role);
-          if (u.user_metadata && u.user_metadata.role) candidates.push(u.user_metadata.role);
-          if (u.role) candidates.push(u.role);
-        }
-      } catch(e){}
-
+        const u = window.SRank?.Auth?.getCurrentUser?.() || {};
+        if (u.app_metadata?.role) cand.push(u.app_metadata.role);
+        if (u.user_metadata?.role) cand.push(u.user_metadata.role);
+        if (u.role) cand.push(u.role);
+      } catch(_){}
       try {
-        const u = readAuthSessionFromStorage();
+        const u = readSession();
         if (u){
-          if (u.app_metadata && u.app_metadata.role) candidates.push(u.app_metadata.role);
-          if (u.user_metadata && u.user_metadata.role) candidates.push(u.user_metadata.role);
-          if (u.role) candidates.push(u.role);
+          if (u.app_metadata?.role) cand.push(u.app_metadata.role);
+          if (u.user_metadata?.role) cand.push(u.user_metadata.role);
+          if (u.role) cand.push(u.role);
         }
-      } catch(e){}
-
+      } catch(_){}
       try {
         for (let i = 0; i < localStorage.length; i++){
-          const k = localStorage.key(i);
-          if (!k) continue;
-          const v = localStorage.getItem(k);
-          if (!v) continue;
-          if (/role/i.test(k) && v.length < 40 && !/[{}]/.test(v)){
-            candidates.push(v);
-            continue;
-          }
-          if (v.charAt(0) === '{'){
+          const k = localStorage.key(i), v = localStorage.getItem(k);
+          if (!k || !v) continue;
+          if (/role/i.test(k) && v.length < 40 && !/[{}]/.test(v)){ cand.push(v); continue; }
+          if (v[0] === '{'){
             try {
               const j = JSON.parse(v);
-              const r =
-                j.role ||
-                (j.user && j.user.role) ||
-                (j.user && j.user.app_metadata && j.user.app_metadata.role) ||
-                (j.user && j.user.user_metadata && j.user.user_metadata.role);
-              if (r) candidates.push(r);
-            } catch(e){}
+              const r = j.role || j.user?.role || j.user?.app_metadata?.role || j.user?.user_metadata?.role;
+              if (r) cand.push(r);
+            } catch(_){}
           }
         }
-      } catch(e){}
-
-      log('role candidates:', candidates);
-
-      for (let i = 0; i < candidates.length; i++){
-        const r = String(candidates[i] || '').trim().toLowerCase();
+      } catch(_){}
+      log('role candidates:', cand);
+      for (const c of cand){
+        const r = String(c || '').trim().toLowerCase();
         if (!r) continue;
-        if (/admin|super|owner|quản.?trị|quan.?tri/.test(r)){
-          return { label: 'ADMIN', klass: 'role-admin' };
-        }
-        if (/manager|leader|quản.?lý|quan.?ly|mod/.test(r)){
-          return { label: 'Quản lý', klass: 'role-manager' };
-        }
-        if (/kdv|kiểm.?duyệt|kiem.?duyet|reviewer/.test(r)){
-          return { label: 'Kiểm duyệt viên', klass: 'role-kdv' };
-        }
+        if (/admin|super|owner|quản.?trị|quan.?tri/.test(r))    return { label:'ADMIN',            klass:'role-admin' };
+        if (/manager|leader|quản.?lý|quan.?ly|mod/.test(r))       return { label:'Quản lý',          klass:'role-manager' };
+        if (/kdv|kiểm.?duyệt|kiem.?duyet|reviewer/.test(r))       return { label:'Kiểm duyệt viên',  klass:'role-kdv' };
       }
-      return { label: 'Thành viên', klass: 'role-member' };
-    }
-
-    function applyRole(el){
+      return { label:'Thành viên', klass:'role-member' };
+    };
+    const applyRole = (el) => {
       if (!el) return;
-      const info = getRoleInfo();
+      const info = getRole();
       if (el.textContent !== info.label) el.textContent = info.label;
       el.classList.remove('role-admin','role-manager','role-kdv','role-member');
       el.classList.add(info.klass);
-
       if (adminItemEl){
-        const isAdmin = (info.klass === 'role-admin');
-        if (adminItemEl.hidden !== !isAdmin){
-          adminItemEl.hidden = !isAdmin;
-        }
+        const isAdmin = info.klass === 'role-admin';
+        if (adminItemEl.hidden !== !isAdmin) adminItemEl.hidden = !isAdmin;
       }
-
       log('role applied:', info);
-    }
+    };
 
-    function readSRankAvatarCache(name){
-      if (!name || !window.SRank || !window.SRank.avatar) return '';
-      const cache = window.SRank.avatar;
+    /* ───── SRank.avatar cache ───── */
+    const readCache = (name) => {
+      if (!name || !window.SRank?.avatar) return '';
+      const c = window.SRank.avatar;
       try {
-        if (typeof cache.getCache === 'function'){ const v = cache.getCache(name); if (isImageUrl(v)) return v; }
-        if (typeof cache.get === 'function'){ const v = cache.get(name); if (isImageUrl(v)) return v; }
-        if (cache.cache && typeof cache.cache === 'object'){ const v = cache.cache[name]; if (isImageUrl(v)) return v; }
-        if (cache.map && typeof cache.map === 'object'){ const v = cache.map[name]; if (isImageUrl(v)) return v; }
-        if (typeof cache[name] === 'string' && isImageUrl(cache[name])) return cache[name];
-      } catch(e){}
+        const tryFns = [c.getCache, c.get].filter(f => typeof f === 'function');
+        for (const f of tryFns){ const v = f.call(c, name); if (isImg(v)) return v; }
+        const fromObj = (obj) => obj?.[name];
+        for (const o of [c.cache, c.map]){ const v = fromObj(o); if (isImg(v)) return v; }
+        if (typeof c[name] === 'string' && isImg(c[name])) return c[name];
+      } catch(_){}
       return '';
-    }
+    };
 
-    let lastKnownAvatarUrl = '';
+    let lastKnownUrl = '';
+    const extractAvatar = () => {
+      const userName = ((realName?.textContent) || '').trim();
 
-    function extractAvatarUrl(){
-      const userName = ((realName && realName.textContent) || '').trim();
+      if (lastKnownUrl && isImg(lastKnownUrl)){ log('avatar: event →', lastKnownUrl); return toUrl(lastKnownUrl); }
 
-      if (lastKnownAvatarUrl && isImageUrl(lastKnownAvatarUrl)){
-        log('avatar nguồn: event avatarUpdated →', lastKnownAvatarUrl);
-        return toCssUrl(lastKnownAvatarUrl);
-      }
-      const cached = readSRankAvatarCache(userName);
-      if (cached){ log('avatar: SRank.avatar cache →', cached); return toCssUrl(cached); }
+      const cached = readCache(userName);
+      if (cached){ log('avatar: cache →', cached); return toUrl(cached); }
 
       const commonKeys = ['avatarUrl','avatar_url','user_avatar_url','srank_avatar_url','meow_avatar_url'];
       try {
-        for (let i = 0; i < commonKeys.length; i++){
-          const v = localStorage.getItem(commonKeys[i]);
-          if (isImageUrl(v)) return toCssUrl(v);
-        }
+        for (const k of commonKeys){ const v = localStorage.getItem(k); if (isImg(v)) return toUrl(v); }
         for (let i = 0; i < localStorage.length; i++){
           const k = localStorage.key(i);
           if (!k || !/avatar/i.test(k)) continue;
           const v = localStorage.getItem(k);
-          if (isImageUrl(v)) return toCssUrl(v);
+          if (isImg(v)) return toUrl(v);
         }
-      } catch(e){}
+      } catch(_){}
 
-      const storageUrl = buildAvatarUrlFromStorage();
-      if (storageUrl){ log('avatar: Supabase Storage →', storageUrl); return toCssUrl(storageUrl); }
-
+      const sbUrl = buildAvatarUrl();
+      if (sbUrl){ log('avatar: storage →', sbUrl); return toUrl(sbUrl); }
       return '';
-    }
+    };
 
-    let currentAvatarRaw = '';
-
-    function applyAvatarUrl(url){
+    let currentRaw = '';
+    const applyAvatar = (url) => {
       if (!menuAvatarEl) return;
-      const raw = stripUrl(url);
-      if (!raw || !isImageUrl(raw)){
-        if (currentAvatarRaw){
-          currentAvatarRaw = '';
-          menuAvatarEl.style.backgroundImage = '';
-          menuAvatarEl.textContent = '🐱';
-        }
+      const raw = strip(url);
+      if (!raw || !isImg(raw)){
+        if (currentRaw){ currentRaw = ''; menuAvatarEl.style.backgroundImage = ''; menuAvatarEl.textContent = '🐱'; }
         return;
       }
-      if (raw === currentAvatarRaw) return;
-      currentAvatarRaw = raw;
-
+      if (raw === currentRaw) return;
+      currentRaw = raw;
       const img = new Image();
-      img.onload  = function(){
-        if (currentAvatarRaw !== raw) return;
-        menuAvatarEl.style.backgroundImage = 'url("' + raw + '")';
-        menuAvatarEl.textContent = '';
-      };
-      img.onerror = function(){
-        if (currentAvatarRaw !== raw) return;
-        currentAvatarRaw = '';
-        menuAvatarEl.style.backgroundImage = '';
-        menuAvatarEl.textContent = '🐱';
-      };
+      img.onload  = () => { if (currentRaw !== raw) return; menuAvatarEl.style.backgroundImage = `url("${raw}")`; menuAvatarEl.textContent = ''; };
+      img.onerror = () => { if (currentRaw !== raw) return; currentRaw = ''; menuAvatarEl.style.backgroundImage = ''; menuAvatarEl.textContent = '🐱'; };
       img.src = raw;
-    }
+    };
 
-    let isSyncing = false;
-    function isLoggedIn(){ return !!(realLogout && !realLogout.hidden); }
-
-    function syncUserCard(){
-      if (isSyncing) return;
-      if (!menuCard || !menuNameEl || !menuAvatarEl) return;
-      isSyncing = true;
+    /* ───── sync user card ───── */
+    let syncing = false;
+    const isLoggedIn = () => !!(realLogout && !realLogout.hidden);
+    const syncCard = () => {
+      if (syncing || !menuCard || !menuNameEl || !menuAvatarEl) return;
+      syncing = true;
       try {
         if (!isLoggedIn()){
           menuCard.hidden = true;
-          lastKnownAvatarUrl = '';
-          currentAvatarRaw = '';
+          lastKnownUrl = ''; currentRaw = '';
           if (adminItemEl) adminItemEl.hidden = true;
           return;
         }
         menuCard.hidden = false;
+        try { const n = ((realName?.textContent) || '').trim() || 'Thành viên';
+              if (menuNameEl.textContent !== n) menuNameEl.textContent = n; } catch(_){}
+        try { applyRole(menuRoleEl); } catch(e){ console.error('[Menu] role:', e); }
+        try { applyAvatar(extractAvatar()); } catch(e){ console.error('[Menu] avatar:', e); }
+      } finally { syncing = false; }
+    };
 
-        try {
-          const name = ((realName && realName.textContent) || '').trim() || 'Thành viên';
-          if (menuNameEl.textContent !== name) menuNameEl.textContent = name;
-        } catch(e){}
-
-        try { applyRole(menuRoleEl); } catch(e){ console.error('[Menu] applyRole:', e); }
-
-        try { applyAvatarUrl(extractAvatarUrl()); } catch(e){ console.error('[Menu] avatar:', e); }
-
-      } finally { isSyncing = false; }
-    }
-
-    window.addEventListener('avatarUpdated', function(e){
-      const d = (e && e.detail) || {};
-      if (!d.url || !isImageUrl(d.url)) return;
-      lastKnownAvatarUrl = d.url;
-      avatarBust = Date.now();
-      try { localStorage.setItem(BUST_KEY, String(avatarBust)); } catch(err){}
-      const currentName = ((realName && realName.textContent) || '').trim();
-      if (!d.name || !currentName || d.name === currentName){
-        applyAvatarUrl(d.url);
-      }
-      if (overlay.classList.contains('open')) syncUserCard();
+    /* ───── event avatarUpdated ───── */
+    addEventListener('avatarUpdated', (e) => {
+      const d = e?.detail || {};
+      if (!isImg(d.url)) return;
+      lastKnownUrl = d.url;
+      bust = Date.now();
+      try { localStorage.setItem(BUST_KEY, String(bust)); } catch(_){}
+      const cur = ((realName?.textContent) || '').trim();
+      if (!d.name || !cur || d.name === cur) applyAvatar(d.url);
+      if (overlay.classList.contains('open')) syncCard();
     });
 
-    let autoSyncTimer = null, autoSyncCount = 0;
-    function startAutoSync(){
-      stopAutoSync();
-      autoSyncCount = 0;
-      syncUserCard();
-      autoSyncTimer = setInterval(function(){
-        syncUserCard();
-        if (++autoSyncCount >= 6){ stopAutoSync(); }
-      }, 300);
-    }
-    function stopAutoSync(){ if (autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer = null; } }
+    /* ───── open/close ───── */
+    let syncTimer = null, syncCount = 0;
+    const stopSync = () => { if (syncTimer){ clearInterval(syncTimer); syncTimer = null; } };
+    const startSync = () => {
+      stopSync(); syncCount = 0; syncCard();
+      syncTimer = setInterval(() => { syncCard(); if (++syncCount >= 6) stopSync(); }, 300);
+    };
 
-    function applyStagger(){
-      overlay.querySelectorAll('.menu-item').forEach(function(el, i){
+    const stagger = () => {
+      overlay.querySelectorAll('.menu-item').forEach((el, i) => {
         el.style.setProperty('--delay', (0.08 + i * 0.035).toFixed(3) + 's');
       });
-    }
+    };
 
-    function isLoginShowing(){
+    const isLoginShowing = () => {
       if (!loginOv) return false;
       if (loginOv.classList.contains('show')) return true;
-      try {
-        const cs = getComputedStyle(loginOv);
-        return cs.display !== 'none' && cs.visibility !== 'hidden';
-      } catch(e){ return false; }
-    }
+      try { const cs = getComputedStyle(loginOv); return cs.display !== 'none' && cs.visibility !== 'hidden'; } catch(_){ return false; }
+    };
 
-    function openMenu(){
+    const openMenu = () => {
       if (isLoginShowing()) return;
-
-      try { applyStagger(); } catch(e){ console.error('[Menu] stagger:', e); }
-
+      try { stagger(); } catch(e){ console.error('[Menu] stagger:', e); }
       overlay.classList.add('open');
       overlay.setAttribute('aria-hidden', 'false');
       btn.setAttribute('aria-expanded', 'true');
       document.body.classList.add('menu-open');
-
-      try { startAutoSync(); } catch(e){ console.error('[Menu] autoSync:', e); }
-    }
-    function closeMenu(){
-      stopAutoSync();
+      try { startSync(); } catch(e){ console.error('[Menu] sync:', e); }
+    };
+    const closeMenu = () => {
+      stopSync();
       overlay.classList.remove('open');
       overlay.setAttribute('aria-hidden', 'true');
       btn.setAttribute('aria-expanded', 'false');
       document.body.classList.remove('menu-open');
-    }
-    function toggleMenu(){ overlay.classList.contains('open') ? closeMenu() : openMenu(); }
+    };
+    const toggleMenu = () => overlay.classList.contains('open') ? closeMenu() : openMenu();
 
-    let pointerId = null, startX = 0, startY = 0, startLeft = 0, startTop = 0, moved = false;
-    const DRAG_THRESHOLD = 8;
+    /* ───── pointer drag + tap ───── */
+    let pointerId = null, startX = 0, startY = 0, startL = 0, startT = 0, moved = false;
+    const DRAG = 8;
 
-    btn.addEventListener('pointerdown', function(e){
+    btn.addEventListener('pointerdown', (e) => {
       if (e.button !== undefined && e.button !== 0) return;
       pointerId = e.pointerId;
-      try { btn.setPointerCapture(pointerId); } catch(err){}
+      try { btn.setPointerCapture(pointerId); } catch(_){}
       const r = btn.getBoundingClientRect();
-      startX = e.clientX; startY = e.clientY;
-      startLeft = r.left; startTop = r.top;
-      moved = false;
+      startX = e.clientX; startY = e.clientY; startL = r.left; startT = r.top; moved = false;
     });
-    btn.addEventListener('pointermove', function(e){
+    btn.addEventListener('pointermove', (e) => {
       if (e.pointerId !== pointerId) return;
       const dx = e.clientX - startX, dy = e.clientY - startY;
       if (!moved){
-        if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
-        moved = true;
-        btn.classList.add('dragging');
+        if (Math.hypot(dx, dy) < DRAG) return;
+        moved = true; btn.classList.add('dragging');
       }
-      applyPos(startLeft + dx, startTop + dy);
+      applyPos(startL + dx, startT + dy);
     });
-    function endPointer(e){
+    const endPointer = (e) => {
       if (e.pointerId !== pointerId) return;
-      try { btn.releasePointerCapture(pointerId); } catch(err){}
+      try { btn.releasePointerCapture(pointerId); } catch(_){}
       pointerId = null;
       if (moved){
         btn.classList.remove('dragging');
         const r = btn.getBoundingClientRect();
-        applyPos(r.left, r.top);
-        savePos();
-      } else { toggleMenu(); }
+        applyPos(r.left, r.top); savePos();
+      } else toggleMenu();
       moved = false;
-    }
+    };
     btn.addEventListener('pointerup', endPointer);
-    btn.addEventListener('click', function(e){
-      e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-    }, true);
-    btn.addEventListener('pointercancel', function(e){
+    btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); }, true);
+    btn.addEventListener('pointercancel', (e) => {
       if (e.pointerId !== pointerId) return;
-      try { btn.releasePointerCapture(pointerId); } catch(err){}
-      btn.classList.remove('dragging');
-      pointerId = null;
-      moved = false;
+      try { btn.releasePointerCapture(pointerId); } catch(_){}
+      btn.classList.remove('dragging'); pointerId = null; moved = false;
     });
 
+    /* ───── close on ESC / outside ───── */
     if (closeBtn) closeBtn.addEventListener('click', closeMenu);
-    document.addEventListener('keydown', function(e){
+    document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && overlay.classList.contains('open')) closeMenu();
     });
-    overlay.addEventListener('click', function(e){
-      if (e.target === overlay) closeMenu();
-    });
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeMenu(); });
 
-    overlay.querySelectorAll('.menu-item').forEach(function(item){
-      item.addEventListener('click', function(ev){
+    /* ───── proxy menu items → original buttons ───── */
+    overlay.querySelectorAll('.menu-item').forEach((item) => {
+      item.addEventListener('click', (ev) => {
         ev.preventDefault(); ev.stopPropagation();
-        const id = item.dataset.target;
-        const real = id && document.getElementById(id);
+        const real = item.dataset.target && document.getElementById(item.dataset.target);
         if (!real) return;
         if (item.animate){
           try {
@@ -1190,75 +961,61 @@ body.menu-open{overflow:hidden}
               { transform: 'scale(1.15) rotate(-3deg)', offset: .35 },
               { transform: 'scale(1)' }
             ], { duration: 280, easing: 'ease-out' });
-          } catch(e){}
+          } catch(_){}
         }
         closeMenu();
-        requestAnimationFrame(function(){
-          setTimeout(function(){ try { real.click(); } catch(e){} }, 340);
-        });
+        requestAnimationFrame(() => setTimeout(() => { try { real.click(); } catch(_){} }, 340));
       });
     });
 
-    const menuAvatarBtn = document.getElementById('menuAvatarBtn');
-    const menuLogoutBtn = document.getElementById('menuLogoutBtn');
+    /* ───── avatar + logout in menu ───── */
+    const menuAvatarBtn = $('menuAvatarBtn');
+    const menuLogoutBtn = $('menuLogoutBtn');
 
-    if (menuAvatarBtn){
-      menuAvatarBtn.addEventListener('click', function(e){
-        e.preventDefault(); e.stopPropagation();
-        if (realAvatar) realAvatar.click();
-      });
-    }
-    if (menuLogoutBtn){
-      menuLogoutBtn.addEventListener('click', function(e){
-        e.preventDefault(); e.stopPropagation();
-        closeMenu();
-        requestAnimationFrame(function(){
-          setTimeout(function(){ try { realLogout.click(); } catch(err){} }, 340);
-        });
-      });
-    }
+    if (menuAvatarBtn) menuAvatarBtn.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      if (realAvatar) realAvatar.click();
+    });
+    if (menuLogoutBtn) menuLogoutBtn.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      closeMenu();
+      requestAnimationFrame(() => setTimeout(() => { try { realLogout.click(); } catch(_){} }, 340));
+    });
 
+    /* ───── preview on file select ───── */
     if (avatarInput && menuAvatarEl){
-      avatarInput.addEventListener('change', function(){
-        const f = avatarInput.files && avatarInput.files[0];
+      avatarInput.addEventListener('change', () => {
+        const f = avatarInput.files?.[0];
         if (f && /^image\//.test(f.type)){
           const reader = new FileReader();
-          reader.onload = function(){
-            currentAvatarRaw = '';
-            menuAvatarEl.style.backgroundImage = 'url("' + reader.result + '")';
+          reader.onload = () => {
+            currentRaw = '';
+            menuAvatarEl.style.backgroundImage = `url("${reader.result}")`;
             menuAvatarEl.textContent = '';
           };
-          try { reader.readAsDataURL(f); } catch(e){}
+          try { reader.readAsDataURL(f); } catch(_){}
         }
-        [600, 1500, 2800, 4500, 7000].forEach(function(t){ setTimeout(syncUserCard, t); });
+        [600, 1500, 2800, 4500, 7000].forEach(t => setTimeout(syncCard, t));
       });
     }
 
+    /* ───── observers ───── */
     if (window.MutationObserver){
-      const mo = new MutationObserver(function(){
-        if (overlay.classList.contains('open')) syncUserCard();
-      });
+      const mo = new MutationObserver(() => { if (overlay.classList.contains('open')) syncCard(); });
       if (realLogout) mo.observe(realLogout, { attributes: true, attributeFilter: ['hidden','style','class'] });
       if (realName)   mo.observe(realName,   { childList: true, characterData: true, subtree: true });
     }
-    document.addEventListener('visibilitychange', function(){
-      if (!document.hidden && overlay.classList.contains('open')) syncUserCard();
-    });
-    window.addEventListener('focus', function(){
-      if (overlay.classList.contains('open')) syncUserCard();
-    });
-    window.addEventListener('load', function(){
-      syncUserCard();
-      [500, 1500, 3000].forEach(function(t){ setTimeout(syncUserCard, t); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && overlay.classList.contains('open')) syncCard(); });
+    addEventListener('focus', () => { if (overlay.classList.contains('open')) syncCard(); });
+    addEventListener('load', () => {
+      syncCard();
+      [500, 1500, 3000].forEach(t => setTimeout(syncCard, t));
     });
 
     if (DEBUG){
-      log('init. Supabase URL =', getSupabaseUrl());
-      log('Current UID =', getCurrentUid() || '(không tìm thấy)');
-      log('Role =', getRoleInfo());
+      log('init | sb =', getSbUrl(), '| uid =', getUid() || '(none)', '| role =', getRole());
     }
-
-  } catch(err){
+  } catch (err){
     console.error('[Menu] init error:', err);
   }
 })();
