@@ -27,232 +27,106 @@
 <link rel="stylesheet" href="css/main.css">
 
 <style>
-/* ============================================================
-   AUTH UI
-   ============================================================ */
-#loginOverlay{position:fixed;inset:0;z-index:1000;background:rgba(15,30,20,.5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px}
+/* ===== AUTH UI ===== */
+#loginOverlay{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(15,30,20,.5);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
 #loginOverlay.show{display:flex}
-#loginPanel{width:min(92vw,380px);background:linear-gradient(160deg,#ffffff,#f4faf3 60%,#edf6eb);border-radius:24px;padding:26px 22px 22px;box-shadow:0 24px 70px rgba(20,45,28,.35);animation:loginPop .28s cubic-bezier(.16,1,.3,1)}
-@keyframes loginPop{from{opacity:0;transform:scale(.9) translateY(18px)}to{opacity:1;transform:scale(1) translateY(0)}}
+#loginPanel{
+  width:min(92vw,380px);
+  background:linear-gradient(160deg,#ffffff,#f4faf3 60%,#edf6eb);
+  border-radius:24px;padding:26px 22px 22px;
+  box-shadow:0 24px 70px rgba(20,45,28,.35);
+  animation:loginPop .28s cubic-bezier(.16,1,.3,1);
+}
+@keyframes loginPop{
+  from{opacity:0;transform:scale(.9) translateY(18px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
 #loginHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 #loginTitle{font-size:19px;font-weight:800;color:#2c4a33;letter-spacing:-.3px}
-#loginClose{background:transparent;border:0;font-size:26px;line-height:1;color:#6b7d70;cursor:pointer;padding:2px 8px;border-radius:50%;transition:background .15s}
+#loginClose{
+  background:transparent;border:0;font-size:26px;line-height:1;
+  color:#6b7d70;cursor:pointer;padding:2px 8px;border-radius:50%;
+  transition:background .15s;
+}
 #loginClose:hover{background:#eef4ec}
 .login-label{display:block;font-size:13px;font-weight:700;color:#4a6b52;margin:14px 0 6px;letter-spacing:.2px}
-#loginUsername,#loginPassword{width:100%;box-sizing:border-box;padding:13px 15px;font-size:16px;border:1.5px solid #cbdcc9;border-radius:14px;background:#fff;color:#2c4a33;outline:none;transition:border-color .15s,box-shadow .15s;font-family:inherit}
+#loginUsername,#loginPassword{
+  width:100%;box-sizing:border-box;
+  padding:13px 15px;font-size:16px;
+  border:1.5px solid #cbdcc9;border-radius:14px;
+  background:#fff;color:#2c4a33;outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  font-family:inherit;
+}
 #loginUsername:focus,#loginPassword:focus{border-color:#ff70b9;box-shadow:0 0 0 3px rgba(255,112,185,.15)}
-#loginMsg{min-height:20px;font-size:13px;color:#d64545;margin:12px 0 4px;text-align:center;font-weight:600}
+#loginMsg{
+  min-height:20px;font-size:13px;color:#d64545;
+  margin:12px 0 4px;text-align:center;font-weight:600;
+  transition:color .2s;
+}
 #loginMsg.ok{color:#2e8b57}
-#loginSubmit{width:100%;padding:14px;background:linear-gradient(135deg,#ff3c91,#ff70b9);color:#fff;font-size:15px;font-weight:800;border:0;border-radius:14px;cursor:pointer;margin-top:4px;letter-spacing:.3px;box-shadow:0 6px 18px rgba(255,60,145,.35);transition:transform .12s,box-shadow .12s;font-family:inherit}
-#loginSubmit:hover{transform:translateY(-1px)}
+#loginSubmit{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,#ff3c91,#ff70b9);
+  color:#fff;font-size:15px;font-weight:800;
+  border:0;border-radius:14px;cursor:pointer;
+  margin-top:4px;letter-spacing:.3px;
+  box-shadow:0 6px 18px rgba(255,60,145,.35);
+  transition:transform .12s,box-shadow .12s;
+  font-family:inherit;
+}
+#loginSubmit:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(255,60,145,.45)}
 #loginSubmit:active{transform:translateY(0)}
-#loginSubmit:disabled{opacity:.6;cursor:wait}
+#loginSubmit:disabled{opacity:.6;cursor:wait;transform:none}
 
-/* ============================================================
-   FLOATING — AVATAR + LOGOUT (góc trái dưới)
-   ============================================================ */
-#logoutBtn{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:999;padding:7px 12px;font-size:12px;font-weight:700;background:rgba(255,255,255,.9);border:1px solid #cbdcc9;border-radius:999px;color:#2c4a33;cursor:pointer;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:inline-flex;gap:6px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.08);font-family:inherit;transition:background .15s,transform .12s;max-width:min(60vw,220px)}
+/* ===== LOGOUT BTN — góc trái dưới ===== */
+#logoutBtn{
+  position:fixed;
+  left:12px;
+  bottom:calc(12px + env(safe-area-inset-bottom));
+  z-index:999;
+  padding:7px 12px;font-size:12px;font-weight:700;
+  background:rgba(255,255,255,.9);
+  border:1px solid #cbdcc9;border-radius:999px;
+  color:#2c4a33;cursor:pointer;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  display:inline-flex;gap:6px;align-items:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.08);
+  font-family:inherit;
+  transition:background .15s,transform .12s;
+  max-width:min(60vw,220px);
+}
 #logoutBtn[hidden]{display:none}
 #logoutBtn:hover{background:#fff;transform:translateY(-1px)}
 #logoutBtn .lb-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-#avatarBtn{position:fixed;left:12px;bottom:calc(60px + env(safe-area-inset-bottom));z-index:999;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.9);border:1px solid #cbdcc9;color:#2c4a33;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.08);transition:transform .12s,background .15s;font-family:inherit}
+/* ===== AVATAR UPLOAD BTN ===== */
+#avatarBtn{
+  position:fixed;
+  left:12px;
+  bottom:calc(60px + env(safe-area-inset-bottom));
+  z-index:999;
+  width:42px;height:42px;
+  border-radius:50%;
+  background:rgba(255,255,255,.9);
+  border:1px solid #cbdcc9;
+  color:#2c4a33;
+  font-size:20px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.08);
+  transition:transform .12s,background .15s;
+  font-family:inherit;
+}
 #avatarBtn[hidden]{display:none !important}
 #avatarBtn:hover{background:#fff}
 #avatarBtn:active{transform:scale(.94)}
 #avatarBtn:disabled{opacity:.55;cursor:wait}
-
-/* ============================================================
-   FLOATING — 🔔 Live Feed + 🎂 Birthday (góc phải TRÊN)
-   Đẩy lên top-right để nhường chỗ cho sidebar
-   ============================================================ */
-html body #liveFeedBtn{
-  position:fixed !important;
-  right:12px !important;
-  top:calc(80px + env(safe-area-inset-top)) !important;
-  bottom:auto !important;
-  z-index:999 !important;
-  transition:opacity .25s ease, transform .25s ease !important;
-}
-html body #bdFab{
-  position:fixed !important;
-  right:12px !important;
-  top:calc(148px + env(safe-area-inset-top)) !important;
-  bottom:auto !important;
-  z-index:999 !important;
-  transition:opacity .25s ease, transform .25s ease !important;
-}
-
-/* Ẩn 🔔 + 🎂 khi có overlay mở */
-html body.nav-hidden #liveFeedBtn,
-html body.nav-hidden #bdFab{
-  opacity:0 !important;
-  pointer-events:none !important;
-  transform:translateY(-14px) !important;
-}
-
-/* ============================================================
-   APP SIDE NAV — EDGE SIDEBAR bên phải, căn giữa dọc
-   ============================================================ */
-#appSideNav{
-  position:fixed;
-  right:10px;
-  top:50%;
-  transform:translateY(-50%);
-  z-index:200;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  padding:8px 6px;
-  background:linear-gradient(180deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.94) 100%);
-  -webkit-backdrop-filter:blur(20px) saturate(180%);
-  backdrop-filter:blur(20px) saturate(180%);
-  border-radius:26px;
-  box-shadow:
-    0 16px 48px -12px rgba(50,80,60,.22),
-    0 4px 14px -4px rgba(50,80,60,.10),
-    inset 0 1px 0 rgba(255,255,255,.9);
-  border:1px solid rgba(180,210,190,.5);
-  transition:transform .28s cubic-bezier(.16,.9,.25,1),
-             opacity .24s ease;
-  will-change:transform,opacity;
-  box-sizing:border-box;
-  overflow:visible;
-  min-height:280px;
-  max-height:calc(100vh - 200px);
-  font-family:inherit;
-}
-
-/* Ẩn sidebar */
-html body #appSideNav.nav-hidden,
-#appSideNav.nav-hidden{
-  transform:translate(90px,-50%);
-  opacity:0;
-  pointer-events:none;
-}
-
-/* Trang A / B */
-#appSideNav .appNav-page{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  opacity:0;
-  transform:translateX(8px);
-  pointer-events:none;
-  position:absolute;
-  left:6px;
-  right:6px;
-  transition:opacity .22s cubic-bezier(.16,.9,.25,1),
-             transform .22s cubic-bezier(.16,.9,.25,1);
-}
-#appSideNav .appNav-page.is-active{
-  opacity:1;
-  transform:translateX(0);
-  pointer-events:auto;
-  position:relative;
-  left:auto;
-  right:auto;
-}
-
-/* Nút */
-#appSideNav .appNav-btn{
-  width:46px;
-  height:46px;
-  min-width:46px;
-  min-height:46px;
-  border-radius:16px;
-  border:0;
-  background:transparent;
-  color:#4a6b52;
-  font-size:22px;
-  line-height:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  transition:transform .18s cubic-bezier(.16,.9,.25,1),
-             background .18s ease,
-             color .18s ease,
-             box-shadow .18s ease;
-  -webkit-tap-highlight-color:transparent;
-  font-family:inherit;
-  position:relative;
-  box-sizing:border-box;
-  overflow:hidden;
-}
-#appSideNav .appNav-btn:active{
-  transform:scale(.9);
-  background:rgba(120,180,140,.15);
-}
-#appSideNav .appNav-btn.is-active{
-  background:linear-gradient(135deg,#6da884,#4e8b5e);
-  color:#fff;
-  box-shadow:
-    0 6px 18px -4px rgba(78,139,94,.6),
-    inset 0 1px 0 rgba(255,255,255,.3);
-}
-#appSideNav .appNav-btn.is-active:active{
-  transform:scale(.92);
-  background:linear-gradient(135deg,#5a9871,#3d7a4d);
-}
-
-/* Toggle button đặc biệt */
-#appSideNav .appNav-toggle{
-  background:rgba(240,246,242,.7);
-  font-size:20px;
-  font-weight:900;
-}
-#appSideNav .appNav-toggle.is-open{
-  background:linear-gradient(135deg,#f2b0c8,#e886ad);
-  color:#fff;
-  box-shadow:
-    0 6px 18px -4px rgba(232,134,173,.55),
-    inset 0 1px 0 rgba(255,255,255,.35);
-}
-
-/* Tooltip khi long-press (native browser) — dùng title attribute */
-#appSideNav .appNav-btn[title]:hover::after{
-  content:attr(title);
-  position:absolute;
-  right:calc(100% + 10px);
-  top:50%;
-  transform:translateY(-50%);
-  background:rgba(30,50,35,.95);
-  color:#fff;
-  font-size:12px;
-  font-weight:700;
-  padding:6px 10px;
-  border-radius:8px;
-  white-space:nowrap;
-  pointer-events:none;
-  font-family:inherit;
-  letter-spacing:.02em;
-}
-
-/* Divider giữa các nút */
-#appSideNav .appNav-btn + .appNav-btn::before{
-  content:'';
-  position:absolute;
-  left:14%;
-  right:14%;
-  top:-3px;
-  height:1px;
-  background:linear-gradient(90deg,transparent,rgba(180,210,190,.4),transparent);
-  pointer-events:none;
-}
-#appSideNav .appNav-btn.is-active + .appNav-btn::before,
-#appSideNav .appNav-btn + .appNav-btn.is-active::before{
-  opacity:0;
-}
-
-/* Đẩy content landing sang trái một chút để không chồng sidebar */
-html body:not(.nav-hidden) main#space{
-  padding-right:66px !important;
-  box-sizing:border-box !important;
-}
-html body.nav-hidden main#space{
-  padding-right:0 !important;
-}
 </style>
 </head>
 <body>
@@ -262,27 +136,6 @@ html body.nav-hidden main#space{
     <p style="margin:0">Trang này yêu cầu JavaScript để hoạt động. Vui lòng bật JavaScript và tải lại trang.</p>
   </div>
 </noscript>
-
-<!-- ===== SIDEBAR NAV — BÊN PHẢI ===== -->
-<nav id="appSideNav" aria-label="Điều hướng chính">
-  <!-- Trang A: Home / BXH / Checklist / Bữa trưa / Chấm công / Thêm -->
-  <div class="appNav-page appNav-page-a is-active" data-nav-page="a">
-    <button id="homeBtn" class="appNav-btn is-active" type="button" title="Home" aria-label="Home">⌂</button>
-    <button id="topBtn" class="appNav-btn" type="button" title="BXH TOP" aria-label="Bảng xếp hạng">🏆</button>
-    <button id="checklistBtn" class="appNav-btn" type="button" title="Checklist" aria-label="Checklist" aria-expanded="false">☑</button>
-    <button id="lunchBtn" class="appNav-btn" type="button" title="Bữa trưa" aria-label="Bữa trưa ăn gì?">🍜</button>
-    <button id="attendanceBtn" class="appNav-btn" type="button" title="Chấm công" aria-label="Chấm công">🗓</button>
-    <button class="appNav-btn appNav-toggle" type="button" data-nav-toggle title="Thêm" aria-label="Mở công cụ khác">⋯</button>
-  </div>
-  <!-- Trang B: Admin / Giám sát / Luật KDV / Làm Ktra / Đóng -->
-  <div class="appNav-page appNav-page-b" data-nav-page="b">
-    <button id="adminBtn" class="appNav-btn" type="button" title="Admin" aria-label="Admin">⚙</button>
-    <button id="monitorBtn" class="appNav-btn" type="button" title="Giám sát" aria-label="Giám sát">👁</button>
-    <button id="kdvRulesBtn" class="appNav-btn" type="button" title="Luật KDV" aria-label="Luật KDV">📜</button>
-    <button id="quizBtn" class="appNav-btn" type="button" title="Làm Ktra" aria-label="Bài kiểm tra">📝</button>
-    <button class="appNav-btn appNav-toggle is-open" type="button" data-nav-toggle title="Đóng" aria-label="Đóng công cụ">✕</button>
-  </div>
-</nav>
 
 <main id="space">
 <div id="status"></div>
@@ -322,6 +175,20 @@ html body.nav-hidden main#space{
   </table></div>
   <div id="topActions"><button id="topCaptureBtn" type="button">📸 Chụp BXH</button><button id="topCloseBtn" type="button">Đóng</button></div>
 </section>
+
+<nav id="bottomNav" aria-label="Điều hướng chính">
+  <button id="homeBtn" type="button" aria-label="Về trang chủ">⌂ Home</button>
+  <button id="adminBtn" type="button" aria-label="Mở cài đặt admin">⚙ Admin</button>
+  <button id="monitorBtn" type="button" aria-label="Mở bảng giám sát">👁 Giám sát</button>
+  <button id="topBtn" type="button" aria-label="Mở bảng xếp hạng">🏆 BXH TOP</button>
+  <button id="checklistBtn" type="button" aria-label="Mở checklist" aria-expanded="false">☑ Checklist</button>
+</nav>
+<nav id="secondaryNav" aria-label="Công cụ">
+  <button id="kdvRulesBtn" type="button" aria-label="Mở Luật KDV">📜 Luật KDV</button>
+  <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?">🍜 Bữa trưa ăn gì?</button>
+  <button id="attendanceBtn" type="button" aria-label="Mở Chấm công">🗓 Chấm công</button>
+  <button id="quizBtn" type="button" aria-label="Bài kiểm tra">📝 Bài KT</button>
+</nav>
 
 <div id="monitorOverlay" aria-hidden="true">
   <section id="monitorPanel" role="dialog" aria-modal="true">
@@ -409,14 +276,17 @@ html body.nav-hidden main#space{
 <div id="hint" aria-hidden="true" hidden></div>
 </main>
 
+<!-- ===== NÚT UPLOAD AVATAR (chỉ hiện khi đã login) ===== -->
 <button id="avatarBtn" type="button" aria-label="Đổi avatar" hidden>📷</button>
 <input id="avatarFileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
 
+<!-- ===== NÚT ĐĂNG XUẤT (chỉ hiện khi đã login) ===== -->
 <button id="logoutBtn" type="button" aria-label="Đăng xuất" hidden>
   <span aria-hidden="true">🚪</span>
   <span class="lb-name" id="logoutName"></span>
 </button>
 
+<!-- ===== LOGIN OVERLAY ===== -->
 <div id="loginOverlay" aria-hidden="true">
   <section id="loginPanel" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
     <div id="loginHead">
@@ -519,11 +389,13 @@ html body.nav-hidden main#space{
       <div id="quizTitle"><span class="quiz-kicker">ĐẢO MÈO</span><span class="quiz-name">📝 Bài kiểm tra</span></div>
       <button id="quizClose" type="button" aria-label="Đóng">×</button>
     </div>
+
     <nav id="quizModeTabs" hidden>
       <button class="quiz-mode-tab active" data-quiz-mode="user" type="button">📝 Làm bài</button>
       <button class="quiz-mode-tab" data-quiz-mode="create" type="button">➕ Tạo câu hỏi</button>
       <button class="quiz-mode-tab" data-quiz-mode="results" type="button">📊 Kết quả</button>
     </nav>
+
     <div id="quizBody">
       <div class="quiz-view active" data-quiz-view="user">
         <div id="quizUserStart">
@@ -534,6 +406,7 @@ html body.nav-hidden main#space{
           <button id="quizStartBtn" type="button">Bắt đầu làm bài</button>
           <div id="quizUserStartMsg"></div>
         </div>
+
         <div id="quizUserRun" hidden>
           <div id="quizRunHeader">
             <div id="quizGreeting"></div>
@@ -548,6 +421,7 @@ html body.nav-hidden main#space{
             <button id="quizNextBtn" type="button">Câu tiếp ›</button>
           </div>
         </div>
+
         <div id="quizUserResult" hidden>
           <div class="quiz-result-card">
             <div id="quizResultEmoji" class="quiz-result-emoji">🎉</div>
@@ -561,14 +435,17 @@ html body.nav-hidden main#space{
           </div>
         </div>
       </div>
+
       <div class="quiz-view" data-quiz-view="create">
         <div class="quiz-section-title">✏️ Tạo / sửa câu hỏi</div>
         <div class="quiz-create-form">
           <label class="quiz-field-label">Câu hỏi</label>
           <textarea id="quizQuestionInput" rows="2" maxlength="500" placeholder="Nhập nội dung câu hỏi…"></textarea>
+
           <label class="quiz-field-label">Đáp án <span class="quiz-hint">(chọn ô tròn để đánh dấu đáp án đúng)</span></label>
           <div id="quizAnswersList"></div>
           <button id="quizAddAnswerBtn" type="button">＋ Thêm đáp án</button>
+
           <div id="quizFormMsg"></div>
           <div class="quiz-create-actions">
             <button id="quizSaveBtn" type="button">Thêm câu hỏi</button>
@@ -578,6 +455,7 @@ html body.nav-hidden main#space{
         <div class="quiz-section-title" style="margin-top:22px">📚 Danh sách câu hỏi (<span id="quizCountLabel">0</span>)</div>
         <div id="quizQuestionList"></div>
       </div>
+
       <div class="quiz-view" data-quiz-view="results">
         <div class="quiz-section-title">📊 Kết quả bài kiểm tra</div>
         <div id="quizResultsList"></div>
