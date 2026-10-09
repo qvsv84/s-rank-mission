@@ -57,7 +57,8 @@
 
   <div id="message"></div>
 
-  <section id="checklistPanel">
+  <!-- LEGACY: superseded by #clV6Page (checklist-ui.js). Giữ DOM cho main.js, ép ẩn bằng inline style. -->
+  <section id="checklistPanel" style="display:none">
     <div id="checklistScroll"><table id="checklist">
       <thead><tr><th>Kiểm duyệt viên</th><th>Giờ</th><th>Hoàn thành</th></tr></thead><tbody></tbody>
     </table></div>
@@ -247,11 +248,14 @@
   <section id="attendanceStatusPanel" role="dialog" aria-modal="true">
     <div class="att-sheet-handle" aria-hidden="true"></div>
     <div id="attendanceStatusHead">
-      <">div><div✓ id="attendanceStatusTitle">Cập nhật chấm công</div><div id="attendanceStatusSub"></div></div>
+      <div>
+        <div id="attendanceStatusTitle">Cập nhật chấm công</div>
+        <div id="attendanceStatusSub"></div>
+      </div>
       <button id="attendanceStatusClose" type="button" aria-label="Đóng">×</button>
     </div>
     <div id="attendanceStatusOptions">
-      <button class="att-status-option work" type="button" data-status=""><span class="att-status-icon</span><span class="att-status-label">Đi làm</span></button>
+      <button class="att-status-option work" type="button" data-status=""><span class="att-status-icon">✓</span><span class="att-status-label">Đi làm</span></button>
       <button class="att-status-option leave" type="button" data-status="P"><span class="att-status-icon">🌴</span><span class="att-status-label">Phép</span></button>
       <button class="att-status-option off" type="button" data-status="O"><span class="att-status-icon">—</span><span class="att-status-label">OFF</span></button>
       <button class="att-status-option ot" type="button" data-status="T"><span class="att-status-icon">⚡</span><span class="att-status-label">OT</span></button>
@@ -293,6 +297,7 @@
 <script src="js/auth-ui.js" defer></script>
 <script src="js/avatar-upload.js" defer></script>
 <script src="js/checklist-ui.js?v=6.3" defer></script>
+<script src="js/checklist-bridge.js" defer></script>
 <script src="js/attendance.js" defer></script>
 <script src="js/attendance-top3.js" defer></script>
 <script src="js/lunch.js" defer></script>
