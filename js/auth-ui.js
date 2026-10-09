@@ -1,9 +1,9 @@
 /* =========================================================
-   SRANK AUTH UI — v9.0
+   SRANK AUTH UI — v10.1 (Sidebar + Auto-hide + Mino kicker)
    ---------------------------------------------------------
-   - CTA hook + wave kicker + login form + logout
-   - NAV TOGGLE 2 page (A / B) — dùng data-attribute
-   - Auto active state cho nút Home
+   NEW v10.1:
+   - Thêm kicker riêng cho user "thaouyen" → "🎀 MINO ÁO HỒNG"
+   - Ưu tiên Mino > Boss > Default
    ========================================================= */
 (function(){
   "use strict";
@@ -12,7 +12,6 @@
   if (!Auth) { console.error("[AUTH-UI] SRank.Auth chưa load"); return; }
 
   const $ = id => document.getElementById(id);
-  const $$ = sel => Array.from(document.querySelectorAll(sel));
   const overlay = $("loginOverlay");
   const closeBtn = $("loginClose");
   const userInput = $("loginUsername");
@@ -31,34 +30,30 @@
   let submitting = false;
 
   /* ============================================================
-     NAV TOGGLE 2 PAGE — data-nav-page
+     SIDEBAR TOGGLE — 2 page A / B
      ============================================================ */
-  (function initNavToggle(){
-    const nav = document.getElementById("appTopNav");
-    if (!nav) { console.warn("[NAV] thiếu #appTopNav"); return; }
+  (function initSidebarToggle(){
+    const nav = document.getElementById("appSideNav");
+    if (!nav) { console.warn("[NAV] thiếu #appSideNav"); return; }
 
     const pagesA = nav.querySelectorAll('[data-nav-page="a"]');
     const pagesB = nav.querySelectorAll('[data-nav-page="b"]');
     const toggles = nav.querySelectorAll('[data-nav-toggle]');
-    const toggleLabels = nav.querySelectorAll('[data-toggle-label]');
 
     let _page = "a";
 
     function setPage(p){
-      if (p === _page) return;
+      if (p === _page && nav.dataset.navReady === "1") return;
       _page = p;
+      nav.dataset.navReady = "1";
 
       pagesA.forEach(function(el){ el.classList.toggle("is-active", p === "a"); });
       pagesB.forEach(function(el){ el.classList.toggle("is-active", p === "b"); });
 
-      // Đổi nhãn toggle button
-      toggleLabels.forEach(function(el){
-        el.textContent = (p === "a") ? "Thêm" : "Đóng";
-      });
       toggles.forEach(function(el){
         el.classList.toggle("is-open", p === "b");
-        const icon = el.querySelector(".appNav-icon");
-        if (icon) icon.textContent = (p === "a") ? "☰" : "✕";
+        el.textContent = (p === "a") ? "⋯" : "✕";
+        el.title = (p === "a") ? "Thêm" : "Đóng";
         el.setAttribute("aria-label", (p === "a") ? "Mở công cụ khác" : "Đóng công cụ");
       });
     }
@@ -73,7 +68,6 @@
       });
     });
 
-    // Auto về page A khi bấm tool trong page B
     pagesB.forEach(function(pageEl){
       pageEl.addEventListener("click", function(e){
         const btn = e.target.closest("button[id]");
@@ -89,7 +83,62 @@
       current: function(){ return _page; }
     };
 
-    console.log("[NAV] ready ✓");
+    console.log("[NAV] sidebar ready ✓");
+  })();
+
+  /* ============================================================
+     AUTO-HIDE — ẩn sidebar + 🔔 + 🎂 khi có overlay mở
+     ============================================================ */
+  (function initAutoHide(){
+    const nav = document.getElementById("appSideNav");
+
+    const OVERLAY_IDS = [
+      "topPanel", "adminPage", "attendancePage", "lunchPage",
+      "quizOverlay", "liveFeedOverlay", "monitorOverlay",
+      "loginOverlay", "linkEditorOverlay", "checklistPanel",
+      "wheelArea", "message"
+    ];
+    const OVERLAY_DISPLAY_IDS = ["adminPasswordOverlay"];
+
+    function isAnyOpen(){
+      for (let i = 0; i < OVERLAY_IDS.length; i++){
+        const el = document.getElementById(OVERLAY_IDS[i]);
+        if (!el) continue;
+        if (el.classList.contains("show")) return true;
+      }
+      for (let i = 0; i < OVERLAY_DISPLAY_IDS.length; i++){
+        const el = document.getElementById(OVERLAY_DISPLAY_IDS[i]);
+        if (!el) continue;
+        if (el.style.display === "flex") return true;
+      }
+      return false;
+    }
+
+    let _scheduled = false;
+    function scheduleUpdate(){
+      if (_scheduled) return;
+      _scheduled = true;
+      requestAnimationFrame(function(){
+        _scheduled = false;
+        const open = isAnyOpen();
+        document.body.classList.toggle("nav-hidden", open);
+        if (nav) nav.classList.toggle("nav-hidden", open);
+      });
+    }
+
+    const obs = new MutationObserver(scheduleUpdate);
+    const allIds = OVERLAY_IDS.concat(OVERLAY_DISPLAY_IDS);
+    allIds.forEach(function(id){
+      const el = document.getElementById(id);
+      if (!el) return;
+      obs.observe(el, { attributes: true, attributeFilter: ["class", "style"] });
+    });
+
+    scheduleUpdate();
+    setTimeout(scheduleUpdate, 200);
+    setTimeout(scheduleUpdate, 800);
+
+    console.log("[NAV] auto-hide ready ✓");
   })();
 
   /* ============ WAVE KICKER CSS ============ */
@@ -179,9 +228,19 @@
   }
   window.__getCtaInfo = getCtaInfo;
 
+  /* ============ KICKER CONFIG ============ */
   const BOSS_WHITELIST = ['tienloi', 'mydung', 'quynhtrang', 'phamkimchi', 'minhthuy'];
+  const MINO_USERNAME = 'thaouyen';
+
   const KICKER_DEFAULT = '🐱 DAILY TEAM HUB';
   const KICKER_BOSS = '🕶️ BOSS TỔ CHỨC ÁO ĐEN';
+  const KICKER_MINO = '🎀 MINO ÁO HỒNG';
+
+  function isMinoMode(){
+    if (!currentUser) return false;
+    const un = String(currentUser.username || '').trim().toLowerCase();
+    return un === MINO_USERNAME;
+  }
 
   function isBossMode(){
     try {
@@ -226,13 +285,21 @@
     return '<span class="boss-wave" aria-label="' + safeLabel + '">' + inner + '</span>';
   }
 
+  /* ✅ Ưu tiên Mino > Boss > Default */
   function getKickerRender(){
-    if (isBossMode()) return { html: buildWaveHtml(KICKER_BOSS), text: KICKER_BOSS, version: 'boss' };
+    if (isMinoMode()){
+      return { html: buildWaveHtml(KICKER_MINO), text: KICKER_MINO, version: 'mino' };
+    }
+    if (isBossMode()){
+      return { html: buildWaveHtml(KICKER_BOSS), text: KICKER_BOSS, version: 'boss' };
+    }
     return { html: null, text: KICKER_DEFAULT, version: 'default' };
   }
 
   function getKickerText(){
-    return isBossMode() ? KICKER_BOSS : KICKER_DEFAULT;
+    if (isMinoMode()) return KICKER_MINO;
+    if (isBossMode()) return KICKER_BOSS;
+    return KICKER_DEFAULT;
   }
 
   window.__getKickerRender = getKickerRender;
@@ -420,5 +487,5 @@
 
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v9.0 — CTA + wave + nav toggle");
+  console.log("[AUTH-UI] ready ✓ v10.1 — sidebar + auto-hide + Mino kicker");
 })();
