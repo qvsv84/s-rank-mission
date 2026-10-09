@@ -84,11 +84,11 @@
 #loginSubmit:active{transform:translateY(0)}
 #loginSubmit:disabled{opacity:.6;cursor:wait;transform:none}
 
-/* ===== LOGOUT BTN — góc trái dưới ===== */
+/* ===== LOGOUT / AVATAR — nâng lên trên nav 2 dòng ===== */
 #logoutBtn{
   position:fixed;
   left:12px;
-  bottom:calc(12px + env(safe-area-inset-bottom));
+  bottom:calc(122px + env(safe-area-inset-bottom));
   z-index:999;
   padding:7px 12px;font-size:12px;font-weight:700;
   background:rgba(255,255,255,.9);
@@ -105,11 +105,10 @@
 #logoutBtn:hover{background:#fff;transform:translateY(-1px)}
 #logoutBtn .lb-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-/* ===== AVATAR UPLOAD BTN ===== */
 #avatarBtn{
   position:fixed;
   left:12px;
-  bottom:calc(58px + env(safe-area-inset-bottom));
+  bottom:calc(170px + env(safe-area-inset-bottom));
   z-index:999;
   width:42px;height:42px;
   border-radius:50%;
@@ -127,6 +126,143 @@
 #avatarBtn:hover{background:#fff}
 #avatarBtn:active{transform:scale(.94)}
 #avatarBtn:disabled{opacity:.55;cursor:wait}
+
+/* ===== BOTTOM NAV — 2 DÒNG ===== */
+#bottomNav.bn-v2{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  z-index:200;
+  display:flex !important;
+  flex-direction:column !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.94) 0%,rgba(255,255,255,.99) 100%);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-top:1px solid rgba(200,220,201,.6);
+  box-shadow:0 -4px 20px rgba(60,90,70,.06);
+  padding-bottom:env(safe-area-inset-bottom);
+  box-sizing:border-box;
+}
+#bottomNav.bn-v2 .bn-row{
+  display:flex;
+  align-items:stretch;
+  justify-content:space-around;
+  gap:4px;
+  padding:0 8px;
+}
+#bottomNav.bn-v2 .bn-row-1{
+  min-height:56px;
+  padding-top:6px;
+  padding-bottom:4px;
+  border-bottom:1px solid rgba(200,220,201,.45);
+}
+#bottomNav.bn-v2 .bn-row-2{
+  min-height:46px;
+  padding-top:3px;
+  padding-bottom:4px;
+}
+#bottomNav.bn-v2 .bn-row > button{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  background:transparent;
+  border:0;
+  border-radius:12px;
+  color:#2c4a33;
+  font-family:inherit;
+  cursor:pointer;
+  transition:background .15s,transform .12s;
+  padding:2px 4px;
+  min-width:0;
+  min-height:0;
+}
+#bottomNav.bn-v2 .bn-row > button:active{
+  background:rgba(120,180,140,.12);
+  transform:scale(.95);
+}
+#bottomNav.bn-v2 .bn-icon{
+  font-size:18px;
+  line-height:1;
+  display:block;
+}
+#bottomNav.bn-v2 .bn-row-1 .bn-icon{ font-size:22px; }
+#bottomNav.bn-v2 .bn-label{
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.02em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
+}
+#bottomNav.bn-v2 .bn-row-1 .bn-label{ font-size:10.5px; }
+
+/* ===== MORE SHEET ===== */
+#moreOverlay{
+  position:fixed;inset:0;
+  z-index:20800;
+  display:none;
+  align-items:flex-end;
+  justify-content:center;
+  background:rgba(20,40,25,.45);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+}
+#moreOverlay.show{display:flex;animation:moreFade .2s ease}
+@keyframes moreFade{from{opacity:0}to{opacity:1}}
+#morePanel{
+  width:100%;max-width:520px;
+  background:linear-gradient(180deg,#ffffff 0%,#f4faf3 100%);
+  border-radius:24px 24px 0 0;
+  padding:12px 16px calc(20px + env(safe-area-inset-bottom));
+  box-shadow:0 -20px 60px rgba(20,45,28,.28);
+  transform:translateY(100%);
+  animation:moreSlideUp .3s cubic-bezier(.16,.9,.25,1) forwards;
+  box-sizing:border-box;
+}
+@keyframes moreSlideUp{to{transform:translateY(0)}}
+.more-handle{
+  width:40px;height:4px;
+  border-radius:99px;
+  background:rgba(120,160,130,.3);
+  margin:0 auto 14px;
+}
+.more-title{
+  font-size:13px;font-weight:900;color:#5a7a5f;
+  text-align:center;letter-spacing:.16em;
+  text-transform:uppercase;
+  margin-bottom:14px;
+}
+.more-list{
+  display:flex;flex-direction:column;gap:6px;
+  margin-bottom:14px;
+}
+.more-list button{
+  display:grid;
+  grid-template-columns:32px 1fr 20px;
+  gap:12px;align-items:center;
+  padding:12px 14px;min-height:52px;
+  border:1px solid rgba(200,220,201,.6);
+  border-radius:14px;
+  background:#fff;color:#2c4a33;
+  font-family:inherit;font-size:15px;font-weight:700;
+  text-align:left;cursor:pointer;
+  transition:transform .12s,background .15s,border-color .15s;
+}
+.more-list button:active{
+  transform:scale(.98);
+  background:#f4faf3;
+  border-color:#b8d4bc;
+}
+.more-list button .ml-icon{font-size:22px;line-height:1;text-align:center}
+.more-list button .ml-arrow{font-size:18px;color:#9bb8a0;text-align:right}
+#moreCloseBtn{
+  width:100%;padding:13px;border:0;border-radius:14px;
+  background:linear-gradient(135deg,#d8e8d5,#b8d4bc);
+  color:#2c4a33;font-family:inherit;font-size:14px;font-weight:800;
+  cursor:pointer;transition:transform .12s;
+}
+#moreCloseBtn:active{transform:scale(.98)}
 </style>
 </head>
 <body>
@@ -176,19 +312,68 @@
   <div id="topActions"><button id="topCaptureBtn" type="button">📸 Chụp BXH</button><button id="topCloseBtn" type="button">Đóng</button></div>
 </section>
 
-<nav id="bottomNav" aria-label="Điều hướng chính">
-  <button id="homeBtn" type="button" aria-label="Về trang chủ">⌂ Home</button>
-  <button id="adminBtn" type="button" aria-label="Mở cài đặt admin">⚙ Admin</button>
-  <button id="monitorBtn" type="button" aria-label="Mở bảng giám sát">👁 Giám sát</button>
-  <button id="topBtn" type="button" aria-label="Mở bảng xếp hạng">🏆 BXH TOP</button>
-  <button id="checklistBtn" type="button" aria-label="Mở checklist" aria-expanded="false">☑ Checklist</button>
+<!-- ===== BOTTOM NAV — 2 DÒNG ===== -->
+<nav id="bottomNav" class="bn-v2" aria-label="Điều hướng chính">
+  <div class="bn-row bn-row-1">
+    <button id="homeBtn" type="button" aria-label="Về trang chủ">
+      <span class="bn-icon" aria-hidden="true">⌂</span>
+      <span class="bn-label">Home</span>
+    </button>
+    <button id="topBtn" type="button" aria-label="Mở bảng xếp hạng">
+      <span class="bn-icon" aria-hidden="true">🏆</span>
+      <span class="bn-label">BXH TOP</span>
+    </button>
+    <button id="checklistBtn" type="button" aria-label="Mở checklist" aria-expanded="false">
+      <span class="bn-icon" aria-hidden="true">☑</span>
+      <span class="bn-label">Checklist</span>
+    </button>
+  </div>
+  <div class="bn-row bn-row-2">
+    <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?">
+      <span class="bn-icon" aria-hidden="true">🍜</span>
+      <span class="bn-label">Bữa trưa</span>
+    </button>
+    <button id="attendanceBtn" type="button" aria-label="Mở Chấm công">
+      <span class="bn-icon" aria-hidden="true">🗓</span>
+      <span class="bn-label">Chấm công</span>
+    </button>
+    <button id="moreBtn" type="button" aria-label="Thêm công cụ">
+      <span class="bn-icon" aria-hidden="true">☰</span>
+      <span class="bn-label">Thêm</span>
+    </button>
+  </div>
 </nav>
-<nav id="secondaryNav" aria-label="Công cụ">
-  <button id="kdvRulesBtn" type="button" aria-label="Mở Luật KDV">📜 Luật KDV</button>
-  <button id="lunchBtn" type="button" aria-label="Bữa trưa ăn gì?">🍜 Bữa trưa ăn gì?</button>
-  <button id="attendanceBtn" type="button" aria-label="Mở Chấm công">🗓 Chấm công</button>
-  <button id="quizBtn" type="button" aria-label="Bài kiểm tra">📝 Bài KT</button>
-</nav>
+
+<!-- ===== MORE SHEET ===== -->
+<div id="moreOverlay" aria-hidden="true">
+  <section id="morePanel" role="dialog" aria-modal="true" aria-labelledby="moreTitleTxt">
+    <div class="more-handle" aria-hidden="true"></div>
+    <div class="more-title" id="moreTitleTxt">Công cụ khác</div>
+    <div class="more-list">
+      <button id="kdvRulesBtn" type="button">
+        <span class="ml-icon" aria-hidden="true">📜</span>
+        <span>Luật KDV</span>
+        <span class="ml-arrow" aria-hidden="true">→</span>
+      </button>
+      <button id="quizBtn" type="button">
+        <span class="ml-icon" aria-hidden="true">📝</span>
+        <span>Bài kiểm tra</span>
+        <span class="ml-arrow" aria-hidden="true">→</span>
+      </button>
+      <button id="monitorBtn" type="button">
+        <span class="ml-icon" aria-hidden="true">👁</span>
+        <span>Giám sát</span>
+        <span class="ml-arrow" aria-hidden="true">→</span>
+      </button>
+      <button id="adminBtn" type="button">
+        <span class="ml-icon" aria-hidden="true">⚙</span>
+        <span>Admin</span>
+        <span class="ml-arrow" aria-hidden="true">→</span>
+      </button>
+    </div>
+    <button id="moreCloseBtn" type="button">Đóng</button>
+  </section>
+</div>
 
 <div id="monitorOverlay" aria-hidden="true">
   <section id="monitorPanel" role="dialog" aria-modal="true">
@@ -481,13 +666,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-adapter.js" defer></script>
 
-<!-- Auth (phải sau supabase-adapter.js — cần window.__sb) -->
+<!-- Auth -->
 <script src="js/auth.js" defer></script>
 
 <!-- App core -->
 <script src="js/main.js" defer></script>
 <script src="js/auth-ui.js" defer></script>
 <script src="js/avatar-upload.js" defer></script>
+<script src="js/more-menu.js" defer></script>
 <script src="js/checklist-ui.js?v=6.3" defer></script>
 <script src="js/attendance.js" defer></script>
 <script src="js/attendance-top3.js" defer></script>
