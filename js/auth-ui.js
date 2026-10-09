@@ -1,8 +1,10 @@
 /* =========================================================
-   SRANK AUTH UI — v8.0
+   SRANK AUTH UI — v8.2
    ---------------------------------------------------------
    - CTA hook + wave kicker + login form + logout
-   - TÍCH HỢP More sheet (thay cho file more-menu.js)
+   - NAV TOGGLE: nút "Thêm" đổi qua lại giữa 2 trang
+     · Trang A: Home/BXH/Checklist + Bữa trưa/Chấm công/Thêm
+     · Trang B: Admin/Giám sát/Luật KDV + Làm Ktra/Thêm
    ========================================================= */
 (function(){
   "use strict";
@@ -11,6 +13,7 @@
   if (!Auth) { console.error("[AUTH-UI] SRank.Auth chưa load"); return; }
 
   const $ = id => document.getElementById(id);
+  const $$ = sel => document.querySelectorAll(sel);
   const overlay = $("loginOverlay");
   const closeBtn = $("loginClose");
   const userInput = $("loginUsername");
@@ -29,70 +32,59 @@
   let submitting = false;
 
   /* ============================================================
-     MORE SHEET
+     NAV TOGGLE — 2 trang A / B
      ============================================================ */
-  (function initMore(){
-    const moreOverlay = $("moreOverlay");
-    const morePanel = $("morePanel");
-    const moreBtn = $("moreBtn");
-    const moreCloseBtn = $("moreCloseBtn");
-    if (!moreOverlay || !moreBtn) { console.warn("[MORE] thiếu DOM"); return; }
+  (function initNavToggle(){
+    let _page = "A";
 
-    let _open = false;
-
-    function openMore(){
-      if (_open) return;
-      _open = true;
-      moreOverlay.classList.add("show");
-      moreOverlay.setAttribute("aria-hidden", "false");
+    function setPage(p){
+      _page = p;
+      const pagesA = document.querySelectorAll('#bottomNav .bn-page-a');
+      const pagesB = document.querySelectorAll('#bottomNav .bn-page-b');
+      if (p === "A"){
+        pagesA.forEach(function(el){ el.classList.add("active"); });
+        pagesB.forEach(function(el){ el.classList.remove("active"); });
+      } else {
+        pagesA.forEach(function(el){ el.classList.remove("active"); });
+        pagesB.forEach(function(el){ el.classList.add("active"); });
+      }
       if (typeof window.syncQuickTools === "function") window.syncQuickTools();
     }
 
-    function closeMore(){
-      if (!_open) return;
-      _open = false;
-      moreOverlay.classList.remove("show");
-      moreOverlay.setAttribute("aria-hidden", "true");
-      if (typeof window.syncQuickTools === "function") window.syncQuickTools();
+    function toggle(){
+      setPage(_page === "A" ? "B" : "A");
     }
 
-    moreBtn.addEventListener("click", function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      openMore();
+    /* Bind tất cả nút có class .more-toggle */
+    const toggles = $$(".more-toggle");
+    if (!toggles.length) { console.warn("[NAV] không thấy .more-toggle"); }
+    toggles.forEach(function(btn){
+      btn.addEventListener("click", function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        toggle();
+      });
     });
 
-    if (moreCloseBtn) moreCloseBtn.addEventListener("click", closeMore);
-
-    moreOverlay.addEventListener("click", function(e){
-      if (e.target === moreOverlay) closeMore();
-    });
-
-    if (morePanel){
-      morePanel.addEventListener("click", function(e){
+    /* Auto về trang A khi user bấm tool trong trang B */
+    const pagesB = $$("#bottomNav .bn-page-b");
+    pagesB.forEach(function(page){
+      page.addEventListener("click", function(e){
         const btn = e.target.closest("button[id]");
         if (!btn) return;
-        if (btn.id === "moreCloseBtn") return;
-        closeMore();
+        /* Đợi 1 nhịp để tool kịp mở, rồi quay về A */
+        setTimeout(function(){ setPage("A"); }, 80);
       }, true);
-    }
-
-    document.addEventListener("keydown", function(e){
-      if (e.key === "Escape" && _open){
-        closeMore();
-        e.preventDefault();
-        e.stopImmediatePropagation();
-      }
-    }, true);
+    });
 
     window.SRank = window.SRank || {};
-    window.SRank.MoreMenu = {
-      open: openMore,
-      close: closeMore,
-      isOpen: function(){ return _open; }
+    window.SRank.NavPages = {
+      setPage: setPage,
+      toggle: toggle,
+      current: function(){ return _page; }
     };
 
-    console.log("[MORE] ready ✓");
+    console.log("[NAV] toggle ready ✓");
   })();
 
   /* ============ CSS WAVE ============ */
@@ -123,16 +115,13 @@
   function ensureWaveKeyframes(count){
     if (_waveStyleEl && _waveCount === count) return;
     if (_waveStyleEl && _waveStyleEl.parentNode) _waveStyleEl.remove();
-
     _waveStyleEl = document.createElement('style');
     _waveStyleEl.id = 'bossWaveKeyframes';
-
     const rules = [];
     for (let i = 0; i < count; i++){
       const startPct = (i / count) * 100;
       const endPct = ((i + 1) / count) * 100;
       const peakPct = (startPct + endPct) / 2;
-
       rules.push('@keyframes bwW_' + i + ' {');
       if (startPct === 0){
         rules.push('  0% { transform: translateY(0) scale(1); }');
@@ -143,7 +132,6 @@
       rules.push('  ' + endPct.toFixed(4) + '%, 100% { transform: translateY(0) scale(1); }');
       rules.push('}');
     }
-
     _waveStyleEl.textContent = rules.join('\n');
     document.head.appendChild(_waveStyleEl);
     _waveCount = count;
@@ -219,10 +207,8 @@
       if (c.trim() !== '' && c !== '\u00A0') visibleCount++;
     }
     ensureWaveKeyframes(visibleCount);
-
     const totalMs = visibleCount * STEP_MS;
     let animIdx = 0;
-
     const inner = chars.map(function(c){
       if (c.trim() === '' || c === '\u00A0'){
         return '<span class="bw-c" style="animation:none">&nbsp;</span>';
@@ -231,7 +217,6 @@
       const safe = c.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       return '<span class="bw-c" style="animation: bwW_' + i + ' ' + totalMs + 'ms ease-in-out infinite">' + safe + '</span>';
     }).join('');
-
     const safeLabel = text.replace(/"/g, '&quot;');
     return '<span class="boss-wave" aria-label="' + safeLabel + '">' + inner + '</span>';
   }
@@ -430,5 +415,5 @@
 
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v8.0 — CTA + wave + more");
+  console.log("[AUTH-UI] ready ✓ v8.2 — CTA + wave + nav toggle");
 })();
