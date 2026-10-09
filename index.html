@@ -349,6 +349,7 @@
   pointer-events:none;
 }
 .menu-item *{pointer-events:none}
+.menu-item[hidden]{display:none !important}
 
 .menu-footer{
   text-align:center;
@@ -763,7 +764,7 @@ body.menu-open{overflow:hidden}
           <span class="menu-item-icon">⌂</span>
           <span class="menu-item-label">Home</span>
         </button>
-        <button class="menu-item" data-target="adminBtn" type="button">
+        <button class="menu-item" data-target="adminBtn" type="button" hidden>
           <span class="menu-item-icon">⚙</span>
           <span class="menu-item-label">Admin</span>
         </button>
@@ -815,6 +816,7 @@ body.menu-open{overflow:hidden}
    - Avatar: {supabase}/storage/v1/object/public/avatars/{uid}.jpg
    - Cache qua SRank.avatar.setCache + event avatarUpdated
    - Role: đọc từ app_metadata.role (JWT) → ADMIN / Quản lý / KDV / Thành viên
+   - Nút Admin trong menu CHỈ hiện với role = admin
    ========================================================= */
 (function(){
   'use strict';
@@ -833,6 +835,7 @@ body.menu-open{overflow:hidden}
     const menuNameEl   = document.getElementById('menuUserName');
     const menuRoleEl   = document.getElementById('menuUserRole');
     const menuAvatarEl = document.getElementById('menuUserAvatar');
+    const adminItemEl  = overlay ? overlay.querySelector('.menu-item[data-target="adminBtn"]') : null;
     const STORAGE_KEY  = 'menuBtnPos';
     const BUST_KEY     = 'srank_avatar_bust';
     const DEBUG        = /[?&]debug=menu/.test(location.search);
@@ -1044,6 +1047,15 @@ body.menu-open{overflow:hidden}
       if (el.textContent !== info.label) el.textContent = info.label;
       el.classList.remove('role-admin','role-manager','role-kdv','role-member');
       el.classList.add(info.klass);
+
+      /* Ẩn/hiện nút Admin: chỉ admin mới thấy */
+      if (adminItemEl){
+        const isAdmin = (info.klass === 'role-admin');
+        if (adminItemEl.hidden !== !isAdmin){
+          adminItemEl.hidden = !isAdmin;
+        }
+      }
+
       log('role applied:', info);
     }
 
@@ -1137,6 +1149,7 @@ body.menu-open{overflow:hidden}
           menuCard.hidden = true;
           lastKnownAvatarUrl = '';
           currentAvatarRaw = '';
+          if (adminItemEl) adminItemEl.hidden = true;
           return;
         }
         menuCard.hidden = false;
