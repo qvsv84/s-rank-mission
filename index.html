@@ -27,19 +27,16 @@
 <link rel="stylesheet" href="css/main.css">
 
 <style>
-/* ═══════════ TOKENS ═══════════ */
 :root{
   --p1:#ff9ecb; --p2:#ff70b9; --p3:#ff3c91;
   --pd:#c73b8a; --pt:#8a2e5c; --ps:#c37aa0;
   --bg1:#fff8fb; --bg2:#ffe9f3; --bg3:#ffdcec;
-  --white:#fff;
   --grad:linear-gradient(135deg,var(--p1) 0%,var(--p2) 45%,var(--p3) 100%);
   --grad-btn:linear-gradient(135deg,var(--p3),var(--p2));
   --sh-btn:0 8px 20px rgba(255,60,145,.38);
   --sh-card:0 8px 20px rgba(255,112,185,.16);
 }
 
-/* ═══════════ AUTH UI ═══════════ */
 #loginOverlay{
   position:fixed;inset:0;z-index:1000;
   background:rgba(15,30,20,.5);
@@ -80,14 +77,12 @@
 #loginSubmit:active{transform:translateY(0)}
 #loginSubmit:disabled{opacity:.6;cursor:wait;transform:none}
 
-/* ═══════════ HIDDEN ORIGINAL NAV (proxy click) ═══════════ */
 :is(#bottomNav,#secondaryNav,#avatarBtn,#logoutBtn){
   position:absolute !important;width:1px;height:1px;padding:0;margin:-1px;
   overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);
   white-space:nowrap;border:0;pointer-events:none;left:0;top:0;
 }
 
-/* ═══════════ MENU TOGGLE (draggable) ═══════════ */
 #menuToggle{
   position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));
   z-index:999;width:52px;height:52px;border-radius:18px;
@@ -112,7 +107,6 @@
 #menuToggle span:nth-child(2){width:16px}
 #menuToggle span:nth-child(3){width:11px}
 
-/* ═══════════ MENU OVERLAY ═══════════ */
 #menuOverlay{
   position:fixed;inset:0;z-index:1100;
   background:
@@ -133,12 +127,10 @@
 }
 #menuOverlay.open #menuOverlayInner{transform:translateY(0);opacity:1;transition-delay:.06s}
 
-/* Floating decorations */
 .menu-float{position:absolute;font-size:22px;opacity:.6;pointer-events:none;filter:drop-shadow(0 4px 8px rgba(255,112,185,.28));animation:floatY 6s ease-in-out infinite}
 .menu-float.small{font-size:16px;opacity:.45}
 @keyframes floatY{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-14px) rotate(6deg)}}
 
-/* Header */
 .menu-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .menu-brand{display:flex;align-items:center;gap:12px}
 .menu-brand-logo{
@@ -168,7 +160,6 @@
 .menu-close:hover{background:#fff;transform:rotate(90deg) scale(1.05)}
 .menu-close:active{transform:scale(.9) rotate(90deg)}
 
-/* User card */
 .menu-user-card{
   display:flex;align-items:center;gap:14px;padding:14px 16px;
   background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,245,250,.85));
@@ -207,7 +198,6 @@
 :is(.menu-user-action,.menu-user-logout):active{transform:scale(.9)}
 .menu-user-logout{background:linear-gradient(135deg,#ffd5e8,#ffb8d9);color:#fff}
 
-/* Sections */
 .menu-section{margin-bottom:22px}
 .menu-section-title{
   display:flex;align-items:center;gap:8px;
@@ -218,7 +208,6 @@
 .menu-section-title span{font-size:16px;filter:drop-shadow(0 2px 4px rgba(255,112,185,.35))}
 .menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 
-/* Menu items */
 .menu-item{
   --delay:0s;
   position:relative;overflow:hidden;
@@ -323,7 +312,6 @@ body.menu-open{overflow:hidden}
     <button id="kdvRulesBtn" type="button">📜 Luật KDV</button>
     <button id="lunchBtn" type="button">🍜 Bữa trưa ăn gì?</button>
     <button id="attendanceBtn" type="button">🗓 Chấm công</button>
-    <button id="quizBtn" type="button" style="display:none">📝 Bài KT</button>
   </nav>
 
   <div id="monitorOverlay" aria-hidden="true">
@@ -602,9 +590,6 @@ body.menu-open{overflow:hidden}
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════
-   MENU 3 GẠCH — Avatar (Supabase Storage) + Role (app_metadata)
-   ═══════════════════════════════════════════════════════════ */
 (() => {
   'use strict';
   try {
@@ -629,7 +614,6 @@ body.menu-open{overflow:hidden}
     const DEBUG       = /[?&]debug=menu/.test(location.search);
     const log         = (...a) => DEBUG && console.log('[Menu]', ...a);
 
-    /* ───── utils ───── */
     const isImg = s => {
       if (typeof s !== 'string' || !s) return false;
       if (!/^(https?:|data:image\/|blob:)/i.test(s)) return false;
@@ -638,9 +622,9 @@ body.menu-open{overflow:hidden}
       if (/\.svg(\?|#|$)/i.test(s)) return false;
       return true;
     };
-    const strip   = s => s ? String(s).replace(/^url\(["']?/, '').replace(/["']?\)$/, '').trim() : '';
-    const toUrl   = s => !s ? '' : /^url\(/i.test(s) ? s : `url("${s}")`;
-    const clamp   = (x, y) => {
+    const strip = s => s ? String(s).replace(/^url\(["']?/, '').replace(/["']?\)$/, '').trim() : '';
+    const toUrl = s => !s ? '' : /^url\(/i.test(s) ? s : `url("${s}")`;
+    const clamp = (x, y) => {
       const w = btn.offsetWidth || 52, h = btn.offsetHeight || 52;
       return {
         x: Math.max(4, Math.min(x, Math.max(4, window.innerWidth  - w - 4))),
@@ -657,7 +641,6 @@ body.menu-open{overflow:hidden}
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ x: r.left, y: r.top })); } catch(_){}
     };
 
-    /* ───── restore position ───── */
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(_){}
     requestAnimationFrame(() => {
@@ -669,11 +652,9 @@ body.menu-open{overflow:hidden}
       const r = btn.getBoundingClientRect(); applyPos(r.left, r.top);
     }, 150));
 
-    /* ───── avatar bust ───── */
     let bust = 0;
     try { bust = parseInt(localStorage.getItem(BUST_KEY) || '0', 10) || 0; } catch(_){}
 
-    /* ───── Supabase URL ───── */
     const getSbUrl = () => {
       const tries = [
         () => window.SRank?.config?.supabaseUrl,
@@ -692,7 +673,6 @@ body.menu-open{overflow:hidden}
       return 'https://yodvujkylnvzjybvgika.supabase.co';
     };
 
-    /* ───── auth session ───── */
     const readSession = () => {
       try {
         for (let i = 0; i < localStorage.length; i++){
@@ -714,7 +694,6 @@ body.menu-open{overflow:hidden}
       return readSession()?.id || '';
     };
 
-    /* ───── avatar URL builder ───── */
     const buildAvatarUrl = (forceBust) => {
       const base = getSbUrl(), uid = getUid();
       if (!base || !uid) return '';
@@ -722,7 +701,6 @@ body.menu-open{overflow:hidden}
       return `${base}/storage/v1/object/public/avatars/${encodeURIComponent(uid)}.jpg${b ? '?t=' + b : ''}`;
     };
 
-    /* ───── role resolver ───── */
     const getRole = () => {
       const cand = [];
       try {
@@ -776,7 +754,6 @@ body.menu-open{overflow:hidden}
       log('role applied:', info);
     };
 
-    /* ───── SRank.avatar cache ───── */
     const readCache = (name) => {
       if (!name || !window.SRank?.avatar) return '';
       const c = window.SRank.avatar;
@@ -793,12 +770,9 @@ body.menu-open{overflow:hidden}
     let lastKnownUrl = '';
     const extractAvatar = () => {
       const userName = ((realName?.textContent) || '').trim();
-
       if (lastKnownUrl && isImg(lastKnownUrl)){ log('avatar: event →', lastKnownUrl); return toUrl(lastKnownUrl); }
-
       const cached = readCache(userName);
       if (cached){ log('avatar: cache →', cached); return toUrl(cached); }
-
       const commonKeys = ['avatarUrl','avatar_url','user_avatar_url','srank_avatar_url','meow_avatar_url'];
       try {
         for (const k of commonKeys){ const v = localStorage.getItem(k); if (isImg(v)) return toUrl(v); }
@@ -809,7 +783,6 @@ body.menu-open{overflow:hidden}
           if (isImg(v)) return toUrl(v);
         }
       } catch(_){}
-
       const sbUrl = buildAvatarUrl();
       if (sbUrl){ log('avatar: storage →', sbUrl); return toUrl(sbUrl); }
       return '';
@@ -831,7 +804,6 @@ body.menu-open{overflow:hidden}
       img.src = raw;
     };
 
-    /* ───── sync user card ───── */
     let syncing = false;
     const isLoggedIn = () => !!(realLogout && !realLogout.hidden);
     const syncCard = () => {
@@ -852,7 +824,6 @@ body.menu-open{overflow:hidden}
       } finally { syncing = false; }
     };
 
-    /* ───── event avatarUpdated ───── */
     addEventListener('avatarUpdated', (e) => {
       const d = e?.detail || {};
       if (!isImg(d.url)) return;
@@ -864,7 +835,6 @@ body.menu-open{overflow:hidden}
       if (overlay.classList.contains('open')) syncCard();
     });
 
-    /* ───── open/close ───── */
     let syncTimer = null, syncCount = 0;
     const stopSync = () => { if (syncTimer){ clearInterval(syncTimer); syncTimer = null; } };
     const startSync = () => {
@@ -902,7 +872,6 @@ body.menu-open{overflow:hidden}
     };
     const toggleMenu = () => overlay.classList.contains('open') ? closeMenu() : openMenu();
 
-    /* ───── pointer drag + tap ───── */
     let pointerId = null, startX = 0, startY = 0, startL = 0, startT = 0, moved = false;
     const DRAG = 8;
 
@@ -941,14 +910,12 @@ body.menu-open{overflow:hidden}
       btn.classList.remove('dragging'); pointerId = null; moved = false;
     });
 
-    /* ───── close on ESC / outside ───── */
     if (closeBtn) closeBtn.addEventListener('click', closeMenu);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && overlay.classList.contains('open')) closeMenu();
     });
     overlay.addEventListener('click', (e) => { if (e.target === overlay) closeMenu(); });
 
-    /* ───── proxy menu items → original buttons ───── */
     overlay.querySelectorAll('.menu-item').forEach((item) => {
       item.addEventListener('click', (ev) => {
         ev.preventDefault(); ev.stopPropagation();
@@ -968,7 +935,6 @@ body.menu-open{overflow:hidden}
       });
     });
 
-    /* ───── avatar + logout in menu ───── */
     const menuAvatarBtn = $('menuAvatarBtn');
     const menuLogoutBtn = $('menuLogoutBtn');
 
@@ -982,7 +948,6 @@ body.menu-open{overflow:hidden}
       requestAnimationFrame(() => setTimeout(() => { try { realLogout.click(); } catch(_){} }, 340));
     });
 
-    /* ───── preview on file select ───── */
     if (avatarInput && menuAvatarEl){
       avatarInput.addEventListener('change', () => {
         const f = avatarInput.files?.[0];
@@ -999,7 +964,6 @@ body.menu-open{overflow:hidden}
       });
     }
 
-    /* ───── observers ───── */
     if (window.MutationObserver){
       const mo = new MutationObserver(() => { if (overlay.classList.contains('open')) syncCard(); });
       if (realLogout) mo.observe(realLogout, { attributes: true, attributeFilter: ['hidden','style','class'] });
@@ -1012,9 +976,7 @@ body.menu-open{overflow:hidden}
       [500, 1500, 3000].forEach(t => setTimeout(syncCard, t));
     });
 
-    if (DEBUG){
-      log('init | sb =', getSbUrl(), '| uid =', getUid() || '(none)', '| role =', getRole());
-    }
+    if (DEBUG) log('init | sb =', getSbUrl(), '| uid =', getUid() || '(none)', '| role =', getRole());
   } catch (err){
     console.error('[Menu] init error:', err);
   }
