@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════════════════════
-   MENU 3 GẠCH — Avatar (Supabase Storage) + Role (app_metadata)
-   + Card user LUÔN hiện (fix login sau 21h khi checklist khoá)
+   MENU 3 GẠCH — Phương án B
+   - Chưa login: nút hiện 🔐 (bấm → mở form login)
+   - Đã login:   nút hiện 📷 (bấm → đổi avatar) + 🚪 logout
+   - Fix tap/hold: ấn giữ ≠ tap, debounce toggle 350ms
    ═══════════════════════════════════════════════════════════ */
 (() => {
   'use strict';
@@ -192,12 +194,9 @@
     let lastKnownUrl = '';
     const extractAvatar = () => {
       const userName = ((realName?.textContent) || '').trim();
-
       if (lastKnownUrl && isImg(lastKnownUrl)){ log('avatar: event →', lastKnownUrl); return toUrl(lastKnownUrl); }
-
       const cached = readCache(userName);
       if (cached){ log('avatar: cache →', cached); return toUrl(cached); }
-
       const commonKeys = ['avatarUrl','avatar_url','user_avatar_url','srank_avatar_url','meow_avatar_url'];
       try {
         for (const k of commonKeys){ const v = localStorage.getItem(k); if (isImg(v)) return toUrl(v); }
@@ -208,7 +207,6 @@
           if (isImg(v)) return toUrl(v);
         }
       } catch(_){}
-
       const sbUrl = buildAvatarUrl();
       if (sbUrl){ log('avatar: storage →', sbUrl); return toUrl(sbUrl); }
       return '';
@@ -230,14 +228,12 @@
       img.src = raw;
     };
 
-    /* ───── sync user card ───── */
-    /* CHÍNH: card LUÔN hiện, kể cả chưa login
-       - Chưa login  → tên "Khách", role "Chưa đăng nhập", nút 🔐 Login, ẩn 📷
-       - Đã login    → tên thật, role thật, nút 📷 + 🚪 */
+    /* ───── sync user card (PHƯƠNG ÁN B) ───── */
     let syncing = false;
     const isLoggedIn = () => !!(realLogout && !realLogout.hidden);
 
-    const showLoginBtn = () => {
+    /* Chưa login: nút avatar biến thành 🔐 login */
+    const setLoginMode = () => {
       if (menuAvatarBtn){
         menuAvatarBtn.textContent = '🔐';
         menuAvatarBtn.setAttribute('aria-label', 'Đăng nhập');
@@ -246,7 +242,8 @@
       }
       if (menuLogoutBtn) menuLogoutBtn.style.display = 'none';
     };
-    const showUserBtns = () => {
+    /* Đã login: nút avatar trở về 📷, hiện thêm 🚪 */
+    const setUserMode = () => {
       if (menuAvatarBtn){
         menuAvatarBtn.textContent = '📷';
         menuAvatarBtn.setAttribute('aria-label', 'Đổi avatar');
@@ -276,7 +273,7 @@
             menuAvatarEl.textContent = '🐱';
           }
           if (adminItemEl) adminItemEl.hidden = true;
-          showLoginBtn();
+          setLoginMode();
           return;
         }
 
@@ -285,7 +282,7 @@
               if (menuNameEl.textContent !== n) menuNameEl.textContent = n; } catch(_){}
         try { applyRole(menuRoleEl); } catch(e){ console.error('[Menu] role:', e); }
         try { applyAvatar(extractAvatar()); } catch(e){ console.error('[Menu] avatar:', e); }
-        showUserBtns();
+        setUserMode();
       } finally { syncing = false; }
     };
 
@@ -315,14 +312,7 @@
       });
     };
 
-    const isLoginShowing = () => {
-      if (!loginOv) return false;
-      if (loginOv.classList.contains('show')) return true;
-      try { const cs = getComputedStyle(loginOv); return cs.display !== 'none' && cs.visibility !== 'hidden'; } catch(_){ return false; }
-    };
-
     const openMenu = () => {
-      /* Không chặn khi loginOverlay đang mở nữa — vì menu có nút login */
       try { stagger(); } catch(e){ console.error('[Menu] stagger:', e); }
       overlay.classList.add('open');
       overlay.setAttribute('aria-hidden', 'false');
@@ -337,45 +327,93 @@
       btn.setAttribute('aria-expanded', 'false');
       document.body.classList.remove('menu-open');
     };
-    const toggleMenu = () => overlay.classList.contains('open') ? closeMenu() : openMenu();
 
-    /* ───── pointer drag + tap ───── */
-    let pointerId = null, startX = 0, startY = 0, startL = 0, startT = 0, moved = false;
+    /* ───── FIX BUG TAP vs HOLD ─────
+       - Tap (bấm nhả nhanh, không di chuyển) → toggle menu
+       - Hold (ấn giữ > 500ms) → KHÔNG làm gì (tránh mở nhầm)
+       - Drag (di chuyển) → kéo nút
+       Debounce 400ms chống double-tap
+    */
+    let pointerId = null, startX = 0, startY = 0, startL = 0, startT = 0;
+    let moved = false, holdTimer = null, wasHold = false;
     const DRAG = 8;
+    const HOLD_MS = 500;
+    const TOGGLE_COOLDOWN = 400;
+    let _lastToggle = 0;
+
+    const toggleMenu = () => {
+      const now = Date.now();
+      if (now - _lastToggle < TOGGLE_COOLDOWN){ log('toggle cooldown, bỏ qua'); return; }
+      _lastToggle = now;
+      overlay.classList.contains('open') ? closeMenu() : openMenu();
+    };
 
     btn.addEventListener('pointerdown', (e) => {
       if (e.button !== undefined && e.button !== 0) return;
       pointerId = e.pointerId;
       try { btn.setPointerCapture(pointerId); } catch(_){}
       const r = btn.getBoundingClientRect();
-      startX = e.clientX; startY = e.clientY; startL = r.left; startT = r.top; moved = false;
+      startX = e.clientX; startY = e.clientY; startL = r.left; startT = r.top;
+      moved = false; wasHold = false;
+      /* Bắt đầu đếm hold */
+      clearTimeout(holdTimer);
+      holdTimer = setTimeout(() => {
+        wasHold = true;
+        log('hold detected — không toggle menu');
+      }, HOLD_MS);
     });
+
     btn.addEventListener('pointermove', (e) => {
       if (e.pointerId !== pointerId) return;
       const dx = e.clientX - startX, dy = e.clientY - startY;
       if (!moved){
         if (Math.hypot(dx, dy) < DRAG) return;
-        moved = true; btn.classList.add('dragging');
+        moved = true;
+        clearTimeout(holdTimer); /* bắt đầu drag → không phải hold */
+        btn.classList.add('dragging');
       }
       applyPos(startL + dx, startT + dy);
     });
+
     const endPointer = (e) => {
       if (e.pointerId !== pointerId) return;
+      try { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); } catch(_){}
+      clearTimeout(holdTimer);
       try { btn.releasePointerCapture(pointerId); } catch(_){}
       pointerId = null;
+
       if (moved){
+        /* Kéo → lưu vị trí */
         btn.classList.remove('dragging');
         const r = btn.getBoundingClientRect();
         applyPos(r.left, r.top); savePos();
-      } else toggleMenu();
-      moved = false;
+        log('drag end, saved pos');
+      } else if (!wasHold){
+        /* Tap → toggle menu */
+        log('tap → toggle');
+        toggleMenu();
+      } else {
+        /* Hold → không làm gì */
+        log('hold end, ignore');
+      }
+      moved = false; wasHold = false;
     };
+
     btn.addEventListener('pointerup', endPointer);
     btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); }, true);
     btn.addEventListener('pointercancel', (e) => {
       if (e.pointerId !== pointerId) return;
+      clearTimeout(holdTimer);
       try { btn.releasePointerCapture(pointerId); } catch(_){}
-      btn.classList.remove('dragging'); pointerId = null; moved = false;
+      btn.classList.remove('dragging'); pointerId = null; moved = false; wasHold = false;
+    });
+
+    /* Chặn các event khác có thể gây logout ngoài ý muốn */
+    ['mousedown','mouseup','touchstart','touchend','touchcancel','contextmenu'].forEach(evt => {
+      btn.addEventListener(evt, (e) => {
+        e.stopPropagation();
+        if (evt !== 'contextmenu') e.preventDefault();
+      }, true);
     });
 
     /* ───── close on ESC / outside ───── */
@@ -405,29 +443,33 @@
       });
     });
 
-    /* ───── nút 📷 / 🔐 / 🚪 trong menu ───── */
+    /* ───── nút avatar (đổi hành vi theo mode) ───── */
     if (menuAvatarBtn){
       menuAvatarBtn.addEventListener('click', (e) => {
         e.preventDefault(); e.stopPropagation();
         const mode = menuAvatarBtn.dataset.mode || 'avatar';
         if (mode === 'login'){
-          /* Mở form login — hoạt động bất kỳ lúc nào, kể cả sau 21h */
+          /* Chưa login → mở form login */
+          log('bấm 🔐 login');
           try {
-            if (window.SRank?.openLogin){ window.SRank.openLogin(); }
-            else if (window.__srankOpenLogin){ window.__srankOpenLogin(); }
-            else { console.warn('[Menu] Không tìm thấy hàm openLogin'); }
+            if (window.SRank?.openLogin) window.SRank.openLogin();
+            else if (window.__srankOpenLogin) window.__srankOpenLogin();
+            else console.warn('[Menu] Không tìm thấy hàm openLogin');
           } catch(err){ console.error('[Menu] openLogin:', err); }
-          /* Đóng menu để không chồng lên login overlay */
           closeMenu();
           return;
         }
-        /* mode === 'avatar' → mở file picker */
+        /* Đã login → mở file picker */
+        log('bấm 📷 avatar');
         if (realAvatar) realAvatar.click();
       });
     }
+
+    /* ───── nút logout ───── */
     if (menuLogoutBtn){
       menuLogoutBtn.addEventListener('click', (e) => {
         e.preventDefault(); e.stopPropagation();
+        log('bấm 🚪 logout');
         closeMenu();
         requestAnimationFrame(() => setTimeout(() => { try { realLogout.click(); } catch(_){} }, 340));
       });
