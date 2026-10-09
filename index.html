@@ -129,6 +129,85 @@
 #avatarBtn:disabled{opacity:.55;cursor:wait}
 </style>
 </head>
+
+<!-- ===== NÚT MENU 3 GẠCH ===== -->
+<button id="menuToggle" type="button" aria-label="Mở menu" aria-expanded="false">
+  <span></span><span></span><span></span>
+</button>
+
+<style>
+/* Nút 3 gạch — góc phải dưới */
+#menuToggle{
+  position:fixed;
+  right:12px;
+  bottom:calc(12px + env(safe-area-inset-bottom));
+  z-index:999;
+  width:52px;height:52px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#ff3c91,#ff70b9);
+  border:0;cursor:pointer;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:5px;
+  box-shadow:0 6px 18px rgba(255,60,145,.4);
+  transition:transform .15s,box-shadow .15s;
+  font-family:inherit;
+  padding:0;
+}
+#menuToggle:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(255,60,145,.5)}
+#menuToggle:active{transform:scale(.95)}
+#menuToggle span{
+  display:block;width:22px;height:2.5px;
+  background:#fff;border-radius:2px;
+  transition:transform .3s cubic-bezier(.16,1,.3,1),opacity .2s;
+}
+/* Biến thành dấu X khi mở */
+body.nav-open #menuToggle span:nth-child(1){transform:translateY(7.5px) rotate(45deg)}
+body.nav-open #menuToggle span:nth-child(2){opacity:0}
+body.nav-open #menuToggle span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg)}
+
+/* 2 thanh nav: ẩn mặc định, trượt lên khi mở */
+#bottomNav,#secondaryNav{
+  transition:transform .32s cubic-bezier(.16,1,.3,1),opacity .25s;
+  will-change:transform,opacity;
+}
+body:not(.nav-open) #bottomNav,
+body:not(.nav-open) #secondaryNav{
+  transform:translateY(150%);
+  opacity:0;
+  pointer-events:none;
+}
+</style>
+
+<script>
+(function(){
+  const btn  = document.getElementById('menuToggle');
+  const body = document.body;
+
+  const open  = () => { body.classList.add('nav-open');    btn.setAttribute('aria-expanded','true');  };
+  const close = () => { body.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); };
+
+  // Bấm nút 3 gạch → toggle
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    body.classList.contains('nav-open') ? close() : open();
+  });
+
+  // Bấm ra ngoài (không phải nav, không phải nút) → tự đóng
+  document.addEventListener('click', (e) => {
+    if (!body.classList.contains('nav-open')) return;
+    if (e.target.closest('#menuToggle')) return;
+    if (e.target.closest('#bottomNav') || e.target.closest('#secondaryNav')) return;
+    close();
+  });
+
+  // ESC cũng đóng cho tiện
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close();
+  });
+})();
+</script>
+
 <body>
 <noscript>
   <div style="padding:24px;font-family:system-ui,-apple-system,sans-serif;text-align:center;background:#f3f8f1;color:#333">
