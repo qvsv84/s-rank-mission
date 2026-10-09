@@ -1,8 +1,8 @@
 /* =========================================================
-   SRANK AUTH UI — v7.6 (CTA + wave + avatar button)
+   SRANK AUTH UI — v8.0
    ---------------------------------------------------------
-   CHANGE v7.6:
-   - Thêm ref #avatarBtn, hide/show cùng logoutBtn
+   - CTA hook + wave kicker + login form + logout
+   - TÍCH HỢP More sheet (thay cho file more-menu.js)
    ========================================================= */
 (function(){
   "use strict";
@@ -28,7 +28,74 @@
   let currentUser = null;
   let submitting = false;
 
-  /* ============ CSS BASE + WAVE ============ */
+  /* ============================================================
+     MORE SHEET
+     ============================================================ */
+  (function initMore(){
+    const moreOverlay = $("moreOverlay");
+    const morePanel = $("morePanel");
+    const moreBtn = $("moreBtn");
+    const moreCloseBtn = $("moreCloseBtn");
+    if (!moreOverlay || !moreBtn) { console.warn("[MORE] thiếu DOM"); return; }
+
+    let _open = false;
+
+    function openMore(){
+      if (_open) return;
+      _open = true;
+      moreOverlay.classList.add("show");
+      moreOverlay.setAttribute("aria-hidden", "false");
+      if (typeof window.syncQuickTools === "function") window.syncQuickTools();
+    }
+
+    function closeMore(){
+      if (!_open) return;
+      _open = false;
+      moreOverlay.classList.remove("show");
+      moreOverlay.setAttribute("aria-hidden", "true");
+      if (typeof window.syncQuickTools === "function") window.syncQuickTools();
+    }
+
+    moreBtn.addEventListener("click", function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      openMore();
+    });
+
+    if (moreCloseBtn) moreCloseBtn.addEventListener("click", closeMore);
+
+    moreOverlay.addEventListener("click", function(e){
+      if (e.target === moreOverlay) closeMore();
+    });
+
+    if (morePanel){
+      morePanel.addEventListener("click", function(e){
+        const btn = e.target.closest("button[id]");
+        if (!btn) return;
+        if (btn.id === "moreCloseBtn") return;
+        closeMore();
+      }, true);
+    }
+
+    document.addEventListener("keydown", function(e){
+      if (e.key === "Escape" && _open){
+        closeMore();
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }
+    }, true);
+
+    window.SRank = window.SRank || {};
+    window.SRank.MoreMenu = {
+      open: openMore,
+      close: closeMore,
+      isOpen: function(){ return _open; }
+    };
+
+    console.log("[MORE] ready ✓");
+  })();
+
+  /* ============ CSS WAVE ============ */
   function injectBaseCss(){
     if (document.getElementById('bossKickerCss')) return;
     const s = document.createElement('style');
@@ -49,7 +116,6 @@
   }
   injectBaseCss();
 
-  /* ============ DYNAMIC KEYFRAMES ============ */
   const STEP_MS = 250;
   let _waveStyleEl = null;
   let _waveCount = 0;
@@ -105,7 +171,6 @@
     } catch(_) { return -1; }
   }
 
-  /* ============ HOOK: CTA ============ */
   function getCtaInfo(){
     if (isChecklistLocked()) return { text: "🔒 Tạm khoá Checklist", locked: true };
     if (!currentUser) return { text: "🔐 Đăng nhập", locked: false };
@@ -121,7 +186,6 @@
   }
   window.__getCtaInfo = getCtaInfo;
 
-  /* ============ HOOK: KICKER + WAVE ============ */
   const BOSS_WHITELIST = ['tienloi', 'mydung', 'quynhtrang', 'phamkimchi', 'minhthuy'];
   const KICKER_DEFAULT = '🐱 DAILY TEAM HUB';
   const KICKER_BOSS = '🕶️ BOSS TỔ CHỨC ÁO ĐEN';
@@ -321,7 +385,7 @@
     }
   }, true);
 
-  /* ============ LOGOUT + AVATAR BUTTON ============ */
+  /* ============ LOGOUT ============ */
   function updateLogoutBtn(){
     if (currentUser){
       if (logoutBtn) logoutBtn.hidden = false;
@@ -343,7 +407,6 @@
 
   if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
 
-  /* ============ AUTH CHANGE ============ */
   Auth.onChange(function(user){
     if (user){
       try {
@@ -367,5 +430,5 @@
 
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v7.6 — CTA + wave + avatar btn");
+  console.log("[AUTH-UI] ready ✓ v8.0 — CTA + wave + more");
 })();
