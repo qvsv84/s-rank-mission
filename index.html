@@ -84,130 +84,112 @@
 #loginSubmit:active{transform:translateY(0)}
 #loginSubmit:disabled{opacity:.6;cursor:wait;transform:none}
 
-/* ===== LOGOUT BTN — góc trái dưới ===== */
-#logoutBtn{
+/* ===== NÚT MENU 3 GẠCH (KÉO ĐƯỢC) ===== */
+#menuToggle{
   position:fixed;
   left:12px;
   bottom:calc(12px + env(safe-area-inset-bottom));
-  z-index:999;
-  padding:7px 12px;font-size:12px;font-weight:700;
-  background:rgba(255,255,255,.9);
-  border:1px solid #cbdcc9;border-radius:999px;
-  color:#2c4a33;cursor:pointer;
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-  display:inline-flex;gap:6px;align-items:center;
-  box-shadow:0 4px 14px rgba(0,0,0,.08);
-  font-family:inherit;
-  transition:background .15s,transform .12s;
-  max-width:min(60vw,220px);
-}
-#logoutBtn[hidden]{display:none}
-#logoutBtn:hover{background:#fff;transform:translateY(-1px)}
-#logoutBtn .lb-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-/* ===== AVATAR UPLOAD BTN ===== */
-#avatarBtn{
-  position:fixed;
-  left:12px;
-  bottom:calc(60px + env(safe-area-inset-bottom));
-  z-index:999;
-  width:42px;height:42px;
+  z-index:1001;
+  width:48px;height:48px;
   border-radius:50%;
+  background:linear-gradient(135deg,#ff3c91,#ff70b9);
+  border:0;cursor:grab;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:5px;
+  box-shadow:0 6px 18px rgba(255,60,145,.4);
+  transition:box-shadow .15s,transform .15s;
+  font-family:inherit;
+  padding:0;
+  touch-action:none;
+  user-select:none;-webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+#menuToggle:hover{box-shadow:0 8px 22px rgba(255,60,145,.5)}
+#menuToggle.dragging{cursor:grabbing;transition:none}
+#menuToggle span{
+  display:block;width:20px;height:2.5px;
+  background:#fff;border-radius:2px;
+  transition:transform .3s cubic-bezier(.16,1,.3,1),opacity .2s;
+  pointer-events:none;
+}
+body.nav-open #menuToggle span:nth-child(1){transform:translateY(7.5px) rotate(45deg)}
+body.nav-open #menuToggle span:nth-child(2){opacity:0}
+body.nav-open #menuToggle span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg)}
+
+/* ===== 2 THANH NAV + USER NAV: ẩn mặc định, trượt lên khi mở ===== */
+#bottomNav,#secondaryNav,#userNav{
+  transition:transform .32s cubic-bezier(.16,1,.3,1),opacity .25s;
+  will-change:transform,opacity;
+}
+body:not(.nav-open) #bottomNav,
+body:not(.nav-open) #secondaryNav,
+body:not(.nav-open) #userNav{
+  transform:translateY(150%);
+  opacity:0;
+  pointer-events:none;
+}
+
+/* ===== USER NAV (avatar + logout) ===== */
+#userNav{
+  position:fixed;
+  left:0;right:0;
+  bottom:calc(132px + env(safe-area-inset-bottom));
+  z-index:998;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:flex-start;
+  padding:0 12px;
+  box-sizing:border-box;
+}
+#userNav [hidden]{display:none !important}
+
+/* Override style cũ của 2 nút (trước đây position:fixed) */
+#userNav #logoutBtn,
+#userNav #avatarBtn{
+  position:static !important;
+  left:auto !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:auto !important;
+  margin:0 !important;
+}
+#userNav #avatarBtn{
+  width:46px;height:46px;
+  border-radius:50%;
+  font-size:20px;
+  flex-shrink:0;
   background:rgba(255,255,255,.9);
   border:1px solid #cbdcc9;
   color:#2c4a33;
-  font-size:20px;
   cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 4px 14px rgba(0,0,0,.08);
   transition:transform .12s,background .15s;
   font-family:inherit;
 }
-#avatarBtn[hidden]{display:none !important}
-#avatarBtn:hover{background:#fff}
-#avatarBtn:active{transform:scale(.94)}
-#avatarBtn:disabled{opacity:.55;cursor:wait}
+#userNav #avatarBtn:active{transform:scale(.94)}
+#userNav #avatarBtn:disabled{opacity:.55;cursor:wait}
+#userNav #logoutBtn{
+  padding:10px 16px;
+  font-size:13px;
+  font-weight:700;
+  border-radius:999px;
+  background:rgba(255,255,255,.9);
+  border:1px solid #cbdcc9;
+  color:#2c4a33;
+  cursor:pointer;
+  display:inline-flex;gap:6px;align-items:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.08);
+  font-family:inherit;
+  transition:background .15s,transform .12s;
+  max-width:60vw;
+}
+#userNav #logoutBtn:hover{background:#fff;transform:translateY(-1px)}
+#userNav #logoutBtn .lb-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 </head>
-
-<!-- ===== NÚT MENU 3 GẠCH — GÓC TRÁI TRÊN ===== -->
-<button id="menuToggle" type="button" aria-label="Mở menu" aria-expanded="false">
-  <span></span><span></span><span></span>
-</button>
-
-<style>
-/* Nút 3 gạch — góc trái trên */
-#menuToggle{
-  position:fixed;
-  left:12px;
-  top:calc(12px + env(safe-area-inset-top));
-  z-index:1001;
-  width:46px;height:46px;
-  border-radius:14px;
-  background:linear-gradient(135deg,#ff3c91,#ff70b9);
-  border:0;cursor:pointer;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  gap:5px;
-  box-shadow:0 6px 18px rgba(255,60,145,.4);
-  transition:transform .15s,box-shadow .15s;
-  font-family:inherit;
-  padding:0;
-}
-#menuToggle:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(255,60,145,.5)}
-#menuToggle:active{transform:scale(.95)}
-#menuToggle span{
-  display:block;width:20px;height:2.5px;
-  background:#fff;border-radius:2px;
-  transition:transform .3s cubic-bezier(.16,1,.3,1),opacity .2s;
-}
-/* Biến thành dấu X khi mở */
-body.nav-open #menuToggle span:nth-child(1){transform:translateY(7.5px) rotate(45deg)}
-body.nav-open #menuToggle span:nth-child(2){opacity:0}
-body.nav-open #menuToggle span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg)}
-
-/* 2 thanh nav: ẩn mặc định, trượt lên khi mở */
-#bottomNav,#secondaryNav{
-  transition:transform .32s cubic-bezier(.16,1,.3,1),opacity .25s;
-  will-change:transform,opacity;
-}
-body:not(.nav-open) #bottomNav,
-body:not(.nav-open) #secondaryNav{
-  transform:translateY(150%);
-  opacity:0;
-  pointer-events:none;
-}
-</style>
-
-<script>
-(function(){
-  const btn  = document.getElementById('menuToggle');
-  const body = document.body;
-
-  const open  = () => { body.classList.add('nav-open');    btn.setAttribute('aria-expanded','true');  };
-  const close = () => { body.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); };
-
-  // Bấm nút 3 gạch → toggle
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    body.classList.contains('nav-open') ? close() : open();
-  });
-
-  // Bấm ra ngoài (không phải nav, không phải nút) → tự đóng
-  document.addEventListener('click', (e) => {
-    if (!body.classList.contains('nav-open')) return;
-    if (e.target.closest('#menuToggle')) return;
-    if (e.target.closest('#bottomNav') || e.target.closest('#secondaryNav')) return;
-    close();
-  });
-
-  // ESC cũng đóng cho tiện
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') close();
-  });
-})();
-</script>
-
 <body>
 <noscript>
   <div style="padding:24px;font-family:system-ui,-apple-system,sans-serif;text-align:center;background:#f3f8f1;color:#333">
@@ -355,11 +337,11 @@ body:not(.nav-open) #secondaryNav{
 <div id="hint" aria-hidden="true" hidden></div>
 </main>
 
-<!-- ===== NÚT UPLOAD AVATAR (chỉ hiện khi đã login) ===== -->
+<!-- ===== NÚT UPLOAD AVATAR (sẽ được chuyển vào #userNav bằng JS) ===== -->
 <button id="avatarBtn" type="button" aria-label="Đổi avatar" hidden>📷</button>
 <input id="avatarFileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
 
-<!-- ===== NÚT ĐĂNG XUẤT (chỉ hiện khi đã login) ===== -->
+<!-- ===== NÚT ĐĂNG XUẤT (sẽ được chuyển vào #userNav bằng JS) ===== -->
 <button id="logoutBtn" type="button" aria-label="Đăng xuất" hidden>
   <span aria-hidden="true">🚪</span>
   <span class="lb-name" id="logoutName"></span>
@@ -570,5 +552,132 @@ body:not(.nav-open) #secondaryNav{
 <script src="js/bxh-top.js" defer></script>
 <script src="js/quiz.js" defer></script>
 <script src="js/birthday-chat.js?v=1.9" defer></script>
+
+<!-- ===== NÚT MENU 3 GẠCH (KÉO ĐƯỢC) + USER NAV ===== -->
+<button id="menuToggle" type="button" aria-label="Mở menu" aria-expanded="false">
+  <span></span><span></span><span></span>
+</button>
+
+<script>
+(function(){
+  const btn  = document.getElementById('menuToggle');
+  const body = document.body;
+  const STORAGE_KEY = 'menuBtnPos';
+
+  /* ===== 1) Tạo #userNav và đưa avatar + logout vào ===== */
+  (function buildUserNav(){
+    const av = document.getElementById('avatarBtn');
+    const lo = document.getElementById('logoutBtn');
+    if (!av && !lo) return;
+    let nav = document.getElementById('userNav');
+    if (!nav){
+      nav = document.createElement('nav');
+      nav.id = 'userNav';
+      nav.setAttribute('aria-label', 'Tài khoản');
+      document.body.appendChild(nav);
+    }
+    if (av) nav.appendChild(av);
+    if (lo) nav.appendChild(lo);
+  })();
+
+  /* ===== 2) Vị trí nút (clamp + lưu) ===== */
+  function clamp(x, y){
+    const w = btn.offsetWidth  || 48;
+    const h = btn.offsetHeight || 48;
+    const maxX = window.innerWidth  - w - 4;
+    const maxY = window.innerHeight - h - 4;
+    return {
+      x: Math.max(4, Math.min(x, maxX)),
+      y: Math.max(4, Math.min(y, maxY))
+    };
+  }
+  function applyPos(x, y){
+    const c = clamp(x, y);
+    btn.style.left   = c.x + 'px';
+    btn.style.top    = c.y + 'px';
+    btn.style.right  = 'auto';
+    btn.style.bottom = 'auto';
+    return c;
+  }
+  function savePos(){
+    const r = btn.getBoundingClientRect();
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({x: r.left, y: r.top})); } catch(e){}
+  }
+
+  // Khởi tạo vị trí
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e){}
+  requestAnimationFrame(() => {
+    if (saved && typeof saved.x === 'number' && typeof saved.y === 'number'){
+      applyPos(saved.x, saved.y);
+    } else {
+      // Mặc định: GÓC DƯỚI TRÁI
+      const h = btn.offsetHeight || 48;
+      applyPos(12, window.innerHeight - h - 12);
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    const r = btn.getBoundingClientRect();
+    applyPos(r.left, r.top);
+  });
+
+  /* ===== 3) Menu toggle ===== */
+  const open  = () => { body.classList.add('nav-open');    btn.setAttribute('aria-expanded','true');  };
+  const close = () => { body.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); };
+  const toggle = () => body.classList.contains('nav-open') ? close() : open();
+
+  /* ===== 4) Kéo + tap ===== */
+  let pointerId = null, startX = 0, startY = 0, startLeft = 0, startTop = 0, moved = false;
+
+  btn.addEventListener('pointerdown', (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    pointerId = e.pointerId;
+    try { btn.setPointerCapture(pointerId); } catch(err){}
+    const r = btn.getBoundingClientRect();
+    startX = e.clientX; startY = e.clientY;
+    startLeft = r.left; startTop = r.top;
+    moved = false;
+    btn.classList.add('dragging');
+  });
+
+  btn.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== pointerId) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (!moved && Math.hypot(dx, dy) < 6) return;   // ngưỡng 6px
+    moved = true;
+    applyPos(startLeft + dx, startTop + dy);
+  });
+
+  function endPointer(e){
+    if (e.pointerId !== pointerId) return;
+    try { btn.releasePointerCapture(pointerId); } catch(err){}
+    btn.classList.remove('dragging');
+    pointerId = null;
+    if (moved){
+      const r = btn.getBoundingClientRect();
+      applyPos(r.left, r.top);
+      savePos();
+    } else {
+      toggle();                                     // tap → mở/đóng menu
+    }
+  }
+  btn.addEventListener('pointerup', endPointer);
+  btn.addEventListener('pointercancel', endPointer);
+
+  // Bấm ra ngoài → đóng menu
+  document.addEventListener('click', (e) => {
+    if (!body.classList.contains('nav-open')) return;
+    if (e.target.closest('#menuToggle')) return;
+    if (e.target.closest('#bottomNav') || e.target.closest('#secondaryNav') || e.target.closest('#userNav')) return;
+    close();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close();
+  });
+})();
+</script>
 </body>
 </html>
