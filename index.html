@@ -27,7 +27,6 @@
 <link rel="stylesheet" href="css/main.css">
 
 <style>
-/* ================= AUTH UI ================= */
 #loginOverlay{
   position:fixed;inset:0;z-index:1000;
   background:rgba(15,30,20,.5);
@@ -84,41 +83,33 @@
 #loginSubmit:active{transform:translateY(0)}
 #loginSubmit:disabled{opacity:.6;cursor:wait;transform:none}
 
-/* ================= ẨN NAV GỐC — kỹ thuật sr-only an toàn ================= */
+/* ẨN NAV GỐC */
 #bottomNav, #secondaryNav{
   position:absolute !important;
-  width:1px !important;
-  height:1px !important;
-  padding:0 !important;
-  margin:-1px !important;
+  width:1px !important;height:1px !important;
+  padding:0 !important;margin:-1px !important;
   overflow:hidden !important;
   clip:rect(0,0,0,0) !important;
   clip-path:inset(50%) !important;
   white-space:nowrap !important;
   border:0 !important;
   pointer-events:none !important;
-  left:0 !important;
-  top:0 !important;
+  left:0 !important;top:0 !important;
 }
-
-/* Nút avatar/logout gốc — sr-only, JS proxy click */
 #avatarBtn, #logoutBtn{
   position:absolute !important;
-  width:1px !important;
-  height:1px !important;
-  padding:0 !important;
-  margin:-1px !important;
+  width:1px !important;height:1px !important;
+  padding:0 !important;margin:-1px !important;
   overflow:hidden !important;
   clip:rect(0,0,0,0) !important;
   clip-path:inset(50%) !important;
   white-space:nowrap !important;
   border:0 !important;
   pointer-events:none !important;
-  left:0 !important;
-  top:0 !important;
+  left:0 !important;top:0 !important;
 }
 
-/* ================= NÚT 3 GẠCH (KÉO ĐƯỢC) ================= */
+/* NÚT 3 GẠCH */
 #menuToggle{
   position:fixed;
   left:12px;
@@ -156,7 +147,7 @@
 #menuToggle span:nth-child(2){width:16px;align-self:center;margin:0 auto}
 #menuToggle span:nth-child(3){width:11px;align-self:center;margin:0 auto}
 
-/* ================= MENU FULL-PAGE OVERLAY ================= */
+/* MENU FULL-PAGE */
 #menuOverlay{
   position:fixed;inset:0;z-index:1100;
   background:
@@ -191,10 +182,7 @@
 }
 
 .menu-float{
-  position:absolute;
-  font-size:22px;
-  opacity:.6;
-  pointer-events:none;
+  position:absolute;font-size:22px;opacity:.6;pointer-events:none;
   filter:drop-shadow(0 4px 8px rgba(255,112,185,.28));
   animation:floatY 6s ease-in-out infinite;
 }
@@ -204,10 +192,7 @@
   50%{transform:translateY(-14px) rotate(6deg)}
 }
 
-.menu-header{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:20px;
-}
+.menu-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .menu-brand{display:flex;align-items:center;gap:12px}
 .menu-brand-logo{
   width:52px;height:52px;border-radius:18px;
@@ -215,36 +200,25 @@
   display:flex;align-items:center;justify-content:center;
   font-size:28px;
   border:2px solid rgba(255,255,255,.95);
-  box-shadow:
-    0 6px 16px rgba(255,112,185,.3),
-    inset 0 1px 0 rgba(255,255,255,.9);
+  box-shadow:0 6px 16px rgba(255,112,185,.3), inset 0 1px 0 rgba(255,255,255,.9);
   animation:brandWiggle 4s ease-in-out infinite;
 }
-@keyframes brandWiggle{
-  0%,100%{transform:rotate(-4deg)}
-  50%{transform:rotate(5deg)}
-}
+@keyframes brandWiggle{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}
 .menu-brand-name{
-  font-size:21px;font-weight:900;
-  letter-spacing:-.4px;line-height:1;margin-bottom:5px;
+  font-size:21px;font-weight:900;letter-spacing:-.4px;line-height:1;margin-bottom:5px;
   background:linear-gradient(135deg,#ff3c91,#c73b8a);
   -webkit-background-clip:text;background-clip:text;
   -webkit-text-fill-color:transparent;
 }
-.menu-brand-sub{
-  font-size:11px;font-weight:800;
-  color:#c37aa0;
-  letter-spacing:1.6px;text-transform:uppercase;
-}
+.menu-brand-sub{font-size:11px;font-weight:800;color:#c37aa0;letter-spacing:1.6px;text-transform:uppercase}
 .menu-close{
   width:44px;height:44px;border-radius:50%;
   background:rgba(255,255,255,.9);
   border:2px solid rgba(255,255,255,.95);
   color:#c73b8a;font-size:20px;font-weight:800;line-height:1;
-  cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
   box-shadow:0 6px 14px rgba(255,112,185,.24);
-  transition:transform .25s cubic-bezier(.34,1.56,.64,1), background .15s, box-shadow .2s;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1), background .15s;
   font-family:inherit;
   -webkit-tap-highlight-color:transparent;
 }
@@ -257,9 +231,7 @@
   background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,245,250,.85));
   border:2px solid rgba(255,255,255,.95);
   border-radius:22px;
-  box-shadow:
-    0 12px 30px rgba(255,112,185,.2),
-    inset 0 1px 0 rgba(255,255,255,.9);
+  box-shadow:0 12px 30px rgba(255,112,185,.2), inset 0 1px 0 rgba(255,255,255,.9);
   margin-bottom:22px;
   -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   animation:userCardIn .5s cubic-bezier(.16,1,.3,1) both;
@@ -271,7 +243,7 @@
 .menu-user-card[hidden]{display:none !important}
 .menu-user-avatar{
   width:52px;height:52px;border-radius:50%;
-  background:linear-gradient(135deg,#ffb8d9,#ff85bf);
+  background-color:#ffd5e8;
   background-size:cover;background-position:center;
   display:flex;align-items:center;justify-content:center;
   color:#fff;font-size:24px;font-weight:800;
@@ -286,10 +258,7 @@
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   line-height:1.2;margin-bottom:4px;
 }
-.menu-user-sub{
-  font-size:11px;font-weight:800;color:#c37aa0;
-  letter-spacing:.6px;text-transform:uppercase;
-}
+.menu-user-sub{font-size:11px;font-weight:800;color:#c37aa0;letter-spacing:.6px;text-transform:uppercase}
 .menu-user-action,
 .menu-user-logout{
   width:40px;height:40px;border-radius:50%;
@@ -305,10 +274,7 @@
 .menu-user-logout:hover{background:#fff;transform:scale(1.1)}
 .menu-user-action:active,
 .menu-user-logout:active{transform:scale(.9)}
-.menu-user-logout{
-  background:linear-gradient(135deg,#ffd5e8,#ffb8d9);
-  color:#fff;
-}
+.menu-user-logout{background:linear-gradient(135deg,#ffd5e8,#ffb8d9);color:#fff}
 
 .menu-section{margin-bottom:22px}
 .menu-section-title{
@@ -317,15 +283,8 @@
   letter-spacing:1.4px;text-transform:uppercase;
   margin-bottom:12px;padding-left:4px;
 }
-.menu-section-title span{
-  font-size:16px;
-  filter:drop-shadow(0 2px 4px rgba(255,112,185,.35));
-}
-.menu-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;
-}
+.menu-section-title span{font-size:16px;filter:drop-shadow(0 2px 4px rgba(255,112,185,.35))}
+.menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .menu-item{
   --delay:0s;
   position:relative;
@@ -336,9 +295,7 @@
   cursor:pointer;
   display:flex;flex-direction:column;
   align-items:center;gap:8px;
-  box-shadow:
-    0 8px 20px rgba(255,112,185,.16),
-    inset 0 1px 0 rgba(255,255,255,.9);
+  box-shadow:0 8px 20px rgba(255,112,185,.16), inset 0 1px 0 rgba(255,255,255,.9);
   font-family:inherit;
   color:#8a2e5c;
   -webkit-tap-highlight-color:transparent;
@@ -351,13 +308,9 @@
     box-shadow .25s,
     background .2s;
 }
-#menuOverlay.open .menu-item{
-  opacity:1;
-  transform:translateY(0) scale(1);
-}
+#menuOverlay.open .menu-item{opacity:1;transform:translateY(0) scale(1)}
 .menu-item::before{
-  content:'';
-  position:absolute;inset:0;border-radius:inherit;
+  content:'';position:absolute;inset:0;border-radius:inherit;
   background:linear-gradient(135deg,rgba(255,112,185,.15),transparent 60%);
   opacity:0;transition:opacity .25s;pointer-events:none;
 }
@@ -365,29 +318,20 @@
 .menu-item:active::before{opacity:1}
 .menu-item:hover{
   transform:translateY(-3px) scale(1.04);
-  box-shadow:
-    0 12px 26px rgba(255,60,145,.3),
-    inset 0 1px 0 rgba(255,255,255,.9);
+  box-shadow:0 12px 26px rgba(255,60,145,.3), inset 0 1px 0 rgba(255,255,255,.9);
   transition-delay:0s;
 }
-.menu-item:active{
-  transform:translateY(-1px) scale(.97);
-  transition-delay:0s;
-}
+.menu-item:active{transform:translateY(-1px) scale(.97);transition-delay:0s}
 .menu-item-icon{
   width:42px;height:42px;border-radius:14px;
   display:flex;align-items:center;justify-content:center;
   font-size:22px;
   background:linear-gradient(135deg,#ffe4f0,#ffcbe3);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.9),
-    0 4px 10px rgba(255,112,185,.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 4px 10px rgba(255,112,185,.18);
   transition:transform .3s cubic-bezier(.34,1.56,.64,1);
   pointer-events:none;
 }
-.menu-item:hover .menu-item-icon{
-  transform:rotate(-8deg) scale(1.12);
-}
+.menu-item:hover .menu-item-icon{transform:rotate(-8deg) scale(1.12)}
 .menu-item-label{
   font-size:12px;font-weight:800;
   letter-spacing:.2px;text-align:center;line-height:1.2;
@@ -402,7 +346,6 @@
   font-size:11px;font-weight:800;color:#c37aa0;
   letter-spacing:.9px;
 }
-
 body.menu-open{overflow:hidden}
 </style>
 </head>
@@ -453,7 +396,6 @@ body.menu-open{overflow:hidden}
   <div id="topActions"><button id="topCaptureBtn" type="button">📸 Chụp BXH</button><button id="topCloseBtn" type="button">Đóng</button></div>
 </section>
 
-<!-- NAV GỐC — ẨN, DÙNG PROXY CLICK -->
 <nav id="bottomNav" aria-label="Điều hướng chính">
   <button id="homeBtn" type="button" aria-label="Về trang chủ">⌂ Home</button>
   <button id="adminBtn" type="button" aria-label="Mở cài đặt admin">⚙ Admin</button>
@@ -861,18 +803,23 @@ body.menu-open{overflow:hidden}
   'use strict';
   try {
 
-    const btn         = document.getElementById('menuToggle');
-    const overlay     = document.getElementById('menuOverlay');
-    const closeBtn    = overlay.querySelector('.menu-close');
-    const loginOv     = document.getElementById('loginOverlay');
-    const realLogout  = document.getElementById('logoutBtn');
-    const realName    = document.getElementById('logoutName');
-    const realAvatar  = document.getElementById('avatarBtn');
-    const avatarInput = document.getElementById('avatarFileInput');
-    const menuCard    = document.getElementById('menuUserCard');
-    const menuNameEl  = document.getElementById('menuUserName');
-    const menuAvatarEl= document.getElementById('menuUserAvatar');
-    const STORAGE_KEY = 'menuBtnPos';
+    const btn          = document.getElementById('menuToggle');
+    const overlay      = document.getElementById('menuOverlay');
+    const closeBtn     = overlay.querySelector('.menu-close');
+    const loginOv      = document.getElementById('loginOverlay');
+    const realLogout   = document.getElementById('logoutBtn');
+    const realName     = document.getElementById('logoutName');
+    const realAvatar   = document.getElementById('avatarBtn');
+    const avatarInput  = document.getElementById('avatarFileInput');
+    const menuCard     = document.getElementById('menuUserCard');
+    const menuNameEl   = document.getElementById('menuUserName');
+    const menuAvatarEl = document.getElementById('menuUserAvatar');
+    const STORAGE_KEY  = 'menuBtnPos';
+    const DEBUG        = /[?&]debug=menu/.test(location.search);
+
+    function log(){
+      if (DEBUG) console.log.apply(console, ['[Menu]'].concat([].slice.call(arguments)));
+    }
 
     /* ============ 1) KÉO NÚT 3 GẠCH ============ */
     function clamp(x, y){
@@ -916,104 +863,103 @@ body.menu-open{overflow:hidden}
       }, 150);
     });
 
-    /* ============ 2) EXTRACT AVATAR URL ============ */
+    /* ============ 2) EXTRACT AVATAR URL (CHỈ TỪ NGUỒN TIN CẬY) ============ */
     function isImageUrl(s){
-      return typeof s === 'string' && (/^https?:/i.test(s) || /^data:image\//i.test(s) || /^blob:/i.test(s));
+      if (typeof s !== 'string' || !s) return false;
+      if (!/^(https?:|data:image\/|blob:)/i.test(s)) return false;
+      if (/gradient\(/i.test(s)) return false;
+      if (/^data:image\/svg/i.test(s)) return false;
+      if (/\.svg(\?|#|$)/i.test(s)) return false;
+      return true;
     }
     function stripUrl(s){
       if (!s) return '';
-      return s.replace(/^url\(["']?/, '').replace(/["']?\)$/, '').trim();
+      return String(s).replace(/^url\(["']?/, '').replace(/["']?\)$/, '').trim();
     }
     function toCssUrl(s){
       if (!s) return '';
       if (/^url\(/i.test(s)) return s;
       return 'url("' + s + '")';
     }
-    function looksLikeSvg(u){
-      return /\.svg(\?|$)/i.test(u) || /^data:image\/svg/i.test(u);
+    function parseAvatarValue(v){
+      if (!v) return '';
+      if (isImageUrl(v)) return v;
+      const t = String(v).trim();
+      if (t.startsWith('{') || t.startsWith('[')){
+        try {
+          const j = JSON.parse(t);
+          const candidates = [j.url, j.avatar, j.avatarUrl, j.avatar_url, j.data, j.src, j.image];
+          if (Array.isArray(j) && j.length){
+            const first = j[0];
+            if (typeof first === 'string') candidates.push(first);
+            else if (first && typeof first === 'object') candidates.push(first.url, first.avatar, first.src);
+          }
+          for (const c of candidates){
+            if (isImageUrl(c)) return c;
+          }
+        } catch(e){}
+      }
+      return '';
     }
 
     function extractAvatarUrl(){
-      // Lớp 1: <img> con của #avatarBtn
+      /* --- Lớp 1: #avatarBtn (nguồn chính do avatar-upload.js ghi) --- */
       if (realAvatar){
+        // 1a. <img> con
         const innerImg = realAvatar.querySelector('img');
-        if (innerImg && isImageUrl(innerImg.src)) return toCssUrl(innerImg.src);
+        if (innerImg && isImageUrl(innerImg.src)) {
+          log('avatar nguồn: <img> trong #avatarBtn →', innerImg.src);
+          return toCssUrl(innerImg.src);
+        }
 
-        // Lớp 2: inline style
+        // 1b. inline style background-image
         const inline = realAvatar.style && realAvatar.style.backgroundImage;
-        if (inline && inline !== 'none' && isImageUrl(stripUrl(inline))) return toCssUrl(stripUrl(inline));
-
-        // Lớp 3: computed style
-        try {
-          const cs = getComputedStyle(realAvatar).backgroundImage;
-          if (cs && cs !== 'none' && isImageUrl(stripUrl(cs))) return toCssUrl(stripUrl(cs));
-        } catch(e){}
-
-        // Lớp 4: data-avatar
-        const da = realAvatar.getAttribute && realAvatar.getAttribute('data-avatar');
-        if (isImageUrl(da)) return toCssUrl(da);
-      }
-
-      // Lớp 5: DOM scan
-      try {
-        const nodes = document.querySelectorAll(
-          'img[class*="avatar" i], img[id*="avatar" i], ' +
-          '[class*="avatar" i] img, [id*="avatar" i] img, ' +
-          '[class*="avatar" i][style*="background-image"], ' +
-          '[id*="avatar" i][style*="background-image"]'
-        );
-        for (const el of nodes){
-          if (el === realAvatar) continue;
-          if (el.tagName === 'IMG' && el.src && isImageUrl(el.src) && !looksLikeSvg(el.src)){
-            return toCssUrl(el.src);
-          }
-          const bg = el.style && el.style.backgroundImage;
-          if (bg && bg !== 'none' && isImageUrl(stripUrl(bg)) && !looksLikeSvg(stripUrl(bg))){
-            return toCssUrl(stripUrl(bg));
+        if (inline && inline !== 'none'){
+          const raw = stripUrl(inline);
+          if (isImageUrl(raw)){
+            log('avatar nguồn: inline style #avatarBtn →', raw);
+            return toCssUrl(raw);
           }
         }
-      } catch(e){}
 
-      // Lớp 6: localStorage (10 key phổ biến + quét tất cả)
+        // 1c. data-avatar
+        const da = realAvatar.getAttribute && realAvatar.getAttribute('data-avatar');
+        if (isImageUrl(da)){
+          log('avatar nguồn: data-avatar #avatarBtn →', da);
+          return toCssUrl(da);
+        }
+      }
+
+      /* --- Lớp 2: localStorage (key phổ biến + quét tất cả key có 'avatar') --- */
       const commonKeys = [
         'avatar','avatarUrl','avatar_url','userAvatar','user_avatar',
-        'meow_avatar','profileAvatar','profile_avatar','user_avatar_url','avatarData'
+        'meow_avatar','profileAvatar','profile_avatar','user_avatar_url','avatarData',
+        'currentUser','current_user','meow_user'
       ];
-      function tryValue(v){
-        if (!v) return '';
-        if (isImageUrl(v)) return toCssUrl(v);
-        if (v.trim().startsWith('{')){
-          try {
-            const j = JSON.parse(v);
-            const u = j.url || j.avatar || j.avatarUrl || j.avatar_url || j.data || j.src;
-            if (isImageUrl(u)) return toCssUrl(u);
-          } catch(e){}
-        }
-        return '';
-      }
       try {
         for (const k of commonKeys){
-          const u = tryValue(localStorage.getItem(k));
-          if (u) return u;
+          const u = parseAvatarValue(localStorage.getItem(k));
+          if (u){ log('avatar nguồn: localStorage["' + k + '"] →', u); return toCssUrl(u); }
         }
         for (let i = 0; i < localStorage.length; i++){
           const k = localStorage.key(i);
           if (!k || !/avatar/i.test(k)) continue;
-          const u = tryValue(localStorage.getItem(k));
-          if (u) return u;
+          const u = parseAvatarValue(localStorage.getItem(k));
+          if (u){ log('avatar nguồn: localStorage["' + k + '"] →', u); return toCssUrl(u); }
         }
       } catch(e){}
 
-      // Lớp 7: sessionStorage
+      /* --- Lớp 3: sessionStorage --- */
       try {
         for (let i = 0; i < sessionStorage.length; i++){
           const k = sessionStorage.key(i);
           if (!k || !/avatar/i.test(k)) continue;
-          const u = tryValue(sessionStorage.getItem(k));
-          if (u) return u;
+          const u = parseAvatarValue(sessionStorage.getItem(k));
+          if (u){ log('avatar nguồn: sessionStorage["' + k + '"] →', u); return toCssUrl(u); }
         }
       } catch(e){}
 
+      log('avatar nguồn: KHÔNG TÌM THẤY — fallback 🐱');
       return '';
     }
 
@@ -1031,12 +977,12 @@ body.menu-open{overflow:hidden}
         return;
       }
       const raw = stripUrl(url);
-      if (!raw){
+      if (!raw || !isImageUrl(raw)){
         menuAvatarEl.style.backgroundImage = '';
         menuAvatarEl.textContent = '🐱';
         return;
       }
-      // Preload
+      // Preload để tránh chớp
       const img = new Image();
       img.onload = () => {
         menuAvatarEl.style.backgroundImage = 'url("' + raw + '")';
@@ -1079,7 +1025,7 @@ body.menu-open{overflow:hidden}
       syncUserCard();
       autoSyncTimer = setInterval(() => {
         syncUserCard();
-        if (++autoSyncCount >= 6){ stopAutoSync(); }
+        if (++autoSyncCount >= 8){ stopAutoSync(); }
       }, 300);
     }
     function stopAutoSync(){
@@ -1251,12 +1197,11 @@ body.menu-open{overflow:hidden}
           };
           try { reader.readAsDataURL(f); } catch(e){}
         }
-        // Sync lại sau khi upload xong
         [600, 1500, 2800, 4000].forEach(t => setTimeout(syncUserCard, t));
       });
     }
 
-    /* ============ 10) OBSERVER — CHỈ ELEMENT CỤ THỂ, KHÔNG BODY ============ */
+    /* ============ 10) OBSERVER (CHỈ ELEMENT CỤ THỂ) ============ */
     if (window.MutationObserver){
       const mo = new MutationObserver(() => {
         if (overlay.classList.contains('open')) syncUserCard();
@@ -1275,7 +1220,6 @@ body.menu-open{overflow:hidden}
           subtree: true
         });
       }
-      // KHÔNG observe document.body — tránh infinite loop
     }
 
     document.addEventListener('visibilitychange', () => {
@@ -1285,14 +1229,16 @@ body.menu-open{overflow:hidden}
       if (overlay.classList.contains('open')) syncUserCard();
     });
 
-    /* ============ 11) SYNC KHI LOAD XONG ============ */
+    /* ============ 11) SYNC SAU KHI LOAD ============ */
     window.addEventListener('load', () => {
       syncUserCard();
       [500, 1500, 3000].forEach(t => setTimeout(syncUserCard, t));
     });
 
+    log('init xong. realAvatar =', realAvatar, '| avatarBtn bg =',
+        realAvatar ? getComputedStyle(realAvatar).backgroundImage : 'N/A');
+
   } catch(err){
-    // Không bao giờ để lỗi menu làm crash trang
     console.error('[Menu] init error:', err);
   }
 })();
