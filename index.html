@@ -260,7 +260,15 @@
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   line-height:1.2;margin-bottom:4px;
 }
-.menu-user-sub{font-size:11px;font-weight:800;color:#c37aa0;letter-spacing:.6px;text-transform:uppercase}
+.menu-user-sub{
+  font-size:11px;font-weight:800;color:#c37aa0;
+  letter-spacing:.6px;text-transform:uppercase;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.menu-user-sub.role-admin{color:#d63384}
+.menu-user-sub.role-manager{color:#8f5cc7}
+.menu-user-sub.role-kdv{color:#e07a3c}
+.menu-user-sub.role-member{color:#c37aa0}
 .menu-user-action,
 .menu-user-logout{
   width:40px;height:40px;border-radius:50%;
@@ -742,7 +750,7 @@ body.menu-open{overflow:hidden}
       <div class="menu-user-avatar" id="menuUserAvatar">🐱</div>
       <div class="menu-user-info">
         <div class="menu-user-name" id="menuUserName">Khách</div>
-        <div class="menu-user-sub">Thành viên</div>
+        <div class="menu-user-sub" id="menuUserRole">Thành viên</div>
       </div>
       <button class="menu-user-action" id="menuAvatarBtn" type="button" aria-label="Đổi avatar">📷</button>
       <button class="menu-user-logout" id="menuLogoutBtn" type="button" aria-label="Đăng xuất">🚪</button>
@@ -802,9 +810,11 @@ body.menu-open{overflow:hidden}
 
 <script>
 /* =========================================================
-   MENU 3 GẠCH — Fix avatar đọc từ Supabase Storage
-   Nguồn: {supabase}/storage/v1/object/public/avatars/{uid}.jpg
-   + Cache qua SRank.avatar.setCache + event avatarUpdated
+   MENU 3 GẠCH — Avatar (Supabase Storage) + Role (app_metadata)
+   ---------------------------------------------------------
+   - Avatar: {supabase}/storage/v1/object/public/avatars/{uid}.jpg
+   - Cache qua SRank.avatar.setCache + event avatarUpdated
+   - Role: đọc từ app_metadata.role (JWT) → ADMIN / Quản lý / KDV / Thành viên
    ========================================================= */
 (function(){
   'use strict';
@@ -821,6 +831,7 @@ body.menu-open{overflow:hidden}
     const avatarInput  = document.getElementById('avatarFileInput');
     const menuCard     = document.getElementById('menuUserCard');
     const menuNameEl   = document.getElementById('menuUserName');
+    const menuRoleEl   = document.getElementById('menuUserRole');
     const menuAvatarEl = document.getElementById('menuUserAvatar');
     const STORAGE_KEY  = 'menuBtnPos';
     const BUST_KEY     = 'srank_avatar_bust';
@@ -891,7 +902,7 @@ body.menu-open{overflow:hidden}
       }, 150);
     });
 
-    /* ================= Cache-bust cho avatar ================= */
+    /* ================= Cache-bust avatar ================= */
     let avatarBust = 0;
     try { avatarBust = parseInt(localStorage.getItem(BUST_KEY) || '0', 10) || 0; } catch(e){}
 
@@ -913,22 +924,11 @@ body.menu-open{overflow:hidden}
           }
         } catch(e){}
       }
-      // Fallback: hardcode từ preconnect trong HTML
       return 'https://yodvujkylnvzjybvgika.supabase.co';
     }
 
-    /* ================= UID resolver ================= */
-    function getCurrentUid(){
-      // 1. SRank.Auth.getCurrentUser()
-      try {
-        const auth = window.SRank && window.SRank.Auth;
-        if (auth && typeof auth.getCurrentUser === 'function'){
-          const u = auth.getCurrentUser();
-          if (u && u.id) return u.id;
-        }
-      } catch(e){}
-
-      // 2. Quét localStorage tìm Supabase auth token
+    /* ================= Đọc auth session từ localStorage ================= */
+    function readAuthSessionFromStorage(){
       try {
         for (let i = 0; i < localStorage.length; i++){
           const k = localStorage.key(i);
@@ -937,34 +937,30 @@ body.menu-open{overflow:hidden}
           if (!v) continue;
           try {
             const j = JSON.parse(v);
-            const uid =
-              (j && j.user && j.user.id) ||
-              (j && j.currentSession && j.currentSession.user && j.currentSession.user.id) ||
-              (j && j.session && j.session.user && j.session.user.id);
-            if (uid) return uid;
+            const user =
+              (j && j.user) ||
+              (j && j.currentSession && j.currentSession.user) ||
+              (j && j.session && j.session.user);
+            if (user) return user;
           } catch(e){}
         }
       } catch(e){}
-
-      // 3. Quét tất cả key chứa "session"/"user", parse JSON tìm .user.id
-      try {
-        for (let i = 0; i < localStorage.length; i++){
-          const k = localStorage.key(i);
-          if (!k || !/session|user|auth/i.test(k)) continue;
-          const v = localStorage.getItem(k);
-          if (!v || v.charAt(0) !== '{') continue;
-          try {
-            const j = JSON.parse(v);
-            const uid = (j.user && j.user.id) || (j.currentSession && j.currentSession.user && j.currentSession.user.id);
-            if (uid && /^[0-9a-f-]{30,}$/i.test(uid)) return uid;
-          } catch(e){}
-        }
-      } catch(e){}
-
-      return '';
+      return null;
     }
 
-    /* ================= Build URL từ Supabase Storage ================= */
+    function getCurrentUid(){
+      try {
+        const auth = window.SRank && window.SRank.Auth;
+        if (auth && typeof auth.getCurrentUser === 'function'){
+          const u = auth.getCurrentUser();
+          if (u && u.id) return u.id;
+        }
+      } catch(e){}
+      const u = readAuthSessionFromStorage();
+      return (u && u.id) || '';
+    }
+
+    /* ================= Build URL avatar ================= */
     function buildAvatarUrlFromStorage(forceBust){
       const base = getSupabaseUrl();
       const uid = getCurrentUid();
@@ -973,104 +969,155 @@ body.menu-open{overflow:hidden}
       return base + '/storage/v1/object/public/avatars/' + encodeURIComponent(uid) + '.jpg' + bust;
     }
 
-    /* ================= Event avatarUpdated (chính xác nhất) ================= */
-    let lastKnownAvatarUrl = '';
+    /* ================= ROLE resolver ================= */
+    function getRoleInfo(){
+      const candidates = [];
 
-    /* ================= Cache từ SRank.avatar ================= */
+      // 1. SRank.Auth.getCurrentUser()
+      try {
+        const auth = window.SRank && window.SRank.Auth;
+        if (auth && typeof auth.getCurrentUser === 'function'){
+          const u = auth.getCurrentUser() || {};
+          if (u.app_metadata && u.app_metadata.role) candidates.push(u.app_metadata.role);
+          if (u.user_metadata && u.user_metadata.role) candidates.push(u.user_metadata.role);
+          if (u.role) candidates.push(u.role);
+        }
+      } catch(e){}
+
+      // 2. localStorage sb-*-auth-token → user.app_metadata.role
+      try {
+        const u = readAuthSessionFromStorage();
+        if (u){
+          if (u.app_metadata && u.app_metadata.role) candidates.push(u.app_metadata.role);
+          if (u.user_metadata && u.user_metadata.role) candidates.push(u.user_metadata.role);
+          if (u.role) candidates.push(u.role);
+        }
+      } catch(e){}
+
+      // 3. Quét mọi localStorage key có "role"
+      try {
+        for (let i = 0; i < localStorage.length; i++){
+          const k = localStorage.key(i);
+          if (!k) continue;
+          const v = localStorage.getItem(k);
+          if (!v) continue;
+          if (/role/i.test(k) && v.length < 40 && !/[{}]/.test(v)){
+            candidates.push(v);
+            continue;
+          }
+          if (v.charAt(0) === '{'){
+            try {
+              const j = JSON.parse(v);
+              const r =
+                j.role ||
+                (j.user && j.user.role) ||
+                (j.user && j.user.app_metadata && j.user.app_metadata.role) ||
+                (j.user && j.user.user_metadata && j.user.user_metadata.role);
+              if (r) candidates.push(r);
+            } catch(e){}
+          }
+        }
+      } catch(e){}
+
+      log('role candidates:', candidates);
+
+      // Chuẩn hoá
+      for (let i = 0; i < candidates.length; i++){
+        const r = String(candidates[i] || '').trim().toLowerCase();
+        if (!r) continue;
+        if (/admin|super|owner|quản.?trị|quan.?tri/.test(r)){
+          return { label: 'ADMIN', klass: 'role-admin' };
+        }
+        if (/manager|leader|quản.?lý|quan.?ly|mod/.test(r)){
+          return { label: 'Quản lý', klass: 'role-manager' };
+        }
+        if (/kdv|kiểm.?duyệt|kiem.?duyet|reviewer/.test(r)){
+          return { label: 'Kiểm duyệt viên', klass: 'role-kdv' };
+        }
+      }
+      return { label: 'Thành viên', klass: 'role-member' };
+    }
+
+    function applyRole(el){
+      if (!el) return;
+      const info = getRoleInfo();
+      if (el.textContent !== info.label) el.textContent = info.label;
+      el.classList.remove('role-admin','role-manager','role-kdv','role-member');
+      el.classList.add(info.klass);
+      log('role applied:', info);
+    }
+
+    /* ================= SRank.avatar cache ================= */
     function readSRankAvatarCache(name){
       if (!name || !window.SRank || !window.SRank.avatar) return '';
       const cache = window.SRank.avatar;
       try {
-        if (typeof cache.getCache === 'function'){
-          const v = cache.getCache(name);
-          if (isImageUrl(v)) return v;
-        }
-        if (typeof cache.get === 'function'){
-          const v = cache.get(name);
-          if (isImageUrl(v)) return v;
-        }
-        if (cache.cache && typeof cache.cache === 'object'){
-          const v = cache.cache[name];
-          if (isImageUrl(v)) return v;
-        }
-        if (cache.map && typeof cache.map === 'object'){
-          const v = cache.map[name];
-          if (isImageUrl(v)) return v;
-        }
+        if (typeof cache.getCache === 'function'){ const v = cache.getCache(name); if (isImageUrl(v)) return v; }
+        if (typeof cache.get === 'function'){ const v = cache.get(name); if (isImageUrl(v)) return v; }
+        if (cache.cache && typeof cache.cache === 'object'){ const v = cache.cache[name]; if (isImageUrl(v)) return v; }
+        if (cache.map && typeof cache.map === 'object'){ const v = cache.map[name]; if (isImageUrl(v)) return v; }
         if (typeof cache[name] === 'string' && isImageUrl(cache[name])) return cache[name];
       } catch(e){}
       return '';
     }
 
-    /* ================= Extract avatar URL ================= */
+    let lastKnownAvatarUrl = '';
+
     function extractAvatarUrl(){
       const userName = ((realName && realName.textContent) || '').trim();
 
-      /* Lớp 0: URL từ event avatarUpdated (có ?t=, chính xác nhất) */
       if (lastKnownAvatarUrl && isImageUrl(lastKnownAvatarUrl)){
         log('avatar nguồn: event avatarUpdated →', lastKnownAvatarUrl);
         return toCssUrl(lastKnownAvatarUrl);
       }
-
-      /* Lớp 1: SRank.avatar cache */
       const cached = readSRankAvatarCache(userName);
-      if (cached){
-        log('avatar nguồn: SRank.avatar cache →', cached);
-        return toCssUrl(cached);
-      }
+      if (cached){ log('avatar: SRank.avatar cache →', cached); return toCssUrl(cached); }
 
-      /* Lớp 2: localStorage các key phổ biến */
       const commonKeys = ['avatarUrl','avatar_url','user_avatar_url','srank_avatar_url','meow_avatar_url'];
       try {
         for (let i = 0; i < commonKeys.length; i++){
           const v = localStorage.getItem(commonKeys[i]);
-          if (isImageUrl(v)){
-            log('avatar nguồn: localStorage["' + commonKeys[i] + '"] →', v);
-            return toCssUrl(v);
-          }
+          if (isImageUrl(v)) return toCssUrl(v);
         }
         for (let i = 0; i < localStorage.length; i++){
           const k = localStorage.key(i);
           if (!k || !/avatar/i.test(k)) continue;
           const v = localStorage.getItem(k);
-          if (isImageUrl(v)){
-            log('avatar nguồn: localStorage["' + k + '"] →', v);
-            return toCssUrl(v);
-          }
+          if (isImageUrl(v)) return toCssUrl(v);
         }
       } catch(e){}
 
-      /* Lớp 3: Ghép URL trực tiếp từ Supabase Storage — đúng với avatar-upload.js */
       const storageUrl = buildAvatarUrlFromStorage();
-      if (storageUrl){
-        log('avatar nguồn: ghép URL Supabase Storage →', storageUrl);
-        return toCssUrl(storageUrl);
-      }
+      if (storageUrl){ log('avatar: Supabase Storage →', storageUrl); return toCssUrl(storageUrl); }
 
-      log('avatar nguồn: KHÔNG TÌM THẤY — fallback 🐱');
       return '';
     }
 
-    /* ================= Apply avatar (preload) ================= */
+    let currentAvatarRaw = '';
+
     function applyAvatarUrl(url){
       if (!menuAvatarEl) return;
-      if (!url){
-        menuAvatarEl.style.backgroundImage = '';
-        menuAvatarEl.textContent = '🐱';
-        return;
-      }
       const raw = stripUrl(url);
       if (!raw || !isImageUrl(raw)){
-        menuAvatarEl.style.backgroundImage = '';
-        menuAvatarEl.textContent = '🐱';
+        if (currentAvatarRaw){
+          currentAvatarRaw = '';
+          menuAvatarEl.style.backgroundImage = '';
+          menuAvatarEl.textContent = '🐱';
+        }
         return;
       }
+      if (raw === currentAvatarRaw) return;
+      currentAvatarRaw = raw;
+
       const img = new Image();
-      img.onload = function(){
+      img.onload  = function(){
+        if (currentAvatarRaw !== raw) return;
         menuAvatarEl.style.backgroundImage = 'url("' + raw + '")';
         menuAvatarEl.textContent = '';
       };
       img.onerror = function(){
+        if (currentAvatarRaw !== raw) return;
+        currentAvatarRaw = '';
         menuAvatarEl.style.backgroundImage = '';
         menuAvatarEl.textContent = '🐱';
       };
@@ -1079,9 +1126,7 @@ body.menu-open{overflow:hidden}
 
     /* ================= Sync user card ================= */
     let isSyncing = false;
-    function isLoggedIn(){
-      return !!(realLogout && !realLogout.hidden);
-    }
+    function isLoggedIn(){ return !!(realLogout && !realLogout.hidden); }
 
     function syncUserCard(){
       if (isSyncing) return;
@@ -1091,56 +1136,46 @@ body.menu-open{overflow:hidden}
         if (!isLoggedIn()){
           menuCard.hidden = true;
           lastKnownAvatarUrl = '';
+          currentAvatarRaw = '';
           return;
         }
         menuCard.hidden = false;
-
         const name = ((realName && realName.textContent) || '').trim() || 'Thành viên';
-        menuNameEl.textContent = name;
-
-        const url = extractAvatarUrl();
-        applyAvatarUrl(url);
-      } finally {
-        isSyncing = false;
-      }
+        if (menuNameEl.textContent !== name) menuNameEl.textContent = name;
+        applyRole(menuRoleEl);
+        applyAvatarUrl(extractAvatarUrl());
+      } finally { isSyncing = false; }
     }
 
-    /* ================= LẮNG NGHE event avatarUpdated ================= */
+    /* ================= Event avatarUpdated ================= */
     window.addEventListener('avatarUpdated', function(e){
       const d = (e && e.detail) || {};
       if (!d.url || !isImageUrl(d.url)) return;
-
       lastKnownAvatarUrl = d.url;
       avatarBust = Date.now();
       try { localStorage.setItem(BUST_KEY, String(avatarBust)); } catch(err){}
-
       const currentName = ((realName && realName.textContent) || '').trim();
       if (!d.name || !currentName || d.name === currentName){
         applyAvatarUrl(d.url);
-        log('avatarUpdated event →', d.url);
       }
       if (overlay.classList.contains('open')) syncUserCard();
     });
 
     /* ================= Mở / Đóng menu ================= */
-    let autoSyncTimer = null;
-    let autoSyncCount = 0;
+    let autoSyncTimer = null, autoSyncCount = 0;
     function startAutoSync(){
       stopAutoSync();
       autoSyncCount = 0;
       syncUserCard();
       autoSyncTimer = setInterval(function(){
         syncUserCard();
-        if (++autoSyncCount >= 8){ stopAutoSync(); }
+        if (++autoSyncCount >= 6){ stopAutoSync(); }
       }, 300);
     }
-    function stopAutoSync(){
-      if (autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer = null; }
-    }
+    function stopAutoSync(){ if (autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer = null; } }
 
     function applyStagger(){
-      const items = overlay.querySelectorAll('.menu-item');
-      items.forEach(function(el, i){
+      overlay.querySelectorAll('.menu-item').forEach(function(el, i){
         el.style.setProperty('--delay', (0.08 + i * 0.035).toFixed(3) + 's');
       });
     }
@@ -1171,14 +1206,10 @@ body.menu-open{overflow:hidden}
       btn.setAttribute('aria-expanded', 'false');
       document.body.classList.remove('menu-open');
     }
-    function toggleMenu(){
-      overlay.classList.contains('open') ? closeMenu() : openMenu();
-    }
+    function toggleMenu(){ overlay.classList.contains('open') ? closeMenu() : openMenu(); }
 
-    /* ================= Pointer: kéo + tap ================= */
-    let pointerId = null;
-    let startX = 0, startY = 0, startLeft = 0, startTop = 0;
-    let moved = false;
+    /* ================= Kéo + tap ================= */
+    let pointerId = null, startX = 0, startY = 0, startLeft = 0, startTop = 0, moved = false;
     const DRAG_THRESHOLD = 8;
 
     btn.addEventListener('pointerdown', function(e){
@@ -1190,11 +1221,9 @@ body.menu-open{overflow:hidden}
       startLeft = r.left; startTop = r.top;
       moved = false;
     });
-
     btn.addEventListener('pointermove', function(e){
       if (e.pointerId !== pointerId) return;
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
+      const dx = e.clientX - startX, dy = e.clientY - startY;
       if (!moved){
         if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
         moved = true;
@@ -1202,7 +1231,6 @@ body.menu-open{overflow:hidden}
       }
       applyPos(startLeft + dx, startTop + dy);
     });
-
     function endPointer(e){
       if (e.pointerId !== pointerId) return;
       try { btn.releasePointerCapture(pointerId); } catch(err){}
@@ -1212,9 +1240,7 @@ body.menu-open{overflow:hidden}
         const r = btn.getBoundingClientRect();
         applyPos(r.left, r.top);
         savePos();
-      } else {
-        toggleMenu();
-      }
+      } else { toggleMenu(); }
       moved = false;
     }
     btn.addEventListener('pointerup', endPointer);
@@ -1235,37 +1261,30 @@ body.menu-open{overflow:hidden}
       if (e.target === overlay) closeMenu();
     });
 
-    /* ================= Proxy menu item → nút gốc ================= */
+    /* ================= Proxy menu item ================= */
     overlay.querySelectorAll('.menu-item').forEach(function(item){
       item.addEventListener('click', function(ev){
-        ev.preventDefault();
-        ev.stopPropagation();
+        ev.preventDefault(); ev.stopPropagation();
         const id = item.dataset.target;
         const real = id && document.getElementById(id);
         if (!real) return;
-
         if (item.animate){
           try {
-            item.animate(
-              [
-                { transform: 'scale(1)' },
-                { transform: 'scale(1.15) rotate(-3deg)', offset: .35 },
-                { transform: 'scale(1)' }
-              ],
-              { duration: 280, easing: 'ease-out' }
-            );
+            item.animate([
+              { transform: 'scale(1)' },
+              { transform: 'scale(1.15) rotate(-3deg)', offset: .35 },
+              { transform: 'scale(1)' }
+            ], { duration: 280, easing: 'ease-out' });
           } catch(e){}
         }
         closeMenu();
         requestAnimationFrame(function(){
-          setTimeout(function(){
-            try { real.click(); } catch(e){}
-          }, 220);
+          setTimeout(function(){ try { real.click(); } catch(e){} }, 220);
         });
       });
     });
 
-    /* ================= Avatar + Logout btn trong menu ================= */
+    /* ================= Avatar + Logout btn ================= */
     const menuAvatarBtn = document.getElementById('menuAvatarBtn');
     const menuLogoutBtn = document.getElementById('menuLogoutBtn');
 
@@ -1281,27 +1300,25 @@ body.menu-open{overflow:hidden}
         closeMenu();
         if (realLogout){
           requestAnimationFrame(function(){
-            setTimeout(function(){
-              try { realLogout.click(); } catch(err){}
-            }, 220);
+            setTimeout(function(){ try { realLogout.click(); } catch(err){} }, 220);
           });
         }
       });
     }
 
-    /* ================= Preview ngay khi chọn ảnh ================= */
+    /* ================= Preview ảnh mới chọn ================= */
     if (avatarInput && menuAvatarEl){
       avatarInput.addEventListener('change', function(){
         const f = avatarInput.files && avatarInput.files[0];
         if (f && /^image\//.test(f.type)){
           const reader = new FileReader();
           reader.onload = function(){
+            currentAvatarRaw = '';
             menuAvatarEl.style.backgroundImage = 'url("' + reader.result + '")';
             menuAvatarEl.textContent = '';
           };
           try { reader.readAsDataURL(f); } catch(e){}
         }
-        // Sync sau khi avatar-upload.js resize + upload + RPC xong
         [600, 1500, 2800, 4500, 7000].forEach(function(t){ setTimeout(syncUserCard, t); });
       });
     }
@@ -1311,22 +1328,15 @@ body.menu-open{overflow:hidden}
       const mo = new MutationObserver(function(){
         if (overlay.classList.contains('open')) syncUserCard();
       });
-      if (realLogout){
-        mo.observe(realLogout, { attributes: true, attributeFilter: ['hidden', 'style', 'class'] });
-      }
-      if (realName){
-        mo.observe(realName, { childList: true, characterData: true, subtree: true });
-      }
+      if (realLogout) mo.observe(realLogout, { attributes: true, attributeFilter: ['hidden','style','class'] });
+      if (realName)   mo.observe(realName,   { childList: true, characterData: true, subtree: true });
     }
-
     document.addEventListener('visibilitychange', function(){
       if (!document.hidden && overlay.classList.contains('open')) syncUserCard();
     });
     window.addEventListener('focus', function(){
       if (overlay.classList.contains('open')) syncUserCard();
     });
-
-    /* ================= Sync sau khi load ================= */
     window.addEventListener('load', function(){
       syncUserCard();
       [500, 1500, 3000].forEach(function(t){ setTimeout(syncUserCard, t); });
@@ -1335,7 +1345,7 @@ body.menu-open{overflow:hidden}
     if (DEBUG){
       log('init. Supabase URL =', getSupabaseUrl());
       log('Current UID =', getCurrentUid() || '(không tìm thấy)');
-      log('Avatar URL =', buildAvatarUrlFromStorage() || '(không build được)');
+      log('Role =', getRoleInfo());
     }
 
   } catch(err){
