@@ -1,10 +1,9 @@
 /* =========================================================
-   SRANK AUTH UI — v8.2
+   SRANK AUTH UI — v9.0
    ---------------------------------------------------------
    - CTA hook + wave kicker + login form + logout
-   - NAV TOGGLE: nút "Thêm" đổi qua lại giữa 2 trang
-     · Trang A: Home/BXH/Checklist + Bữa trưa/Chấm công/Thêm
-     · Trang B: Admin/Giám sát/Luật KDV + Làm Ktra/Thêm
+   - NAV TOGGLE 2 page (A / B) — dùng data-attribute
+   - Auto active state cho nút Home
    ========================================================= */
 (function(){
   "use strict";
@@ -13,7 +12,7 @@
   if (!Auth) { console.error("[AUTH-UI] SRank.Auth chưa load"); return; }
 
   const $ = id => document.getElementById(id);
-  const $$ = sel => document.querySelectorAll(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
   const overlay = $("loginOverlay");
   const closeBtn = $("loginClose");
   const userInput = $("loginUsername");
@@ -32,32 +31,40 @@
   let submitting = false;
 
   /* ============================================================
-     NAV TOGGLE — 2 trang A / B
+     NAV TOGGLE 2 PAGE — data-nav-page
      ============================================================ */
   (function initNavToggle(){
-    let _page = "A";
+    const nav = document.getElementById("appTopNav");
+    if (!nav) { console.warn("[NAV] thiếu #appTopNav"); return; }
+
+    const pagesA = nav.querySelectorAll('[data-nav-page="a"]');
+    const pagesB = nav.querySelectorAll('[data-nav-page="b"]');
+    const toggles = nav.querySelectorAll('[data-nav-toggle]');
+    const toggleLabels = nav.querySelectorAll('[data-toggle-label]');
+
+    let _page = "a";
 
     function setPage(p){
+      if (p === _page) return;
       _page = p;
-      const pagesA = document.querySelectorAll('#bottomNav .bn-page-a');
-      const pagesB = document.querySelectorAll('#bottomNav .bn-page-b');
-      if (p === "A"){
-        pagesA.forEach(function(el){ el.classList.add("active"); });
-        pagesB.forEach(function(el){ el.classList.remove("active"); });
-      } else {
-        pagesA.forEach(function(el){ el.classList.remove("active"); });
-        pagesB.forEach(function(el){ el.classList.add("active"); });
-      }
-      if (typeof window.syncQuickTools === "function") window.syncQuickTools();
+
+      pagesA.forEach(function(el){ el.classList.toggle("is-active", p === "a"); });
+      pagesB.forEach(function(el){ el.classList.toggle("is-active", p === "b"); });
+
+      // Đổi nhãn toggle button
+      toggleLabels.forEach(function(el){
+        el.textContent = (p === "a") ? "Thêm" : "Đóng";
+      });
+      toggles.forEach(function(el){
+        el.classList.toggle("is-open", p === "b");
+        const icon = el.querySelector(".appNav-icon");
+        if (icon) icon.textContent = (p === "a") ? "☰" : "✕";
+        el.setAttribute("aria-label", (p === "a") ? "Mở công cụ khác" : "Đóng công cụ");
+      });
     }
 
-    function toggle(){
-      setPage(_page === "A" ? "B" : "A");
-    }
+    function toggle(){ setPage(_page === "a" ? "b" : "a"); }
 
-    /* Bind tất cả nút có class .more-toggle */
-    const toggles = $$(".more-toggle");
-    if (!toggles.length) { console.warn("[NAV] không thấy .more-toggle"); }
     toggles.forEach(function(btn){
       btn.addEventListener("click", function(e){
         e.preventDefault();
@@ -66,14 +73,12 @@
       });
     });
 
-    /* Auto về trang A khi user bấm tool trong trang B */
-    const pagesB = $$("#bottomNav .bn-page-b");
-    pagesB.forEach(function(page){
-      page.addEventListener("click", function(e){
+    // Auto về page A khi bấm tool trong page B
+    pagesB.forEach(function(pageEl){
+      pageEl.addEventListener("click", function(e){
         const btn = e.target.closest("button[id]");
         if (!btn) return;
-        /* Đợi 1 nhịp để tool kịp mở, rồi quay về A */
-        setTimeout(function(){ setPage("A"); }, 80);
+        setTimeout(function(){ setPage("a"); }, 80);
       }, true);
     });
 
@@ -84,10 +89,10 @@
       current: function(){ return _page; }
     };
 
-    console.log("[NAV] toggle ready ✓");
+    console.log("[NAV] ready ✓");
   })();
 
-  /* ============ CSS WAVE ============ */
+  /* ============ WAVE KICKER CSS ============ */
   function injectBaseCss(){
     if (document.getElementById('bossKickerCss')) return;
     const s = document.createElement('style');
@@ -233,7 +238,7 @@
   window.__getKickerRender = getKickerRender;
   window.__getKickerText = getKickerText;
 
-  /* ============ CTA CLICK ============ */
+  /* ============ CTA HANDLER ============ */
   function miniBurst(){
     const space = document.getElementById("space");
     if (!space) return;
@@ -415,5 +420,5 @@
 
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v8.2 — CTA + wave + nav toggle");
+  console.log("[AUTH-UI] ready ✓ v9.0 — CTA + wave + nav toggle");
 })();
