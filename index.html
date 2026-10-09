@@ -814,10 +814,12 @@ body.menu-open{overflow:hidden}
 /* =========================================================
    MENU 3 GẠCH — Avatar (Supabase Storage) + Role (app_metadata)
    ---------------------------------------------------------
-   - Avatar: {supabase}/storage/v1/object/public/avatars/{uid}.jpg
-   - Cache qua SRank.avatar.setCache + event avatarUpdated
-   - Role: đọc từ app_metadata.role (JWT) → ADMIN / Quản lý / KDV / Thành viên
-   - Nút Admin trong menu CHỈ hiện với role = admin
+   v2.0 fixes:
+   - applyStagger() chạy TRƯỚC khi mở overlay (stagger chạy đúng)
+   - Bỏ syncUserCard() thừa (startAutoSync đã gọi rồi)
+   - Đóng menu 340ms (transition là 320ms) — tránh giật
+   - isLoginShowing() bỏ check opacity — tránh chặn nhầm khi login đang fade
+   - Xoá listener pointerup capture vô tác dụng
    ========================================================= */
 (function(){
   'use strict';
@@ -1045,7 +1047,6 @@ body.menu-open{overflow:hidden}
       el.classList.remove('role-admin','role-manager','role-kdv','role-member');
       el.classList.add(info.klass);
 
-      /* Ẩn/hiện nút Admin: chỉ admin mới thấy */
       if (adminItemEl){
         const isAdmin = (info.klass === 'role-admin');
         if (adminItemEl.hidden !== !isAdmin){
@@ -1197,28 +1198,31 @@ body.menu-open{overflow:hidden}
       });
     }
 
+    /* Chỉ kiểm tra display — overlay login ẩn hoàn toàn khi không có class .show.
+       Bỏ check opacity để tránh chặn nhầm khi overlay đang fade out. */
     function isLoginShowing(){
       if (!loginOv) return false;
       if (loginOv.classList.contains('show')) return true;
       try {
         const cs = getComputedStyle(loginOv);
-        return cs.display !== 'none' && cs.visibility !== 'hidden' && cs.opacity !== '0';
+        return cs.display !== 'none' && cs.visibility !== 'hidden';
       } catch(e){ return false; }
     }
 
     function openMenu(){
       if (isLoginShowing()) return;
 
-      /* MỞ MENU TRƯỚC — đảm bảo luôn mở dù syncUserCard có lỗi */
+      /* 1. Set stagger delay TRƯỚC khi thêm .open — transition mới có delay đúng */
+      try { applyStagger(); } catch(e){ console.error('[Menu] stagger:', e); }
+
+      /* 2. Mở overlay */
       overlay.classList.add('open');
       overlay.setAttribute('aria-hidden', 'false');
       btn.setAttribute('aria-expanded', 'true');
       document.body.classList.add('menu-open');
 
-      /* Rồi mới đồng bộ — mỗi bước bọc try riêng */
-      try { syncUserCard(); }   catch(e){ console.error('[Menu] syncUserCard:', e); }
-      try { startAutoSync(); }  catch(e){ console.error('[Menu] autoSync:', e); }
-      try { applyStagger(); }   catch(e){ console.error('[Menu] stagger:', e); }
+      /* 3. Đồng bộ — startAutoSync() đã gọi syncUserCard() đầu tiên */
+      try { startAutoSync(); } catch(e){ console.error('[Menu] autoSync:', e); }
     }
     function closeMenu(){
       stopAutoSync();
@@ -1269,9 +1273,6 @@ body.menu-open{overflow:hidden}
     btn.addEventListener('click', function(e){
       e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
     }, true);
-    btn.addEventListener('pointerup', function(e){
-      e.stopPropagation();
-    }, true);
     btn.addEventListener('pointercancel', function(e){
       if (e.pointerId !== pointerId) return;
       try { btn.releasePointerCapture(pointerId); } catch(err){}
@@ -1306,8 +1307,9 @@ body.menu-open{overflow:hidden}
           } catch(e){}
         }
         closeMenu();
+        /* Đợi overlay fade xong (transition 320ms) rồi mới click nút gốc */
         requestAnimationFrame(function(){
-          setTimeout(function(){ try { real.click(); } catch(e){} }, 220);
+          setTimeout(function(){ try { real.click(); } catch(e){} }, 340);
         });
       });
     });
@@ -1326,11 +1328,9 @@ body.menu-open{overflow:hidden}
       menuLogoutBtn.addEventListener('click', function(e){
         e.preventDefault(); e.stopPropagation();
         closeMenu();
-        if (realLogout){
-          requestAnimationFrame(function(){
-            setTimeout(function(){ try { realLogout.click(); } catch(err){} }, 220);
-          });
-        }
+        requestAnimationFrame(function(){
+          setTimeout(function(){ try { realLogout.click(); } catch(err){} }, 340);
+        });
       });
     }
 
