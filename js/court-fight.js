@@ -123,7 +123,7 @@
     /* ── Tạo hand: xuất phát từ tâm Vua, offset nhẹ về cùng phía đích ── */
     const hand = document.createElement('div');
     hand.className = 'cf-hand';
-    hand.textContent = '🖐️';
+    hand.textContent = '❤️‍🔥';
     hand.style.left = (tCenterAbs.x + flyDir * 8) + 'px';
     hand.style.top  = tCenterAbs.y + 'px';
     document.body.appendChild(hand);
