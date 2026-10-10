@@ -47,7 +47,16 @@ html body #question .throne-medal { position: absolute !important; bottom: -6px 
 html body #question .throne-name { font-size: 14px !important; font-weight: 950 !important; color: #7a5410 !important; max-width: 170px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; text-align: center !important; }
 html body #question .throne-time { font-size: 11px !important; font-weight: 900 !important; color: #c8891a !important; font-variant-numeric: tabular-nums !important; }
 html body #question .court-advisors { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12px !important; padding: 0 !important; margin: 0 !important; width: 100% !important; }
+html body #question .court-advisors .advisor:only-child { grid-column: 1 / -1 !important; justify-self: center !important; }
 html body #question .advisor { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 3px !important; min-width: 0 !important; }
+html body #question .advisor-crown { font-size: 16px !important; line-height: 1 !important; display: inline-block !important; text-align: center !important; margin-bottom: 2px !important; }
+html body #question .advisor.rank-2 .advisor-crown { animation: advisorSunSpin 12s linear infinite !important; transform-origin: center center !important; }
+html body #question .advisor.rank-3 .advisor-crown { animation: advisorMoonFloat 3.5s ease-in-out infinite !important; }
+@keyframes advisorSunSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes advisorMoonFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) {
+  html body #question .advisor-crown { animation: none !important; }
+}
 html body #question .advisor-avatar { position: relative !important; width: 52px !important; height: 52px !important; border-radius: 50% !important; overflow: hidden !important; background: linear-gradient(135deg,#f5f7fa,#e8ecef) !important; display: flex !important; align-items: center !important; justify-content: center !important; }
 html body #question .advisor.rank-2 .advisor-avatar { border: 2.5px solid #c8d0d8 !important; box-shadow: 0 0 0 3px rgba(200,208,216,.3), 0 6px 16px -6px rgba(150,160,170,.5) !important; }
 html body #question .advisor.rank-3 .advisor-avatar { border: 2.5px solid #d18a4a !important; box-shadow: 0 0 0 3px rgba(217,154,92,.3), 0 6px 16px -6px rgba(200,130,70,.55) !important; }
@@ -56,7 +65,6 @@ html body #question .advisor-avatar-fallback { font-size: 20px !important; font-
 html body #question .advisor-avatar-fallback.show { display: block !important; }
 html body #question .advisor.rank-2 .advisor-avatar-fallback { color: #4a5460 !important; }
 html body #question .advisor.rank-3 .advisor-avatar-fallback { color: #7a4a20 !important; }
-html body #question .advisor-medal { position: absolute !important; bottom: -4px !important; right: -4px !important; font-size: 15px !important; filter: drop-shadow(0 1px 3px rgba(0,0,0,.15)) !important; }
 html body #question .advisor-name { font-size: 11px !important; font-weight: 900 !important; max-width: 100% !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; text-align: center !important; }
 html body #question .advisor.rank-2 .advisor-name { color: #4a5460 !important; }
 html body #question .advisor.rank-3 .advisor-name { color: #7a4a20 !important; }
@@ -248,6 +256,7 @@ html body #question .landing-lock-note { display: block !important; margin-top: 
 <button id="logoutBtn" type="button" aria-label="Đăng xuất" hidden><span aria-hidden="true">🚪</span><span class="lb-name" id="logoutName"></span></button>
 
 <button id="birthdayBtn" type="button" aria-label="Inb vùng kín" hidden style="display:none">💌</button>
+<button id="displayNameBtn" type="button" hidden style="display:none"></button>
 
 <div id="loginOverlay" aria-hidden="true">
   <section id="loginPanel" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
@@ -355,6 +364,7 @@ html body #question .landing-lock-note { display: block !important; margin-top: 
 <script src="js/toast.js" defer></script>
 <script src="js/admin-session.js" defer></script>
 <script src="js/store.js" defer></script>
+<script src="js/display-name.js" defer></script>
 <script src="js/scheduler.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-adapter.js" defer></script>
@@ -475,6 +485,7 @@ html body #question .landing-lock-note { display: block !important; margin-top: 
         <button class="menu-item" data-target="lunchBtn" type="button"><span class="menu-item-icon">🍜</span><span class="menu-item-label">Bữa trưa</span></button>
         <button class="menu-item" data-target="attendanceBtn" type="button"><span class="menu-item-icon">🗓</span><span class="menu-item-label">Chấm công</span></button>
         <button class="menu-item" data-target="birthdayProxyBtn" type="button"><span class="menu-item-icon">💌</span><span class="menu-item-label">Inb vùng kín</span><span class="bd-menu-badge" id="bdMenuBadge" hidden></span></button>
+        <button class="menu-item" data-target="displayNameBtn" type="button"><span class="menu-item-icon">🎴</span><span class="menu-item-label">Đổi tên hiển thị</span></button>
       </div>
     </div>
 
