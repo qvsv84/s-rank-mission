@@ -16,6 +16,122 @@
 <meta name="application-name" content="Đảo Mèo">
 <meta name="description" content="Đảo Mèo — Daily Mission, Checklist, Chấm công & BXH TOP">
 
+<!-- ═══════════════════════════════════════════════════════════
+     AUTO-UPDATE — phải chạy ĐẦU TIÊN trong <head>
+     Kiểm tra version.json → nếu khác localStorage → clear cache → reload
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  "use strict";
+  var LS_KEY = '__srank_ver';
+  var fetchedVer = null;
+
+  function getStored() {
+    try { return localStorage.getItem(LS_KEY) || ''; } catch(_) { return ''; }
+  }
+  function setStored(v) {
+    try { localStorage.setItem(LS_KEY, v); } catch(_) {}
+  }
+
+  async function fetchVersion() {
+    try {
+      var res = await fetch('/version.json?_=' + Date.now(), {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      if (!res.ok) return null;
+      var data = await res.json();
+      return data && data.v ? String(data.v) : null;
+    } catch(_) { return null; }
+  }
+
+  async function clearAll() {
+    var tasks = [];
+
+    if ('serviceWorker' in navigator) {
+      tasks.push(
+        navigator.serviceWorker.getRegistrations()
+          .then(function(regs){
+            return Promise.all(regs.map(function(r){ return r.unregister(); }));
+          })
+          .catch(function(){})
+      );
+    }
+
+    if ('caches' in window) {
+      tasks.push(
+        caches.keys()
+          .then(function(keys){
+            return Promise.all(keys.map(function(k){ return caches.delete(k); }));
+          })
+          .catch(function(){})
+      );
+    }
+
+    await Promise.all(tasks);
+  }
+
+  function hardReload() {
+    /* Thêm ?v= vào URL để bypass browser HTTP cache */
+    var url = new URL(location.href);
+    url.searchParams.set('_v', Date.now());
+    location.replace(url.toString());
+  }
+
+  (async function(){
+    var stored = getStored();
+    var remote = await fetchVersion();
+
+    /* Không fetch được version.json → bỏ qua (offline mode) */
+    if (!remote) return;
+
+    /* Lần đầu vào — lưu version, không reload */
+    if (!stored) {
+      setStored(remote);
+      return;
+    }
+
+    /* Version khớp → không cần làm gì */
+    if (stored === remote) return;
+
+    /* Version khác → clear cache + reload */
+    console.log('[AutoUpdate] version mới:', remote, '(cũ:', stored + ')');
+    await clearAll();
+    setStored(remote);
+    console.log('[AutoUpdate] đã clear, đang reload...');
+    hardReload();
+  })();
+
+  /* Kiểm tra lại mỗi 5 phút (user để tab mở lâu) */
+  setInterval(async function(){
+    if (document.hidden) return;
+    var remote = await fetchVersion();
+    if (!remote) return;
+    var stored = getStored();
+    if (stored && stored !== remote) {
+      console.log('[AutoUpdate] phát hiện version mới (interval):', remote);
+      await clearAll();
+      setStored(remote);
+      hardReload();
+    }
+  }, 5 * 60 * 1000);
+
+  /* Kiểm tra khi user quay lại tab */
+  document.addEventListener('visibilitychange', async function(){
+    if (document.hidden) return;
+    var remote = await fetchVersion();
+    if (!remote) return;
+    var stored = getStored();
+    if (stored && stored !== remote) {
+      console.log('[AutoUpdate] phát hiện version mới (focus):', remote);
+      await clearAll();
+      setStored(remote);
+      hardReload();
+    }
+  });
+})();
+</script>
+
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="preconnect" href="https://yodvujkylnvzjybvgika.supabase.co" crossorigin>
