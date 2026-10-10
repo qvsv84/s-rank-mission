@@ -16,10 +16,6 @@
 <meta name="application-name" content="Đảo Mèo">
 <meta name="description" content="Đảo Mèo — Daily Mission, Checklist, Chấm công & BXH TOP">
 
-<!-- ═══════════════════════════════════════════════════════════
-     AUTO-UPDATE — phải chạy ĐẦU TIÊN trong <head>
-     Kiểm tra version.json → nếu khác localStorage → clear cache → reload
-     ═══════════════════════════════════════════════════════════ -->
 <script>
 (function(){
   "use strict";
@@ -72,7 +68,6 @@
   }
 
   function hardReload() {
-    /* Thêm ?v= vào URL để bypass browser HTTP cache */
     var url = new URL(location.href);
     url.searchParams.set('_v', Date.now());
     location.replace(url.toString());
@@ -82,19 +77,15 @@
     var stored = getStored();
     var remote = await fetchVersion();
 
-    /* Không fetch được version.json → bỏ qua (offline mode) */
     if (!remote) return;
 
-    /* Lần đầu vào — lưu version, không reload */
     if (!stored) {
       setStored(remote);
       return;
     }
 
-    /* Version khớp → không cần làm gì */
     if (stored === remote) return;
 
-    /* Version khác → clear cache + reload */
     console.log('[AutoUpdate] version mới:', remote, '(cũ:', stored + ')');
     await clearAll();
     setStored(remote);
@@ -102,7 +93,6 @@
     hardReload();
   })();
 
-  /* Kiểm tra lại mỗi 5 phút (user để tab mở lâu) */
   setInterval(async function(){
     if (document.hidden) return;
     var remote = await fetchVersion();
@@ -116,7 +106,6 @@
     }
   }, 5 * 60 * 1000);
 
-  /* Kiểm tra khi user quay lại tab */
   document.addEventListener('visibilitychange', async function(){
     if (document.hidden) return;
     var remote = await fetchVersion();
@@ -145,15 +134,23 @@
 
 <style id="landingCourtForce">
 html, body { overflow-y: auto !important; overflow-x: hidden !important; height: auto !important; min-height: 100% !important; }
-html body #space { overflow: visible !important; height: auto !important; min-height: 100vh !important; padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px)) !important; }
+html body #space {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  padding-top: max(28px, env(safe-area-inset-top, 0px)) !important;
+  padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px)) !important;
+}
 html body #homeStack, html body #questionWrap { overflow: visible !important; height: auto !important; max-height: none !important; }
 html body #question, html body #question.play, html body #question.checklist-locked-home, html body #question.hero-wheel-open { background: transparent !important; background-color: transparent !important; background-image: none !important; border-color: transparent !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; max-height: none !important; height: auto !important; overflow: visible !important; }
 html body #question::before, html body #question::after { display: none !important; content: none !important; background: none !important; border: 0 !important; box-shadow: none !important; }
 html body #question.landing-court-active { max-height: none !important; height: auto !important; overflow: visible !important; }
-html body #question .landing-top3.landing-court, html body #question .landing-court { display: flex !important; flex-direction: column !important; align-items: stretch !important; justify-content: flex-start !important; flex-wrap: nowrap !important; gap: 12px !important; padding: 0 !important; margin: 0 0 18px !important; width: 100% !important; max-width: 100% !important; min-width: 0 !important; height: auto !important; max-height: none !important; overflow: visible !important; position: static !important; background: none !important; border: 0 !important; box-shadow: none !important; box-sizing: border-box !important; }
+html body #question .landing-kicker { display: block !important; margin: 0 0 14px !important; padding: 0 !important; min-height: 16px !important; line-height: 1.2 !important; }
+html body #question .landing-title { margin: 0 0 10px !important; }
+html body #question .landing-top3.landing-court, html body #question .landing-court { display: flex !important; flex-direction: column !important; align-items: stretch !important; justify-content: flex-start !important; flex-wrap: nowrap !important; gap: 8px !important; padding: 0 !important; margin: 0 0 12px !important; width: 100% !important; max-width: 100% !important; min-width: 0 !important; height: auto !important; max-height: none !important; overflow: visible !important; position: static !important; background: none !important; border: 0 !important; box-shadow: none !important; box-sizing: border-box !important; }
 html body #question .landing-court::before, html body #question .landing-court::after { display: none !important; content: none !important; }
 html body #question .landing-court > * { flex: 0 0 auto !important; width: 100% !important; max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; }
-html body #question .court-throne { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; gap: 4px !important; width: 100% !important; margin: 0 !important; }
+html body #question .court-throne { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; gap: 4px !important; width: 100% !important; margin: 0 0 4px !important; }
 html body #question .throne-crown { font-size: 22px !important; line-height: 1 !important; margin-bottom: 2px !important; }
 html body #question .throne-avatar { position: relative !important; width: 68px !important; height: 68px !important; border-radius: 50% !important; overflow: hidden !important; border: 3px solid #ffb800 !important; background: linear-gradient(135deg,#fffbe9,#fff0c4) !important; box-shadow: 0 0 0 4px rgba(255,200,0,.25), 0 8px 24px -8px rgba(255,140,0,.55) !important; display: flex !important; align-items: center !important; justify-content: center !important; }
 html body #question .throne-avatar img { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
@@ -162,7 +159,7 @@ html body #question .throne-avatar-fallback.show { display: block !important; }
 html body #question .throne-medal { position: absolute !important; bottom: -6px !important; right: -6px !important; font-size: 20px !important; filter: drop-shadow(0 2px 4px rgba(0,0,0,.2)) !important; }
 html body #question .throne-name { font-size: 14px !important; font-weight: 950 !important; color: #7a5410 !important; max-width: 170px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; text-align: center !important; }
 html body #question .throne-time { font-size: 11px !important; font-weight: 900 !important; color: #c8891a !important; font-variant-numeric: tabular-nums !important; }
-html body #question .court-advisors { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12px !important; padding: 0 !important; margin: 0 !important; width: 100% !important; }
+html body #question .court-advisors { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12px !important; padding: 0 !important; margin: 0 0 8px !important; width: 100% !important; }
 html body #question .court-advisors .advisor:only-child { grid-column: 1 / -1 !important; justify-self: center !important; }
 html body #question .advisor { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 3px !important; min-width: 0 !important; }
 html body #question .advisor-crown { font-size: 16px !important; line-height: 1 !important; display: inline-block !important; text-align: center !important; margin-bottom: 2px !important; }
@@ -185,7 +182,7 @@ html body #question .advisor-name { font-size: 11px !important; font-weight: 900
 html body #question .advisor.rank-2 .advisor-name { color: #4a5460 !important; }
 html body #question .advisor.rank-3 .advisor-name { color: #7a4a20 !important; }
 html body #question .advisor-time { font-size: 10px !important; font-weight: 900 !important; color: #6b8f78 !important; font-variant-numeric: tabular-nums !important; }
-html body #question .court-courtiers-label { display: flex !important; align-items: center !important; gap: 10px !important; font-size: 10px !important; font-weight: 900 !important; color: #8fa89a !important; letter-spacing: .2em !important; text-transform: uppercase !important; margin: 4px 0 8px !important; padding: 0 !important; width: 100% !important; }
+html body #question .court-courtiers-label { display: flex !important; align-items: center !important; gap: 10px !important; font-size: 10px !important; font-weight: 900 !important; color: #8fa89a !important; letter-spacing: .2em !important; text-transform: uppercase !important; margin: 4px 0 6px !important; padding: 0 !important; width: 100% !important; }
 html body #question .court-courtiers-label::before, html body #question .court-courtiers-label::after { content: '' !important; flex: 1 !important; height: 1px !important; background: linear-gradient(90deg, transparent, rgba(200,220,205,.85), transparent) !important; }
 html body #question .court-courtiers-label span { padding: 0 4px !important; white-space: nowrap !important; }
 html body #question .court-courtiers { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 6px !important; width: 100% !important; }
@@ -198,8 +195,8 @@ html body #question .courtier-avatar-fallback.show { display: block !important; 
 html body #question .courtier-info { min-width: 0 !important; flex: 1 !important; display: flex !important; flex-direction: column !important; gap: 0 !important; }
 html body #question .courtier-name { font-size: 10.5px !important; font-weight: 900 !important; color: #234a32 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; line-height: 1.15 !important; }
 html body #question .courtier-time { font-size: 9px !important; font-weight: 800 !important; color: #6b8f78 !important; font-variant-numeric: tabular-nums !important; line-height: 1.15 !important; }
-html body #question .landing-cta { display: inline-block !important; margin-top: 14px !important; margin-bottom: 8px !important; }
-html body #question .landing-lock-note { display: block !important; margin-top: 8px !important; margin-bottom: 8px !important; }
+html body #question .landing-cta { display: inline-block !important; margin-top: 12px !important; margin-bottom: 6px !important; }
+html body #question .landing-lock-note { display: block !important; margin-top: 6px !important; margin-bottom: 6px !important; }
 @media (min-width: 480px) {
   html body #question .throne-avatar { width: 80px !important; height: 80px !important; }
   html body #question .throne-name { font-size: 15px !important; }
@@ -545,6 +542,25 @@ html body #question .landing-lock-note { display: block !important; margin-top: 
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
+})();
+</script>
+
+<script>
+(function(){
+  "use strict";
+  var done = false;
+  function scrollTopOnce() {
+    if (done) return;
+    if (window.scrollY > 4) {
+      window.scrollTo(0, 0);
+    }
+    done = true;
+  }
+  window.addEventListener('load', function(){
+    setTimeout(scrollTopOnce, 150);
+    setTimeout(scrollTopOnce, 600);
+    setTimeout(scrollTopOnce, 1500);
+  });
 })();
 </script>
 
