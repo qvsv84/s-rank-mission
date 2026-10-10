@@ -150,10 +150,13 @@ html body #question .landing-title { margin: 0 0 10px !important; }
 html body #question .landing-top3.landing-court, html body #question .landing-court { display: flex !important; flex-direction: column !important; align-items: stretch !important; justify-content: flex-start !important; flex-wrap: nowrap !important; gap: 8px !important; padding: 0 !important; margin: 0 0 12px !important; width: 100% !important; max-width: 100% !important; min-width: 0 !important; height: auto !important; max-height: none !important; overflow: visible !important; position: static !important; background: none !important; border: 0 !important; box-shadow: none !important; box-sizing: border-box !important; }
 html body #question .landing-court::before, html body #question .landing-court::after { display: none !important; content: none !important; }
 html body #question .landing-court > * { flex: 0 0 auto !important; width: 100% !important; max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; }
-html body #question .court-podium { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 6px !important; align-items: end !important; width: 100% !important; margin: 0 0 12px !important; }
+html body #question { padding-left: 0 !important; padding-right: 0 !important; }
+html body #question .landing-court { padding-left: 0 !important; padding-right: 0 !important; }
+html body #question .landing-top3 { padding-left: 0 !important; padding-right: 0 !important; }
+html body #question .court-podium { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 6px !important; align-items: end !important; width: 100% !important; max-width: 100% !important; margin-left: auto !important; margin-right: auto !important; margin-bottom: 12px !important; padding: 0 !important; box-sizing: border-box !important; }
 html body #question .podium-slot { display: flex !important; flex-direction: column !important; justify-content: flex-end !important; align-items: center !important; min-width: 0 !important; width: 100% !important; }
 html body #question .podium-slot-1 { padding-bottom: 25px !important; }
-html body #question .court-throne { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; gap: 4px !important; width: 100% !important; margin: 0 0 4px !important; }
+html body #question .court-throne { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; gap: 4px !important; width: 100% !important; margin: 0 !important; }
 html body #question .throne-crown { font-size: 22px !important; line-height: 1 !important; margin-bottom: 2px !important; }
 html body #question .throne-avatar { position: relative !important; width: 68px !important; height: 68px !important; border-radius: 50% !important; overflow: hidden !important; border: 3px solid #ffb800 !important; background: linear-gradient(135deg,#fffbe9,#fff0c4) !important; box-shadow: 0 0 0 4px rgba(255,200,0,.25), 0 8px 24px -8px rgba(255,140,0,.55) !important; display: flex !important; align-items: center !important; justify-content: center !important; }
 html body #question .throne-avatar img { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
@@ -162,7 +165,7 @@ html body #question .throne-avatar-fallback.show { display: block !important; }
 html body #question .throne-medal { position: absolute !important; bottom: -6px !important; right: -6px !important; font-size: 20px !important; filter: drop-shadow(0 2px 4px rgba(0,0,0,.2)) !important; }
 html body #question .throne-name { font-size: 14px !important; font-weight: 950 !important; color: #7a5410 !important; max-width: 170px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; text-align: center !important; }
 html body #question .throne-time { font-size: 11px !important; font-weight: 900 !important; color: #c8891a !important; font-variant-numeric: tabular-nums !important; }
-html body #question .court-advisors { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12px !important; padding: 0 !important; margin: 0 0 8px !important; width: 100% !important; }
+html body #question .court-advisors { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12px !important; padding: 0 !important; margin: 0 !important; width: 100% !important; }
 html body #question .court-advisors .advisor:only-child { grid-column: 1 / -1 !important; justify-self: center !important; }
 html body #question .advisor { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 3px !important; min-width: 0 !important; }
 html body #question .advisor-crown { font-size: 16px !important; line-height: 1 !important; display: inline-block !important; text-align: center !important; margin-bottom: 2px !important; }
@@ -500,7 +503,7 @@ html body #question .landing-lock-note { display: block !important; margin-top: 
 <script src="js/birthday-chat.js?v=2.0.0" defer></script>
 <script src="js/kick-signal.js" defer></script>
 <script src="js/menu.js" defer></script>
-<script src="js/court-fight.js" defer></script>
+<!-- court-fight.js đã bỏ -->
 
 <script>
 (function () {
