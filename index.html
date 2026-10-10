@@ -87,6 +87,13 @@ html body #question .landing-lock-note { display: block !important; margin-top: 
   html body #question .courtier-time { font-size: 10px !important; }
 }
 </style>
+
+<style id="hideBdFabForce">
+#bdFab { display: none !important; visibility: hidden !important; pointer-events: none !important; opacity: 0 !important; position: fixed !important; left: -9999px !important; top: -9999px !important; z-index: -1 !important; width: 1px !important; height: 1px !important; overflow: hidden !important; }
+.menu-item { position: relative !important; }
+.bd-menu-badge { position: absolute !important; top: -4px !important; right: -4px !important; min-width: 20px !important; height: 20px !important; padding: 0 6px !important; border-radius: 10px !important; background: linear-gradient(135deg, #ff4d94, #b1005c) !important; color: #fff !important; font-size: 11px !important; font-weight: 800 !important; line-height: 1 !important; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: 0 2px 6px rgba(0,0,0,.3), 0 0 0 2px rgba(255,255,255,.25) !important; pointer-events: none !important; z-index: 3 !important; }
+.bd-menu-badge[hidden] { display: none !important; }
+</style>
 </head>
 <body>
 <noscript>
@@ -364,9 +371,55 @@ html body #question .landing-lock-note { display: block !important; margin-top: 
 <script src="js/secret-mail.js" defer></script>
 <script src="js/realtime.js" defer></script>
 <script src="js/bxh-top.js" defer></script>
-<script src="js/birthday-chat.js?v=1.9" defer></script>
+<script src="js/birthday-chat.js?v=2.0.0" defer></script>
 <script src="js/kick-signal.js" defer></script>
 <script src="js/menu.js" defer></script>
+
+<script>
+(function () {
+  "use strict";
+  function ensureProxy() {
+    let proxy = document.getElementById('birthdayProxyBtn');
+    if (!proxy) {
+      proxy = document.createElement('button');
+      proxy.id = 'birthdayProxyBtn';
+      proxy.type = 'button';
+      proxy.hidden = true;
+      proxy.style.display = 'none';
+      proxy.addEventListener('click', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        const t1 = document.getElementById('birthdayBtn');
+        const t2 = document.getElementById('bdFab');
+        const target = (t1 && !t1.hidden) ? t1 : (t2 || t1);
+        if (target) { try { target.click(); } catch (_) {} }
+      });
+      document.body.appendChild(proxy);
+    }
+    return proxy;
+  }
+  function mirrorBadge() {
+    const fabBadge = document.getElementById('bdFabBadge');
+    const menuBadge = document.getElementById('bdMenuBadge');
+    if (!fabBadge || !menuBadge) return;
+    const isShow = fabBadge.classList.contains('show') && String(fabBadge.textContent || '').trim();
+    if (isShow) {
+      const txt = String(fabBadge.textContent).trim();
+      if (menuBadge.textContent !== txt) menuBadge.textContent = txt;
+      if (menuBadge.hidden) menuBadge.hidden = false;
+    } else {
+      if (!menuBadge.hidden) menuBadge.hidden = true;
+    }
+  }
+  function boot() {
+    ensureProxy();
+    setInterval(mirrorBadge, 800);
+    [500, 1500, 3000, 6000].forEach(function (t) { setTimeout(mirrorBadge, t); });
+    console.log('[BirthdayProxy] ready ✓');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
 
 <button id="menuToggle" type="button" aria-label="Mở menu" aria-expanded="false">
   <span></span><span></span><span></span>
@@ -421,7 +474,7 @@ html body #question .landing-lock-note { display: block !important; margin-top: 
         <button class="menu-item" data-target="kdvRulesBtn" type="button"><span class="menu-item-icon">📜</span><span class="menu-item-label">Luật KDV</span></button>
         <button class="menu-item" data-target="lunchBtn" type="button"><span class="menu-item-icon">🍜</span><span class="menu-item-label">Bữa trưa</span></button>
         <button class="menu-item" data-target="attendanceBtn" type="button"><span class="menu-item-icon">🗓</span><span class="menu-item-label">Chấm công</span></button>
-        <button class="menu-item" data-target="birthdayBtn" type="button"><span class="menu-item-icon">💌</span><span class="menu-item-label">Inb vùng kín</span><span class="bd-menu-badge" id="bdMenuBadge" hidden></span></button>
+        <button class="menu-item" data-target="birthdayProxyBtn" type="button"><span class="menu-item-icon">💌</span><span class="menu-item-label">Inb vùng kín</span><span class="bd-menu-badge" id="bdMenuBadge" hidden></span></button>
       </div>
     </div>
 
