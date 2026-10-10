@@ -24,7 +24,7 @@
   if (window.__courtFightLoaded) return;
   window.__courtFightLoaded = true;
 
-  const LOOP_MS = 30000;   // nghỉ 30s giữa mỗi lần
+  const LOOP_MS = 8000;   // nghỉ 30s giữa mỗi lần
   const POLL_MS = 1500;
 
   /* ── Timing (ms) ── */
