@@ -1,30 +1,29 @@
 /* =========================================================
-   COURT FIGHT — v1.0
+   COURT FIGHT — v2.0
    ---------------------------------------------------------
-   Hiệu ứng: Vua 👑 (top 1) vung bàn tay 🖐️ đánh
-     → Top 2 (☀️) bay sang trái + khóc "hu hu 😭"
-     → Top 3 (🌙) bay sang phải + khóc "hu hu 😭"
+   Hiệu ứng: Vua 👑 (top 1) vung 2 bàn tay 🖐️
+     → Bay từ TÂM avatar Vua tới TÂM avatar Top 2 và Top 3
+     → Trúng → Top 2/3 rung nhẹ → bay ra 2 bên khoảng ngắn
+     → Kèm "hu hu 😭" bay lên
 
-   SPEC:
-     - Trigger: khi landing court render ra (tự động)
-     - Loop: mỗi 30s
-     - Điều kiện: có ít nhất 1 advisor (top 2 hoặc top 3)
-     - Giới hạn: chạy tối đa 5 lần TỔNG CỘNG, sau đó tự tắt
-       (đếm qua localStorage, không reset khi F5)
-     - Không âm thanh — chỉ visual
-     - Layout: advisor bay ra rồi quay về vị trí cũ
+   SPEC v2.0:
+     - Trigger: tự động khi landing court render
+     - Loop 30s, tối đa 5 lần (localStorage, không reset khi F5)
+     - Không âm thanh
+     - Layout: advisor bay ra ~45px rồi về (không phá layout)
 
-   Timeline (~2.8s):
-     0.0 – 1.0s  : chuẩn bị (hand fade in + advisor đứng yên)
-     1.0 – 1.2s  : rung lắc nhẹ (impact)
-     1.2 – 1.5s  : advisor bay ra xa + khóc hiện
-     1.5 – 1.9s  : ở xa, khóc bay lên
-     1.9 – 2.5s  : advisor bay về
-     2.5 – 2.8s  : khóc mờ dần, reset
+   Timeline (~2.7s):
+     0.00 – 0.15s : 2 bàn tay xuất hiện tại tâm Vua
+     0.15 – 0.75s : Bay tới tâm Top 2/3 (600ms)
+     0.75         : Trúng → bàn tay biến mất
+     0.75 – 1.15s : Top 2/3 rung nhẹ (4 lần)
+     1.15 – 1.60s : Bay ra 2 bên ±45px
+     1.60 – 2.10s : Ở đó (khóc bay lên)
+     2.10 – 2.60s : Bay về vị trí cũ
+     2.60 – 2.70s : Reset
 
    YÊU CẦU:
-     - Load SAU js/main.js (vì cần #question đã render)
-     - HTML phải có <script src="js/court-fight.js" defer></script>
+     - Load SAU js/main.js (đã render landing court)
    ========================================================= */
 (function(){
   "use strict";
@@ -34,7 +33,11 @@
   const STORAGE_KEY = 'srank_court_fight_count_v1';
   const MAX_RUNS = 5;
   const LOOP_MS = 30000;
-  const ANIM_MS = 2800;
+  const ANIM_MS = 2700;
+  const HAND_FLY_MS = 700;
+  const ADV_ANIM_MS = 1900;
+  const FLY_DIST = 45;      // khoảng cách bay ra (px)
+  const FLY_UP = 15;        // bay lên (px)
 
   let _lastTrigger = 0;
 
@@ -53,91 +56,31 @@
     const s = document.createElement('style');
     s.id = 'courtFightStyles';
     s.textContent = `
-      /* Container của advisor — cần position relative để hand/cry định vị */
-      #question .court-advisors { position: relative !important; z-index: 5; }
+      /* Container cần relative + visible để hand bay không bị cắt */
+      #question .landing-court { position: relative !important; overflow: visible !important; }
+      #question .court-advisors { position: relative !important; overflow: visible !important; }
+      #question .court-advisors .advisor { position: relative !important; overflow: visible !important; }
       #question .court-advisors.is-fighting { z-index: 60 !important; }
-      #question .court-advisors .advisor { position: relative !important; }
 
       /* ── BÀN TAY 🖐️ ── */
-      #question .advisor-hand {
+      .cf-hand {
         position: absolute;
-        top: 22%;
-        font-size: 36px;
+        font-size: 34px;
         line-height: 1;
         pointer-events: none;
         opacity: 0;
-        z-index: 30;
-        filter: drop-shadow(0 4px 8px rgba(0,0,0,.35));
+        z-index: 200;
         will-change: transform, opacity;
-      }
-      /* Top 2: bàn tay xuất phát bên PHẢI advisor (phía vua) → bay vào */
-      #question .advisor.rank-2 .advisor-hand { right: -55px; }
-      /* Top 3: bàn tay xuất phát bên TRÁI advisor (phía vua) → bay vào */
-      #question .advisor.rank-3 .advisor-hand { left: -55px; }
-
-      #question .court-advisors.is-fighting .advisor.rank-2 .advisor-hand {
-        animation: courtHandRight 2.8s cubic-bezier(.4,0,.2,1) both;
-      }
-      #question .court-advisors.is-fighting .advisor.rank-3 .advisor-hand {
-        animation: courtHandLeft 2.8s cubic-bezier(.4,0,.2,1) both;
-      }
-
-      @keyframes courtHandRight {
-        0%   { opacity: 0; transform: translate(50px, 0) rotate(-45deg) scale(.4); }
-        18%  { opacity: 1; transform: translate(0, 0) rotate(-15deg) scale(1); }
-        32%  { opacity: 1; transform: translate(-10px, 0) rotate(20deg) scale(1.15); }
-        44%  { opacity: 1; transform: translate(0, 0) rotate(-8deg) scale(1); }
-        58%  { opacity: 0; transform: translate(30px, 0) rotate(-40deg) scale(.7); }
-        100% { opacity: 0; transform: translate(50px, 0) rotate(-45deg) scale(.4); }
-      }
-      @keyframes courtHandLeft {
-        0%   { opacity: 0; transform: translate(-50px, 0) rotate(45deg) scale(.4); }
-        18%  { opacity: 1; transform: translate(0, 0) rotate(15deg) scale(1); }
-        32%  { opacity: 1; transform: translate(10px, 0) rotate(-20deg) scale(1.15); }
-        44%  { opacity: 1; transform: translate(0, 0) rotate(8deg) scale(1); }
-        58%  { opacity: 0; transform: translate(-30px, 0) rotate(40deg) scale(.7); }
-        100% { opacity: 0; transform: translate(-50px, 0) rotate(45deg) scale(.4); }
-      }
-
-      /* ── ADVISOR BAY ── */
-      #question .court-advisors.is-fighting .advisor.rank-2 {
-        animation: courtFlyLeft 2.8s cubic-bezier(.4,0,.2,1) both;
-        will-change: transform;
-      }
-      #question .court-advisors.is-fighting .advisor.rank-3 {
-        animation: courtFlyRight 2.8s cubic-bezier(.4,0,.2,1) both;
-        will-change: transform;
-      }
-
-      @keyframes courtFlyLeft {
-        0%, 34%   { transform: translate(0, 0) rotate(0); }
-        37%       { transform: translate(-6px, 0) rotate(-4deg); }
-        40%       { transform: translate(6px, 0) rotate(4deg); }
-        43%       { transform: translate(-6px, 0) rotate(-4deg); }
-        46%       { transform: translate(6px, 0) rotate(4deg); }
-        49%       { transform: translate(-4px, 0) rotate(-2deg); }
-        56%       { transform: translate(-150px, -30px) rotate(-22deg); }
-        72%       { transform: translate(-150px, -30px) rotate(-22deg); }
-        90%, 100% { transform: translate(0, 0) rotate(0); }
-      }
-      @keyframes courtFlyRight {
-        0%, 34%   { transform: translate(0, 0) rotate(0); }
-        37%       { transform: translate(6px, 0) rotate(4deg); }
-        40%       { transform: translate(-6px, 0) rotate(-4deg); }
-        43%       { transform: translate(6px, 0) rotate(4deg); }
-        46%       { transform: translate(-6px, 0) rotate(-4deg); }
-        49%       { transform: translate(4px, 0) rotate(2deg); }
-        56%       { transform: translate(150px, -30px) rotate(22deg); }
-        72%       { transform: translate(150px, -30px) rotate(22deg); }
-        90%, 100% { transform: translate(0, 0) rotate(0); }
+        filter: drop-shadow(0 4px 10px rgba(0,0,0,.35));
+        transform: translate(-50%, -50%);
       }
 
       /* ── KHÓC "hu hu 😭" ── */
-      #question .advisor-cry {
+      .cf-cry {
         position: absolute;
         top: -30px;
         left: 50%;
-        transform: translateX(-50%);
+        transform: translate(-50%, 0);
         font-size: 11px;
         font-weight: 900;
         color: #7a1a3a;
@@ -148,11 +91,11 @@
         white-space: nowrap;
         opacity: 0;
         pointer-events: none;
-        z-index: 35;
+        z-index: 210;
         line-height: 1.2;
         font-family: var(--font, ui-rounded, system-ui);
       }
-      #question .advisor-cry::after {
+      .cf-cry::after {
         content: '';
         position: absolute;
         bottom: -5px;
@@ -164,22 +107,9 @@
         border-right: 6px solid transparent;
         border-top: 6px solid #fff;
       }
-      #question .court-advisors.is-fighting .advisor-cry {
-        animation: courtCryFloat 2.8s ease-in-out both;
-      }
-      @keyframes courtCryFloat {
-        0%, 42%  { opacity: 0; transform: translate(-50%, 0) scale(.7); }
-        52%      { opacity: 1; transform: translate(-50%, -22px) scale(1); }
-        85%      { opacity: 1; transform: translate(-50%, -60px) scale(1); }
-        100%     { opacity: 0; transform: translate(-50%, -80px) scale(.85); }
-      }
 
       @media (prefers-reduced-motion: reduce) {
-        #question .court-advisors.is-fighting .advisor,
-        #question .court-advisors.is-fighting .advisor-hand,
-        #question .court-advisors.is-fighting .advisor-cry {
-          animation: none !important;
-        }
+        .cf-hand, .cf-cry { display: none !important; }
       }
     `;
     document.head.appendChild(s);
@@ -190,46 +120,140 @@
     return document.querySelector('#question .landing-court .court-advisors');
   }
 
-  function hasAdvisors(court) {
-    if (!court) return false;
-    return court.querySelectorAll('.advisor').length > 0;
+  function findThrone() {
+    return document.querySelector('#question .landing-court .throne-avatar')
+        || document.querySelector('#question .landing-court .court-throne');
   }
 
-  function ensurePieces(court) {
-    court.querySelectorAll('.advisor').forEach(function(adv){
-      if (!adv.querySelector('.advisor-hand')) {
-        const hand = document.createElement('div');
-        hand.className = 'advisor-hand';
-        hand.textContent = '🖐️';
-        hand.setAttribute('aria-hidden', 'true');
-        adv.appendChild(hand);
-      }
-      if (!adv.querySelector('.advisor-cry')) {
-        const cry = document.createElement('div');
-        cry.className = 'advisor-cry';
-        cry.textContent = 'hu hu 😭';
-        cry.setAttribute('aria-hidden', 'true');
-        adv.appendChild(cry);
-      }
+  function hasAdvisors(court) {
+    return court && court.querySelectorAll('.advisor').length > 0;
+  }
+
+  /* ---------- get center of element relative to container ---------- */
+  function centerOf(el, container) {
+    const r = el.getBoundingClientRect();
+    const c = container.getBoundingClientRect();
+    return {
+      x: r.left + r.width / 2 - c.left,
+      y: r.top + r.height / 2 - c.top
+    };
+  }
+
+  /* ---------- main fight ---------- */
+  function doFight() {
+    const court = findCourt();
+    const throne = findThrone();
+    if (!court || !throne || !hasAdvisors(court)) return false;
+    if (court.classList.contains('is-fighting')) return false;
+
+    court.classList.add('is-fighting');
+
+    const tCenter = centerOf(throne, court);
+    const advisors = court.querySelectorAll('.advisor');
+
+    // Mỗi advisor có 1 bàn tay bay tới
+    advisors.forEach(function(adv, idx) {
+      const avatarEl = adv.querySelector('.advisor-avatar') || adv;
+      const aCenter = centerOf(avatarEl, court);
+      const dx = aCenter.x - tCenter.x;
+      const dy = aCenter.y - tCenter.y;
+      const isRank3 = adv.classList.contains('rank-3');
+      const dir = isRank3 ? 1 : -1;
+
+      // ── 1. Tạo bàn tay tại tâm Vua ──
+      const hand = document.createElement('div');
+      hand.className = 'cf-hand';
+      hand.textContent = '🖐️';
+      // Offset nhẹ 2 bên để 2 bàn tay không chồng khít lên nhau
+      hand.style.left = (tCenter.x + dir * 8) + 'px';
+      hand.style.top  = tCenter.y + 'px';
+      // Tay trái mirror để hướng đúng
+      if (!isRank3) hand.style.transform = 'translate(-50%, -50%) scaleX(-1)';
+      court.appendChild(hand);
+
+      // ── 2. Animate bàn tay bay từ tâm Vua → tâm advisor ──
+      const baseTf = isRank3 ? 'translate(-50%,-50%)' : 'translate(-50%,-50%) scaleX(-1)';
+      hand.animate([
+        { transform: baseTf + ' translate(0,0) scale(0.4)',              opacity: 0, offset: 0 },
+        { transform: baseTf + ' translate(0,0) scale(1)',                opacity: 1, offset: 0.18 },
+        { transform: baseTf + ` translate(${dx}px,${dy}px) scale(1.15)`, opacity: 1, offset: 0.85 },
+        { transform: baseTf + ` translate(${dx}px,${dy}px) scale(0.85)`, opacity: 0, offset: 1 }
+      ], {
+        duration: HAND_FLY_MS,
+        easing: 'cubic-bezier(.4, 0, .2, 1)',
+        fill: 'forwards'
+      });
+
+      // ── 3. Sau khi trúng (700ms) → advisor rung + bay + khóc ──
+      setTimeout(function() {
+        hand.remove();
+
+        // Advisor: rung nhẹ 4 lần (200ms) → bay ra ngắn → về
+        adv.animate([
+          { transform: 'translate(0, 0)',                              offset: 0.00 },
+          { transform: `translate(${dir * 5}px, 0)`,                   offset: 0.04 },
+          { transform: `translate(${dir * -5}px, 0)`,                  offset: 0.08 },
+          { transform: `translate(${dir * 5}px, 0)`,                   offset: 0.12 },
+          { transform: `translate(${dir * -5}px, 0)`,                  offset: 0.16 },
+          { transform: `translate(${dir * 3}px, 0)`,                   offset: 0.20 },
+          { transform: 'translate(0, 0)',                              offset: 0.24 },
+          { transform: `translate(${dir * FLY_DIST}px, -${FLY_UP}px)`, offset: 0.42 },
+          { transform: `translate(${dir * FLY_DIST}px, -${FLY_UP}px)`, offset: 0.72 },
+          { transform: `translate(${dir * FLY_DIST * 0.5}px, -${FLY_UP * 0.5}px)`, offset: 0.86 },
+          { transform: 'translate(0, 0)',                              offset: 1.00 }
+        ], {
+          duration: ADV_ANIM_MS,
+          easing: 'ease-out',
+          fill: 'forwards'
+        });
+
+        // Khóc: hiện ra + bay lên + mờ dần
+        let cry = adv.querySelector('.cf-cry');
+        if (!cry) {
+          cry = document.createElement('div');
+          cry.className = 'cf-cry';
+          cry.textContent = 'hu hu 😭';
+          adv.appendChild(cry);
+        }
+        cry.animate([
+          { transform: 'translate(-50%, 0)',      opacity: 0, offset: 0.00 },
+          { transform: 'translate(-50%, -12px)',  opacity: 1, offset: 0.10 },
+          { transform: 'translate(-50%, -30px)',  opacity: 1, offset: 0.50 },
+          { transform: 'translate(-50%, -55px)',  opacity: 1, offset: 0.80 },
+          { transform: 'translate(-50%, -75px)',  opacity: 0, offset: 1.00 }
+        ], {
+          duration: ADV_ANIM_MS,
+          easing: 'ease-in-out',
+          fill: 'forwards'
+        });
+
+        // Dọn cry sau khi xong
+        setTimeout(function() {
+          if (cry && cry.parentNode) cry.remove();
+        }, ADV_ANIM_MS + 100);
+
+      }, HAND_FLY_MS);
     });
+
+    // Reset class sau khi xong toàn bộ
+    setTimeout(function() {
+      court.classList.remove('is-fighting');
+    }, ANIM_MS);
+
+    return true;
   }
 
   /* ---------- trigger ---------- */
   function tryTrigger() {
     if (getCount() >= MAX_RUNS) return false;
-
     const now = Date.now();
     if (now - _lastTrigger < LOOP_MS) return false;
 
     const court = findCourt();
     if (!court || !hasAdvisors(court)) return false;
-    if (court.classList.contains('is-fighting')) return false;
 
-    ensurePieces(court);
-    court.classList.add('is-fighting');
-    setTimeout(function(){
-      court.classList.remove('is-fighting');
-    }, ANIM_MS);
+    const ok = doFight();
+    if (!ok) return false;
 
     _lastTrigger = now;
     const newCount = getCount() + 1;
@@ -241,25 +265,20 @@
   /* ---------- observe ---------- */
   function startObserver() {
     const target = document.getElementById('question');
-    if (!target) {
-      setTimeout(startObserver, 1000);
-      return;
-    }
+    if (!target) { setTimeout(startObserver, 1000); return; }
 
     let _debounce = null;
-    const obs = new MutationObserver(function(){
+    const obs = new MutationObserver(function() {
       if (_debounce) clearTimeout(_debounce);
-      _debounce = setTimeout(function(){
+      _debounce = setTimeout(function() {
         _debounce = null;
         tryTrigger();
       }, 800);
     });
     obs.observe(target, { childList: true, subtree: true });
 
-    // Lần đầu — chờ render ổn định
     setTimeout(tryTrigger, 2000);
     setTimeout(tryTrigger, 6000);
-
     console.log('[CourtFight] observer ready ✓');
   }
 
@@ -272,7 +291,7 @@
     }
     injectCSS();
     startObserver();
-    console.log('[CourtFight] ready ✓ (đã chạy', used, '/', MAX_RUNS, ')');
+    console.log('[CourtFight] v2.0 ready ✓ (đã chạy', used, '/', MAX_RUNS, ')');
   }
 
   if (document.readyState === 'loading') {
