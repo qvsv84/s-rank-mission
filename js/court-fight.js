@@ -78,13 +78,13 @@
         position: fixed !important;
         left: 0;
         top: 0;
-        font-size: 34px;
+        font-size: 30px;
         line-height: 1;
         pointer-events: none;
         opacity: 0;
-        z-index: 99999;
+        z-index: 2;
         will-change: transform, opacity;
-        filter: drop-shadow(0 4px 10px rgba(0,0,0,.35));
+        filter: drop-shadow(0 3px 6px rgba(0,0,0,.3));
         transform-origin: 0 0;
       }
       @media (prefers-reduced-motion: reduce) {
@@ -131,11 +131,13 @@
     /* 2 tay cùng hướng — KHÔNG flip scaleX */
     const baseTf = 'translate(-50%, -50%)';
 
-    /* ── Bay tới tâm advisor ── */
+    /* ── Bay tới tâm advisor — fade in/out nhanh để không đè UI khác ── */
     await animateDone(hand, [
       { transform: baseTf + ' translate(0,0) scale(0.5)',              opacity: 0 },
-      { transform: baseTf + ' translate(0,0) scale(1)',                opacity: 1, offset: 0.15 },
-      { transform: baseTf + ` translate(${dx}px,${dy}px) scale(1.15)`, opacity: 1, offset: 0.9 },
+      { transform: baseTf + ' translate(0,0) scale(1)',                opacity: 0.9, offset: 0.08 },
+      { transform: baseTf + ` translate(${dx*0.35}px,${dy*0.35}px) scale(1.1)`, opacity: 0.95, offset: 0.35 },
+      { transform: baseTf + ` translate(${dx*0.75}px,${dy*0.75}px) scale(1.15)`, opacity: 0.95, offset: 0.7 },
+      { transform: baseTf + ` translate(${dx}px,${dy}px) scale(1.15)`, opacity: 1, offset: 0.88 },
       { transform: baseTf + ` translate(${dx}px,${dy}px) scale(0.9)`,  opacity: 0 }
     ], { duration: T_HAND_FLY, easing: 'cubic-bezier(.4, 0, .2, 1)', fill: 'forwards' });
 
