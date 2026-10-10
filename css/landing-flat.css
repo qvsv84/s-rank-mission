@@ -1,0 +1,111 @@
+/* =========================================================
+   LANDING FLAT — v1.0
+   ---------------------------------------------------------
+   Mục đích:
+     Loại bỏ "khung card" của #question (background trắng,
+     viền, shadow, blur) NHƯNG giữ nguyên:
+       • padding (để layout con không dịch)
+       • border-width (để padding-box không co)
+       • border-radius
+       • mọi thành phần con (kicker, title, podium, CTA)
+       • mọi animation (.play, .hero-wheel-open, ...)
+       • mọi state modifier (.checklist-locked-home, ...)
+
+   CƠ CHẾ:
+     Chỉ set visual về "vô hình" bằng:
+       - background: transparent
+       - border-color: transparent
+       - box-shadow: none
+       - backdrop-filter: none
+     Không set "border: 0" hay "padding: 0" → không đổi layout.
+
+   REVERT:
+     Xoá 1 dòng <link> trong index.html → về gốc ngay.
+
+   LOAD SAU css/main.css để override.
+   ========================================================= */
+
+/* ═══════════════════════════════════════════════════════════
+   1. #question — bỏ visual khung, giữ nguyên box model
+   ═══════════════════════════════════════════════════════════ */
+#question {
+  /* Nền — vô hình */
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+
+  /* Viền — giữ độ dày (để padding-box không dịch),
+     nhưng màu trong suốt (để không thấy viền) */
+  border-color: transparent !important;
+
+  /* Bóng — tắt hoàn toàn */
+  box-shadow: none !important;
+
+  /* Blur — tắt (không có nền thì blur cũng vô nghĩa + tốn GPU) */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+
+  /* KHÔNG đụng: padding, border-width, border-radius,
+     margin, width, height, position, transform, transition */
+}
+
+/* Tắt pseudo-element nếu main.css dùng ::before/::after
+   để vẽ khung gradient / glow / decorative border */
+#question::before,
+#question::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  opacity: 0 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   2. Wrapper ngoài — nếu main.css có style khung
+   ═══════════════════════════════════════════════════════════ */
+#questionWrap,
+#homeStack {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+#questionWrap::before,
+#questionWrap::after,
+#homeStack::before,
+#homeStack::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   3. State modifier — đảm bảo không vô tình bật lại khung
+   ═══════════════════════════════════════════════════════════ */
+
+/* Khi checklist bị khoá, main.css có thể đổi màu nền #question
+   → ép transparent lại để không bị "trồi" khung */
+#question.checklist-locked-home {
+  background: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Khi .play animation chạy, main.css có thể set lại background
+   bằng keyframes → ép không có nền */
+#question.play {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4. (AN TOÀN) Landing-top3-empty — giữ nguyên nhưng bỏ khung
+      nếu bạn muốn nó hoà nền. Nếu muốn giữ khung dashes cũ
+      thì xoá block này.
+   ═══════════════════════════════════════════════════════════ */
+/* #question .landing-top3-empty {
+  background: transparent !important;
+  border-color: rgba(200, 220, 205, 0.5) !important;
+} */
