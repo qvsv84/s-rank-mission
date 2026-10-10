@@ -30,11 +30,7 @@
 <style id="landingCourtForce">
 /* ═══════════════════════════════════════════════════════════
    LANDING COURT — INLINE FORCE v3
-   Fix v3: bỏ max-height trên #question, cho page scroll tự nhiên
-   + compact layout khi nhiều courtiers
    ═══════════════════════════════════════════════════════════ */
-
-/* ── 0. Cho page scroll tự nhiên ── */
 html, body {
   overflow-y: auto !important;
   overflow-x: hidden !important;
@@ -53,8 +49,6 @@ html body #questionWrap {
   height: auto !important;
   max-height: none !important;
 }
-
-/* ── 1. Làm phẳng #question — bỏ khung card ── */
 html body #question,
 html body #question.play,
 html body #question.checklist-locked-home,
@@ -83,8 +77,6 @@ html body #question.landing-court-active {
   height: auto !important;
   overflow: visible !important;
 }
-
-/* ── 2. Container court ── */
 html body #question .landing-top3.landing-court,
 html body #question .landing-court {
   display: flex !important;
@@ -119,8 +111,6 @@ html body #question .landing-court > * {
   min-width: 0 !important;
   box-sizing: border-box !important;
 }
-
-/* ── 3. Vua (Top 1) ── */
 html body #question .court-throne {
   display: flex !important;
   flex-direction: column !important;
@@ -186,8 +176,6 @@ html body #question .throne-time {
   color: #c8891a !important;
   font-variant-numeric: tabular-nums !important;
 }
-
-/* ── 4. 2 Quan (Top 2-3) ── */
 html body #question .court-advisors {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
@@ -262,8 +250,6 @@ html body #question .advisor-time {
   color: #6b8f78 !important;
   font-variant-numeric: tabular-nums !important;
 }
-
-/* ── 5. Label "QUẦN THẦN" ── */
 html body #question .court-courtiers-label {
   display: flex !important;
   align-items: center !important;
@@ -288,8 +274,6 @@ html body #question .court-courtiers-label span {
   padding: 0 4px !important;
   white-space: nowrap !important;
 }
-
-/* ── 6. Quần thần — 2 cột dọc ── */
 html body #question .court-courtiers {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
@@ -362,8 +346,6 @@ html body #question .courtier-time {
   font-variant-numeric: tabular-nums !important;
   line-height: 1.15 !important;
 }
-
-/* ── 7. CTA nằm cuối court, không bị che bởi bottom nav ── */
 html body #question .landing-cta {
   display: inline-block !important;
   margin-top: 14px !important;
@@ -374,8 +356,6 @@ html body #question .landing-lock-note {
   margin-top: 8px !important;
   margin-bottom: 8px !important;
 }
-
-/* ── 8. Tablet+ ── */
 @media (min-width: 480px) {
   html body #question .throne-avatar { width: 80px !important; height: 80px !important; }
   html body #question .throne-name { font-size: 15px !important; }
@@ -543,6 +523,9 @@ html body #question .landing-lock-note {
   <span class="lb-name" id="logoutName"></span>
 </button>
 
+<!-- ✅ Button ẩn — được menu.js proxy click khi user bấm menu item "Inb vùng kín" -->
+<button id="birthdayBtn" type="button" aria-label="Inb vùng kín" hidden style="display:none">💌</button>
+
 <div id="loginOverlay" aria-hidden="true">
   <section id="loginPanel" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
     <div id="loginHead">
@@ -683,8 +666,8 @@ html body #question .landing-lock-note {
     <div class="menu-float"       style="top:42%;left:3%;animation-delay:1.4s">💗</div>
     <div class="menu-float small" style="top:58%;right:5%;animation-delay:.3s">🎀</div>
     <div class="menu-float"       style="bottom:14%;left:12%;animation-delay:1s">🐾</div>
-    <div class="menu-float small" style="bottom:22%;right:14%;animation-delay:1.7s">✨</div>
-    <div class="menu-float small" style="top:78%;left:8%;animation-delay:.5s">🌸</div>
+    <div class="menuóng-float small" style="bottom:22%;right menu:14">%;animation-delay:1.7s✕">✨</div>
+    <</div class="menu-float small" style="top:78%;left:8%;animation-delay:.5s">🌸</div>
     <div class="menu-float small" style="top:30%;right:20%;animation-delay:2s">💕</div>
 
     <header class="menu-header">
@@ -695,7 +678,7 @@ html body #question .landing-lock-note {
           <div class="menu-brand-sub">Daily Mission</div>
         </div>
       </div>
-      <button class="menu-close" type="button" aria-label="Đóng menu">✕</button>
+      <button class="menu-close" type="button" aria-label="Đbutton>
     </header>
 
     <div id="menuUserCard" class="menu-user-card" hidden>
@@ -725,6 +708,8 @@ html body #question .landing-lock-note {
         <button class="menu-item" data-target="kdvRulesBtn" type="button"><span class="menu-item-icon">📜</span><span class="menu-item-label">Luật KDV</span></button>
         <button class="menu-item" data-target="lunchBtn" type="button"><span class="menu-item-icon">🍜</span><span class="menu-item-label">Bữa trưa</span></button>
         <button class="menu-item" data-target="attendanceBtn" type="button"><span class="menu-item-icon">🗓</span><span class="menu-item-label">Chấm công</span></button>
+        <!-- ✅ MỚI: Inb vùng kín (thay FAB "Chúc mừng SN") -->
+        <button class="menu-item" data-target="birthdayBtn" type="button"><span class="menu-item-icon">💌</span><span class="menu-item-label">Inb vùng kín</span><span class="bd-menu-badge" id="bdMenuBadge" hidden></span></button>
       </div>
     </div>
 
