@@ -43,7 +43,6 @@
 
   async function clearAll() {
     var tasks = [];
-
     if ('serviceWorker' in navigator) {
       tasks.push(
         navigator.serviceWorker.getRegistrations()
@@ -53,7 +52,6 @@
           .catch(function(){})
       );
     }
-
     if ('caches' in window) {
       tasks.push(
         caches.keys()
@@ -63,7 +61,6 @@
           .catch(function(){})
       );
     }
-
     await Promise.all(tasks);
   }
 
@@ -76,16 +73,9 @@
   (async function(){
     var stored = getStored();
     var remote = await fetchVersion();
-
     if (!remote) return;
-
-    if (!stored) {
-      setStored(remote);
-      return;
-    }
-
+    if (!stored) { setStored(remote); return; }
     if (stored === remote) return;
-
     console.log('[AutoUpdate] version mới:', remote, '(cũ:', stored + ')');
     await clearAll();
     setStored(remote);
@@ -134,13 +124,7 @@
 
 <style id="landingCourtForce">
 html, body { overflow-y: auto !important; overflow-x: hidden !important; height: auto !important; min-height: 100% !important; }
-html body #space {
-  overflow: visible !important;
-  height: auto !important;
-  min-height: 100vh !important;
-  padding-top: max(28px, env(safe-area-inset-top, 0px)) !important;
-  padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px)) !important;
-}
+html body #space { overflow: visible !important; height: auto !important; min-height: 100vh !important; padding-top: max(28px, env(safe-area-inset-top, 0px)) !important; padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px)) !important; }
 html body #homeStack, html body #questionWrap { overflow: visible !important; height: auto !important; max-height: none !important; }
 html body #question, html body #question.play, html body #question.checklist-locked-home, html body #question.hero-wheel-open { background: transparent !important; background-color: transparent !important; background-image: none !important; border-color: transparent !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; max-height: none !important; height: auto !important; overflow: visible !important; }
 html body #question::before, html body #question::after { display: none !important; content: none !important; background: none !important; border: 0 !important; box-shadow: none !important; }
@@ -150,12 +134,12 @@ html body #question .landing-title { margin: 0 0 10px !important; }
 html body #question .landing-top3.landing-court, html body #question .landing-court { display: flex !important; flex-direction: column !important; align-items: stretch !important; justify-content: flex-start !important; flex-wrap: nowrap !important; gap: 8px !important; padding: 0 !important; margin: 0 0 12px !important; width: 100% !important; max-width: 100% !important; min-width: 0 !important; height: auto !important; max-height: none !important; overflow: visible !important; position: static !important; background: none !important; border: 0 !important; box-shadow: none !important; box-sizing: border-box !important; }
 html body #question .landing-court::before, html body #question .landing-court::after { display: none !important; content: none !important; }
 html body #question .landing-court > * { flex: 0 0 auto !important; width: 100% !important; max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; }
-html body #question { padding-left: 0 !important; padding-right: 0 !important; }
-html body #question .landing-court { padding-left: 0 !important; padding-right: 0 !important; }
-html body #question .landing-top3 { padding-left: 0 !important; padding-right: 0 !important; }
-html body #question .court-podium { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 6px !important; align-items: end !important; width: 100% !important; max-width: 100% !important; margin-left: auto !important; margin-right: auto !important; margin-bottom: 12px !important; padding: 0 !important; box-sizing: border-box !important; }
-html body #question .podium-slot { display: flex !important; flex-direction: column !important; justify-content: flex-end !important; align-items: center !important; min-width: 0 !important; width: 100% !important; }
+
+/* ═══ PODIUM — FLEX 3 CỘT CHIA ĐỀU ═══ */
+html body #question .court-podium { display: flex !important; flex-direction: row !important; justify-content: center !important; align-items: flex-end !important; gap: 6px !important; width: 100% !important; max-width: 100% !important; margin: 0 0 12px 0 !important; padding: 0 !important; box-sizing: border-box !important; }
+html body #question .podium-slot { flex: 1 1 0 !important; min-width: 0 !important; max-width: 33.333% !important; width: auto !important; display: flex !important; flex-direction: column !important; justify-content: flex-end !important; align-items: center !important; box-sizing: border-box !important; }
 html body #question .podium-slot-1 { padding-bottom: 25px !important; }
+
 html body #question .court-throne { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; gap: 4px !important; width: 100% !important; margin: 0 !important; }
 html body #question .throne-crown { font-size: 22px !important; line-height: 1 !important; margin-bottom: 2px !important; }
 html body #question .throne-avatar { position: relative !important; width: 68px !important; height: 68px !important; border-radius: 50% !important; overflow: hidden !important; border: 3px solid #ffb800 !important; background: linear-gradient(135deg,#fffbe9,#fff0c4) !important; box-shadow: 0 0 0 4px rgba(255,200,0,.25), 0 8px 24px -8px rgba(255,140,0,.55) !important; display: flex !important; align-items: center !important; justify-content: center !important; }
@@ -503,7 +487,6 @@ html body #question .landing-lock-note { display: block !important; margin-top: 
 <script src="js/birthday-chat.js?v=2.0.0" defer></script>
 <script src="js/kick-signal.js" defer></script>
 <script src="js/menu.js" defer></script>
-<!-- court-fight.js đã bỏ -->
 
 <script>
 (function () {
