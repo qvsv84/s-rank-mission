@@ -25,8 +25,336 @@
 <link rel="preload" href="css/main.css" as="style">
 <link rel="preload" href="js/main.js" as="script">
 <link rel="stylesheet" href="css/main.css">
-<link rel="stylesheet" href="css/landing-court.css">
 <link rel="stylesheet" href="css/menu.css">
+
+<style id="landingCourtForce">
+/* ═══════════════════════════════════════════════════════════
+   LANDING COURT — INLINE FORCE v2
+   Inline để bypass SW cache + thắng specificity #question
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── 1. Làm phẳng #question — bỏ khung card ── */
+html body #question,
+html body #question.play,
+html body #question.checklist-locked-home,
+html body #question.hero-wheel-open {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html body #question::before,
+html body #question::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ── 2. Container court — ép column ── */
+html body #question .landing-top3.landing-court,
+html body #question .landing-court {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  gap: 12px !important;
+  padding: 0 !important;
+  margin: 0 0 18px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  position: static !important;
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+}
+html body #question .landing-court::before,
+html body #question .landing-court::after {
+  display: none !important;
+  content: none !important;
+}
+html body #question .landing-court > * {
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* ── 3. Vua (Top 1) ── */
+html body #question .court-throne {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+html body #question .throne-crown {
+  font-size: 22px !important;
+  line-height: 1 !important;
+  margin-bottom: 2px !important;
+}
+html body #question .throne-avatar {
+  position: relative !important;
+  width: 68px !important;
+  height: 68px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  border: 3px solid #ffb800 !important;
+  background: linear-gradient(135deg,#fffbe9,#fff0c4) !important;
+  box-shadow: 0 0 0 4px rgba(255,200,0,.25), 0 8px 24px -8px rgba(255,140,0,.55) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+html body #question .throne-avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+html body #question .throne-avatar-fallback {
+  font-size: 26px !important;
+  font-weight: 950 !important;
+  color: #7a5410 !important;
+  display: none !important;
+}
+html body #question .throne-avatar-fallback.show {
+  display: block !important;
+}
+html body #question .throne-medal {
+  position: absolute !important;
+  bottom: -6px !important;
+  right: -6px !important;
+  font-size: 20px !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.2)) !important;
+}
+html body #question .throne-name {
+  font-size: 14px !important;
+  font-weight: 950 !important;
+  color: #7a5410 !important;
+  max-width: 170px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+html body #question .throne-time {
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  color: #c8891a !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* ── 4. 2 Quan (Top 2-3) ── */
+html body #question .court-advisors {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
+html body #question .advisor {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+}
+html body #question .advisor-avatar {
+  position: relative !important;
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  background: linear-gradient(135deg,#f5f7fa,#e8ecef) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+html body #question .advisor.rank-2 .advisor-avatar {
+  border: 2.5px solid #c8d0d8 !important;
+  box-shadow: 0 0 0 3px rgba(200,208,216,.3), 0 6px 16px -6px rgba(150,160,170,.5) !important;
+}
+html body #question .advisor.rank-3 .advisor-avatar {
+  border: 2.5px solid #d18a4a !important;
+  box-shadow: 0 0 0 3px rgba(217,154,92,.3), 0 6px 16px -6px rgba(200,130,70,.55) !important;
+}
+html body #question .advisor-avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+html body #question .advisor-avatar-fallback {
+  font-size: 20px !important;
+  font-weight: 950 !important;
+  display: none !important;
+}
+html body #question .advisor-avatar-fallback.show {
+  display: block !important;
+}
+html body #question .advisor.rank-2 .advisor-avatar-fallback { color: #4a5460 !important; }
+html body #question .advisor.rank-3 .advisor-avatar-fallback { color: #7a4a20 !important; }
+html body #question .advisor-medal {
+  position: absolute !important;
+  bottom: -4px !important;
+  right: -4px !important;
+  font-size: 15px !important;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.15)) !important;
+}
+html body #question .advisor-name {
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+html body #question .advisor.rank-2 .advisor-name { color: #4a5460 !important; }
+html body #question .advisor.rank-3 .advisor-name { color: #7a4a20 !important; }
+html body #question .advisor-time {
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  color: #6b8f78 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* ── 5. Label "QUẦN THẦN" ── */
+html body #question .court-courtiers-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  color: #8fa89a !important;
+  letter-spacing: .2em !important;
+  text-transform: uppercase !important;
+  margin: 4px 0 8px !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+html body #question .court-courtiers-label::before,
+html body #question .court-courtiers-label::after {
+  content: '' !important;
+  flex: 1 !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, transparent, rgba(200,220,205,.85), transparent) !important;
+}
+html body #question .court-courtiers-label span {
+  padding: 0 4px !important;
+  white-space: nowrap !important;
+}
+
+/* ── 6. Quần thần — 2 cột dọc ── */
+html body #question .court-courtiers {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+html body #question .courtiers-col {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+html body #question .courtier {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  padding: 6px 8px !important;
+  border-radius: 12px !important;
+  background: rgba(255,255,255,.55) !important;
+  border: 1px solid rgba(200,220,205,.55) !important;
+  min-width: 0 !important;
+}
+html body #question .courtier-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+  background: linear-gradient(135deg,#e8f5ec,#d4ead9) !important;
+  border: 1.5px solid #fff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+html body #question .courtier-avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+html body #question .courtier-avatar-fallback {
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  color: #4a7a5a !important;
+  display: none !important;
+}
+html body #question .courtier-avatar-fallback.show {
+  display: block !important;
+}
+html body #question .courtier-info {
+  min-width: 0 !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1px !important;
+}
+html body #question .courtier-name {
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  color: #234a32 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+html body #question .courtier-time {
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  color: #6b8f78 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* ── 7. Scroll khi court quá dài ── */
+html body #question.landing-court-active {
+  min-height: auto !important;
+  max-height: calc(100vh - 160px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+}
+html body #question.landing-court-active::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* ── 8. Tablet+ ── */
+@media (min-width: 480px) {
+  html body #question .throne-avatar { width: 80px !important; height: 80px !important; }
+  html body #question .throne-name { font-size: 15px !important; }
+  html body #question .advisor-avatar { width: 60px !important; height: 60px !important; }
+  html body #question .advisor-name { font-size: 12px !important; }
+  html body #question .courtier-avatar { width: 36px !important; height: 36px !important; }
+  html body #question .courtier-name { font-size: 12px !important; }
+}
+</style>
 </head>
 <body>
 <noscript>
@@ -58,7 +386,6 @@
 
   <div id="message"></div>
 
-  <!-- LEGACY: superseded by #clV6Page (checklist-ui.js). Giữ DOM cho main.js, ép ẩn bằng inline style. -->
   <section id="checklistPanel" style="display:none">
     <div id="checklistScroll"><table id="checklist">
       <thead><tr><th>Kiểm duyệt viên</th><th>Giờ</th><th>Hoàn thành</th></tr></thead><tbody></tbody>
@@ -289,19 +616,6 @@
   </section>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════════
-     THỨ TỰ LOAD SCRIPT (QUAN TRỌNG — không đổi):
-       1. config.js          (sync — tạo window.__SRANK_CONFIG + LRUCache)
-       2. toast.js           (defer — window.Toast)        ← PHASE 1
-       3. admin-session.js   (defer — window.AdminSession) ← PHASE 1
-       4. store.js           (defer — window.Store)        ← PHASE 1
-       5. scheduler.js       (defer — window.SRankScheduler)
-       6. supabase-js CDN    (sync — window.supabase)
-       7. supabase-adapter   (defer — window.__srankApi + window.__sb)
-       8. auth.js            (defer — window.SRank.Auth)
-       9. main.js            (defer — cần Toast + AdminSession + Store)
-      10. ...các module UI
-     ══════════════════════════════════════════════════════════════ -->
 <script src="js/config.js"></script>
 <script src="js/toast.js" defer></script>
 <script src="js/admin-session.js" defer></script>
