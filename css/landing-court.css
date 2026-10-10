@@ -1,29 +1,47 @@
 /* =========================================================
-   LANDING COURT — v1.0
-   Layout "thiết triều": Vua (top1) + 2 Quan (top2-3) + Quần thần (top4-13)
-   Override .landing-top3 gốc, giữ nguyên logic main.js
+   LANDING COURT — v1.1 (bugfix)
+   Fix:
+     - Override aggressive .landing-top3 từ main.css
+     - Dùng margin thay gap (tránh bị reset bởi parent gap)
+     - Overflow-y cho #question khi 13 slot
+     - Avatar fallback không phụ thuộc inline onerror
    ========================================================= */
 
-/* Container chính — ghi đè .landing-top3 cũ thành layout cột */
+/* ═══ Container chính — ép mọi style từ main.css ═══ */
 .landing-top3.landing-court {
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
   justify-content: flex-start !important;
-  gap: 14px !important;
+  gap: 0 !important;
   padding: 0 !important;
-  margin: 0 0 20px !important;
+  margin: 0 0 18px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
   background: none !important;
   border: 0 !important;
   box-shadow: none !important;
+  flex: 0 0 auto !important;
+}
+.landing-top3.landing-court::before,
+.landing-top3.landing-court::after {
+  display: none !important;
+  content: none !important;
+}
+.landing-top3.landing-court > * {
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
 }
 
-/* ── VUA (Top 1) ── */
+/* ═══ Vua (Top 1) ═══ */
 .court-throne {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  margin-bottom: 12px;
 }
 .throne-crown {
   font-size: 22px;
@@ -43,9 +61,7 @@
   overflow: hidden;
   border: 3px solid #ffb800;
   background: linear-gradient(135deg, #fffbe9, #fff0c4);
-  box-shadow:
-    0 0 0 4px rgba(255,200,0,.25),
-    0 8px 24px -8px rgba(255,140,0,.55);
+  box-shadow: 0 0 0 4px rgba(255,200,0,.25), 0 8px 24px -8px rgba(255,140,0,.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -60,8 +76,8 @@
   font-size: 26px;
   font-weight: 950;
   color: #7a5410;
+  display: none;
 }
-.throne-avatar-fallback:not(.show) { display: none; }
 .throne-medal {
   position: absolute;
   bottom: -6px;
@@ -86,18 +102,20 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── 2 QUAN (Top 2-3) ── */
+/* ═══ 2 Quan (Top 2-3) ═══ */
 .court-advisors {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   padding: 0 16px;
+  margin-bottom: 14px;
 }
 .advisor {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 3px;
+  min-width: 0;
 }
 .advisor-avatar {
   position: relative;
@@ -127,10 +145,10 @@
 .advisor-avatar-fallback {
   font-size: 20px;
   font-weight: 950;
+  display: none;
 }
 .advisor.rank-2 .advisor-avatar-fallback { color: #4a5460; }
 .advisor.rank-3 .advisor-avatar-fallback { color: #7a4a20; }
-.advisor-avatar-fallback:not(.show) { display: none; }
 .advisor-medal {
   position: absolute;
   bottom: -4px;
@@ -156,7 +174,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Label "QUẦN THẦN" ── */
+/* ═══ Label "QUẦN THẦN" ═══ */
 .court-courtiers-label {
   display: flex;
   align-items: center;
@@ -165,7 +183,7 @@
   font-weight: 900;
   color: #8fa89a;
   letter-spacing: .2em;
-  margin: 2px 0;
+  margin: 0 0 8px;
 }
 .court-courtiers-label::before,
 .court-courtiers-label::after {
@@ -179,7 +197,7 @@
   white-space: nowrap;
 }
 
-/* ── QUẦN THẦN (Top 4-13): 2 cột dọc ── */
+/* ═══ Quần thần (Top 4-13): 2 cột dọc ═══ */
 .court-courtiers {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -189,6 +207,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 .courtier {
   display: flex;
@@ -224,8 +243,8 @@
   font-size: 13px;
   font-weight: 950;
   color: #4a7a5a;
+  display: none;
 }
-.courtier-avatar-fallback:not(.show) { display: none; }
 .courtier-info {
   min-width: 0;
   flex: 1;
@@ -248,7 +267,32 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Tablet+ ── */
+/* ═══ Fallback: hiện khi có class .show HOẶC khi img không có src ═══ */
+.throne-avatar-fallback.show,
+.advisor-avatar-fallback.show,
+.courtier-avatar-fallback.show {
+  display: block !important;
+}
+.throne-avatar img:not([src]) ~ .throne-avatar-fallback,
+.advisor-avatar img:not([src]) ~ .advisor-avatar-fallback,
+.courtier-avatar img:not([src]) ~ .courtier-avatar-fallback {
+  display: block !important;
+}
+
+/* ═══ #question scroll khi court quá dài ═══ */
+#question.landing-court-active {
+  min-height: auto !important;
+  max-height: calc(100vh - 160px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+#question.landing-court-active::-webkit-scrollbar {
+  display: none;
+}
+
+/* ═══ Tablet+ ═══ */
 @media (min-width: 480px) {
   .throne-avatar { width: 80px; height: 80px; }
   .throne-name { font-size: 15px; }
@@ -258,7 +302,7 @@
   .courtier-name { font-size: 12px; }
 }
 
-/* ── Reduced motion ── */
+/* ═══ Reduced motion ═══ */
 @media (prefers-reduced-motion: reduce) {
   .throne-crown { animation: none !important; }
 }
