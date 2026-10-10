@@ -1,12 +1,17 @@
 /* =========================================================
-   BIRTHDAY CHAT — v4.1 (Auth + Scroll Optimization)
+   BIRTHDAY CHAT — v4.1.1 (Menu Integration)
    ---------------------------------------------------------
-   FIX scroll lag:
-   - Bỏ conic-gradient animation trên mỗi bubble → dùng static gradient
-   - Bỏ box-shadow animation trên avatar/gift/send
-   - Bỏ backdrop-filter trên bubble
-   - Thêm contain + GPU layer cho scroll area
-   - Giữ animation ở head/composer (chỉ 2 element, không ảnh hưởng scroll)
+   v4.1.1 (đổi so với v4.1):
+   - Bỏ FAB "Chúc mừng SN" ở góc dưới phải
+   - Chuyển thành menu item "💌 Inb vùng kín" trong menu 3 gạch
+   - Badge "99+" nằm trên menu item (góc trên-phải)
+   - HTML phải có:
+       <button id="birthdayBtn" hidden style="display:none"></button>
+       <button class="menu-item" data-target="birthdayBtn">
+         <span class="menu-item-icon">💌</span>
+         <span class="menu-item-label">Inb vùng kín</span>
+         <span class="bd-menu-badge" id="bdMenuBadge" hidden></span>
+       </button>
    ========================================================= */
 (function(){
   "use strict";
@@ -71,7 +76,7 @@
     throw new Error('RPC không hỗ trợ qua adapter: ' + name);
   }
 
-  /* ============ CSS — ĐÃ TỐI ƯU SCROLL ============ */
+  /* ============ CSS ============ */
   function injectStyles() {
     if ($('bdStyles')) return;
 
@@ -83,6 +88,9 @@
     const style = document.createElement('style');
     style.id = 'bdStyles';
     style.textContent = `
+/* Ẩn FAB cũ nếu còn tồn tại (migration) */
+#bdFab { display: none !important; visibility: hidden !important; pointer-events: none !important; opacity: 0 !important; }
+
 @keyframes bdFlameRotate { from { --bd-angle: 0deg; } to { --bd-angle: 360deg; } }
 @property --bd-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
 @keyframes bdFlameShift { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
@@ -95,12 +103,29 @@
 @keyframes bdCakeBob { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-6px) rotate(3deg); } }
 @keyframes bdConfettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
 
-#bdFab { position: fixed; right: 18px; bottom: max(24px, calc(18px + env(safe-area-inset-bottom))); z-index: 20600; min-width: 116px; height: 52px; padding: 0 18px 0 14px; border: 0; border-radius: 26px; background: linear-gradient(135deg, #ff4d94 0%, #b1005c 100%); color: #fff; font-family: inherit; font-size: 13px; font-weight: 800; letter-spacing: .01em; display: flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 0 0 1px rgba(255,120,180,.4), 0 8px 24px -6px rgba(255,77,148,.5); transition: transform .15s ease; }
-#bdFab:active { transform: scale(.96); }
-#bdFab.hidden { display: none !important; }
-#bdFab .bd-fab-icon { font-size: 20px; line-height: 1; }
-#bdFab .bd-fab-badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: #fff; color: #b1005c; font-size: 11px; font-weight: 800; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
-#bdFab .bd-fab-badge.show { display: flex; }
+/* ===== MENU BADGE cho "Inb vùng kín" ===== */
+.menu-item { position: relative !important; }
+.bd-menu-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ff4d94, #b1005c);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.3), 0 0 0 2px rgba(255,255,255,.25);
+  pointer-events: none;
+  z-index: 3;
+}
+.bd-menu-badge[hidden] { display: none !important; }
 
 #bdPage { position: fixed; inset: 0; z-index: 20900; display: none; flex-direction: column; background: #0f0508; color: #fff0f5; font-family: var(--font, ui-rounded, system-ui); overflow: hidden; padding: 5px; box-sizing: border-box; }
 #bdPage.show { display: flex; }
@@ -111,7 +136,6 @@
 .bd-head-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,120,180,.3); border-radius: 50%; background: rgba(255,120,180,.08); color: #ffb8d1; font-size: 18px; font-weight: 700; cursor: pointer; transition: transform .15s ease, background .15s ease, border-color .15s ease; position: relative; z-index: 2; }
 .bd-head-btn:active { transform: scale(.92); background: rgba(255,120,180,.18); border-color: rgba(255,120,180,.5); }
 .bd-head-center { min-width: 0; display: flex; align-items: center; gap: 12px; position: relative; z-index: 2; }
-/* Avatar bỏ animation glow — dùng shadow tĩnh */
 .bd-head-avatar { position: relative; width: 46px; height: 46px; border-radius: 50%; flex: 0 0 auto; background: linear-gradient(135deg, #ff4d94, #b1005c); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; overflow: hidden; box-shadow: 0 0 0 2px #1a0812, 0 0 0 3px rgba(255,120,180,.7), 0 0 12px rgba(255,77,148,.45); }
 .bd-head-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .bd-head-info { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -157,13 +181,8 @@
 .bd-name { font-size: 12.5px; font-weight: 800; color: #ff7fb0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
 .bd-time-inline { font-size: 10.5px; font-weight: 600; color: #a08090; flex-shrink: 0; }
 
-/* Bong bóng — bỏ backdrop-filter */
 .bd-bubble { position: relative; padding: 10px 14px; border-radius: 20px 20px 20px 6px; background: #1f0d16; color: #fff0f5; font-size: 14.5px; font-weight: 500; line-height: 1.5; white-space: pre-wrap; word-break: break-word; border: 1px solid rgba(255,120,180,.18); box-shadow: 0 2px 8px rgba(0,0,0,.2); overflow: hidden; }
-
-/* Bubble me — bỏ conic animation, dùng border tĩnh */
 .bd-card.me .bd-bubble { padding: 11px 16px; border-radius: 20px 20px 6px 20px; background: linear-gradient(135deg, #ff4d94 0%, #b1005c 100%); color: #fff; font-weight: 600; border: 1px solid rgba(255,150,195,.6); text-shadow: 0 1px 1px rgba(90,0,45,.25); box-shadow: 0 4px 16px -2px rgba(255,77,148,.45); }
-
-/* Shine chỉ chạy 1 lần khi bubble mới → OK giữ */
 .bd-card.me .bd-bubble.shine::after { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 100%; background: linear-gradient(100deg, transparent 0%, transparent 30%, rgba(255,255,255,.45) 50%, transparent 70%, transparent 100%); transform: translateX(-100%); animation: bdShine .9s ease-out .12s; pointer-events: none; }
 
 .bd-replies { display: flex; flex-direction: column; gap: 6px; margin-left: 42px; margin-top: 4px; max-width: 82%; }
@@ -191,11 +210,9 @@
 .bd-reply-link:active { background: rgba(255,120,180,.25); transform: scale(.96); }
 .bd-reply-link .bd-rl-icon { font-size: 11px; }
 
-/* Composer */
 .bd-composer { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: 44px 1fr; gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: linear-gradient(180deg, #1f0a14 0%, #16060d 100%); box-shadow: 0 -4px 20px rgba(0,0,0,.3); }
 .bd-composer::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1.5px; background: linear-gradient(90deg, rgba(255,77,148,0), rgba(255,77,148,.35) 20%, rgba(255,150,195,.7) 50%, rgba(255,77,148,.35) 80%, rgba(255,77,148,0)); background-size: 200% 100%; animation: bdFlameShift 4s linear infinite; box-shadow: 0 0 8px rgba(255,120,180,.4); }
 
-/* Gift + Send — bỏ animation glow */
 .bd-gift-btn { width: 44px; height: 44px; border: 0; border-radius: 50%; background: linear-gradient(135deg, #ff4d94, #b1005c); color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 1px rgba(255,150,195,.5), 0 6px 16px -4px rgba(255,77,148,.5); transition: transform .15s ease; }
 .bd-gift-btn:active { transform: scale(.92); }
 .bd-composer-inner { display: flex; align-items: flex-end; gap: 8px; }
@@ -206,7 +223,6 @@
 .bd-send-btn:active { transform: scale(.92) rotate(-8deg); }
 .bd-send-btn:disabled { opacity: .35; pointer-events: none; box-shadow: none; }
 
-/* Modal — giữ backdrop-filter (không scroll, không sao) */
 #bdModal { position: fixed; inset: 0; z-index: 21100; display: none; align-items: flex-end; justify-content: center; background: rgba(15,5,8,.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 #bdModal.show { display: flex; animation: bdFade .2s ease; }
 .bd-modal-panel { width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 20px calc(24px + env(safe-area-inset-bottom)); background: linear-gradient(180deg, #1a0812 0%, #0f0508 100%); border-top: 1px solid rgba(255,120,180,.3); border-radius: 24px 24px 0 0; animation: bdSlideUp .28s cubic-bezier(.16,.9,.25,1) forwards; transform: translateY(100%); box-shadow: 0 -20px 60px rgba(255,77,148,.15); contain: layout style; }
@@ -249,32 +265,43 @@
     document.head.appendChild(style);
   }
 
-  /* ============ FAB ============ */
+  /* ============ BUTTON (thay FAB) ============ */
   function ensureFab() {
-    let fab = $('bdFab');
-    if (fab) return fab;
-    fab = document.createElement('button');
-    fab.id = 'bdFab';
-    fab.type = 'button';
-    fab.setAttribute('aria-label', 'Chúc mừng sinh nhật Mỹ Dung');
-    fab.innerHTML = `<span class="bd-fab-icon">🎂</span><span class="bd-fab-text">Chúc mừng SN</span><span class="bd-fab-badge" id="bdFabBadge"></span>`;
-    fab.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); openPage(); });
-    document.body.appendChild(fab);
-    return fab;
+    // Migration: xoá FAB cũ nếu còn tồn tại trong DOM (do cache HTML cũ)
+    const oldFab = document.getElementById('bdFab');
+    if (oldFab) oldFab.remove();
+
+    // Dùng button ẩn #birthdayBtn (đã có trong HTML) để menu.js proxy click
+    let btn = $('birthdayBtn');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.id = 'birthdayBtn';
+      btn.type = 'button';
+      btn.hidden = true;
+      btn.style.display = 'none';
+      document.body.appendChild(btn);
+    }
+    if (!btn.__bdBound) {
+      btn.__bdBound = true;
+      btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); openPage(); });
+    }
+    return btn;
   }
 
   function updateFabBadge() {
-    const badge = $('bdFabBadge');
+    // Badge giờ nằm trong menu item "Inb vùng kín" (#bdMenuBadge)
+    const badge = document.getElementById('bdMenuBadge');
     if (!badge) return;
-    if (S.unread > 0 && !S.pageOpen) { badge.textContent = S.unread > 99 ? '99+' : String(S.unread); badge.classList.add('show'); }
-    else { badge.classList.remove('show'); }
+    if (S.unread > 0 && !S.pageOpen) {
+      badge.textContent = S.unread > 99 ? '99+' : String(S.unread);
+      badge.hidden = false;
+    } else {
+      badge.hidden = true;
+    }
   }
 
   function syncFabVisibility() {
-    const fab = $('bdFab');
-    if (!fab) return;
-    const otherOpen = $('lunchPage')?.classList.contains('show') || $('quizOverlay')?.classList.contains('show') || $('liveFeedOverlay')?.classList.contains('show') || $('attendancePage')?.classList.contains('show') || $('adminPage')?.classList.contains('show') || $('monitorOverlay')?.classList.contains('show') || $('checklistPanel')?.classList.contains('show') || $('loginOverlay')?.classList.contains('show') || window.BXH?.isOpen?.();
-    fab.classList.toggle('hidden', !!otherOpen);
+    // No-op — không còn FAB nổi, button nằm trong menu 3 gạch
   }
 
   /* ============ PAGE ============ */
@@ -755,7 +782,7 @@
     }
     setTimeout(startPolling, 3000);
     setTimeout(() => fetchWishes(false), 1500);
-    log('v4.1 ready ✓');
+    log('v4.1.1 ready ✓');
   }
 
   if (document.readyState === 'loading') {
