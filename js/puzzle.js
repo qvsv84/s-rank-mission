@@ -381,4 +381,82 @@
           '<div class="pz-admin-item">'
           +'<div class="pz-admin-item-head"><span class="pz-admin-item-title">'+escHtml(p.title||'Puzzle')+'</span><span class="pz-admin-item-meta">'+(p.active?'🟢 Active':'⚪ Archived')+'</span></div>'
           +'<div class="pz-admin-item-answer">Đáp án: '+escHtml(p.answer)+'</div>'
-          +'<div class="pz-admin-item-meta">'+p.points_reward+'đ · '+p.duration_minutes+'p · 🔤 '+(p.word_lengths||[]
+          +'<div class="pz-admin-item-meta">'+p.points_reward+'đ · '+p.duration_minutes+'p · 🔤 '+(p.word_lengths||[]).join('+')+' · 💡 '+(p.hint_list||[]).length+'</div>'
+          +'<div class="pz-admin-item-meta">👥 '+p.attempt_count+' người chơi · ✓ '+p.solved_count+' giải đúng</div>'
+          +(p.active?'<div class="pz-admin-item-actions"><button type="button" data-archive="'+escHtml(p.id)+'">📦 Archive</button></div>':'')
+          +'</div>'
+        ).join(''):'<div class="pz-empty" style="padding:20px;">Chưa có puzzle nào</div>')
+        +'</div>';
+      $('pzCreateForm').addEventListener('submit',handleCreatePuzzle);
+      adminContent.querySelectorAll('[data-archive]').forEach(btn=>{
+        btn.addEventListener('click',async()=>{
+          if(!confirm('Archive puzzle này? User sẽ không thấy nữa.'))return;
+          btn.disabled=true;
+          try{await API.archive(btn.dataset.archive);Toast?.show('Đã archive ✓',{type:'success'});renderAdminView()}
+          catch(e){btn.disabled=false;Toast?.show(e.message||'Lỗi',{type:'error'})}
+        });
+      });
+    }catch(e){adminContent.innerHTML='<div class="pz-error">'+escHtml(e.message||'Lỗi tải admin')+'</div>'}
+  }
+
+  async function handleCreatePuzzle(e){
+    e.preventDefault();
+    const title=$('pzFldTitle').value.trim();
+    const answer=$('pzFldAnswer').value.trim();
+    const hintsRaw=$('pzFldHints').value;
+    const points=parseInt($('pzFldPoints').value,10)||50;
+    const duration=parseInt($('pzFldDuration').value,10)||60;
+    if(!answer){Toast?.show('Cần nhập đáp án',{type:'warning'});return}
+    const hints=hintsRaw.split('\n').map(s=>s.trim()).filter(Boolean);
+    const btn=$('pzCreateBtn');
+    btn.disabled=!0;btn.textContent='⏳ Đang tạo…';
+    try{
+      await API.create({title,answer,hints,points,duration});
+      Toast?.show('Đã tạo puzzle ✓',{type:'success',duration:3500});
+      $('pzFldTitle').value='';$('pzFldAnswer').value='';$('pzFldHints').value='';
+      $('pzFldPoints').value='50';$('pzFldDuration').value='60';
+      renderAdminView();
+      API.getActive().then(l=>{activePuzzles=l||[]}).catch(()=>{});
+    }catch(e){Toast?.show(e.message||'Không tạo được',{type:'error',duration:5000})}
+    finally{btn.disabled=!1;btn.textContent='✚ Tạo puzzle mới'}
+  }
+
+  function switchTab(name){
+    currentTab=name;
+    tabsEl.querySelectorAll('.puzzle-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+    playView.classList.toggle('active',name==='play');
+    adminView.classList.toggle('active',name==='admin');
+    if(name==='admin')renderAdminView();
+  }
+  tabsEl.querySelectorAll('.puzzle-tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+
+  async function open(){
+    if(!window.SRank?.Auth?.isLoggedIn?.()){Toast?.show('Vui lòng đăng nhập',{type:'warning'});return}
+    overlay.classList.add('show');overlay.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    if(adminTab)adminTab.hidden=!isAdmin();
+    selectedPuzzle=null;attemptState=null;guessHistory=[];
+    hintItems=[];revealedHintCount=0;
+    switchTab('play');
+    playContent.innerHTML='<div style="text-align:center;padding:30px;color:#7a9a80;">Đang tải…</div>';
+    try{activePuzzles=(await API.getActive())||[];renderPlayView()}
+    catch(e){playContent.innerHTML='<div class="pz-error">'+escHtml(e.message||'Không tải được')+'</div>'}
+  }
+  function close(){
+    stopTimer();
+    overlay.classList.remove('show');overlay.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+    if(typeof window.syncQuickTools==='function')window.syncQuickTools();
+  }
+
+  closeBtn.addEventListener('click',close);
+  overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('show')){e.preventDefault();close()}});
+
+  const triggerBtn=$('puzzleBtn');
+  if(triggerBtn)triggerBtn.addEventListener('click',()=>{open()});
+
+  window.SRank=window.SRank||{};
+  window.SRank.Puzzle={open,close};
+  console.log('[PUZZLE] v1.0.0 ready ✓');
+})();
