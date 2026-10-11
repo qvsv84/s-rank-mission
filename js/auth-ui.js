@@ -1,9 +1,11 @@
 /* =========================================================
-   SRANK AUTH UI — v10.1 (Sidebar + Auto-hide + Mino kicker)
+   SRANK AUTH UI — v10.3 (Role-based, no password)
    ---------------------------------------------------------
-   NEW v10.1:
-   - Thêm kicker riêng cho user "thaouyen" → "🎀 MINO ÁO HỒNG"
-   - Ưu tiên Mino > Boss > Default
+   v10.3 CHANGES:
+   - Bỏ hẳn mọi reference đến password admin
+   - isBossMode() check role admin từ Auth metadata
+   - Auth.onChange KHÔNG clear gì → role auto-refresh
+   - Logout mới clear AdminSession (dù là no-op)
    ========================================================= */
 (function(){
   "use strict";
@@ -242,15 +244,17 @@
     return un === MINO_USERNAME;
   }
 
+  /* ⭐ v10.3: role-based, không đọc password */
   function isBossMode(){
+    if (!currentUser) return false;
     try {
-      if (window.AdminSession && typeof window.AdminSession.isValid === "function" && window.AdminSession.isValid()) return true;
+      const appMeta = currentUser.app_metadata || {};
+      const userMeta = currentUser.user_metadata || {};
+      const role = String(appMeta.role || userMeta.role || currentUser.role || '').toLowerCase();
+      if (/admin|super|owner|quản|quan/.test(role)) return true;
     } catch(_) {}
-    if (currentUser){
-      const un = String(currentUser.username || '').trim().toLowerCase();
-      if (un && BOSS_WHITELIST.indexOf(un) >= 0) return true;
-    }
-    return false;
+    const un = String(currentUser.username || '').trim().toLowerCase();
+    return un && BOSS_WHITELIST.indexOf(un) >= 0;
   }
 
   function splitGraphemes(text){
@@ -285,7 +289,6 @@
     return '<span class="boss-wave" aria-label="' + safeLabel + '">' + inner + '</span>';
   }
 
-  /* ✅ Ưu tiên Mino > Boss > Default */
   function getKickerRender(){
     if (isMinoMode()){
       return { html: buildWaveHtml(KICKER_MINO), text: KICKER_MINO, version: 'mino' };
@@ -405,10 +408,7 @@
     setMsg("");
     try {
       await Auth.login(u, p);
-      try {
-        if (window.AdminSession && typeof window.AdminSession.clear === "function") window.AdminSession.clear();
-        localStorage.removeItem("srank_admin_pwd_v1");
-      } catch(_) {}
+      /* v10.3: không clear gì — role được đọc từ Auth metadata */
       setMsg("Đăng nhập thành công ✓", true);
       setTimeout(closeLoginForm, 350);
     } catch(err){
@@ -460,12 +460,19 @@
   async function handleLogout(){
     if (!confirm("Đăng xuất khỏi tài khoản?")) return;
     try { await Auth.logout(); } catch(_) {}
+    /* v10.3: Clear AdminSession (no-op nhưng gọi cho sạch) */
+    try {
+      if (window.AdminSession && typeof window.AdminSession.clear === "function") {
+        window.AdminSession.clear();
+      }
+    } catch(_) {}
   }
 
   if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
 
+  /* v10.3: Auth.onChange không clear gì cả */
   Auth.onChange(function(user){
-  currentUser = user;
+    currentUser = user;
     updateLogoutBtn();
     if (window.SRank && typeof window.SRank.rerenderLanding === "function"){
       try { window.SRank.rerenderLanding(); } catch(_) {}
@@ -481,5 +488,5 @@
 
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v10.1 — sidebar + auto-hide + Mino kicker");
+  console.log("[AUTH-UI] ready ✓ v10.3 — role-based");
 })();
