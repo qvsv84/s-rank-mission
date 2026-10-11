@@ -197,6 +197,21 @@ html body #question .landing-lock-note { display: block !important; margin-top: 
   html body #question .courtier-name { font-size: 12px !important; }
   html body #question .courtier-time { font-size: 10px !important; }
 }
+
+/* ═══ ATTENDANCE CARD — Stats inline với tên ═══ */
+html body .att-employee-info { min-width: 0 !important; flex: 1 !important; display: flex !important; flex-direction: column !important; gap: 2px !important; }
+html body .att-employee-line { display: flex !important; align-items: baseline !important; gap: 8px !important; min-width: 0 !important; flex-wrap: wrap !important; }
+html body .att-employee-line .wheel-value { min-width: 0 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; flex: 0 1 auto !important; }
+html body .att-employee-stats { display: inline-flex !important; align-items: center !important; gap: 6px !important; font-size: 12px !important; font-weight: 900 !important; color: #6b8f78 !important; font-variant-numeric: tabular-nums !important; flex: 0 0 auto !important; }
+html body .att-employee-stats .att-stats-pts { color: #4fa370 !important; font-weight: 950 !important; }
+html body .att-employee-stats .att-stats-sep { color: #c0d0c4 !important; font-weight: 700 !important; margin: 0 1px !important; }
+html body .att-employee-stats .att-stats-rank { display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 1px 7px !important; border-radius: 5px !important; font-size: 11px !important; font-weight: 950 !important; line-height: 1.3 !important; letter-spacing: .02em !important; }
+html body .att-employee-stats .att-stats-rank.rank-VIP { background: linear-gradient(135deg,#fff4c4,#d88800) !important; color: #4a2a00 !important; }
+html body .att-employee-stats .att-stats-rank.rank-SSS { background: linear-gradient(135deg,#ff6b6b,#991b1b) !important; color: #fff !important; }
+html body .att-employee-stats .att-stats-rank.rank-SS { background: linear-gradient(135deg,#f0a5ff,#86198f) !important; color: #fff !important; }
+html body .att-employee-stats .att-stats-rank.rank-S { background: linear-gradient(135deg,#ffb366,#c2410c) !important; color: #fff !important; }
+html body .att-employee-stats .att-stats-rank.rank-A { background: linear-gradient(135deg,#93c5fd,#1e40af) !important; color: #fff !important; }
+html body .att-employee-stats .att-stats-rank.rank-B { background: linear-gradient(135deg,#e8eef3,#d0d8e0) !important; color: #6b7a86 !important; }
 </style>
 
 <style id="hideBdFabForce">
@@ -296,8 +311,6 @@ body:not(.user-is-admin) #adminBtn { display: none !important; }
     </section>
   </div>
 
-  <!-- adminPasswordOverlay đã xoá — không dùng password nữa -->
-
   <section id="adminPage" aria-label="Cài đặt Admin">
     <header id="adminPageHeader">
       <button id="adminPageBack" type="button" aria-label="Quay lại">←</button>
@@ -381,7 +394,13 @@ body:not(.user-is-admin) #adminBtn { display: none !important; }
     </header>
     <button id="attendanceEmployeeWheelBtn" class="att-employee-card" type="button">
       <span class="att-employee-avatar" id="attendanceEmployeeAvatar">?</span>
-      <span class="att-employee-info"><span class="att-employee-label">Kiểm Duyệt Viên</span><span class="wheel-value">Đang tải…</span></span>
+      <span class="att-employee-info">
+        <span class="att-employee-label">Kiểm Duyệt Viên</span>
+        <span class="att-employee-line">
+          <span class="wheel-value">Đang tải…</span>
+          <span class="att-employee-stats" id="attendanceEmployeeStats"></span>
+        </span>
+      </span>
       <span class="att-employee-chevron">⌄</span>
     </button>
     <select id="attendanceEmployee" aria-hidden="true" tabindex="-1"></select>
