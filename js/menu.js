@@ -1,7 +1,9 @@
 /* ═══════════════════════════════════════════════════════════
-   MENU 3 GẠCH — Phương án B
+   MENU 3 GẠCH — v1.1 (role-based admin)
    - Chưa login: nút hiện 🔐 (bấm → mở form login)
    - Đã login:   nút hiện 📷 (bấm → đổi avatar) + 🚪 logout
+   - Nút Admin:  CHỈ hiện khi user có role admin
+                 (cả bottomNav #adminBtn + menu item)
    - Fix tap/hold: ấn giữ ≠ tap, debounce toggle 350ms
    ═══════════════════════════════════════════════════════════ */
 (() => {
@@ -25,6 +27,7 @@
     const menuAvatarBtn = $('menuAvatarBtn');
     const menuLogoutBtn = $('menuLogoutBtn');
     const adminItemEl = overlay.querySelector('.menu-item[data-target="adminBtn"]');
+    const adminBottomBtn = $('adminBtn');
     const STORAGE_KEY = 'menuBtnPos';
     const BUST_KEY    = 'srank_avatar_bust';
     const DEBUG       = /[?&]debug=menu/.test(location.search);
@@ -123,15 +126,19 @@
       return `${base}/storage/v1/object/public/avatars/${encodeURIComponent(uid)}.jpg${b ? '?t=' + b : ''}`;
     };
 
-    /* ───── role resolver ───── */
+    /* ───── role resolver — v1.1 role-based ───── */
     const getRole = () => {
       const cand = [];
+
+      /* ⭐ Ưu tiên 1: Supabase Auth user metadata */
       try {
         const u = window.SRank?.Auth?.getCurrentUser?.() || {};
         if (u.app_metadata?.role) cand.push(u.app_metadata.role);
         if (u.user_metadata?.role) cand.push(u.user_metadata.role);
         if (u.role) cand.push(u.role);
       } catch(_){}
+
+      /* ⭐ Ưu tiên 2: Đọc session từ localStorage */
       try {
         const u = readSession();
         if (u){
@@ -140,6 +147,8 @@
           if (u.role) cand.push(u.role);
         }
       } catch(_){}
+
+      /* Ưu tiên 3: Scan localStorage keys chứa "role" */
       try {
         for (let i = 0; i < localStorage.length; i++){
           const k = localStorage.key(i), v = localStorage.getItem(k);
@@ -154,6 +163,17 @@
           }
         }
       } catch(_){}
+
+      /* Ưu tiên 4: Whitelist username (fallback) */
+      try {
+        const u = window.SRank?.Auth?.getCurrentUser?.() || readSession() || {};
+        const un = String(u.username || (u.email || '').split('@')[0] || '').toLowerCase();
+        const BOSS_WHITELIST = ['tienloi','mydung','quynhtrang','phamkimchi','minhthuy'];
+        if (un && BOSS_WHITELIST.indexOf(un) >= 0) {
+          return { label:'ADMIN', klass:'role-admin' };
+        }
+      } catch(_){}
+
       log('role candidates:', cand);
       for (const c of cand){
         const r = String(c || '').trim().toLowerCase();
@@ -164,25 +184,33 @@
       }
       return { label:'Thành viên', klass:'role-member' };
     };
+
     const applyRole = (el) => {
       if (!el) return;
       const info = getRole();
       if (el.textContent !== info.label) el.textContent = info.label;
       el.classList.remove('role-admin','role-manager','role-kdv','role-member');
       el.classList.add(info.klass);
+
+      const isAdmin = info.klass === 'role-admin';
+
+      /* ⭐ Menu item admin trong menu 3 gạch */
       if (adminItemEl){
-  const isAdmin = info.klass === 'role-admin';
-  if (adminItemEl.hidden !== !isAdmin) adminItemEl.hidden = !isAdmin;
-}
-// Ẩn/hiện nút Admin ở bottomNav theo role
-const bottomAdminBtn = document.getElementById('adminBtn');
-if (bottomAdminBtn){
-  const isAdmin = info.klass === 'role-admin';
-  bottomAdminBtn.style.display = isAdmin ? '' : 'none';
-  bottomAdminBtn.hidden = !isAdmin;
-}
+        if (adminItemEl.hidden !== !isAdmin) adminItemEl.hidden = !isAdmin;
       }
-      log('role applied:', info);
+
+      /* ⭐ Nút Admin ở bottomNav */
+      if (adminBottomBtn){
+        adminBottomBtn.style.display = isAdmin ? '' : 'none';
+        adminBottomBtn.hidden = !isAdmin;
+      }
+
+      /* ⭐ Body class để CSS fallback */
+      try {
+        document.body.classList.toggle('user-is-admin', isAdmin);
+      } catch(_){}
+
+      log('role applied:', info, '| isAdmin:', isAdmin);
     };
 
     /* ───── SRank.avatar cache ───── */
@@ -240,7 +268,6 @@ if (bottomAdminBtn){
     let syncing = false;
     const isLoggedIn = () => !!(realLogout && !realLogout.hidden);
 
-    /* Chưa login: nút avatar biến thành 🔐 login */
     const setLoginMode = () => {
       if (menuAvatarBtn){
         menuAvatarBtn.textContent = '🔐';
@@ -250,7 +277,6 @@ if (bottomAdminBtn){
       }
       if (menuLogoutBtn) menuLogoutBtn.style.display = 'none';
     };
-    /* Đã login: nút avatar trở về 📷, hiện thêm 🚪 */
     const setUserMode = () => {
       if (menuAvatarBtn){
         menuAvatarBtn.textContent = '📷';
@@ -268,7 +294,6 @@ if (bottomAdminBtn){
         menuCard.hidden = false;
 
         if (!isLoggedIn()){
-          /* ── Chưa login ── */
           if (menuNameEl.textContent !== 'Khách') menuNameEl.textContent = 'Khách';
           if (menuRoleEl){
             if (menuRoleEl.textContent !== 'Chưa đăng nhập') menuRoleEl.textContent = 'Chưa đăng nhập';
@@ -281,11 +306,11 @@ if (bottomAdminBtn){
             menuAvatarEl.textContent = '🐱';
           }
           if (adminItemEl) adminItemEl.hidden = true;
+          if (adminBottomBtn){ adminBottomBtn.style.display = 'none'; adminBottomBtn.hidden = true; }
           setLoginMode();
           return;
         }
 
-        /* ── Đã login ── */
         try { const n = ((realName?.textContent) || '').trim() || 'Thành viên';
               if (menuNameEl.textContent !== n) menuNameEl.textContent = n; } catch(_){}
         try { applyRole(menuRoleEl); } catch(e){ console.error('[Menu] role:', e); }
@@ -336,12 +361,7 @@ if (bottomAdminBtn){
       document.body.classList.remove('menu-open');
     };
 
-    /* ───── FIX BUG TAP vs HOLD ─────
-       - Tap (bấm nhả nhanh, không di chuyển) → toggle menu
-       - Hold (ấn giữ > 500ms) → KHÔNG làm gì (tránh mở nhầm)
-       - Drag (di chuyển) → kéo nút
-       Debounce 400ms chống double-tap
-    */
+    /* ───── FIX BUG TAP vs HOLD ───── */
     let pointerId = null, startX = 0, startY = 0, startL = 0, startT = 0;
     let moved = false, holdTimer = null, wasHold = false;
     const DRAG = 8;
@@ -363,7 +383,6 @@ if (bottomAdminBtn){
       const r = btn.getBoundingClientRect();
       startX = e.clientX; startY = e.clientY; startL = r.left; startT = r.top;
       moved = false; wasHold = false;
-      /* Bắt đầu đếm hold */
       clearTimeout(holdTimer);
       holdTimer = setTimeout(() => {
         wasHold = true;
@@ -377,7 +396,7 @@ if (bottomAdminBtn){
       if (!moved){
         if (Math.hypot(dx, dy) < DRAG) return;
         moved = true;
-        clearTimeout(holdTimer); /* bắt đầu drag → không phải hold */
+        clearTimeout(holdTimer);
         btn.classList.add('dragging');
       }
       applyPos(startL + dx, startT + dy);
@@ -391,17 +410,14 @@ if (bottomAdminBtn){
       pointerId = null;
 
       if (moved){
-        /* Kéo → lưu vị trí */
         btn.classList.remove('dragging');
         const r = btn.getBoundingClientRect();
         applyPos(r.left, r.top); savePos();
         log('drag end, saved pos');
       } else if (!wasHold){
-        /* Tap → toggle menu */
         log('tap → toggle');
         toggleMenu();
       } else {
-        /* Hold → không làm gì */
         log('hold end, ignore');
       }
       moved = false; wasHold = false;
@@ -416,7 +432,6 @@ if (bottomAdminBtn){
       btn.classList.remove('dragging'); pointerId = null; moved = false; wasHold = false;
     });
 
-    /* Chặn các event khác có thể gây logout ngoài ý muốn */
     ['mousedown','mouseup','touchstart','touchend','touchcancel','contextmenu'].forEach(evt => {
       btn.addEventListener(evt, (e) => {
         e.stopPropagation();
@@ -457,7 +472,6 @@ if (bottomAdminBtn){
         e.preventDefault(); e.stopPropagation();
         const mode = menuAvatarBtn.dataset.mode || 'avatar';
         if (mode === 'login'){
-          /* Chưa login → mở form login */
           log('bấm 🔐 login');
           try {
             if (window.SRank?.openLogin) window.SRank.openLogin();
@@ -467,7 +481,6 @@ if (bottomAdminBtn){
           closeMenu();
           return;
         }
-        /* Đã login → mở file picker */
         log('bấm 📷 avatar');
         if (realAvatar) realAvatar.click();
       });
@@ -512,6 +525,16 @@ if (bottomAdminBtn){
       syncCard();
       [500, 1500, 3000].forEach(t => setTimeout(syncCard, t));
     });
+
+    /* ⭐ Re-apply role khi auth thay đổi */
+    try {
+      if (window.SRank?.Auth?.onChange){
+        window.SRank.Auth.onChange(function(){
+          if (menuRoleEl) applyRole(menuRoleEl);
+          if (overlay.classList.contains('open')) syncCard();
+        });
+      }
+    } catch(_){}
 
     if (DEBUG) log('init | sb =', getSbUrl(), '| uid =', getUid() || '(none)', '| role =', getRole());
   } catch (err){
