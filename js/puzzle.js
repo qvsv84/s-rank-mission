@@ -1,10 +1,9 @@
 /* =========================================================
-   PUZZLE GAME — Wordle tiếng Việt v2.0.0
-   v2.0.0 FIXES:
-   - Unicode NFC normalization chắc chắn
-   - Debug console log rõ ràng
-   - Direct menu listener (không phụ thuộc proxy)
-   - Error hiển thị trong overlay, không silent
+   PUZZLE GAME — Wordle tiếng Việt v2.1.0
+   v2.1.0 FIXES:
+   - Chuyển từ 7 input riêng → 1 input chung + 7 preview div
+   - Bàn phím Telex/VNI hoạt động bình thường
+   - Không can thiệp từng ký tự khi user gõ
    ========================================================= */
 (function(){
   'use strict';
@@ -28,7 +27,7 @@
 
   waitForOverlay().then(overlay=>{
     if(!overlay){
-      console.error(LOG,'#puzzleOverlay KHÔNG TÌM THẤY trong DOM. Check index.html đã patch chỗ 3 chưa?');
+      console.error(LOG,'#puzzleOverlay KHÔNG TÌM THẤY trong DOM.');
       return;
     }
     console.log(LOG,'overlay found');
@@ -56,26 +55,15 @@
     };
 
     let activePuzzles=[],selectedPuzzle=null,attemptState=null,guessHistory=[];
-    let currentTab='play',cells=[],isSubmitting=!1,timerHandle=null;
+    let currentTab='play',cells=[],guessInput=null,isSubmitting=!1,timerHandle=null;
     let hintItems=[],revealedHintCount=0,leaderboardRows=[];
 
-    function firstGrapheme(str){
-      if(!str)return '';
-      const s=String(str).normalize('NFC');
-      try{
-        if(Intl&&Intl.Segmenter){
-          const seg=new Intl.Segmenter('vi',{granularity:'grapheme'});
-          for(const s2 of seg.segment(s))return s2.segment;
-        }
-      }catch(_){}
-      return s[0]||'';
-    }
     function splitGraphemes(str){
       const out=[];if(!str)return out;
       const s=String(str).normalize('NFC');
       try{
         if(Intl&&Intl.Segmenter){
-          const seg=new Intl.Segmenter('vi',{granularity:'grapheme'});
+          const seg=new Intl.Segmenter(undefined,{granularity:'grapheme'});
           for(const s2 of seg.segment(s))out.push(s2.segment);
           return out;
         }
@@ -86,6 +74,12 @@
       if(!ch)return '';
       try{return String(ch).normalize('NFC').toUpperCase()}
       catch(_){return String(ch).toUpperCase()}
+    }
+    function cleanGuess(raw){
+      return String(raw||'').normalize('NFC').toUpperCase().replace(/\s+/g,'');
+    }
+    function totalChars(){
+      return (selectedPuzzle?.word_lengths||[]).reduce((a,b)=>a+b,0);
     }
     function fmtTime(sec){sec=Math.max(0,Math.floor(sec));const m=Math.floor(sec/60),s=sec%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
     function fmtSeconds(sec){sec=Math.max(0,Math.floor(sec));if(sec<60)return sec+'s';const m=Math.floor(sec/60),s=sec%60;return m+'m'+(s?s+'s':'')}
@@ -181,7 +175,7 @@
 
     function renderPreview(){
       const p=selectedPuzzle;
-      const total=(p.word_lengths||[]).reduce((a,b)=>a+b,0);
+      const total=totalChars();
       playContent.innerHTML=
         '<div class="pz-playing-head">'
         +'<div class="pz-points-badge">💰 '+p.points_reward+'đ</div>'
@@ -197,12 +191,16 @@
 
     function renderPlaying(){
       const p=selectedPuzzle;
+      const total=totalChars();
       playContent.innerHTML=
         '<div class="pz-playing-head">'
         +'<div class="pz-points-badge">💰 '+p.points_reward+'đ</div>'
         +'<div class="pz-timer"><span>⏱</span><span class="pz-timer-text">--:--</span></div>'
         +'</div>'
         +'<div class="pz-grid" id="pzGrid"></div>'
+        +'<div class="pz-input-wrap">'
+        +'<input type="text" id="pzGuessInput" class="pz-input" placeholder="Nhập đáp án ('+total+' ký tự)..." autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done">'
+        +'</div>'
         +'<div class="pz-hints" id="pzHints"></div>'
         +'<div class="pz-actions">'
         +'<button type="button" class="pz-btn" id="pzSubmitBtn" disabled>🔍 Đoán</button>'
@@ -211,6 +209,7 @@
         +'<div class="pz-history" id="pzHistory"></div>'
         +'<div class="pz-lb" id="pzLb"></div>';
       buildGrid(p.word_lengths||[]);
+      setupInputHandler();
       renderHints();
       renderHistory();
       loadLeaderboard();
@@ -226,52 +225,56 @@
         const wordEl=document.createElement('div');
         wordEl.className='pz-word';
         for(let i=0;i<len;i++){
-          const inp=document.createElement('input');
-          inp.type='text';inp.inputMode='text';inp.autocapitalize='characters';
-          inp.spellcheck=false;inp.autocomplete='off';
-          inp.className='pz-cell';inp.dataset.idx=String(idx);inp.maxLength=4;
-          wordEl.appendChild(inp);cells.push(inp);idx++;
+          const cell=document.createElement('div');
+          cell.className='pz-cell';
+          cell.dataset.idx=String(idx);
+          wordEl.appendChild(cell);cells.push(cell);idx++;
         }
         gridEl.appendChild(wordEl);
       });
-      setupCellHandlers();
-      if(cells[0])setTimeout(()=>cells[0].focus(),120);
+      // Tap vào grid để focus input
+      gridEl.addEventListener('click',()=>guessInput?.focus());
+    }
+
+    function setupInputHandler(){
+      guessInput=$('pzGuessInput');
+      if(!guessInput)return;
+      guessInput.addEventListener('input',onGuessInput);
+      guessInput.addEventListener('keydown',e=>{
+        if(e.key==='Enter'){e.preventDefault();if(allFilled())submitGuess()}
+      });
+      setTimeout(()=>guessInput.focus(),120);
+    }
+
+    function onGuessInput(){
+      const cleaned=cleanGuess(guessInput.value);
+      const graphemes=splitGraphemes(cleaned);
+      const total=totalChars();
+      const limited=graphemes.slice(0,total);
+      // Nếu user gõ quá total, cắt bớt
+      if(graphemes.length>total){
+        guessInput.value=limited.join('');
+      }
+      cells.forEach((cell,i)=>{
+        const g=limited[i]||'';
+        if(cell.textContent!==g)cell.textContent=g;
+        cell.classList.toggle('filled',!!g);
+      });
       updateSubmitState();
     }
 
-    function setupCellHandlers(){
-      cells.forEach((cell,i)=>{
-        cell.addEventListener('input',()=>{
-          const g=firstGrapheme(cell.value);
-          const up=normalizeUp(g);
-          cell.value=up;
-          cell.classList.toggle('filled',!!up);
-          if(up&&cells[i+1])cells[i+1].focus();
-          updateSubmitState();
-        });
-        cell.addEventListener('keydown',e=>{
-          if(e.key==='Backspace'&&!cell.value&&cells[i-1]){
-            e.preventDefault();cells[i-1].focus();cells[i-1].value='';
-            cells[i-1].classList.remove('filled');updateSubmitState();
-          }else if(e.key==='ArrowLeft'&&cells[i-1]){e.preventDefault();cells[i-1].focus()}
-          else if(e.key==='ArrowRight'&&cells[i+1]){e.preventDefault();cells[i+1].focus()}
-          else if(e.key==='Enter'){e.preventDefault();if(allFilled())submitGuess()}
-        });
-        cell.addEventListener('paste',e=>{
-          e.preventDefault();
-          const txt=(e.clipboardData||window.clipboardData).getData('text')||'';
-          const gs=splitGraphemes(txt).filter(g=>g.trim()!==''&&g!==' ');
-          let j=i;
-          for(const g of gs){if(j>=cells.length)break;cells[j].value=normalizeUp(g);cells[j].classList.add('filled');j++}
-          if(cells[j])cells[j].focus();
-          updateSubmitState();
-        });
-      });
+    function allFilled(){
+      if(!guessInput)return false;
+      const graphemes=splitGraphemes(cleanGuess(guessInput.value));
+      return graphemes.length===totalChars();
     }
-
-    function allFilled(){return cells.length>0&&cells.every(c=>c.value)}
     function updateSubmitState(){const btn=$('pzSubmitBtn');if(btn)btn.disabled=!allFilled()||isSubmitting}
-    function clearGrid(){cells.forEach(c=>{c.value='';c.classList.remove('filled')});if(cells[0])cells[0].focus();updateSubmitState()}
+    function clearGrid(){
+      if(guessInput)guessInput.value='';
+      cells.forEach(c=>{c.textContent='';c.classList.remove('filled')});
+      if(guessInput)guessInput.focus();
+      updateSubmitState();
+    }
 
     function renderHints(){
       const el=$('pzHints');if(!el)return;
@@ -377,9 +380,10 @@
 
     async function submitGuess(){
       if(isSubmitting||!selectedPuzzle||!attemptState)return;
-      const guess=cells.map(c=>c.value||'').join('');
-      const total=(selectedPuzzle.word_lengths||[]).reduce((a,b)=>a+b,0);
-      if(guess.length!==total){Toast?.show('Cần điền đủ '+total+' ô',{type:'warning'});return}
+      const graphemes=splitGraphemes(cleanGuess(guessInput?.value||''));
+      const total=totalChars();
+      if(graphemes.length!==total){Toast?.show('Cần điền đủ '+total+' ký tự',{type:'warning'});return}
+      const guess=graphemes.join('');
       isSubmitting=!0;updateSubmitState();
       try{
         const r=await API.guess(selectedPuzzle.id,guess);
@@ -536,17 +540,14 @@
     overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('show')){e.preventDefault();close()}});
 
-    // ⭐ Multi-strategy trigger: 3 cách để chắc chắn vào được
-    // C1: #puzzleBtn click (từ menu.js proxy)
     const triggerBtn=$('puzzleBtn');
     if(triggerBtn){
       triggerBtn.addEventListener('click',()=>{console.log(LOG,'trigger via #puzzleBtn');open()});
       console.log(LOG,'bound #puzzleBtn');
     } else {
-      console.warn(LOG,'#puzzleBtn KHÔNG TÌM THẤY — cần thêm vào index.html');
+      console.warn(LOG,'#puzzleBtn KHÔNG TÌM THẤY');
     }
 
-    // C2: Direct menu item listener (backup, không phụ thuộc proxy)
     document.querySelectorAll('.menu-item[data-target="puzzleBtn"]').forEach(item=>{
       item.addEventListener('click',()=>{
         console.log(LOG,'trigger via menu item direct');
@@ -555,13 +556,11 @@
           if(ov&&!ov.classList.contains('show'))open();
         },400);
       });
-      console.log(LOG,'bound menu item direct');
     });
 
-    // C3: Global helper — có thể gọi từ console hoặc nút khác
     window.SRank=window.SRank||{};
     window.SRank.Puzzle={open,close,debug:()=>console.log(LOG,'activePuzzles:',activePuzzles,'selected:',selectedPuzzle,'attempt:',attemptState)};
 
-    console.log(LOG,'v2.0.0 ready ✓');
+    console.log(LOG,'v2.1.0 ready ✓');
   }
 })();
