@@ -204,6 +204,7 @@ html body #question .landing-lock-note { display: block !important; margin-top: 
 .menu-item { position: relative !important; }
 .bd-menu-badge { position: absolute !important; top: -4px !important; right: -4px !important; min-width: 20px !important; height: 20px !important; padding: 0 6px !important; border-radius: 10px !important; background: linear-gradient(135deg, #ff4d94, #b1005c) !important; color: #fff !important; font-size: 11px !important; font-weight: 800 !important; line-height: 1 !important; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: 0 2px 6px rgba(0,0,0,.3), 0 0 0 2px rgba(255,255,255,.25) !important; pointer-events: none !important; z-index: 3 !important; }
 .bd-menu-badge[hidden] { display: none !important; }
+body:not(.user-is-admin) #adminBtn { display: none !important; }
 </style>
 </head>
 <body>
@@ -255,7 +256,7 @@ html body #question .landing-lock-note { display: block !important; margin-top: 
 
   <nav id="bottomNav" aria-label="Điều hướng chính">
     <button id="homeBtn" type="button">⌂ Home</button>
-    <button id="adminBtn" type="button">⚙ Admin</button>
+    <button id="adminBtn" type="button" hidden>⚙ Admin</button>
     <button id="monitorBtn" type="button">👁 Giám sát</button>
     <button id="topBtn" type="button">🏆 BXH TOP</button>
     <button id="checklistBtn" type="button" aria-expanded="false">☑ Checklist</button>
@@ -295,15 +296,7 @@ html body #question .landing-lock-note { display: block !important; margin-top: 
     </section>
   </div>
 
-  <div id="adminPasswordOverlay" aria-hidden="true">
-    <section id="adminPasswordBox">
-      <div id="adminPasswordTitle">🔐 Admin</div>
-      <div id="adminPasswordSub">Nhập mật khẩu để mở cài đặt</div>
-      <input id="adminPasswordInput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••">
-      <div id="adminPasswordMsg"></div>
-      <div id="adminPasswordActions"><button id="adminPasswordCancel" type="button">Huỷ</button><button id="adminPasswordOk" type="button">Xác nhận</button></div>
-    </section>
-  </div>
+  <!-- adminPasswordOverlay đã xoá — không dùng password nữa -->
 
   <section id="adminPage" aria-label="Cài đặt Admin">
     <header id="adminPageHeader">
