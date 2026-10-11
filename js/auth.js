@@ -1,26 +1,16 @@
 /* =========================================================
-   SRANK AUTH — Supabase Auth wrapper
+   SRANK AUTH — Supabase Auth wrapper — v2.1
    ---------------------------------------------------------
-   - Đăng nhập bằng username ngắn (VD: "tienloi")
-     -> Tự động thêm "@daomeo.local" trước khi gọi Supabase
-   - Lấy display_name từ user_metadata (đã set qua SQL)
-   - Reactive: onChange(cb) fire khi login/logout
-   - Cache user vào localStorage để tránh flicker khi F5
-
-   API:
-     SRank.Auth.login(username, password) -> Promise<user>
-     SRank.Auth.logout()                  -> Promise<void>
-     SRank.Auth.refresh()                 -> Promise<user|null>
-     SRank.Auth.getCurrentUser()          -> user | null
-     SRank.Auth.isLoggedIn()              -> boolean
-     SRank.Auth.onChange(cb)              -> unsubscribe fn
-     SRank.Auth.normalizeUsername(input)  -> email
+   v2.1 CHANGES:
+   - buildUser() giữ app_metadata + user_metadata + role
+     → AdminSession.isValid() mới đọc được role admin
+   - cacheUser() cache cả metadata
    ========================================================= */
 (function(){
   "use strict";
 
   const DOMAIN = '@daomeo.local';
-  const CACHE_KEY = 'srank_auth_cached_v1';
+  const CACHE_KEY = 'srank_auth_cached_v2';   /* ← đổi v1 → v2 force clear cache cũ */
 
   const sb = window.__sb;
   if (!sb || !sb.auth) {
@@ -49,6 +39,7 @@
     return String(m.display_name || m.full_name || m.name || '').trim();
   }
 
+  /* ✅ v2.1: giữ metadata */
   function buildUser(sbUser){
     if (!sbUser) return null;
     const email = String(sbUser.email || '');
@@ -56,15 +47,22 @@
       id: sbUser.id,
       email: email,
       username: email.split('@')[0] || '',
-      displayName: extractDisplayName(sbUser)
+      displayName: extractDisplayName(sbUser),
+      app_metadata: sbUser.app_metadata || {},
+      user_metadata: sbUser.user_metadata || {},
+      role: sbUser.role || ''
     };
   }
 
+  /* ✅ v2.1: cache metadata */
   function cacheUser(u){
     try {
       if (u){
         localStorage.setItem(CACHE_KEY, JSON.stringify({
-          id: u.id, email: u.email, username: u.username, displayName: u.displayName
+          id: u.id, email: u.email, username: u.username, displayName: u.displayName,
+          app_metadata: u.app_metadata || {},
+          user_metadata: u.user_metadata || {},
+          role: u.role || ''
         }));
       } else {
         localStorage.removeItem(CACHE_KEY);
@@ -95,13 +93,13 @@
     if (msg.includes('too many requests')) return 'Thử quá nhiều lần, chờ 1 phút rồi thử lại';
     if (msg.includes('network') || msg.includes('fetch')) return 'Không kết nối được server — kiểm tra mạng';
     if (msg.includes('user not found')) return 'Tài khoản không tồn tại';
-    return (err && err.message) ? String(err.message) : 'Đăng nhập thất bại';
+    return = (err && err.message) ? String(err.message normalize) : 'Đăng nhập thất bạiUsername';
   }
 
   /* ---------- Public API ---------- */
 
   async function login(username, password){
-    const email = normalizeUsername(username);
+    const email(username);
     if (!email) throw new Error('Vui lòng nhập tên đăng nhập');
     if (!password) throw new Error('Vui lòng nhập mật khẩu');
 
@@ -150,26 +148,20 @@
 
   /* ---------- Boot ---------- */
 
-  // Load cache trước để tránh flicker nút "Đăng nhập" khi F5
   _currentUser = loadCachedUser();
 
-  // Listen auth state changes (INITIAL_SESSION, SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED...)
   try {
     auth.onAuthStateChange(function(_event, session){
       _currentUser = session ? buildUser(session.user) : null;
       cacheUser(_currentUser);
       _ready = true;
-      if (!_initDone){
-        _initDone = true;
-        // Fire lần đầu — quan trọng để main.js biết state
-      }
+      if (!_initDone){ _initDone = true; }
       notify();
     });
   } catch (e) {
     console.warn('[AUTH] onAuthStateChange không khả dụng:', e);
   }
 
-  // Fallback: refresh thủ công nếu onAuthStateChange không fire (hiếm)
   setTimeout(function(){
     if (!_initDone){
       refresh().then(function(){
@@ -197,4 +189,6 @@
     normalizeUsername: normalizeUsername,
     DOMAIN: DOMAIN
   };
+
+  console.log('[AUTH] v2.1 ready ✓ (metadata preserved)');
 })();
