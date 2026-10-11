@@ -1,6 +1,11 @@
 /* =========================================================
-   SRANK AUTH UI — v10.3 (Role-based, no password)
+   SRANK AUTH UI — v10.4 (Role-based, no password, remember me)
    ---------------------------------------------------------
+   v10.4 CHANGES:
+   - Thêm checkbox "Lưu mật khẩu cho lần sau"
+   - Tự động điền credentials đã lưu khi mở form
+   - Lưu/xoá theo checkbox khi login thành công
+   - Storage key: srank_saved_credentials_v1
    v10.3 CHANGES:
    - Bỏ hẳn mọi reference đến password admin
    - isBossMode() check role admin từ Auth metadata
@@ -25,6 +30,8 @@
   const avatarBtn = $("avatarBtn");
   const appVersion = $("appVersion");
   const question = $("question");
+  const rememberCheckbox = $("loginRemember");
+  const CRED_KEY = "srank_saved_credentials_v1";
 
   if (!overlay) { console.warn("[AUTH-UI] thiếu DOM"); return; }
 
@@ -374,12 +381,51 @@
   }
 
   /* ============ LOGIN FORM ============ */
+
+  /* ⭐ v10.4: lưu/đọc/xoá credentials */
+  function loadSavedCredentials(){
+    try {
+      const raw = localStorage.getItem(CRED_KEY);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (!obj || typeof obj !== "object") return null;
+      if (!obj.username || !obj.password) return null;
+      return { username: String(obj.username), password: String(obj.password) };
+    } catch (_) { return null; }
+  }
+
+  function saveCredentials(username, password){
+    try {
+      localStorage.setItem(CRED_KEY, JSON.stringify({
+        username: String(username || ""),
+        password: String(password || ""),
+        savedAt: Date.now()
+      }));
+    } catch (_) {}
+  }
+
+  function clearCredentials(){
+    try { localStorage.removeItem(CRED_KEY); } catch (_) {}
+  }
+
   function openLoginForm(){
     overlay.classList.add("show");
     overlay.setAttribute("aria-hidden", "false");
     msgEl.textContent = "";
     msgEl.classList.remove("ok");
-    setTimeout(function(){ userInput.focus(); }, 60);
+    /* ⭐ v10.4: tự điền credentials đã lưu */
+    const saved = loadSavedCredentials();
+    if (saved){
+      if (!userInput.value) userInput.value = saved.username;
+      if (!passInput.value) passInput.value = saved.password;
+      if (rememberCheckbox) rememberCheckbox.checked = true;
+    } else {
+      if (rememberCheckbox) rememberCheckbox.checked = false;
+    }
+    setTimeout(function(){
+      if (userInput.value && passInput.value) passInput.focus();
+      else userInput.focus();
+    }, 60);
   }
 
   function closeLoginForm(){
@@ -409,6 +455,12 @@
     try {
       await Auth.login(u, p);
       /* v10.3: không clear gì — role được đọc từ Auth metadata */
+      /* ⭐ v10.4: lưu/xoá credentials theo checkbox */
+      if (rememberCheckbox && rememberCheckbox.checked) {
+        saveCredentials(u, p);
+      } else {
+        clearCredentials();
+      }
       setMsg("Đăng nhập thành công ✓", true);
       setTimeout(closeLoginForm, 350);
     } catch(err){
@@ -466,6 +518,7 @@
         window.AdminSession.clear();
       }
     } catch(_) {}
+    /* ⭐ v10.4: KHÔNG xoá credentials — để lần sau tự điền */
   }
 
   if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
@@ -488,5 +541,5 @@
 
   window.SRank.openLogin = openLoginForm;
 
-  console.log("[AUTH-UI] ready ✓ v10.3 — role-based");
+  console.log("[AUTH-UI] ready ✓ v10.4 — role-based + remember me");
 })();
