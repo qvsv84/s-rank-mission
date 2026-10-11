@@ -30,7 +30,57 @@ function applyAttendanceData(payload,year,month){const map={};(payload?.employee
 function applyAttendanceCache(year,month){const cache=loadAttendanceCache(year,month);if(!cache||!Array.isArray(cache.employees))return!1;rememberAttendanceRaw(year,month,cache.employees);const prefix=year+"-"+pad(month+1)+"-";cache.employees.forEach(person=>{const name=String(person?.name||"").trim();if(!name)return;if(!ATTENDANCE_DATA[name])ATTENDANCE_DATA[name]={};Object.keys(ATTENDANCE_DATA[name]).forEach(k=>{if(k.startsWith(prefix))delete ATTENDANCE_DATA[name][k]});const days=person?.days||{};Object.keys(days).forEach(day=>{const status=String(days[day]??"").trim().toUpperCase();if(["P","O","T","Q","X"].includes(status))ATTENDANCE_DATA[name][key(year,month,Number(day))]=status})});const seen=new Set(ATTENDANCE_EMPLOYEES);cache.employees.forEach(p=>{const name=String(p?.name||"").trim();if(name&&!seen.has(name)){seen.add(name);ATTENDANCE_EMPLOYEES.push(name)}});syncAttendanceEmployeeControls();return!0}
 function statusInfo(status){const s=String(status||"").trim().toUpperCase();if(s==="V")return{className:"work",label:"✓",icon:"✓",shortLabel:""};if(s==="P")return{className:"leave",label:"Phép",icon:"🌴",shortLabel:"phép"};if(s==="O")return{className:"off",label:"OFF",icon:"—",shortLabel:"off"};if(s==="T")return{className:"ot",label:"OT",icon:"⚡",shortLabel:"ot"};if(s==="Q")return{className:"q",label:"Quên",icon:"❓",shortLabel:"quên"};if(s==="X")return{className:"x",label:"X",icon:"⚠️",shortLabel:"kp"};if(s==="U")return{className:"empty",label:"",icon:"🥥",shortLabel:""};return{className:"empty",label:"",icon:"",shortLabel:""}}
 function rebuildAttendanceCacheFromCurrent(year,month){const employees=ATTENDANCE_EMPLOYEES.map(name=>{const days={};for(let d=1;d<=31;d++){const value=ATTENDANCE_DATA[name]?.[key(year,month,d)];if(["P","O","T","Q","X"].includes(value))days[String(d)]=value}return{name,days}});rememberAttendanceRaw(year,month,employees);saveAttendanceCache(year,month,employees)}
-function syncAttendanceEmployeeControls(){const authName=isAuthUser()?getAuthDisplayName():"";if(authName)selectedName=authName;const cur=selectedName;if(ATTENDANCE_EMPLOYEES.includes(cur)){wheelIndex=ATTENDANCE_EMPLOYEES.indexOf(cur)}else{wheelIndex=0;if(!authName)selectedName=ATTENDANCE_EMPLOYEES[0]||""}const sameList=employee.options.length===ATTENDANCE_EMPLOYEES.length&&ATTENDANCE_EMPLOYEES.every((name,i)=>employee.options[i]?.value===name);if(!sameList){const frag=document.createDocumentFragment();ATTENDANCE_EMPLOYEES.forEach(name=>{const opt=document.createElement("option");opt.value=name;opt.textContent=(window.DN?window.DN(name):name);frag.appendChild(opt)});employee.innerHTML="";employee.appendChild(frag);nameWheel.setItems(ATTENDANCE_EMPLOYEES.map(n=>window.DN?window.DN(n):n))}employee.value=selectedName;updateWheelButton();updateEmployeeAvatar()}
+
+/* ═══ ⭐ v1.3: SCORE STATS — Điểm + Rank cho card user ═══ */
+let _scoreStatsCache={month:0,ts:0,map:new Map()};
+const SCORE_STATS_TTL=60000;
+
+async function fetchScoreStats(month,force){
+  const now=Date.now();
+  if(!force&&_scoreStatsCache.month===month&&(now-_scoreStatsCache.ts)<SCORE_STATS_TTL){
+    return _scoreStatsCache.map;
+  }
+  try{
+    const r=await(window.SRankScheduler?window.SRankScheduler.enqueuePoll(()=>window.__srankApi("scoreLeaderboard",{month,_ts:Date.now()},15000)):window.__srankApi("scoreLeaderboard",{month,_ts:Date.now()},15000));
+    if(!r||!r.ok||!r.data)return _scoreStatsCache.map;
+    const rows=Array.isArray(r.data.rows)?r.data.rows:(Array.isArray(r.data)?r.data:[]);
+    const map=new Map();
+    rows.forEach(function(row){
+      const nm=String(row&&row.name||"").trim();
+      if(!nm)return;
+      const pts=Number(row.points)||0;
+      let rk=String(row.rank||"").trim().toUpperCase();
+      if(!rk){rk=pts>=340?"SSS":pts>=240?"SS":pts>=180?"S":pts>=100?"A":"B"}
+      map.set(nm,{points:pts,rank:rk});
+    });
+    _scoreStatsCache={month:month,ts:now,map:map};
+    return map;
+  }catch(_){
+    return _scoreStatsCache.map;
+  }
+}
+
+function invalidateScoreStats(){_scoreStatsCache={month:0,ts:0,map:new Map()}}
+
+async function updateEmployeeStats(){
+  const el=$("attendanceEmployeeStats");
+  if(!el)return;
+  if(!page.classList.contains("show"))return;
+  if(!selectedName){el.innerHTML="";return}
+  const m=viewDate.getMonth()+1;
+  el.innerHTML='<span class="att-stats-pts">…</span>';
+  const map=await fetchScoreStats(m,false);
+  const st=map.get(selectedName);
+  if(!st){el.innerHTML="";return}
+  const rankKey=String(st.rank||"B").toUpperCase();
+  el.innerHTML='<span class="att-stats-pts">'+st.points.toLocaleString("vi-VN")+'đ</span>'
+    +'<span class="att-stats-sep">·</span>'
+    +'<span class="att-stats-rank rank-'+rankKey+'">'+rankKey+'</span>';
+}
+
+/* ═══ end SCORE STATS ═══ */
+
+function syncAttendanceEmployeeControls(){const authName=isAuthUser()?getAuthDisplayName():"";if(authName)selectedName=authName;const cur=selectedName;if(ATTENDANCE_EMPLOYEES.includes(cur)){wheelIndex=ATTENDANCE_EMPLOYEES.indexOf(cur)}else{wheelIndex=0;if(!authName)selectedName=ATTENDANCE_EMPLOYEES[0]||""}const sameList=employee.options.length===ATTENDANCE_EMPLOYEES.length&&ATTENDANCE_EMPLOYEES.every((name,i)=>employee.options[i]?.value===name);if(!sameList){const frag=document.createDocumentFragment();ATTENDANCE_EMPLOYEES.forEach(name=>{const opt=document.createElement("option");opt.value=name;opt.textContent=(window.DN?window.DN(name):name);frag.appendChild(opt)});employee.innerHTML="";employee.appendChild(frag);nameWheel.setItems(ATTENDANCE_EMPLOYEES.map(n=>window.DN?window.DN(n):n))}employee.value=selectedName;updateWheelButton();updateEmployeeAvatar();try{updateEmployeeStats()}catch(_){}}
 async function loadAttendanceMonth(force=!1){if(!force&&Date.now()<attendanceLockUntil)return{ok:!0,locked:!0};const y=viewDate.getFullYear(),m=viewDate.getMonth(),requestKey=y+"-"+(m+1);if(attendanceLoadPromise&&attendanceLoadPromiseKey===requestKey)return attendanceLoadPromise;const token=++attendanceLoadToken;if(!force&&attendanceServerLoaded&&attendanceServerLoadedKey===requestKey)return{ok:!0,cached:!0};if(force)setAttendanceFooterState("syncing","Đang đồng bộ…");else if(!ATTENDANCE_EMPLOYEES.length){applyAttendanceCache(y,m);render()}const promise=(async()=>{try{const r=await(window.SRankScheduler?window.SRankScheduler.enqueuePoll(()=>window.__srankApi("getAttendance",{month:m+1,_ts:Date.now()},2e4)):window.__srankApi("getAttendance",{month:m+1,_ts:Date.now()},2e4));if(!r||r.ok!==!0)throw new Error(r?.error||"Google Sheet trả về dữ liệu không hợp lệ");if(!r.data||!Array.isArray(r.data.employees))throw new Error("Phản hồi getAttendance thiếu danh sách employees");if(viewDate.getFullYear()===y&&viewDate.getMonth()===m){applyAttendanceData(r.data,y,m);attendanceServerLoaded=!0;attendanceServerLoadedKey=requestKey;render()}return r}catch(e){const msg=attendanceErrorText(e),hasCache=applyAttendanceCache(y,m);setAttendanceFooterState("error",hasCache?`Lỗi đồng bộ: ${msg} • đang dùng dữ liệu đã lưu`:`Lỗi đồng bộ: ${msg}`);render();throw e}finally{if(attendanceLoadPromiseKey===requestKey){attendanceLoadPromise=null;attendanceLoadPromiseKey=""}}})();attendanceLoadPromise=promise;attendanceLoadPromiseKey=requestKey;return promise}
 async function preloadAdjacentMonths(){const y=viewDate.getFullYear(),m=viewDate.getMonth(),tasks=[];for(let offset=-2;offset<=2;offset++){if(offset===0)continue;let ny=y,nm=m+offset;while(nm<0){nm+=12;ny-=1}while(nm>11){nm-=12;ny+=1}tasks.push({year:ny,month:nm+1})}for(const t of tasks){const cacheKey=t.year+"-"+t.month;if(attendancePreloadedKeys.has(cacheKey))continue;if(getAttendanceRawMemory(t.year,t.month-1)){attendancePreloadedKeys.add(cacheKey);continue}attendancePreloadedKeys.add(cacheKey);try{const r=await(window.SRankScheduler?window.SRankScheduler.enqueuePoll(()=>window.__srankApi("getAttendance",{month:t.month,_ts:Date.now()},15e3)):window.__srankApi("getAttendance",{month:t.month,_ts:Date.now()},15e3));if(r&&r.ok&&Array.isArray(r.data?.employees)){rememberAttendanceRaw(t.year,t.month-1,r.data.employees);saveAttendanceCache(t.year,t.month-1,r.data.employees)}}catch(_){}}}
 function updateEmployeeAvatar(){const el=$("attendanceEmployeeAvatar");if(!el)return;const name=selectedName||"";let url="";try{if(typeof window.getAvatarUrl==="function")url=window.getAvatarUrl(name);else if(window.SRank&&typeof window.SRank.getAvatarUrl==="function")url=window.SRank.getAvatarUrl(name)}catch(_){}if(url){el.style.backgroundImage=`url("${url.replace(/"/g,'\\"')}")`;el.textContent=""}else{el.style.backgroundImage="";const _dnName=window.DN?window.DN(name):name;el.textContent=_dnName?_dnName.slice(0,1).toUpperCase():"?"}}
@@ -68,6 +118,8 @@ async function saveAttendanceBatchStatus(status){
     const r=await window.__srankApi("setAttendanceBatch",{month:monthAtRequest,days,name:nameAtRequest,status:cleanStatus},2e4);
     if(!r||r.ok!==!0)throw new Error(r?.error||"Không xác nhận");
     rebuildAttendanceCacheFromCurrent(y,m);attendanceLockUntil=Date.now()+3e3;
+    invalidateScoreStats();
+    try{updateEmployeeStats()}catch(_){}
     setAttendanceFooterState("ok",`Đã lưu ${days.length} ngày ✓`)
   }catch(e){
     snapshots.forEach(s=>{if(s.prev)ATTENDANCE_DATA[nameAtRequest][s.key]=s.prev;else delete ATTENDANCE_DATA[nameAtRequest][s.key]});
@@ -121,6 +173,8 @@ async function saveAttendanceStatus(status){
     const r=await window.__srankApi("setAttendance",{month:monthAtRequest,day:dayAtRequest,name:nameAtRequest,status:cleanStatus},2e4);
     if(!r||r.ok!==!0)throw new Error(r?.error||"Google Sheet không xác nhận");
     rebuildAttendanceCacheFromCurrent(y,m);attendanceLockUntil=Date.now()+3e3;
+    invalidateScoreStats();
+    try{updateEmployeeStats()}catch(_){}
     setAttendanceFooterState("ok","Đã lưu ✓")
   }catch(e){
     if(prevValue)ATTENDANCE_DATA[nameAtRequest][k]=prevValue;else delete ATTENDANCE_DATA[nameAtRequest][k];
@@ -188,6 +242,7 @@ async function openPage(){
   const y=viewDate.getFullYear(),m=viewDate.getMonth(),hasCache=applyAttendanceCache(y,m);
   if(hasCache)render();
   updateEmployeeAvatar();
+  try{updateEmployeeStats()}catch(_){}
   startAttendanceAutoRefresh();
   loadAttendanceMonth(!1).then(()=>preloadAdjacentMonths()).catch(()=>{})
 }
@@ -210,32 +265,32 @@ if(wheelBtn)wheelBtn.addEventListener("click",e=>{
 });
 if(wheelClose)wheelClose.addEventListener("click",closeNameWheel);
 if(wheelOverlay)wheelOverlay.addEventListener("click",e=>{if(e.target===wheelOverlay)closeNameWheel()});
-if(wheelConfirm)wheelConfirm.addEventListener("click",()=>{if(isRegularUser()){closeNameWheel();return}selectedName=ATTENDANCE_EMPLOYEES[nameWheel.getIndex()]||"";employee.value=selectedName;updateWheelButton();updateEmployeeAvatar();closeNameWheel();render()});
-document.addEventListener("keydown",e=>{if(!wheelOverlay||!wheelOverlay.classList.contains("show")||!ATTENDANCE_EMPLOYEES.length)return;if(e.key==="ArrowDown"){e.preventDefault();nameWheel.setIndex(nameWheel.getIndex()+1)}else if(e.key==="ArrowUp"){e.preventDefault();nameWheel.setIndex(nameWheel.getIndex()-1)}else if(e.key==="Enter"){e.preventDefault();if(isRegularUser()){closeNameWheel();return}selectedName=ATTENDANCE_EMPLOYEES[nameWheel.getIndex()]||"";employee.value=selectedName;updateWheelButton();closeNameWheel();render()}});
+if(wheelConfirm)wheelConfirm.addEventListener("click",()=>{if(isRegularUser()){closeNameWheel();return}selectedName=ATTENDANCE_EMPLOYEES[nameWheel.getIndex()]||"";employee.value=selectedName;updateWheelButton();updateEmployeeAvatar();try{updateEmployeeStats()}catch(_){}closeNameWheel();render()});
+document.addEventListener("keydown",e=>{if(!wheelOverlay||!wheelOverlay.classList.contains("show")||!ATTENDANCE_EMPLOYEES.length)return;if(e.key==="ArrowDown"){e.preventDefault();nameWheel.setIndex(nameWheel.getIndex()+1)}else if(e.key==="ArrowUp"){e.preventDefault();nameWheel.setIndex(nameWheel.getIndex()-1)}else if(e.key==="Enter"){e.preventDefault();if(isRegularUser()){closeNameWheel();return}selectedName=ATTENDANCE_EMPLOYEES[nameWheel.getIndex()]||"";employee.value=selectedName;updateWheelButton();try{updateEmployeeStats()}catch(_){}closeNameWheel();render()}});
 function goToMonth(delta){
   viewDate.setMonth(viewDate.getMonth()+delta);
   attendanceLoadPromise=null;attendanceLoadPromiseKey="";
   if(attendanceMultiMode||attendanceMultiDays.size){attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI()}
   const y=viewDate.getFullYear(),m=viewDate.getMonth(),hasCache=applyAttendanceCache(y,m);
   if(!hasCache)Object.keys(ATTENDANCE_DATA).forEach(k=>delete ATTENDANCE_DATA[k]);
-  render();loadAttendanceMonth(!1).catch(()=>{})
+  render();try{updateEmployeeStats()}catch(_){}loadAttendanceMonth(!1).catch(()=>{})
 }
 if(prev)prev.addEventListener("click",()=>goToMonth(-1));
 if(next)next.addEventListener("click",()=>goToMonth(1));
 const attendanceTodayBtn=$("attendanceTodayBtn");
 if(attendanceTodayBtn)attendanceTodayBtn.addEventListener("click",()=>{const now=new Date();if(viewDate.getFullYear()===now.getFullYear()&&viewDate.getMonth()===now.getMonth()){loadAttendanceMonth(!0).catch(()=>{});return}
   if(attendanceMultiMode||attendanceMultiDays.size){attendanceMultiMode=!1;attendanceMultiDays.clear();updateAttendanceMultiUI()}
-  viewDate.setMonth(now.getMonth());viewDate.setFullYear(now.getFullYear());attendanceLoadPromise=null;attendanceLoadPromiseKey="";const hasCache=applyAttendanceCache(now.getFullYear(),now.getMonth());if(hasCache)render();loadAttendanceMonth(!1).catch(()=>{});setAttendanceFooterState("syncing","Đang tải tháng hiện tại…")});
+  viewDate.setMonth(now.getMonth());viewDate.setFullYear(now.getFullYear());attendanceLoadPromise=null;attendanceLoadPromiseKey="";const hasCache=applyAttendanceCache(now.getFullYear(),now.getMonth());if(hasCache)render();try{updateEmployeeStats()}catch(_){}loadAttendanceMonth(!1).catch(()=>{});setAttendanceFooterState("syncing","Đang tải tháng hiện tại…")});
 if(isAuthUser()){const n=getAuthDisplayName();if(n)selectedName=n}
 updateEmployeeCardVisibility();
 updateAdminControlsVisibility();
 employee.value=selectedName;updateWheelButton();buildNameWheel();render();
 const todayKeyAttendance=()=>{const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Ho_Chi_Minh",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()),g=k=>parts.find(x=>x.type===k)?.value||"";return`${g("year")}-${g("month")}-${g("day")}`};
 function renderAttendanceIfCheckinMatches(){if(!page.classList.contains("show"))return;let ev=null;try{const raw=localStorage.getItem("srank_last_checkin");if(raw)ev=JSON.parse(raw)}catch(_){}if(!ev||!ev.name||!ev.date||ev.date!==todayKeyAttendance()||ev.name!==selectedName)return;const now=new Date();if(viewDate.getFullYear()!==now.getFullYear()||viewDate.getMonth()!==now.getMonth())return;const day=now.getDate(),k=key(now.getFullYear(),now.getMonth(),day),existing=ATTENDANCE_DATA[selectedName]?.[k];if(["P","O","T","Q","X"].includes(existing))return;render()}
-window.addEventListener("checkinDone",()=>{requestAnimationFrame(()=>renderAttendanceIfCheckinMatches());setTimeout(()=>{try{localStorage.removeItem("srank_last_checkin")}catch(_){}},5e3)});
+window.addEventListener("checkinDone",()=>{requestAnimationFrame(()=>renderAttendanceIfCheckinMatches());invalidateScoreStats();try{updateEmployeeStats()}catch(_){}setTimeout(()=>{try{localStorage.removeItem("srank_last_checkin")}catch(_){}},5e3)});
 document.addEventListener("visibilitychange",()=>{if(document.hidden||!page.classList.contains("show"))return;renderAttendanceIfCheckinMatches()});
 
-/* ✅ v1.2: expose tên GỐC cho attendance-top3.js (tránh đọc DOM bị DN đổi) */
+/* ✅ v1.2: expose tên GỐC cho attendance-top3.js */
 window.__getAttendanceSelectedName=function(){return selectedName||""};
 
 window.__getAttendanceTopDataForMonth=async function(monthNumber,force=!1){const now=new Date(),year=now.getFullYear(),month=Math.max(1,Math.min(12,Number(monthNumber)||now.getMonth()+1)),monthIndex=month-1;let employees=!force?getAttendanceRawMemory(year,monthIndex):null;if(!employees&&!force){const cache=loadAttendanceCache(year,monthIndex);if(cache&&Array.isArray(cache.employees)){employees=cache.employees;rememberAttendanceRaw(year,monthIndex,employees)}}if(!(Array.isArray(employees)&&employees.length)){const r=await(window.SRankScheduler?window.SRankScheduler.enqueuePoll(()=>window.__srankApi("getAttendance",{month,_ts:Date.now()},2e4)):window.__srankApi("getAttendance",{month,_ts:Date.now()},2e4));if(!r||r.ok!==!0)throw new Error(r?.error||"Google Sheet trả về dữ liệu không hợp lệ");employees=Array.isArray(r.data?.employees)?r.data.employees:[];rememberAttendanceRaw(year,monthIndex,employees);saveAttendanceCache(year,monthIndex,employees)}return{year,month,employees}};
@@ -249,6 +304,7 @@ if(window.SRank&&window.SRank.Auth&&typeof window.SRank.Auth.onChange==="functio
     updateAdminControlsVisibility();
     syncAttendanceEmployeeControls();
     if(page.classList.contains("show")){if(!isLoggedIn()){closePage()}else render()}
+    try{updateEmployeeStats()}catch(_){}
   });
 }
 
@@ -257,11 +313,12 @@ setInterval(function(){
   updateEmployeeCardVisibility();
 },1500);
 
-/* ✅ v1.2: đổi tên hiển thị → cập nhật wheel/avatar/danh sách */
+/* ✅ v1.2 + v1.3: đổi tên hiển thị + cập nhật stats khi checkin */
 window.addEventListener("displayNameUpdated",function(){
   try{updateWheelButton()}catch(_){}
   try{updateEmployeeAvatar()}catch(_){}
   try{if(ATTENDANCE_EMPLOYEES.length){syncAttendanceEmployeeControls()}}catch(_){}
+  try{updateEmployeeStats()}catch(_){}
 });
 
 })();
