@@ -1,4 +1,4 @@
-/* ═══ PUZZLE GAME ═══ */
+/* ═══ PUZZLE GAME v1.0.1 ═══ */
 #puzzleOverlay{position:fixed;inset:0;background:rgba(10,25,18,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:9600;display:none;align-items:center;justify-content:center;padding:12px;animation:pzFadeIn .2s ease}
 #puzzleOverlay.show{display:flex}
 @keyframes pzFadeIn{from{opacity:0}to{opacity:1}}
@@ -36,9 +36,12 @@
 .pz-points-badge{background:linear-gradient(135deg,#fff2c4,#f5c542);color:#6a4a10;font-weight:900;font-size:12px;padding:4px 10px;border-radius:10px;border:1px solid #e0a800}
 .pz-grid{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;padding:12px 0;overflow-x:auto}
 .pz-word{display:flex;gap:6px;padding:6px;border-radius:10px;background:#f4faf1;border:1px dashed #c8dec8}
-.pz-cell{width:42px;height:50px;border:2px solid #c8dec8;background:#fff;border-radius:10px;font-size:22px;font-weight:900;text-align:center;text-transform:uppercase;color:#2a5a38;font-family:inherit;padding:0;outline:none;transition:all .15s;caret-color:transparent}
-.pz-cell:focus{border-color:#4fa370;box-shadow:0 0 0 3px rgba(79,163,112,.25)}
-.pz-cell.filled{background:#eef8ec}
+.pz-cell{width:42px;height:50px;border:2px solid #c8dec8;background:#fff;border-radius:10px;font-size:22px;font-weight:900;text-align:center;text-transform:uppercase;color:#2a5a38;font-family:inherit;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.pz-cell.filled{background:#eef8ec;border-color:#a8d0b0}
+.pz-input-wrap{margin-top:14px}
+.pz-input{width:100%;padding:14px 18px;border:2px solid #c8dec8;border-radius:14px;font-size:18px;font-weight:900;text-align:center;letter-spacing:3px;text-transform:uppercase;background:#fff;color:#2a5a38;font-family:inherit;outline:none;transition:all .15s;box-sizing:border-box}
+.pz-input:focus{border-color:#4fa370;box-shadow:0 0 0 4px rgba(79,163,112,.2)}
+.pz-input::placeholder{letter-spacing:0;font-weight:700;color:#a8c0a8;text-transform:none;font-size:14px}
 .pz-history{margin-top:16px}
 .pz-history-title{font-weight:900;font-size:13px;color:#5a7a60;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
 .pz-history-rows{display:flex;flex-direction:column;gap:6px}
@@ -91,6 +94,7 @@
 @media (max-width:480px){
   #puzzleBody{padding:12px}
   .pz-cell{width:36px;height:44px;font-size:19px}
+  .pz-input{font-size:16px;padding:12px 14px;letter-spacing:2px}
   .pz-hcell{width:28px;height:34px;font-size:15px}
   .pz-word{gap:4px;padding:4px}
 }
