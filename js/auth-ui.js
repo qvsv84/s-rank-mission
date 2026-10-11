@@ -465,13 +465,7 @@
   if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
 
   Auth.onChange(function(user){
-    if (user){
-      try {
-        if (window.AdminSession && typeof window.AdminSession.clear === "function") window.AdminSession.clear();
-        localStorage.removeItem("srank_admin_pwd_v1");
-      } catch(_) {}
-    }
-    currentUser = user;
+  currentUser = user;
     updateLogoutBtn();
     if (window.SRank && typeof window.SRank.rerenderLanding === "function"){
       try { window.SRank.rerenderLanding(); } catch(_) {}
