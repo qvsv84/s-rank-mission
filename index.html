@@ -356,8 +356,25 @@ body:not(.user-is-admin) #adminBtn { display: none !important; }
     </div>
   </section>
 
-  <div id="hint" aria-hidden="true" hidden></div>
+<div id="hint" aria-hidden="true" hidden></div>
 </main>
+
+<div id="puzzleOverlay" aria-hidden="true">
+  <section id="puzzlePanel" role="dialog" aria-modal="true">
+    <header id="puzzleHead">
+      <div id="puzzleHeadTitle"><span class="puzzle-head-icon">🧩</span><span>Giải đố Đảo Mèo</span></div>
+      <button id="puzzleClose" type="button" aria-label="Đóng">×</button>
+    </header>
+    <nav id="puzzleTabs">
+      <button class="puzzle-tab active" data-tab="play" type="button">🎮 Chơi</button>
+      <button class="puzzle-tab" data-tab="admin" type="button" id="puzzleAdminTab" hidden>⚙ Tạo puzzle</button>
+    </nav>
+    <div id="puzzleBody">
+      <div class="puzzle-view active" data-view="play"><div id="puzzlePlayContent"></div></div>
+      <div class="puzzle-view" data-view="admin"><div id="puzzleAdminContent"></div></div>
+    </div>
+  </section>
+</div>
 
 <button id="avatarBtn" type="button" aria-label="Đổi avatar" hidden>📷</button>
 <input id="avatarFileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
@@ -365,7 +382,7 @@ body:not(.user-is-admin) #adminBtn { display: none !important; }
 <button id="logoutBtn" type="button" aria-label="Đăng xuất" hidden><span aria-hidden="true">🚪</span><span class="lb-name" id="logoutName"></span></button>
 
 <button id="birthdayBtn" type="button" aria-label="Inb vùng kín" hidden style="display:none">💌</button>
-<button id="displayNameBtn" type="button" hidden style="display:none"></button> <button id="puzzleBtn" type="button" hidden style="display:none"></button>
+<button id="displayNameBtn" type="button" hidden style="display:none"></button>
 
 <div id="loginOverlay" aria-hidden="true">
   <section id="loginPanel" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
@@ -496,6 +513,7 @@ body:not(.user-is-admin) #adminBtn { display: none !important; }
 <script src="js/secret-mail.js" defer></script>
 <script src="js/realtime.js" defer></script>
 <script src="js/bxh-top.js" defer></script>
+ <script src="js/puzzle.js" defer></script>
 <script src="js/birthday-chat.js?v=2.0.0" defer></script>
 <script src="js/kick-signal.js" defer></script>
 <script src="js/menu.js" defer></script>
@@ -616,7 +634,7 @@ body:not(.user-is-admin) #adminBtn { display: none !important; }
       <div class="menu-section-title"><span>🎀</span> Công cụ</div>
       <div class="menu-grid">
         <button class="menu-item" data-target="kdvRulesBtn" type="button"><span class="menu-item-icon">📜</span><span class="menu-item-label">Luật KDV</span></button>
-        <button class="menu-item" data-target="lunchBtn" type="button"><span class="menu-item-icon">🍜</span><span class="menu-item-label">Bữa trưa</span></button>
+        <button class="menu-item" data-target="lunchBtn" type="button"><span class="menu-item-icon">🍜</span><span class="menu-item-label">Bữa trưa</span></button> <button class="menu-item" data-target="puzzleBtn" type="button"><span class="menu-item-icon">🧩</span><span class="menu-item-label">Giải đố</span></button>
         <button class="menu-item" data-target="attendanceBtn" type="button"><span class="menu-item-icon">🗓</span><span class="menu-item-label">Chấm công</span></button>
         <button class="menu-item" data-target="birthdayProxyBtn" type="button"><span class="menu-item-icon">💌</span><span class="menu-item-label">Inb vùng kín</span><span class="bd-menu-badge" id="bdMenuBadge" hidden></span></button>
         <button class="menu-item" data-target="displayNameBtn" type="button"><span class="menu-item-icon">🎴</span><span class="menu-item-label">Đổi tên hiển thị</span></button>
