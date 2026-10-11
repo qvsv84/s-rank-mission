@@ -1,16 +1,17 @@
 /* =========================================================
-   SRANK AUTH — Supabase Auth wrapper — v2.1
+   SRANK AUTH — Supabase Auth wrapper — v2.2
    ---------------------------------------------------------
-   v2.1 CHANGES:
-   - buildUser() giữ app_metadata + user_metadata + role
-     → AdminSession.isValid() mới đọc được role admin
-   - cacheUser() cache cả metadata
+   v2.2 CHANGES:
+   - GIỮ NGUYÊN CACHE_KEY v1 → không phá localStorage user
+   - Validate cache: cache thiếu metadata → treat null
+     → user cũ tự nhiên phải login lại 1 lần (không cần xoá cache)
+   - buildUser/cacheUser giữ app_metadata + user_metadata
    ========================================================= */
 (function(){
   "use strict";
 
   const DOMAIN = '@daomeo.local';
-  const CACHE_KEY = 'srank_auth_cached_v2';   /* ← đổi v1 → v2 force clear cache cũ */
+  const CACHE_KEY = 'srank_auth_cached_v1';   /* ← giữ v1, KHÔNG đổi */
 
   const sb = window.__sb;
   if (!sb || !sb.auth) {
@@ -39,7 +40,7 @@
     return String(m.display_name || m.full_name || m.name || '').trim();
   }
 
-  /* ✅ v2.1: giữ metadata */
+  /* ✅ v2.2: giữ metadata để AdminSession đọc được role */
   function buildUser(sbUser){
     if (!sbUser) return null;
     const email = String(sbUser.email || '');
@@ -54,7 +55,7 @@
     };
   }
 
-  /* ✅ v2.1: cache metadata */
+  /* ✅ v2.2: cache metadata */
   function cacheUser(u){
     try {
       if (u){
@@ -70,12 +71,24 @@
     } catch (_) {}
   }
 
+  /* ✅ v2.2: chỉ chấp nhận cache có metadata
+     Cache cũ (thiếu metadata) → return null → UI hiện "Đăng nhập"
+     → User login lại 1 lần, không cần xoá thủ công */
   function loadCachedUser(){
     try {
       const raw = localStorage.getItem(CACHE_KEY);
       if (!raw) return null;
       const u = JSON.parse(raw);
       if (!u || typeof u !== 'object' || !u.id) return null;
+
+      const hasAppMeta = u.app_metadata && typeof u.app_metadata === 'object'
+                      && Object.keys(u.app_metadata).length > 0;
+      const hasUserMeta = u.user_metadata && typeof u.user_metadata === 'object'
+                       && Object.keys(u.user_metadata).length > 0;
+
+      /* Cache cũ thiếu cả 2 metadata → không tin → return null */
+      if (!hasAppMeta && !hasUserMeta) return null;
+
       return u;
     } catch (_) { return null; }
   }
@@ -93,13 +106,13 @@
     if (msg.includes('too many requests')) return 'Thử quá nhiều lần, chờ 1 phút rồi thử lại';
     if (msg.includes('network') || msg.includes('fetch')) return 'Không kết nối được server — kiểm tra mạng';
     if (msg.includes('user not found')) return 'Tài khoản không tồn tại';
-    return = (err && err.message) ? String(err.message normalize) : 'Đăng nhập thất bạiUsername';
+    return (err && err.message) ? String(err.message) : 'Đăng nhập thất bại';
   }
 
   /* ---------- Public API ---------- */
 
   async function login(username, password){
-    const email(username);
+    const email = normalizeUsername(username);
     if (!email) throw new Error('Vui lòng nhập tên đăng nhập');
     if (!password) throw new Error('Vui lòng nhập mật khẩu');
 
@@ -148,6 +161,7 @@
 
   /* ---------- Boot ---------- */
 
+  /* Cache cũ thiếu metadata → tự treat null → user login lại 1 lần */
   _currentUser = loadCachedUser();
 
   try {
@@ -162,6 +176,7 @@
     console.warn('[AUTH] onAuthStateChange không khả dụng:', e);
   }
 
+  /* Fallback: refresh thủ công nếu Auth chậm */
   setTimeout(function(){
     if (!_initDone){
       refresh().then(function(){
@@ -190,5 +205,5 @@
     DOMAIN: DOMAIN
   };
 
-  console.log('[AUTH] v2.1 ready ✓ (metadata preserved)');
+  console.log('[AUTH] v2.2 ready ✓ (no cache clear needed)');
 })();
