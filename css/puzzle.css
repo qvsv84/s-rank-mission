@@ -1,4 +1,4 @@
-/* ═══ PUZZLE GAME v1.0.1 ═══ */
+/* ═══ PUZZLE GAME v1.0.2 ═══ */
 #puzzleOverlay{position:fixed;inset:0;background:rgba(10,25,18,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:9600;display:none;align-items:center;justify-content:center;padding:12px;animation:pzFadeIn .2s ease}
 #puzzleOverlay.show{display:flex}
 @keyframes pzFadeIn{from{opacity:0}to{opacity:1}}
@@ -38,6 +38,20 @@
 .pz-word{display:flex;gap:6px;padding:6px;border-radius:10px;background:#f4faf1;border:1px dashed #c8dec8}
 .pz-cell{width:42px;height:50px;border:2px solid #c8dec8;background:#fff;border-radius:10px;font-size:22px;font-weight:900;text-align:center;text-transform:uppercase;color:#2a5a38;font-family:inherit;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .pz-cell.filled{background:#eef8ec;border-color:#a8d0b0}
+
+/* ⭐ v1.0.2: LEGEND màu sắc */
+.pz-legend{margin-top:10px;background:#f4faf1;border:1px solid #d8ead8;border-radius:12px;padding:10px 12px}
+.pz-legend-title{font-weight:900;font-size:11px;color:#5a7a60;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.pz-legend-list{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+.pz-legend-item{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;color:#3a5a40;line-height:1.3}
+.pz-legend-swatch{width:16px;height:16px;border-radius:5px;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.08);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:900}
+.pz-legend-swatch.green{background:linear-gradient(135deg,#5fb87e,#3d8a5b)}
+.pz-legend-swatch.black{background:linear-gradient(135deg,#3a3a3a,#1a1a1a)}
+.pz-legend-swatch.yellow{background:linear-gradient(135deg,#f0c94a,#d4a800)}
+.pz-legend-swatch.purple{background:linear-gradient(135deg,#b873d0,#8e3baa)}
+.pz-legend-example{margin-top:8px;padding-top:8px;border-top:1px dashed #c8dec8;font-size:11px;color:#5a7a60;font-weight:700;line-height:1.5}
+.pz-legend-example b{color:#2a5a38;background:#fff;padding:1px 5px;border-radius:4px;font-family:monospace;letter-spacing:.5px}
+
 .pz-input-wrap{margin-top:14px}
 .pz-input{width:100%;padding:14px 18px;border:2px solid #c8dec8;border-radius:14px;font-size:18px;font-weight:900;text-align:center;letter-spacing:3px;text-transform:uppercase;background:#fff;color:#2a5a38;font-family:inherit;outline:none;transition:all .15s;box-sizing:border-box}
 .pz-input:focus{border-color:#4fa370;box-shadow:0 0 0 4px rgba(79,163,112,.2)}
@@ -97,4 +111,8 @@
   .pz-input{font-size:16px;padding:12px 14px;letter-spacing:2px}
   .pz-hcell{width:28px;height:34px;font-size:15px}
   .pz-word{gap:4px;padding:4px}
+  .pz-legend-list{grid-template-columns:1fr}
+}
+@media (max-width:380px){
+  .pz-legend-list{grid-template-columns:1fr}
 }
