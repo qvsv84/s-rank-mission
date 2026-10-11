@@ -1,14 +1,10 @@
 /* =========================================================
-   ATTENDANCE TOP3 — 🥇🥈🥉 cho top 3 check sớm nhất
-   Load SAU attendance.js
+   ATTENDANCE TOP3 — v1.2 (fix DN)
    ---------------------------------------------------------
-   FIX v1.1:
-   - Rank 3 dùng class `att-top3rd` (đúng CSS), không phải `att-top3`
-   - Cache TTL 60s (tránh stale data)
-   - Race-condition guard (patchToken)
-   - Skip patch khi page ẩn
-   - Invalidate cache khi checkinDone
-   - Expose window.__attTop3.refresh() để force update
+   v1.2 FIX:
+   - Dùng __getAttendanceSelectedName() lấy tên GỐC (checklist_name)
+   - Fallback reverse DN nếu attendance.js chưa có global
+   - Lắng nghe displayNameUpdated để re-patch khi đổi tên
    ========================================================= */
 (function(){
   "use strict";
@@ -28,11 +24,30 @@
     return null;
   }
 
+  /* ✅ v1.2: dùng tên GỐC từ attendance.js, fallback reverse DN */
   function getSelectedName() {
+    try {
+      if (typeof window.__getAttendanceSelectedName === 'function') {
+        const n = window.__getAttendanceSelectedName();
+        if (n) return String(n).trim();
+      }
+    } catch(_) {}
     const btn = document.getElementById('attendanceEmployeeWheelBtn');
     if (!btn) return '';
     const v = btn.querySelector('.wheel-value');
-    return v ? String(v.textContent || '').trim() : '';
+    const displayName = v ? String(v.textContent || '').trim() : '';
+    if (!displayName) return '';
+    try {
+      const map = window.DisplayName && window.DisplayName.map;
+      if (map && map.size) {
+        for (const [key, val] of map) {
+          if (val && String(val).trim() === displayName) {
+            return String(key).trim();
+          }
+        }
+      }
+    } catch(_) {}
+    return displayName;
   }
 
   function getCurrentMonth() {
@@ -90,7 +105,7 @@
     const token = ++_patchToken;
 
     const map = await fetchTop3(month, false);
-    if (token !== _patchToken) return;   // có patch mới hơn → bỏ
+    if (token !== _patchToken) return;
     if (!map) return;
 
     clearBadges();
@@ -166,14 +181,17 @@
     const page = document.getElementById('attendancePage');
     if (page) new MutationObserver(schedule).observe(page, { attributes: true, attributeFilter: ['class'] });
 
-    // Khi tab visible lại → refresh
     document.addEventListener('visibilitychange', function() {
       if (!document.hidden) schedule();
     });
 
-    // Khi checkin hoặc admin đổi dữ liệu → invalidate cache
     window.addEventListener('checkinDone', function() {
       invalidateCache();
+      schedule();
+    });
+
+    /* ✅ v1.2: Đổi tên hiển thị → patch lại huy chương */
+    window.addEventListener('displayNameUpdated', function() {
       schedule();
     });
 
@@ -181,11 +199,12 @@
     setTimeout(schedule, 1500);
     setTimeout(schedule, 3000);
 
-    // Expose để debug / manual refresh
     window.__attTop3 = {
       refresh: function() { invalidateCache(); schedule(); },
       patch: patch
     };
+
+    console.log('[ATT-Top3] v1.2 ready ✓');
   }
 
   if (document.readyState === 'loading') {
