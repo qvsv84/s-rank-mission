@@ -45,7 +45,7 @@
     const Toast=window.Toast;
     const DN=window.DN||(n=>n);
 
-    const isAdmin=()=>{try{return window.AdminSession?.isValid?.()===true}catch(_){return false}};
+    const isAdmin=()=>{   try{     const u=window.SRank?.Auth?.getCurrentUser?.();     const un=String(u?.username||'').toLowerCase().trim();     return un==='tienloi';   }catch(_){return false} };
     const isLoggedIn=()=>{
       try{
         if(window.SRank?.Auth?.isLoggedIn)return window.SRank.Auth.isLoggedIn();
