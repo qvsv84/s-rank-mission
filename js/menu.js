@@ -171,8 +171,16 @@
       el.classList.remove('role-admin','role-manager','role-kdv','role-member');
       el.classList.add(info.klass);
       if (adminItemEl){
-        const isAdmin = info.klass === 'role-admin';
-        if (adminItemEl.hidden !== !isAdmin) adminItemEl.hidden = !isAdmin;
+  const isAdmin = info.klass === 'role-admin';
+  if (adminItemEl.hidden !== !isAdmin) adminItemEl.hidden = !isAdmin;
+}
+// Ẩn/hiện nút Admin ở bottomNav theo role
+const bottomAdminBtn = document.getElementById('adminBtn');
+if (bottomAdminBtn){
+  const isAdmin = info.klass === 'role-admin';
+  bottomAdminBtn.style.display = isAdmin ? '' : 'none';
+  bottomAdminBtn.hidden = !isAdmin;
+}
       }
       log('role applied:', info);
     };
