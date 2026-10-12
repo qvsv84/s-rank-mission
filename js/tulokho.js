@@ -1,11 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.1.0
+   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.2.0
    - Full-screen layout
-   - Hand compact (overlap cards)
-   - Table history (bài lượt cũ hiện mờ phía trên)
-   - Bài 13 lá/người, 3♠ đi trước, chất ♠<♣<♦<♥
-   - Chặt: tứ quý, 3 đôi thông, 4 đôi thông
-   - Ăn trắng: 7 loại (SQL check)
+   - Hand wrap (không overlap), lá to
+   - Table history (bài lượt cũ mờ)
+   - Smart select: click lá → cycle combo (pair → straight → single → clear)
+   - Fix: tạo/join phòng vào ngay (bug đứng im)
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -41,12 +40,17 @@
   let _isOpen = false;
   let _busy = false;
   let _lastErrorAt = 0;
+
   // Table history
   let _lastTable = [];
   let _lastTableOwner = '';
   let _lastTableStr = '';
   let _prevTable = [];
   let _prevTableOwner = '';
+
+  // Smart select
+  let _lastClickCard = null;
+  let _lastClickMode = -1;
 
   /* ───── utils ───── */
   const $ = id => document.getElementById(id);
@@ -150,6 +154,97 @@
       '3straight': '3 đôi thông',
       '4straight': '4 đôi thông'
     })[t] || t;
+  }
+
+  /* ───── SMART SELECT: tìm các combo chứa clickedCard ───── */
+  function getCandidates(clickedCard, hand){
+    const result = [];
+    const clickedRank = cardRank(clickedCard);
+
+    // Map rank → cards
+    const rankToCards = new Map();
+    hand.forEach(c => {
+      const r = cardRank(c);
+      if (!rankToCards.has(r)) rankToCards.set(r, []);
+      rankToCards.get(r).push(c);
+    });
+    rankToCards.forEach(arr => arr.sort(sortAsc));
+
+    // 1. Group cùng rank: pair → triple → quad
+    const sameRankRaw = (rankToCards.get(clickedRank) || []).slice();
+    // Đảm bảo clickedCard ở đầu
+    const sameRank = [clickedCard, ...sameRankRaw.filter(c => c !== clickedCard)];
+    if (sameRank.length >= 2) result.push(sameRank.slice(0, 2));
+    if (sameRank.length >= 3) result.push(sameRank.slice(0, 3));
+    if (sameRank.length >= 4) result.push(sameRank.slice(0, 4));
+
+    // 2. Straight: len 3..N, không chứa 2 (rank 12)
+    for (let len = 3; len <= 12; len++){
+      for (let start = Math.max(0, clickedRank - len + 1);
+           start <= Math.min(clickedRank, 12 - len);
+           start++){
+        const end = start + len - 1;
+        if (end >= 12) continue;
+        let ok = true;
+        const combo = [];
+        for (let r = start; r <= end; r++){
+          const cards = rankToCards.get(r);
+          if (!cards || !cards.length){ ok = false; break; }
+          combo.push(r === clickedRank ? clickedCard : cards[0]);
+        }
+        if (ok) result.push(combo);
+      }
+    }
+
+    // 3. 3 đôi thông: 3 cặp liên tiếp, không chứa 2
+    if (sameRank.length >= 2){
+      for (let start = Math.max(0, clickedRank - 2);
+           start <= Math.min(clickedRank, 12 - 3);
+           start++){
+        const end = start + 2;
+        if (end >= 12) continue;
+        let ok = true;
+        const combo = [];
+        for (let r = start; r <= end; r++){
+          const cards = rankToCards.get(r);
+          if (!cards || cards.length < 2){ ok = false; break; }
+          if (r === clickedRank) combo.push(...sameRank.slice(0, 2));
+          else combo.push(cards[0], cards[1]);
+        }
+        if (ok) result.push(combo);
+      }
+    }
+
+    // 4. 4 đôi thông
+    if (sameRank.length >= 2){
+      for (let start = Math.max(0, clickedRank - 3);
+           start <= Math.min(clickedRank, 12 - 4);
+           start++){
+        const end = start + 3;
+        if (end >= 12) continue;
+        let ok = true;
+        const combo = [];
+        for (let r = start; r <= end; r++){
+          const cards = rankToCards.get(r);
+          if (!cards || cards.length < 2){ ok = false; break; }
+          if (r === clickedRank) combo.push(...sameRank.slice(0, 2));
+          else combo.push(cards[0], cards[1]);
+        }
+        if (ok) result.push(combo);
+      }
+    }
+
+    // 5. Single
+    result.push([clickedCard]);
+
+    // Dedup
+    const seen = new Set();
+    const unique = [];
+    result.forEach(combo => {
+      const key = combo.slice().sort(sortAsc).join(',');
+      if (!seen.has(key)){ seen.add(key); unique.push(combo); }
+    });
+    return unique;
   }
 
   /* ───── RPC ───── */
@@ -495,11 +590,7 @@
     handBox.innerHTML = '';
     myHand.forEach(c => {
       const el = cardEl(c, { selected: _selected.has(c), dataCard: true });
-      el.addEventListener('click', function (){
-        if (_selected.has(c)) _selected.delete(c);
-        else _selected.add(c);
-        renderPlaying();
-      });
+      el.addEventListener('click', function (){ onCardClick(c, myHand); });
       handBox.appendChild(el);
     });
 
@@ -508,6 +599,35 @@
     const passBtn = $('tlkPassBtn');
     playBtn.disabled = !isMyTurn || _selected.size === 0 || !isValidSelection(myHand, sortedTable, tableType) || _busy;
     passBtn.disabled = !isMyTurn || sortedTable.length === 0 || tableOwner === _myName || _busy;
+  }
+
+  /* ───── SMART SELECT HANDLER ───── */
+  function onCardClick(clickedCard, myHand){
+    if (_busy) return;
+
+    // Xác định mode kế tiếp
+    if (clickedCard === _lastClickCard){
+      _lastClickMode += 1;
+    } else {
+      _lastClickCard = clickedCard;
+      _lastClickMode = 0;
+    }
+
+    const candidates = getCandidates(clickedCard, myHand);
+    if (!candidates.length) return;
+
+    // Vượt quá → clear hết
+    if (_lastClickMode >= candidates.length){
+      _selected.clear();
+      _lastClickMode = -1;
+      renderPlaying();
+      return;
+    }
+
+    const combo = candidates[_lastClickMode];
+    _selected.clear();
+    combo.forEach(c => _selected.add(c));
+    renderPlaying();
   }
 
   function isValidSelection(myHand, table, tableType){
@@ -530,6 +650,12 @@
   }
 
   /* ───── ACTIONS ───── */
+  function resetSelectionState(){
+    _selected.clear();
+    _lastClickCard = null;
+    _lastClickMode = -1;
+  }
+
   async function actCreate(){
     if (_busy) return; _busy = true;
     try {
@@ -537,6 +663,8 @@
       const code = data.data?.code;
       if (!code) throw new Error('Không tạo được phòng');
       saveRoomCode(code);
+      // ⭐ FIX: gán _room trước khi fetchState
+      _room = { code, status: 'waiting', version: 0, players: [] };
       subscribeRoom(code);
       await fetchState();
       toast('Đã tạo phòng ' + code, { type: 'success', duration: 2600 });
@@ -557,6 +685,8 @@
     try {
       await callRpc('rpc_card_join', { p_code: code, p_name: _myName });
       saveRoomCode(code);
+      // ⭐ FIX: gán _room trước khi fetchState
+      _room = { code, status: 'waiting', version: 0, players: [] };
       subscribeRoom(code);
       await fetchState();
       toast('Đã vào phòng ' + code, { type: 'success', duration: 2600 });
@@ -582,7 +712,7 @@
     _busy = true;
     try {
       const r = await callRpc('rpc_card_start', { p_code: _room.code, p_name: _myName });
-      _selected.clear();
+      resetSelectionState();
       _prevTable = []; _prevTableOwner = ''; _lastTable = []; _lastTableOwner = ''; _lastTableStr = '';
       await fetchState();
       if (r?.data?.winner){
@@ -601,7 +731,7 @@
     _busy = true;
     try {
       const r = await callRpc('rpc_card_play', { p_code: _room.code, p_name: _myName, p_cards: cards });
-      _selected.clear();
+      resetSelectionState();
       await fetchState();
       if (r?.data?.winner){
         toast('🏆 ' + displayUser(r.data.winner) + ' thắng!', { type: 'success', duration: 4200 });
@@ -614,7 +744,7 @@
     if (_busy || !_room) return;
     _busy = true;
     try {
-      _selected.clear();
+      resetSelectionState();
       await callRpc('rpc_card_pass', { p_code: _room.code, p_name: _myName });
       await fetchState();
     } catch (e){ toastError(e.message); }
@@ -641,7 +771,7 @@
     _busy = true;
     try {
       const r = await callRpc('rpc_card_start', { p_code: _room.code, p_name: _myName });
-      _selected.clear();
+      resetSelectionState();
       _prevTable = []; _prevTableOwner = ''; _lastTable = []; _lastTableOwner = ''; _lastTableStr = '';
       await fetchState();
       if (r?.data?.winner){
@@ -675,7 +805,7 @@
     unsubscribeRoom();
     clearRoomCode();
     _room = null;
-    _selected.clear();
+    resetSelectionState();
     _prevTable = []; _prevTableOwner = ''; _lastTable = []; _lastTableOwner = ''; _lastTableStr = '';
     render();
   }
@@ -693,10 +823,10 @@
       _room = st;
       render();
       if (statusChanged && st.status === 'playing'){
-        _selected.clear();
+        resetSelectionState();
       }
       if (statusChanged && st.status === 'finished'){
-        _selected.clear();
+        resetSelectionState();
         if (st.winner){
           toast('🏆 ' + displayUser(st.winner) + ' thắng!', { type: 'success', duration: 4200 });
         }
@@ -850,7 +980,7 @@
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleVisibility);
 
-    console.log('[Tulokho] ready ✓ v1.1.0');
+    console.log('[Tulokho] ready ✓ v1.2.0');
   }
 
   /* ───── PUBLIC API ───── */
@@ -860,7 +990,7 @@
     close,
     isOpen: () => _isOpen,
     getRoom: () => _room,
-    version: '1.1.0'
+    version: '1.2.0'
   };
 
   if (document.readyState === 'loading'){
