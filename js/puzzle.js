@@ -1,21 +1,23 @@
 /* =========================================================
-   PUZZLE GAME — Wordle tiếng Việt v2.2.1
+   PUZZLE GAME — Wordle tiếng Việt v2.2.2
    ---------------------------------------------------------
+   v2.2.2:
+   - FIX: Event delegation cho menu item (chắc 100%, không
+     phụ thuộc element tồn tại lúc load)
+   - FIX: Bỏ timing conflict 340/400ms
    v2.2.1:
-   - FIX: switchTab('play') refresh list (thấy puzzle vừa tạo)
+   - switchTab('play') refresh list
    - Auto-open login khi chưa đăng nhập
    v2.2.0:
    - Admin check = CHỈ user tienloi
    - Không leak đáp án khi hết hạn
    v2.1.0:
    - 1 input chung + preview div → Telex/VNI hoạt động
-   v2.0.0:
-   - Unicode NFC normalize + debug log + menu listener direct
    ========================================================= */
 (function(){
   'use strict';
   const LOG='[PUZZLE]';
-  console.log(LOG,'script loaded');
+  console.log(LOG,'script loaded v2.2.2');
 
   const $=id=>document.getElementById(id);
 
@@ -52,7 +54,6 @@
     const Toast=window.Toast;
     const DN=window.DN||(n=>n);
 
-    // ⭐ v2.2.0: CHỈ tienloi có quyền admin puzzle
     const isAdmin=()=>{
       try{
         const u=window.SRank?.Auth?.getCurrentUser?.();
@@ -347,7 +348,6 @@
           +'</div>').join('');
     }
 
-    // ⭐ v2.2.0: chỉ hiện đáp án khi GIẢI ĐÚNG, không hiện khi hết hạn
     function renderFinished(solved,expired){
       const p=selectedPuzzle;
       const answer=solved?(p.revealed_answer||attemptState.revealed_answer||'').toUpperCase():'';
@@ -372,7 +372,6 @@
       });
     }
 
-    // ⭐ v2.2.0: revealed_answer chỉ giữ khi đã solved
     async function selectPuzzle(p){
       selectedPuzzle=p;attemptState=null;guessHistory=[];
       hintItems=[];revealedHintCount=0;
@@ -517,7 +516,7 @@
       try{
         await API.create({title,answer,hints,points,duration});
         Toast?.show('Đã tạo puzzle ✓',{type:'success',duration:3500});
-        $('pzFldTitle').value='';$('pzFldAnswer30').value='';$('pzFldHints').value='';
+        $('pzFldTitle').value='';$('pzFldAnswer').value='';$('pzFldHints').value='';
         $('pzFldPoints').value='50';$('pzFldDuration').value='60';
         renderAdminView();
         API.getActive().then(l=>{activePuzzles=l||[]}).catch(()=>{});
@@ -525,7 +524,6 @@
       finally{btn.disabled=!1;btn.textContent='✚ Tạo puzzle mới'}
     }
 
-    // ⭐ v2.2.1: switchTab('play') refresh list (thấy puzzle vừa tạo)
     function switchTab(name){
       currentTab=name;
       tabsEl.querySelectorAll('.puzzle-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
@@ -544,7 +542,6 @@
     }
     tabsEl.querySelectorAll('.puzzle-tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
 
-    // ⭐ v2.2.1: auto-open login khi chưa đăng nhập
     async function open(){
       console.log(LOG,'open() called | loggedIn=',isLoggedIn());
       if(!isLoggedIn()){
@@ -558,7 +555,7 @@
       selectedPuzzle=null;attemptState=null;guessHistory=[];
       hintItems=[];revealedHintCount=0;
       switchTab('play');
-      playContent.innerHTML='<div style="text-align:center;padding:px;color:#7a9a80;">⏳ Đang tải…</div>';
+      playContent.innerHTML='<div style="text-align:center;padding:30px;color:#7a9a80;">⏳ Đang tải…</div>';
       try{
         activePuzzles=(await API.getActive())||[];
         console.log(LOG,'active puzzles:',activePuzzles.length);
@@ -576,27 +573,30 @@
     overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('show')){e.preventDefault();close()}});
 
+    /* ⭐ v2.2.2: EVENT DELEGATION — bind trên document, chắc 100%
+       - Chạy capture phase → trước menu.js bubble
+       - Không phụ thuộc element tồn tại lúc load
+       - Bắt mọi click vào [data-target="puzzleBtn"] bất kể lúc nào */
+    document.addEventListener('click',function(e){
+      const item=e.target.closest('[data-target="puzzleBtn"]');
+      if(!item)return;
+      console.log(LOG,'event delegation: puzzleBtn clicked');
+      // Delay 450ms — sau menu proxy 340ms đóng overlay menu
+      setTimeout(function(){
+        const ov=$('puzzleOverlay');
+        if(ov&&!ov.classList.contains('show')){open()}
+      },450);
+    },true); /* ← capture phase */
+
+    /* Backup: nút #puzzleBtn trực tiếp (nếu có) */
     const triggerBtn=$('puzzleBtn');
     if(triggerBtn){
       triggerBtn.addEventListener('click',()=>{console.log(LOG,'trigger via #puzzleBtn');open()});
-      console.log(LOG,'bound #puzzleBtn');
-    } else {
-      console.warn(LOG,'#puzzleBtn KHÔNG TÌM THẤY');
     }
-
-    document.querySelectorAll('.menu-item[data-target="puzzleBtn"]').forEach(item=>{
-      item.addEventListener('click',()=>{
-        console.log(LOG,'trigger via menu item direct');
-        setTimeout(()=>{
-          const ov=$('puzzleOverlay');
-          if(ov&&!ov.classList.contains('show'))open();
-        },400);
-      });
-    });
 
     window.SRank=window.SRank||{};
     window.SRank.Puzzle={open,close,debug:()=>console.log(LOG,'activePuzzles:',activePuzzles,'selected:',selectedPuzzle,'attempt:',attemptState)};
 
-    console.log(LOG,'v2.2.1 ready ✓');
+    console.log(LOG,'v2.2.2 ready ✓');
   }
 })();
