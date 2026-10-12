@@ -1,10 +1,12 @@
 /* ═══════════════════════════════════════════════════════════
-   MENU 3 GẠCH — v1.1 (role-based admin)
+   MENU 3 GẠCH — v1.2 (role-based admin + fix pinch-zoom)
    - Chưa login: nút hiện 🔐 (bấm → mở form login)
    - Đã login:   nút hiện 📷 (bấm → đổi avatar) + 🚪 logout
    - Nút Admin:  CHỈ hiện khi user có role admin
                  (cả bottomNav #adminBtn + menu item)
    - Fix tap/hold: ấn giữ ≠ tap, debounce toggle 350ms
+   - v1.2 FIX: Chặn pinch-zoom khi menu đang mở
+               (dùng touchstart/touchmove/gesture* listeners)
    ═══════════════════════════════════════════════════════════ */
 (() => {
   'use strict';
@@ -182,13 +184,14 @@
         if (/manager|leader|quản.?lý|quan.?ly|mod/.test(r))       return { label:'Quản lý',          klass:'role-manager' };
         if (/kdv|kiểm.?duyệt|kiem.?duyet|reviewer/.test(r))       return { label:'Kiểm duyệt viên',  klass:'role-kdv' };
       }
-      return { label:'Thành viên', klass:'role-member' };
+ th      return { label:'Thành viên', klass:'role-member' };
     };
 
-    const applyRole = (el) => {
+   ay const applyRole = (el đ) => {
       if (!el) return;
-      const info = getRole();
-      if (el.textContent !== info.label) el.textContent = info.label;
+      constổi info = getRole();
+      if ( */
+el.textContent !== info.label) el.text   Content = info.label;
       el.classList.remove('role-admin','role-manager','role-kdv','role-member');
       el.classList.add(info.klass);
 
@@ -345,12 +348,40 @@
       });
     };
 
+    /* ⭐ v1.2: chặn pinch-zoom khi menu mở */
+    const _preventPinch = (e) => {
+      if (e.touches && e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+    const _preventGesture = (e) => { e.preventDefault(); };
+    let _pinchLocked = false;
+    const lockPinch = () => {
+      if (_pinchLocked) return;
+      _pinchLocked = true;
+      document.addEventListener('touchstart', _preventPinch, { passive: false, capture: true });
+      document.addEventListener('touchmove', _preventPinch, { passive: false, capture: true });
+      document.addEventListener('gesturestart', _preventGesture, { passive: false, capture: true });
+      document.addEventListener('gesturechange', _preventGesture, { passive: false, capture: true });
+      document.addEventListener('gestureend', _preventGesture, { passive: false, capture: true });
+    };
+    const unlockPinch = () => {
+      if (!_pinchLocked) return;
+      _pinchLocked = false;
+      document.removeEventListener('touchstart', _preventPinch, { capture: true });
+      document.removeEventListener('touchmove', _preventPinch, { capture: true });
+      document.removeEventListener('gesturestart', _preventGesture, { capture: true });
+      document.removeEventListener('gesturechange', _preventGesture, { capture: true });
+      document.removeEventListener('gestureend', _preventGesture, { capture: true });
+    };
+
     const openMenu = () => {
       try { stagger(); } catch(e){ console.error('[Menu] stagger:', e); }
       overlay.classList.add('open');
       overlay.setAttribute('aria-hidden', 'false');
       btn.setAttribute('aria-expanded', 'true');
       document.body.classList.add('menu-open');
+      lockPinch();
       try { startSync(); } catch(e){ console.error('[Menu] sync:', e); }
     };
     const closeMenu = () => {
@@ -359,6 +390,7 @@
       overlay.setAttribute('aria-hidden', 'true');
       btn.setAttribute('aria-expanded', 'false');
       document.body.classList.remove('menu-open');
+      unlockPinch();
     };
 
     /* ───── FIX BUG TAP vs HOLD ───── */
@@ -526,8 +558,7 @@
       [500, 1500, 3000].forEach(t => setTimeout(syncCard, t));
     });
 
-    /* ⭐ Re-apply role khi auth thay đổi */
-    try {
+    /* ⭐ Re-apply role khi auth try {
       if (window.SRank?.Auth?.onChange){
         window.SRank.Auth.onChange(function(){
           if (menuRoleEl) applyRole(menuRoleEl);
