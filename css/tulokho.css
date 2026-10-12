@@ -1,9 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ — v2.1.0 "GỌN GÀNG" 🌸
-   - Layout GRID không overlap (4 zone rõ ràng)
-   - Hiệu ứng nổi bật: pulse, glow, bounce
-   - Card nhỏ gọn, 13 lá vừa 2 hàng
-   - KHÔNG đụng logic JS
+   TÚ LƠ KHƠ — v2.2.0 🌸
+   - FIX: card selected không đè status (z-index + padding)
+   - Bỏ status "tên đối thủ" (đã có timer ở opp)
+   - Layout gọn gàng, hiệu ứng nổi bật
    ═══════════════════════════════════════════════════════════════ */
 
 /* ───────── ROOT PALETTE ───────── */
@@ -533,7 +532,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ⭐ PLAYING — GRID 4 ZONE KHÔNG OVERLAP
+   ⭐ PLAYING — GRID 4 ZONE
    ═══════════════════════════════════════════════════════════════ */
 .tlk-play {
   position: absolute;
@@ -744,18 +743,27 @@
   text-align: center;
 }
 
-/* ───── Zone 3: Me (status + hand) ───── */
+/* ═══════════════════════════════════════════════════════════════
+   ⭐ Zone 3: Me (status + hand)
+   ═══════════════════════════════════════════════════════════════ */
 .tlk-play-me {
   grid-area: mebar;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding-top: 18px;
+  gap: 8px;
+  padding-top: 4px;
+  padding-bottom: 0;
   min-height: 0;
+  position: relative;
+  /* ⭐ v2.2.0: chừa chỗ cho card nhô lên */
+  padding-bottom: 4px;
 }
 
+/* ⭐ v2.2.0: status luôn nổi TRÊN card (z-index cao) */
 .tlk-my-status {
+  position: relative;
+  z-index: 100;
   text-align: center;
   min-height: 26px;
   display: flex;
@@ -764,13 +772,16 @@
   gap: 6px;
   flex-wrap: wrap;
   flex-shrink: 0;
+  pointer-events: none;
 }
+.tlk-my-status > * { pointer-events: auto; }
+
 .tlk-status-tag {
   font-size: 12px;
   font-weight: 900;
   padding: 5px 14px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, .92);
+  background: rgba(255, 255, 255, .95);
   color: var(--tlk-text);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -820,17 +831,18 @@
   50%      { opacity: .7; transform: scale(1.05); }
 }
 
-/* ───── Hand: wrap 2 hàng gọn ───── */
+/* ⭐ v2.2.0: hand chừa padding-top cho card nhô */
 .tlk-my-hand {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: flex-end;
   gap: 4px;
-  padding: 0 2px;
+  padding: 20px 2px 0;
   max-width: 100%;
   overflow: visible;
   position: relative;
+  z-index: 1;
 }
 .tlk-my-hand .tlk-card {
   flex-shrink: 0;
@@ -843,8 +855,8 @@
 .tlk-my-hand .tlk-card .tlk-card-rank { font-size: 15px; }
 .tlk-my-hand .tlk-card .tlk-card-suit { font-size: 22px; }
 .tlk-my-hand .tlk-card.selected {
-  transform: translateY(-14px) scale(1.08);
-  z-index: 30;
+  transform: translateY(-16px) scale(1.08);
+  z-index: 10;
   border-color: var(--tlk-pink);
   box-shadow:
     0 -8px 20px rgba(255, 112, 185, .6),
@@ -854,14 +866,17 @@
   transform: translateY(-4px);
 }
 
-/* ───── Zone 4: Action bar ───── */
+/* ═══════════════════════════════════════════════════════════════
+   Zone 4: Action bar
+   ═══════════════════════════════════════════════════════════════ */
 .tlk-play-actions {
-  grid-area: actions;
-  display: flex;
-  gap: 6px;
+  grid}
+-area: actions;
+ .t display: flex;
+  gap:lk 6px;
   justify-content: center;
   align-items: center;
-  padding: 6px 0;
+  padding: 6px 0 4px;
   flex-shrink: 0;
 }
 .tlk-play-actions .tlk-btn.small {
@@ -874,19 +889,16 @@
   font-weight: 900;
   border-radius: 14px;
 }
-/* Nút Rời — subtle danger */
 .tlk-play-actions .tlk-btn.danger {
   background: rgba(255, 234, 234, .85);
   color: #b8434e;
   border-color: rgba(232, 85, 107, .25);
 }
-/* Nút Bỏ chọn + Bỏ lượt — neutral */
 .tlk-play-actions .tlk-btn:not(.primary):not(.danger) {
   background: rgba(255, 255, 255, .95);
   color: var(--tlk-text-soft);
   border-color: var(--tlk-card-border);
 }
-/* Nút Đánh bài — primary hồng đậm */
 .tlk-play-actions .tlk-btn.primary {
   background: linear-gradient(135deg, #ff8cc4 0%, #ff3c91 100%);
   box-shadow: 0 6px 18px -6px rgba(255, 60, 145, .8), inset 0 1px 0 rgba(255, 255, 255, .4);
@@ -926,8 +938,7 @@
   position: relative;
   font-family: ui-monospace, Menlo, monospace;
   box-sizing: border-box;
-}
-.tlk-card::before {
+-card::before {
   content: "";
   position: absolute;
   inset: 2px;
@@ -969,7 +980,6 @@
   filter: drop-shadow(0 2px 3px rgba(232, 60, 145, .35));
 }
 
-/* Table card sizes */
 .tlk-table-cards .tlk-card.small {
   width: 38px;
   height: 54px;
@@ -1071,12 +1081,12 @@
   justify-content: flex-start;
 }
 
-/* ───────── MENU ITEM BADGE ───────── */
 #tulokhoMenuBtn .menu-item-icon { color: var(--tlk-pink-deep, #e8556b); }
 
 /* ───────── RESPONSIVE ───────── */
 @media (min-width: 480px) {
   .tlk-play { padding: 12px 16px 10px; gap: 10px; }
+  .tlk-my-hand { padding-top: 24px; }
   .tlk-my-hand .tlk-card { width: 54px; height: 78px; }
   .tlk-my-hand .tlk-card .tlk-card-rank { font-size: 18px; }
   .tlk-my-hand .tlk-card .tlk-card-suit { font-size: 26px; }
@@ -1086,11 +1096,11 @@
   .tlk-opp-avatar { width: 48px; height: 48px; font-size: 20px; }
 }
 
-/* ───────── VERY SMALL SCREEN ───────── */
 @media (max-height: 640px) {
   .tlk-my-hand .tlk-card { width: 42px; height: 62px; }
   .tlk-my-hand .tlk-card .tlk-card-rank { font-size: 14px; }
   .tlk-my-hand .tlk-card .tlk-card-suit { font-size: 20px; }
+  .tlk-my-hand { padding-top: 16px; }
   .tlk-play { gap: 6px; padding: 8px; }
   .tlk-status-tag, .tlk-timer, .tlk-status-hint { font-size: 11px; padding: 4px 10px; }
 }
