@@ -1,10 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.0.0
-   - 2-4 người chơi online qua Supabase Realtime
+   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.1.0
+   - Full-screen layout
+   - Hand compact (overlap cards)
+   - Table history (bài lượt cũ hiện mờ phía trên)
    - Bài 13 lá/người, 3♠ đi trước, chất ♠<♣<♦<♥
    - Chặt: tứ quý, 3 đôi thông, 4 đôi thông
-   - Ăn trắng: sảnh rồng, 5 đôi thông, 6 đôi, tứ quý 2, 4con2+sám, cùng màu, 3 sám
-   - UI inject hoàn toàn từ JS (không đụng index.html ngoài link + script)
+   - Ăn trắng: 7 loại (SQL check)
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -19,7 +20,6 @@
   const POLL_MS = 2500;
   const RANKS = ['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
   const SUITS = ['♠','♣','♦','♥'];
-  const SUIT_NAME = ['bích','chuồn','rô','cơ'];
 
   const ANGT_STATUS_LABEL = {
     sanh_rong: 'Sảnh rồng 3→2',
@@ -35,14 +35,18 @@
   /* ───── state ───── */
   let _room = null;
   let _myName = '';
-  let _myDisplay = '';
   let _selected = new Set();
   let _channel = null;
   let _pollTimer = null;
   let _isOpen = false;
-  let _subscribedCode = '';
   let _busy = false;
   let _lastErrorAt = 0;
+  // Table history
+  let _lastTable = [];
+  let _lastTableOwner = '';
+  let _lastTableStr = '';
+  let _prevTable = [];
+  let _prevTableOwner = '';
 
   /* ───── utils ───── */
   const $ = id => document.getElementById(id);
@@ -51,7 +55,6 @@
   function cardRank(c){ return Math.floor(c / 4); }
   function cardSuit(c){ return c % 4; }
   function isRed(c){ return cardSuit(c) >= 2; }
-  function cardLabel(c){ return RANKS[cardRank(c)] + SUITS[cardSuit(c)]; }
   function cardValue(c){ return cardRank(c) * 4 + cardSuit(c); }
   function sortAsc(a, b){ return cardValue(a) - cardValue(b); }
 
@@ -59,16 +62,14 @@
     try { const u = Auth.getCurrentUser?.(); return String(u?.username || '').trim().toLowerCase(); }
     catch(_){ return ''; }
   }
-  function getDisplayName(){
-    try {
-      const u = Auth.getCurrentUser?.();
-      return String(u?.displayName || u?.username || '').trim();
-    } catch(_){ return ''; }
-  }
   function displayUser(uname){
     if (!uname) return '';
     const d = window.DN ? window.DN(uname) : uname;
     return d || uname;
+  }
+  function getAvatarUrl(name){
+    try { return window.getAvatarUrl ? window.getAvatarUrl(name) : ''; }
+    catch(_){ return ''; }
   }
   function toast(msg, opts){
     try {
@@ -77,12 +78,12 @@
   }
   function toastError(msg){
     const now = Date.now();
-    if (now - _lastErrorAt < 800) return; // dedupe
+    if (now - _lastErrorAt < 800) return;
     _lastErrorAt = now;
     toast(msg, { type: 'error', duration: 3500 });
   }
 
-  /* ───── combo logic (client-side để preview) ───── */
+  /* ───── combo logic ───── */
   function comboType(cards){
     const n = cards.length;
     if (!n) return null;
@@ -139,6 +140,18 @@
     return false;
   }
 
+  function comboLabel(t){
+    return ({
+      single: '1 lá',
+      pair: 'Đôi',
+      triple: 'Sám cô',
+      straight: 'Sảnh',
+      quad: 'Tứ quý',
+      '3straight': '3 đôi thông',
+      '4straight': '4 đôi thông'
+    })[t] || t;
+  }
+
   /* ───── RPC ───── */
   async function callRpc(fn, params){
     const sb = window.__sb;
@@ -192,7 +205,7 @@
             <div class="tlk-join">
               <div class="tlk-join-title">🔗 Nhập mã phòng</div>
               <div class="tlk-join-sub">Hỏi chủ phòng mã 6 ký tự</div>
-              <input id="tlkJoinInput" type="text" maxlength="6" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="VD: A1B2C3">
+              <input id="tlkJoinInput" type="text" maxlength="6" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="A1B2C3">
               <button class="tlk-btn primary" data-action="join" type="button">Vào phòng</button>
               <button class="tlk-btn" data-action="back-menu" type="button">← Quay lại</button>
             </div>
@@ -209,20 +222,31 @@
               <div class="tlk-actions">
                 <button class="tlk-btn" data-action="toggle-ready" id="tlkReadyBtn" type="button">Sẵn sàng</button>
                 <button class="tlk-btn primary" data-action="start" id="tlkStartBtn" type="button" hidden>▶ Bắt đầu</button>
+                <button class="tlk-btn danger" data-action="leave" type="button">Rời phòng</button>
               </div>
-              <button class="tlk-btn danger" data-action="leave" type="button">Rời phòng</button>
             </div>
           </div>
           <div class="tlk-view" data-view="playing" hidden>
-            <div class="tlk-playing">
-              <div id="tlkOpponents" class="tlk-opponents"></div>
-              <div id="tlkTable" class="tlk-table"></div>
-              <div id="tlkMyStatus" class="tlk-my-status"></div>
-              <div id="tlkMyHand" class="tlk-my-hand"></div>
-              <div class="tlk-actions tlk-actions-playing">
-                <button class="tlk-btn danger small" data-action="leave" type="button">Rời</button>
-                <button class="tlk-btn" data-action="pass" id="tlkPassBtn" type="button">Bỏ lượt</button>
-                <button class="tlk-btn primary" data-action="play" id="tlkPlayBtn" type="button">Đánh</button>
+            <div class="tlk-play">
+              <div id="tlkOppTop" class="tlk-opp-slot top" hidden></div>
+              <div id="tlkOppLeft" class="tlk-opp-slot left" hidden></div>
+              <div id="tlkOppRight" class="tlk-opp-slot right" hidden></div>
+
+              <div class="tlk-play-center">
+                <div id="tlkTableHistory" class="tlk-table-history"></div>
+                <div id="tlkTableCurrent" class="tlk-table-cards"></div>
+                <div id="tlkTableCombo" class="tlk-table-combo-label" hidden></div>
+              </div>
+
+              <div class="tlk-play-me">
+                <div id="tlkMyStatus" class="tlk-my-status"></div>
+                <div id="tlkMyHand" class="tlk-my-hand"></div>
+              </div>
+
+              <div class="tlk-play-actions">
+                <button class="tlk-btn small danger" data-action="leave" type="button">Rời</button>
+                <button class="tlk-btn small" data-action="pass" id="tlkPassBtn" type="button">Bỏ lượt</button>
+                <button class="tlk-btn primary small" data-action="play" id="tlkPlayBtn" type="button">Đánh bài</button>
               </div>
             </div>
           </div>
@@ -304,10 +328,7 @@
 
   /* ───── RENDER ───── */
   function render(){
-    if (!_room){
-      showView('menu');
-      return;
-    }
+    if (!_room){ showView('menu'); return; }
     const st = _room.status;
     if (st === 'waiting') { renderWaiting(); showView('waiting'); }
     else if (st === 'playing') { renderPlaying(); showView('playing'); }
@@ -321,7 +342,6 @@
     const players = _room.players || [];
     $('tlkPlayerCount').textContent = players.length + '/4';
 
-    const host = _room.host;
     const hostName = _room.host || '';
     const me = players.find(p => p.name === _myName);
     const allReady = players.length >= 2 && players.every(p => p.ready === true);
@@ -342,7 +362,6 @@
       list.appendChild(row);
     });
 
-    // Nút sẵn sàng
     const readyBtn = $('tlkReadyBtn');
     if (me){
       readyBtn.hidden = false;
@@ -352,7 +371,6 @@
       readyBtn.hidden = true;
     }
 
-    // Nút bắt đầu (chỉ host)
     const startBtn = $('tlkStartBtn');
     if (isHost){
       startBtn.hidden = false;
@@ -374,49 +392,105 @@
     const tableType = _room.tableType;
     const tableOwner = _room.tableOwner;
 
-    // Opponents
-    const oppBox = $('tlkOpponents');
-    oppBox.innerHTML = '';
-    players.forEach(p => {
-      if (p.name === _myName) return;
-      const row = document.createElement('div');
-      row.className = 'tlk-opp';
-      if (turn != null && turn === p.order) row.classList.add('active');
+    /* ─ Track prev table ─ */
+    const sortedTable = table.slice().sort(sortAsc);
+    const tableStr = JSON.stringify(sortedTable);
+    if (_lastTableStr !== '' && _lastTableStr !== tableStr){
+      if (_lastTable.length > 0 && sortedTable.length > 0){
+        _prevTable = _lastTable.slice();
+        _prevTableOwner = _lastTableOwner;
+      } else if (sortedTable.length === 0){
+        _prevTable = [];
+        _prevTableOwner = '';
+      }
+    }
+    _lastTable = sortedTable.slice();
+    _lastTableOwner = tableOwner || '';
+    _lastTableStr = tableStr;
+
+    /* ─ Opponents ─ */
+    const opps = players.filter(p => p.name !== _myName).sort((a, b) => a.order - b.order);
+    const slotIds = { top: $('tlkOppTop'), left: $('tlkOppLeft'), right: $('tlkOppRight') };
+    ['top', 'left', 'right'].forEach(k => { if (slotIds[k]) slotIds[k].hidden = true; });
+
+    let positions = [];
+    if (opps.length === 1) positions = ['top'];
+    else if (opps.length === 2) positions = ['top', 'left'];
+    else if (opps.length === 3) positions = ['top', 'left', 'right'];
+
+    opps.forEach((p, i) => {
+      const slot = slotIds[positions[i]];
+      if (!slot) return;
+      slot.hidden = false;
+      slot.classList.toggle('active', turn === p.order);
       const cnt = p.cardCount != null ? p.cardCount : (Array.isArray(p.hand) ? p.hand.length : '?');
-      row.innerHTML = `
-        <div class="tlk-opp-name">${h(displayUser(p.name))}</div>
-        <div class="tlk-opp-count">${cnt} lá</div>
+      const du = displayUser(p.name) || '?';
+      const initial = du.trim().slice(0, 1).toUpperCase();
+      const av = getAvatarUrl(p.name);
+      const avHtml = av
+        ? `<img src="${h(av)}" alt="" onerror="this.style.display='none';this.parentNode.textContent='${h(initial)}'">`
+        : h(initial);
+      slot.innerHTML = `
+        <div class="tlk-opp-avatar">${avHtml}</div>
+        <div class="tlk-opp-name" title="${h(du)}">${h(du)}</div>
+        <div class="tlk-opp-cards"><span class="tlk-opp-cards-icon"></span>${cnt}</div>
       `;
-      oppBox.appendChild(row);
     });
 
-    // Table
-    const tableBox = $('tlkTable');
-    tableBox.innerHTML = '';
-    if (table.length === 0){
-      tableBox.innerHTML = '<div class="tlk-table-empty">Chưa có bài — mở vòng mới</div>';
-    } else {
-      const lastPlay = _room.lastPlay || {};
-      const ownerLabel = lastPlay.name ? displayUser(lastPlay.name) : '';
-      tableBox.innerHTML = `<div class="tlk-table-owner">${h(ownerLabel)} đánh:</div>`;
-      const cardsWrap = document.createElement('div');
-      cardsWrap.className = 'tlk-table-cards';
-      table.slice().sort(sortAsc).forEach(c => cardsWrap.appendChild(cardEl(c, { small: true })));
-      tableBox.appendChild(cardsWrap);
+    /* ─ Table history ─ */
+    const histBox = $('tlkTableHistory');
+    histBox.innerHTML = '';
+    if (_prevTable.length > 0){
+      const label = document.createElement('div');
+      label.className = 'tlk-table-prev-label';
+      label.textContent = (displayUser(_prevTableOwner) || '?') + ' (lượt trước)';
+      histBox.appendChild(label);
+      const wrap = document.createElement('div');
+      wrap.className = 'tlk-table-cards prev';
+      _prevTable.forEach(c => wrap.appendChild(cardEl(c, { small: true })));
+      histBox.appendChild(wrap);
     }
 
-    // My status
+    /* ─ Table current ─ */
+    const curBox = $('tlkTableCurrent');
+    curBox.innerHTML = '';
+    if (sortedTable.length > 0){
+      sortedTable.forEach(c => curBox.appendChild(cardEl(c, { small: true })));
+    } else {
+      const empty = document.createElement('div');
+      empty.className = 'tlk-table-empty';
+      empty.textContent = 'Chưa có bài — mở vòng mới';
+      curBox.appendChild(empty);
+    }
+
+    /* ─ Combo label ─ */
+    const comboEl = $('tlkTableCombo');
+    if (tableType && sortedTable.length > 0){
+      comboEl.hidden = false;
+      comboEl.textContent = comboLabel(tableType);
+    } else {
+      comboEl.hidden = true;
+    }
+
+    /* ─ My status ─ */
     const status = $('tlkMyStatus');
+    status.innerHTML = '';
     if (isMyTurn){
       status.innerHTML = '<span class="tlk-status-tag turn">🎯 Lượt bạn</span>';
     } else if (turn != null){
       const curr = players.find(p => p.order === turn);
-      status.innerHTML = `<span class="tlk-status-tag wait">⏳ Chờ ${h(displayUser(curr ? curr.name : '?'))}</span>`;
-    } else {
-      status.innerHTML = '';
+      status.innerHTML = `<span class="tlk-status-tag">⏳ ${h(displayUser(curr ? curr.name : '?'))}</span>`;
     }
 
-    // My hand
+    /* ─ Hint combo đã chọn ─ */
+    const selectedCards = myHand.filter(c => _selected.has(c));
+    if (selectedCards.length){
+      const t = comboType(selectedCards);
+      const label = t ? comboLabel(t) : 'Bộ không hợp lệ';
+      status.insertAdjacentHTML('beforeend', ` <span class="tlk-status-hint">${h(label)}</span>`);
+    }
+
+    /* ─ My hand ─ */
     const handBox = $('tlkMyHand');
     handBox.innerHTML = '';
     myHand.forEach(c => {
@@ -429,19 +503,11 @@
       handBox.appendChild(el);
     });
 
-    // Buttons
+    /* ─ Buttons ─ */
     const playBtn = $('tlkPlayBtn');
     const passBtn = $('tlkPassBtn');
-    playBtn.disabled = !isMyTurn || _selected.size === 0 || !isValidSelection(myHand, table, tableType) || _busy;
-    passBtn.disabled = !isMyTurn || table.length === 0 || tableOwner === _myName || _busy;
-
-    // Hint text
-    const selectedCards = myHand.filter(c => _selected.has(c));
-    if (selectedCards.length){
-      const t = comboType(selectedCards);
-      const label = t ? comboLabel(t) : 'Bộ không hợp lệ';
-      status.insertAdjacentHTML('beforeend', ` <span class="tlk-status-hint">${h(label)}</span>`);
-    }
+    playBtn.disabled = !isMyTurn || _selected.size === 0 || !isValidSelection(myHand, sortedTable, tableType) || _busy;
+    passBtn.disabled = !isMyTurn || sortedTable.length === 0 || tableOwner === _myName || _busy;
   }
 
   function isValidSelection(myHand, table, tableType){
@@ -449,20 +515,8 @@
     if (!cards.length) return false;
     const t = comboType(cards);
     if (!t) return false;
-    if (table.length === 0) return true;
+    if (!table || !table.length) return true;
     return comboBeats(cards, t, table, tableType);
-  }
-
-  function comboLabel(t){
-    return ({
-      single: '1 lá',
-      pair: 'Đôi',
-      triple: 'Sám cô',
-      straight: 'Sảnh',
-      quad: 'Tứ quý',
-      '3straight': '3 đôi thông',
-      '4straight': '4 đôi thông'
-    })[t] || t;
   }
 
   function renderFinished(){
@@ -519,9 +573,8 @@
     try {
       await callRpc('rpc_card_ready', { p_code: _room.code, p_name: _myName, p_ready: !me.ready });
       await fetchState();
-    } catch (e){
-      toastError(e.message);
-    } finally { _busy = false; }
+    } catch (e){ toastError(e.message); }
+    finally { _busy = false; }
   }
 
   async function actStart(){
@@ -530,13 +583,13 @@
     try {
       const r = await callRpc('rpc_card_start', { p_code: _room.code, p_name: _myName });
       _selected.clear();
+      _prevTable = []; _prevTableOwner = ''; _lastTable = []; _lastTableOwner = ''; _lastTableStr = '';
       await fetchState();
       if (r?.data?.winner){
         toast('🎉 Ăn trắng! ' + displayUser(r.data.winner), { type: 'success', duration: 4200 });
       }
-    } catch (e){
-      toastError(e.message);
-    } finally { _busy = false; }
+    } catch (e){ toastError(e.message); }
+    finally { _busy = false; }
   }
 
   async function actPlay(){
@@ -553,9 +606,8 @@
       if (r?.data?.winner){
         toast('🏆 ' + displayUser(r.data.winner) + ' thắng!', { type: 'success', duration: 4200 });
       }
-    } catch (e){
-      toastError(e.message);
-    } finally { _busy = false; }
+    } catch (e){ toastError(e.message); }
+    finally { _busy = false; }
   }
 
   async function actPass(){
@@ -565,20 +617,18 @@
       _selected.clear();
       await callRpc('rpc_card_pass', { p_code: _room.code, p_name: _myName });
       await fetchState();
-    } catch (e){
-      toastError(e.message);
-    } finally { _busy = false; }
+    } catch (e){ toastError(e.message); }
+    finally { _busy = false; }
   }
 
   async function actLeave(){
-    if (!_room) { closeRoom(); return; }
+    if (!_room){ closeRoom(); return; }
     if (!confirm('Rời phòng? Bạn sẽ mất bài đang chơi.')) return;
     if (_busy) return;
     _busy = true;
     try {
       await callRpc('rpc_card_leave', { p_code: _room.code, p_name: _myName });
     } catch (e){
-      // có thể phòng đã xoá — bỏ qua
       console.warn('[Tulokho] leave:', e.message);
     } finally {
       _busy = false;
@@ -592,19 +642,17 @@
     try {
       const r = await callRpc('rpc_card_start', { p_code: _room.code, p_name: _myName });
       _selected.clear();
+      _prevTable = []; _prevTableOwner = ''; _lastTable = []; _lastTableOwner = ''; _lastTableStr = '';
       await fetchState();
       if (r?.data?.winner){
         toast('🎉 Ăn trắng! ' + displayUser(r.data.winner), { type: 'success', duration: 4200 });
       }
-    } catch (e){
-      toastError(e.message);
-    } finally { _busy = false; }
+    } catch (e){ toastError(e.message); }
+    finally { _busy = false; }
   }
 
   async function actBackWaiting(){
     if (!_room) return;
-    // Đơn giản: rời phòng hiện tại rồi vào lại (hoặc để user tự làm mới)
-    // MVP: chỉ cần fetch state — nếu server đã về waiting thì OK
     await fetchState();
   }
 
@@ -628,6 +676,7 @@
     clearRoomCode();
     _room = null;
     _selected.clear();
+    _prevTable = []; _prevTableOwner = ''; _lastTable = []; _lastTableOwner = ''; _lastTableStr = '';
     render();
   }
 
@@ -641,7 +690,6 @@
       const newVersion = st.version || 0;
       if (newVersion < prevVersion) return;
       const statusChanged = _room.status !== st.status;
-      const turnChanged = _room.turn !== st.turn;
       _room = st;
       render();
       if (statusChanged && st.status === 'playing'){
@@ -654,7 +702,6 @@
         }
       }
     } catch (e){
-      // Phòng không tồn tại
       if (/không tìm thấy/i.test(e.message)){
         closeRoom();
       } else {
@@ -669,7 +716,6 @@
     if (!code) return;
     const sb = window.__sb;
     if (!sb || !sb.channel) return;
-    _subscribedCode = code;
     try {
       _channel = sb.channel('tlk_' + code)
         .on('postgres_changes', {
@@ -688,7 +734,6 @@
       try { _channel.unsubscribe(); } catch(_){}
       _channel = null;
     }
-    _subscribedCode = '';
   }
   function startPoll(){
     stopPoll();
@@ -706,7 +751,6 @@
   function open(){
     injectDom();
     _myName = getUsername();
-    _myDisplay = getDisplayName();
     if (!_myName){
       toastError('Bạn cần đăng nhập trước');
       return;
@@ -718,7 +762,6 @@
     ov.setAttribute('aria-hidden', 'false');
     document.body.classList.add('tlk-open');
 
-    // Thử resume phòng cũ
     const saved = loadRoomCode();
     if (saved && saved.name === _myName){
       _room = { code: saved.code, status: 'waiting', version: 0, players: [] };
@@ -728,7 +771,6 @@
     } else {
       render();
     }
-
     startPoll();
   }
 
@@ -740,12 +782,7 @@
     ov.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('tlk-open');
     stopPoll();
-    // KHÔNG unsubscribe — giữ để realtime cập nhật khi mở lại
-    // KHÔNG clear _room — để resume
-    // Nhưng nếu user đã leave (actLeave), _room = null → đã unsubscribe rồi
-    if (!_room){
-      unsubscribeRoom();
-    }
+    if (!_room) unsubscribeRoom();
   }
 
   /* ───── EVENTS ───── */
@@ -779,13 +816,8 @@
   }
 
   function handleJoinInputKey(e){
-    if (e.key === 'Enter'){
-      e.preventDefault();
-      actJoin();
-    } else if (e.key === 'Escape'){
-      e.preventDefault();
-      showView('menu');
-    }
+    if (e.key === 'Enter'){ e.preventDefault(); actJoin(); }
+    else if (e.key === 'Escape'){ e.preventDefault(); showView('menu'); }
   }
 
   function handleVisibility(){
@@ -796,15 +828,12 @@
   /* ───── INIT ───── */
   function init(){
     injectDom();
-    // Inject menu item sau khi menu.js init
     setTimeout(injectMenuItem, 400);
-    setTimeout(injectMenuItem, 1500); // retry nếu menu chưa có
+    setTimeout(injectMenuItem, 1500);
 
     const ov = $('tulokhoOverlay');
     if (ov){
-      ov.addEventListener('click', function (e){
-        if (e.target === ov) close();
-      });
+      ov.addEventListener('click', function (e){ if (e.target === ov) close(); });
       ov.addEventListener('click', handleClick);
     }
     const closeBtn = $('tlkClose');
@@ -817,13 +846,11 @@
       });
     }
 
-    // Escape ở capture phase để chạy trước main.js
     document.addEventListener('keydown', handleKeydownCapture, true);
-
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleVisibility);
 
-    console.log('[Tulokho] ready ✓ v1.0.0');
+    console.log('[Tulokho] ready ✓ v1.1.0');
   }
 
   /* ───── PUBLIC API ───── */
@@ -833,10 +860,9 @@
     close,
     isOpen: () => _isOpen,
     getRoom: () => _room,
-    version: '1.0.0'
+    version: '1.1.0'
   };
 
-  /* ───── BOOT ───── */
   if (document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', init);
   } else {
