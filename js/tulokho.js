@@ -1,7 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.5.0
-   - Timeout: host cài giây/lượt, hết giờ tự pass hoặc tự đánh lowest
+   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.5.1
+   - FIX: overlay ẩn từ đầu (inline style) — tránh hiện khi CSS chưa load
+   - Timeout per turn + host setting
    - Lowest card đi trước nếu không có 3♠
+   - Room list, reveal bài khi finished
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -264,6 +266,7 @@
     const ov = document.createElement('div');
     ov.id = 'tulokhoOverlay';
     ov.setAttribute('aria-hidden', 'true');
+    ov.style.display = 'none';   // ⭐ FIX: ẩn ngay từ đầu, không phụ thuộc CSS
     ov.innerHTML = `
       <section id="tlkPanel" role="dialog" aria-modal="true">
         <header id="tlkHead">
@@ -1008,6 +1011,7 @@
     const ov = $('tulokhoOverlay');
     if (!ov) return;
     _isOpen = true;
+    ov.style.display = 'block';   // ⭐ FIX
     ov.classList.add('show');
     ov.setAttribute('aria-hidden', 'false');
     document.body.classList.add('tlk-open');
@@ -1031,6 +1035,7 @@
     const ov = $('tulokhoOverlay');
     if (!ov) return;
     _isOpen = false;
+    ov.style.display = 'none';   // ⭐ FIX
     ov.classList.remove('show');
     ov.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('tlk-open');
@@ -1090,7 +1095,7 @@
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleVisibility);
 
-    console.log('[Tulokho] ready ✓ v1.5.0');
+    console.log('[Tulokho] ready ✓ v1.5.1');
   }
 
   window.SRank = window.SRank || {};
@@ -1099,7 +1104,7 @@
     close,
     isOpen: () => _isOpen,
     getRoom: () => _room,
-    version: '1.5.0'
+    version: '1.5.1'
   };
 
   if (document.readyState === 'loading'){
