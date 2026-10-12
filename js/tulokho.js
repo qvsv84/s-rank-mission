@@ -1,10 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.6.0
-   - Cơ chế CHỌN BÀI CHUẨN (như ZingPlay, iWin):
-     + Click lá → toggle chọn/bỏ
-     + Không smart select, không cycle, không ép chất
-     + Nút "Đánh bài" tự enable/disable
-   - Pre-check: bàn có bài + không có combo beat → toast + không cho click
+   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.6.1
+   - Bỏ status "⏳ tên đối thủ" (đã có timer ở opp slot)
+   - Cơ chế chọn bài chuẩn: tap toggle, không ép chất, không cycle
+   - Pre-check: bàn có bài + không beat được → toast
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -163,7 +161,6 @@
     })[t] || t;
   }
 
-  /* ⭐ Đơn giản: enumerate để check có combo beat không (cho pre-check) */
   function hasAnyBeatingCombo(hand, table, tableType){
     if (!table || !table.length) return hand.length > 0;
 
@@ -175,11 +172,9 @@
     });
     byRank.forEach(arr => arr.sort((a, b) => cardSuit(a) - cardSuit(b)));
 
-    // Single
     for (const c of hand){
       if (comboBeats([c], 'single', table, tableType)) return true;
     }
-    // Pair / Triple / Quad
     let found = false;
     byRank.forEach(cards => {
       if (found) return;
@@ -189,7 +184,6 @@
     });
     if (found) return true;
 
-    // Straight
     for (let len = 3; len <= 12; len++){
       for (let start = 0; start <= 12 - len; start++){
         const end = start + len - 1;
@@ -205,7 +199,6 @@
       }
     }
 
-    // 3 đôi thông
     for (let start = 0; start <= 12 - 3; start++){
       const end = start + 2;
       if (end >= 12) continue;
@@ -219,7 +212,6 @@
       if (ok && comboBeats(combo, '3straight', table, tableType)) return true;
     }
 
-    // 4 đôi thông
     for (let start = 0; start <= 12 - 4; start++){
       const end = start + 3;
       if (end >= 12) continue;
@@ -236,20 +228,17 @@
     return false;
   }
 
-  /* ⭐ Cơ chế chuẩn: chỉ toggle */
   function onCardClick(card, hand){
     if (_busy) return;
 
     const table = _room.table || [];
     const tableType = _room.tableType;
 
-    // Pre-check: bàn có bài + không có combo nào beat → chặn
     if (table.length > 0 && !hasAnyBeatingCombo(hand, table, tableType)){
       toastError('Không có bài đánh lại');
       return;
     }
 
-    // Toggle đơn giản
     if (_selected.has(card)) _selected.delete(card);
     else _selected.add(card);
 
@@ -660,10 +649,8 @@
         timerHtml = ` <span class="tlk-timer ${remain <= 5 ? 'urgent' : ''}">⏱ <span data-tlk-timer>${remain}</span>s</span>`;
       }
       status.innerHTML = `<span class="tlk-status-tag turn">🎯 Lượt bạn</span>${timerHtml}`;
-    } else if (turn != null){
-      const curr = players.find(p => p.order === turn);
-      status.innerHTML = `<span class="tlk-status-tag">⏳ ${h(displayUser(curr ? curr.name : '?'))}</span>`;
     }
+    /* ⭐ v1.6.1: bỏ status "⏳ tên đối thủ" — đã có timer ở opp slot */
 
     const selectedCards = myHand.filter(c => _selected.has(c));
     if (selectedCards.length){
@@ -1082,7 +1069,7 @@
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleVisibility);
 
-    console.log('[Tulokho] ready ✓ v1.6.0');
+    console.log('[Tulokho] ready ✓ v1.6.1');
   }
 
   window.SRank = window.SRank || {};
@@ -1091,7 +1078,7 @@
     close,
     isOpen: () => _isOpen,
     getRoom: () => _room,
-    version: '1.6.0'
+    version: '1.6.1'
   };
 
   if (document.readyState === 'loading'){
