@@ -1,8 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.5.6
-   - FIX: cho phép build dần combo (VD click 4-5-6-7 để lên sảnh)
-     canBuildToCombo thay isValidSelectionStructure
-   - Smart select v3: swap chất, bỏ rank, add rank
+   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.6.0
+   - Cơ chế CHỌN BÀI CHUẨN (như ZingPlay, iWin):
+     + Click lá → toggle chọn/bỏ
+     + Không smart select, không cycle, không ép chất
+     + Nút "Đánh bài" tự enable/disable
+   - Pre-check: bàn có bài + không có combo beat → toast + không cho click
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -161,8 +163,10 @@
     })[t] || t;
   }
 
-  function enumerateAllCombos(hand){
-    const combos = [];
+  /* ⭐ Đơn giản: enumerate để check có combo beat không (cho pre-check) */
+  function hasAnyBeatingCombo(hand, table, tableType){
+    if (!table || !table.length) return hand.length > 0;
+
     const byRank = new Map();
     hand.forEach(c => {
       const r = cardRank(c);
@@ -171,14 +175,21 @@
     });
     byRank.forEach(arr => arr.sort((a, b) => cardSuit(a) - cardSuit(b)));
 
-    for (const c of hand) combos.push([c]);
-
+    // Single
+    for (const c of hand){
+      if (comboBeats([c], 'single', table, tableType)) return true;
+    }
+    // Pair / Triple / Quad
+    let found = false;
     byRank.forEach(cards => {
-      if (cards.length >= 2) combos.push([cards[0], cards[1]]);
-      if (cards.length >= 3) combos.push([cards[0], cards[1], cards[2]]);
-      if (cards.length >= 4) combos.push([cards[0], cards[1], cards[2], cards[3]]);
+      if (found) return;
+      if (cards.length >= 2 && comboBeats([cards[0], cards[1]], 'pair', table, tableType)){ found = true; return; }
+      if (cards.length >= 3 && comboBeats([cards[0], cards[1], cards[2]], 'triple', table, tableType)){ found = true; return; }
+      if (cards.length >= 4 && comboBeats([cards[0], cards[1], cards[2], cards[3]], 'quad', table, tableType)){ found = true; return; }
     });
+    if (found) return true;
 
+    // Straight
     for (let len = 3; len <= 12; len++){
       for (let start = 0; start <= 12 - len; start++){
         const end = start + len - 1;
@@ -190,10 +201,11 @@
           if (!cards || !cards.length){ ok = false; break; }
           combo.push(cards[0]);
         }
-        if (ok) combos.push(combo);
+        if (ok && comboBeats(combo, 'straight', table, tableType)) return true;
       }
     }
 
+    // 3 đôi thông
     for (let start = 0; start <= 12 - 3; start++){
       const end = start + 2;
       if (end >= 12) continue;
@@ -204,9 +216,10 @@
         if (!cards || cards.length < 2){ ok = false; break; }
         combo.push(cards[0], cards[1]);
       }
-      if (ok) combos.push(combo);
+      if (ok && comboBeats(combo, '3straight', table, tableType)) return true;
     }
 
+    // 4 đôi thông
     for (let start = 0; start <= 12 - 4; start++){
       const end = start + 3;
       if (end >= 12) continue;
@@ -217,110 +230,29 @@
         if (!cards || cards.length < 2){ ok = false; break; }
         combo.push(cards[0], cards[1]);
       }
-      if (ok) combos.push(combo);
+      if (ok && comboBeats(combo, '4straight', table, tableType)) return true;
     }
 
-    return combos;
+    return false;
   }
 
-  function getValidCombos(hand, table, tableType){
-    const all = enumerateAllCombos(hand);
-    if (!table || !table.length) return all;
-    return all.filter(c => {
-      const t = comboType(c);
-      return t && comboBeats(c, t, table, tableType);
-    });
-  }
-
-  /* ⭐ v1.5.6: cho phép build dần (subset của combo) */
-  function canBuildToCombo(selectedSet, combos){
-    const size = selectedSet.size;
-    if (size <= 1) return true;
-    const selArr = [...selectedSet];
-    return combos.some(combo => selArr.every(c => combo.indexOf(c) >= 0));
-  }
-
-  function getBestCombo(card, combos){
-    const containing = combos.filter(c => c.indexOf(card) >= 0);
-    if (!containing.length) return null;
-    containing.sort((a, b) => {
-      if (a.length !== b.length) return a.length - b.length;
-      const sumA = a.reduce((s, c) => s + cardValue(c), 0);
-      const sumB = b.reduce((s, c) => s + cardValue(c), 0);
-      return sumA - sumB;
-    });
-    return containing[0];
-  }
-
-  /* ⭐ Smart select v3.1 */
+  /* ⭐ Cơ chế chuẩn: chỉ toggle */
   function onCardClick(card, hand){
     if (_busy) return;
 
     const table = _room.table || [];
     const tableType = _room.tableType;
-    const validCombos = getValidCombos(hand, table, tableType);
 
-    if (table.length > 0 && validCombos.length === 0){
+    // Pre-check: bàn có bài + không có combo nào beat → chặn
+    if (table.length > 0 && !hasAnyBeatingCombo(hand, table, tableType)){
       toastError('Không có bài đánh lại');
       return;
     }
 
-    const rank = cardRank(card);
+    // Toggle đơn giản
+    if (_selected.has(card)) _selected.delete(card);
+    else _selected.add(card);
 
-    /* Case 1: Click lá đang chọn → bỏ hết rank đó */
-    if (_selected.has(card)){
-      [..._selected].filter(c => cardRank(c) === rank).forEach(c => _selected.delete(c));
-      if (_selected.size > 0 && !canBuildToCombo(_selected, validCombos)){
-        _selected.clear();
-      }
-      renderPlaying();
-      return;
-    }
-
-    /* Case 2: Selection rỗng → auto best */
-    if (_selected.size === 0){
-      const best = getBestCombo(card, validCombos);
-      if (best) best.forEach(c => _selected.add(c));
-      renderPlaying();
-      return;
-    }
-
-    /* Case 3: Thử add 1 lá */
-    const tryAdd1 = new Set(_selected);
-    tryAdd1.add(card);
-    if (canBuildToCombo(tryAdd1, validCombos)){
-      _selected = tryAdd1;
-      renderPlaying();
-      return;
-    }
-
-    /* Case 4: Thử swap lá cùng rank (giữ 1 lá mới, bỏ lá cũ) */
-    const sameRankInSel = [..._selected].filter(c => cardRank(c) === rank);
-    if (sameRankInSel.length > 0){
-      const trySwap = new Set(_selected);
-      sameRankInSel.forEach(c => trySwap.delete(c));
-      trySwap.add(card);
-      if (canBuildToCombo(trySwap, validCombos)){
-        _selected = trySwap;
-        renderPlaying();
-        return;
-      }
-    }
-
-    /* Case 5: Thử add cả rank (để lên đôi thông/tứ quý) */
-    const allRank = hand.filter(c => cardRank(c) === rank);
-    const tryAddAll = new Set(_selected);
-    allRank.forEach(c => tryAddAll.add(c));
-    if (canBuildToCombo(tryAddAll, validCombos)){
-      _selected = tryAddAll;
-      renderPlaying();
-      return;
-    }
-
-    /* Case 6: Fallback best combo chứa card */
-    _selected.clear();
-    const best = getBestCombo(card, validCombos);
-    if (best) best.forEach(c => _selected.add(c));
     renderPlaying();
   }
 
@@ -425,6 +357,7 @@
               </div>
               <div class="tlk-play-actions">
                 <button class="tlk-btn small danger" data-action="leave" type="button">Rời</button>
+                <button class="tlk-btn small" data-action="clear" id="tlkClearBtn" type="button">Bỏ chọn</button>
                 <button class="tlk-btn small" data-action="pass" id="tlkPassBtn" type="button">Bỏ lượt</button>
                 <button class="tlk-btn primary small" data-action="play" id="tlkPlayBtn" type="button">Đánh bài</button>
               </div>
@@ -735,7 +668,7 @@
     const selectedCards = myHand.filter(c => _selected.has(c));
     if (selectedCards.length){
       const t = comboType(selectedCards);
-      const label = t ? comboLabel(t) : 'Đang chọn…';
+      const label = t ? comboLabel(t) : 'Chưa hợp lệ';
       status.insertAdjacentHTML('beforeend', ` <span class="tlk-status-hint">${h(label)}</span>`);
     }
 
@@ -749,8 +682,10 @@
 
     const playBtn = $('tlkPlayBtn');
     const passBtn = $('tlkPassBtn');
+    const clearBtn = $('tlkClearBtn');
     playBtn.disabled = !isMyTurn || _selected.size === 0 || !isValidSelection(myHand, sortedTable, tableType) || _busy;
     passBtn.disabled = !isMyTurn || sortedTable.length === 0 || tableOwner === _myName || _busy;
+    if (clearBtn) clearBtn.disabled = _selected.size === 0 || _busy;
   }
 
   function renderFinished(){
@@ -925,6 +860,12 @@
       await fetchState();
     } catch (e){ toastError(e.message); }
     finally { _busy = false; }
+  }
+
+  function actClear(){
+    if (_busy) return;
+    resetSelectionState();
+    renderPlaying();
   }
 
   async function actLeave(){
@@ -1103,6 +1044,7 @@
     else if (a === 'start') actStart();
     else if (a === 'play') actPlay();
     else if (a === 'pass') actPass();
+    else if (a === 'clear') actClear();
     else if (a === 'leave') actLeave();
     else if (a === 'back-waiting') actBackWaiting();
   }
@@ -1140,7 +1082,7 @@
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleVisibility);
 
-    console.log('[Tulokho] ready ✓ v1.5.6');
+    console.log('[Tulokho] ready ✓ v1.6.0');
   }
 
   window.SRank = window.SRank || {};
@@ -1149,7 +1091,7 @@
     close,
     isOpen: () => _isOpen,
     getRoom: () => _room,
-    version: '1.5.6'
+    version: '1.6.0'
   };
 
   if (document.readyState === 'loading'){
