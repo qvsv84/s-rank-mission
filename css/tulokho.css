@@ -1,7 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ — v1.1.0
-   - Full-screen layout (như game bài thật)
-   - Hand compact (xếp chồng, pop-up khi selected)
+   TÚ LƠ KHƠ — v1.2.0
+   - Full-screen layout
+   - Hand wrap (không overlap) — fix bug không chọn được lá bị che
+   - Lá to hơn (54×78 mobile, 62×88 desktop)
    - Table history (bài lượt cũ mờ phía trên)
    ═══════════════════════════════════════════════════════════════ */
 
@@ -94,7 +95,7 @@
   inset: 0;
 }
 
-/* ───────── MENU (nền tối) ───────── */
+/* ───────── MENU ───────── */
 .tlk-menu {
   display: flex;
   flex-direction: column;
@@ -453,7 +454,7 @@
   bottom: 76px;
   left: 0;
   right: 0;
-  padding: 26px 8px 4px;
+  padding: 20px 8px 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -509,28 +510,30 @@
   text-shadow: 0 1px 2px rgba(0,0,0,.6);
 }
 
-/* My hand — COMPACT */
+/* ⭐ My hand — WRAP (không overlap), lá to, dễ chọn */
 .tlk-my-hand {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: flex-end;
-  padding: 22px 8px 6px;
-  min-height: 92px;
+  gap: 3px;
+  padding: 30px 6px 6px;
   max-width: 100%;
   overflow: visible;
   position: relative;
 }
 .tlk-my-hand .tlk-card {
   flex-shrink: 0;
-  margin-left: -30px;
+  width: 54px;
+  height: 78px;
   transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
   transform-origin: bottom center;
-  box-shadow: -2px 2px 6px rgba(0,0,0,.35);
   position: relative;
 }
-.tlk-my-hand .tlk-card:first-child { margin-left: 0; }
+.tlk-my-hand .tlk-card .tlk-card-rank { font-size: 18px; }
+.tlk-my-hand .tlk-card .tlk-card-suit { font-size: 26px; }
 .tlk-my-hand .tlk-card.selected {
-  transform: translateY(-16px);
+  transform: translateY(-14px) scale(1.06);
   z-index: 30;
   border-color: #58c47e;
   box-shadow: 0 -4px 14px rgba(88, 196, 126, .7), 0 0 0 2px rgba(88, 196, 126, .6);
@@ -674,17 +677,13 @@
 
 /* ───────── RESPONSIVE ───────── */
 @media (min-width: 480px) {
-  .tlk-my-hand .tlk-card { width: 52px; height: 74px; }
-  .tlk-my-hand .tlk-card .tlk-card-rank { font-size: 18px; }
-  .tlk-my-hand .tlk-card .tlk-card-suit { font-size: 26px; }
+  .tlk-my-hand .tlk-card { width: 62px; height: 88px; }
+  .tlk-my-hand .tlk-card .tlk-card-rank { font-size: 20px; }
+  .tlk-my-hand .tlk-card .tlk-card-suit { font-size: 30px; }
   .tlk-table-cards .tlk-card.small { width: 46px; height: 64px; }
   .tlk-table-cards.prev .tlk-card.small { width: 34px; height: 48px; }
   .tlk-opp-slot { min-width: 100px; }
   .tlk-opp-avatar { width: 48px; height: 48px; font-size: 20px; }
-  .tlk-my-hand .tlk-card { margin-left: -34px; }
-}
-@media (min-width: 768px) {
-  .tlk-my-hand .tlk-card { margin-left: -24px; }
 }
 
 body.tlk-open { overflow: hidden; }
