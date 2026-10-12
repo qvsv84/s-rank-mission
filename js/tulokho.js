@@ -1,8 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.5.4
-   - FIX: comboType cho phép sảnh 4 lá (trước đó chỉ nhận tứ quý)
-   - Smart select v2, pre-check, chất yếu nhất
-   - Dùng displayName, room list, timeout, reveal
+   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.5.5
+   - Smart select v3:
+     + Click lá đang chọn → bỏ hết rank đó (còn lại invalid → clear)
+     + Click lá cùng rank khác lá → swap chất
+     + Click rank mới → add 1 lá → fail thì add cả rank (lên 4 đôi thông)
+     + Fallback: best combo chứa lá đó
+   - Không ép chất yếu khi user tự build
+   - FIX comboType nhận sảnh 4 lá
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -93,7 +97,7 @@
     toast(msg, { type: 'error', duration: 3500 });
   }
 
-  /* ⭐ FIX v1.5.4: comboType nhận sảnh cho MỌI n>=3 */
+  /* ⭐ comboType nhận sảnh cho mọi n>=3 */
   function comboType(cards){
     const n = cards.length;
     if (!n) return null;
@@ -104,13 +108,11 @@
     if (n === 3 && ranks[0] === ranks[1] && ranks[1] === ranks[2]) return 'triple';
     if (n === 4 && ranks[0] === ranks[3]) return 'quad';
 
-    // 3 đôi thông (6 lá)
     if (n === 6
         && ranks[0]===ranks[1] && ranks[2]===ranks[3] && ranks[4]===ranks[5]
         && ranks[2]===ranks[0]+1 && ranks[4]===ranks[2]+1 && ranks[4]<12){
       return '3straight';
     }
-    // 4 đôi thông (8 lá)
     if (n === 8
         && ranks[0]===ranks[1] && ranks[2]===ranks[3]
         && ranks[4]===ranks[5] && ranks[6]===ranks[7]
@@ -119,7 +121,6 @@
       return '4straight';
     }
 
-    // ⭐ Sảnh: n >= 3, liên tiếp, không chứa 2 (rank 12)
     if (n >= 3){
       let isStraight = true;
       for (let i = 1; i < n; i++){
@@ -236,10 +237,10 @@
     });
   }
 
-  function canBuild(selected, combos){
-    if (!selected.size) return true;
-    const selArr = [...selected];
-    return combos.some(combo => selArr.every(c => combo.indexOf(c) >= 0));
+  /* ⭐ Hợp lệ cấu trúc: 0 lá OK, 1 lá OK, nhiều lá phải là combo */
+  function isValidSelectionStructure(cards){
+    if (cards.length <= 1) return true;
+    return comboType(cards) != null;
   }
 
   function getBestCombo(card, combos){
@@ -254,34 +255,84 @@
     return containing[0];
   }
 
+  /* ⭐ Smart select v3 */
   function onCardClick(card, hand){
     if (_busy) return;
 
     const table = _room.table || [];
     const tableType = _room.tableType;
-    const combos = getValidCombos(hand, table, tableType);
+    const validCombos = getValidCombos(hand, table, tableType);
 
-    if (table.length > 0 && combos.length === 0){
+    // Pre-check
+    if (table.length > 0 && validCombos.length === 0){
       toastError('Không có bài đánh lại');
       return;
     }
 
+    const rank = cardRank(card);
+
+    /* Case 1: Click lá đang chọn (chính nó) → bỏ hết rank đó */
     if (_selected.has(card)){
-      _selected.clear();
+      const sameRankInSel = [..._selected].filter(c => cardRank(c) === rank);
+      sameRankInSel.forEach(c => _selected.delete(c));
+      if (!isValidSelectionStructure([..._selected])){
+        _selected.clear();
+      }
       renderPlaying();
       return;
     }
 
-    const trySel = new Set(_selected);
-    trySel.add(card);
-    if (canBuild(trySel, combos)){
-      _selected = trySel;
+    /* Case 2: Click lá cùng rank (khác lá) → swap chất */
+    const sameRankInSel = [..._selected].filter(c => cardRank(c) === rank);
+    if (sameRankInSel.length > 0){
+      const swapTarget = sameRankInSel[0];
+      _selected.delete(swapTarget);
+      _selected.add(card);
+      if (isValidSelectionStructure([..._selected])){
+        renderPlaying();
+        return;
+      }
+      // Swap fail → rollback rồi bỏ hết rank đó
+      _selected.delete(card);
+      _selected.add(swapTarget);
+      sameRankInSel.forEach(c => _selected.delete(c));
+      if (!isValidSelectionStructure([..._selected])){
+        _selected.clear();
+      }
       renderPlaying();
       return;
     }
 
+    /* Case 3: Selection rỗng → auto best */
+    if (_selected.size === 0){
+      const best = getBestCombo(card, validCombos);
+      if (best) best.forEach(c => _selected.add(c));
+      renderPlaying();
+      return;
+    }
+
+    /* Case 4: Thử add 1 lá */
+    const trySel1 = new Set(_selected);
+    trySel1.add(card);
+    if (isValidSelectionStructure([...trySel1])){
+      _selected = trySel1;
+      renderPlaying();
+      return;
+    }
+
+    /* Case 5: Thử add cả rank (VD lên 4 đôi thông) */
+    const cardsWithRank = hand.filter(c => cardRank(c) === rank);
+    const trySel2 = new Set(_selected);
+    cardsWithRank.forEach(c => trySel2.add(c));
+    if (isValidSelectionStructure([...trySel2])){
+      _selected = trySel2;
+      renderPlaying();
+      return;
+    }
+
+    /* Case 6: Fallback best combo chứa card */
     _selected.clear();
-    const best = getBestCombo(card, combos);
+    const best = getBestCombo(card, validCombos);
     if (best) best.forEach(c => _selected.add(c));
     renderPlaying();
   }
@@ -1102,7 +1153,7 @@
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleVisibility);
 
-    console.log('[Tulokho] ready ✓ v1.5.4');
+    console.log('[Tulokho] ready ✓ v1.5.5');
   }
 
   window.SRank = window.SRank || {};
@@ -1111,7 +1162,7 @@
     close,
     isOpen: () => _isOpen,
     getRoom: () => _room,
-    version: '1.5.4'
+    version: '1.5.5'
   };
 
   if (document.readyState === 'loading'){
