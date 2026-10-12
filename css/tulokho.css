@@ -1,18 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ — v2.2.0 🌸
-   - FIX: card selected không đè status (z-index + padding)
-   - Bỏ status "tên đối thủ" (đã có timer ở opp)
-   - Layout gọn gàng, hiệu ứng nổi bật
+   TÚ LƠ KHƠ — v2.2.1 🌸
+   - FIX: layout finished bị vỡ (trophy bị cắt, card xếp dọc)
+   - Card selected không đè status
+   - Bỏ status "tên đối thủ"
    ═══════════════════════════════════════════════════════════════ */
 
-/* ───────── ROOT PALETTE ───────── */
 #tulokhoOverlay {
-  --tlk-bg-1: #e8f5ec;
-  --tlk-bg-2: #fdf6f0;
-  --tlk-bg-3: #ffe8f0;
-  --tlk-text: #4a3a35;
-  --tlk-text-soft: #7a6a60;
-  --tlk-text-mute: #a89890;
   --tlk-pink: #ff70b9;
   --tlk-pink-deep: #e8556b;
   --tlk-pink-dark: #c9306a;
@@ -22,12 +15,13 @@
   --tlk-mint-deep: #2f9b57;
   --tlk-mint-soft: #d4ede0;
   --tlk-mint-bg: #eaf6ee;
-  --tlk-card-bg: #fffef9;
+  --tlk-text: #4a3a35;
+  --tlk-text-soft: #7a6a60;
+  --tlk-text-mute: #a89890;
   --tlk-card-border: #e8dcd4;
   --tlk-red: #e8556b;
   --tlk-black: #4a3a35;
   --tlk-gold: #e8a53c;
-  --tlk-gold-soft: #ffd88a;
 }
 
 #tulokhoOverlay {
@@ -53,7 +47,7 @@
   overflow: hidden;
 }
 
-/* ───────── PETAL DECORATION ───────── */
+/* ───────── PETAL ───────── */
 #tlkPanel::before {
   content: "🌸";
   position: absolute;
@@ -154,6 +148,7 @@
 .tlk-view { position: relative; }
 .tlk-view[hidden] { display: none !important; }
 
+/* ⭐ FIX: view menu + waiting dùng flex */
 .tlk-view[data-view="menu"] {
   width: 100%;
   height: 100%;
@@ -165,8 +160,7 @@
   align-items: center;
   gap: 24px;
 }
-.tlk-view[data-view="waiting"],
-.tlk-view[data-view="finished"] {
+.tlk-view[data-view="waiting"] {
   width: 100%;
   height: 100%;
   overflow-y: auto;
@@ -175,6 +169,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+/* ⭐ FIX v2.2.1: finished KHÔNG dùng flex-center — tránh cắt content */
+.tlk-view[data-view="finished"] {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  display: block;
 }
 .tlk-view[data-view="playing"] {
   position: absolute;
@@ -271,8 +274,6 @@
   background: rgba(255, 255, 255, .65);
   border: 1.5px dashed var(--tlk-pink-soft);
   border-radius: 18px;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
 }
 .tlk-room-row {
   display: flex;
@@ -283,8 +284,6 @@
   border: 1.5px solid var(--tlk-pink-soft);
   border-radius: 18px;
   box-shadow: 0 4px 14px -6px rgba(255, 112, 185, .25);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
 }
 .tlk-room-info {
   flex: 1;
@@ -335,7 +334,6 @@
   cursor: pointer;
   flex-shrink: 0;
   box-shadow: 0 4px 12px -4px rgba(255, 60, 145, .6);
-  transition: transform .12s, box-shadow .12s;
 }
 .tlk-room-join:active:not(:disabled) { transform: scale(.94); }
 .tlk-room-join.full {
@@ -358,9 +356,7 @@
   cursor: pointer;
   width: 100%;
   max-width: 320px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: transform .12s, box-shadow .12s, background .12s;
+  transition: transform .12s, box-shadow .12s;
   box-shadow: 0 4px 12px -5px rgba(74, 58, 53, .18);
 }
 .tlk-btn:active:not(:disabled) { transform: scale(.96); }
@@ -420,8 +416,6 @@
   background: rgba(255, 255, 255, .85);
   border: 1.5px solid var(--tlk-card-border);
   border-radius: 18px;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   box-shadow: 0 3px 10px -5px rgba(74, 58, 53, .15);
 }
 .tlk-player-slot {
@@ -436,7 +430,6 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px -2px rgba(255, 60, 145, .5);
 }
 .tlk-player-name {
   flex: 1;
@@ -477,8 +470,6 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   box-shadow: 0 4px 14px -6px rgba(255, 112, 185, .25);
 }
 .tlk-time-setting[hidden] { display: none !important; }
@@ -502,7 +493,6 @@
   font-weight: 900;
   text-align: center;
   font-family: ui-monospace, Menlo, monospace;
-  transition: border-color .15s, box-shadow .15s;
 }
 .tlk-time-row input:focus {
   outline: none;
@@ -521,9 +511,7 @@
   font-weight: 900;
   cursor: pointer;
   box-shadow: 0 4px 12px -4px rgba(255, 60, 145, .55);
-  transition: transform .12s;
 }
-.tlk-time-row button:active { transform: scale(.94); }
 .tlk-time-hint {
   font-size: 11px;
   color: var(--tlk-text-mute);
@@ -532,7 +520,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ⭐ PLAYING — GRID 4 ZONE
+   PLAYING
    ═══════════════════════════════════════════════════════════════ */
 .tlk-play {
   position: absolute;
@@ -551,7 +539,7 @@
   overflow: hidden;
 }
 
-/* ───── Zone 1: Opponents ───── */
+/* Opponents */
 .tlk-opp-slot {
   display: flex;
   flex-direction: column;
@@ -560,8 +548,6 @@
   padding: 8px 12px;
   border-radius: 16px;
   background: rgba(255, 255, 255, .88);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   border: 1.5px solid var(--tlk-card-border);
   box-shadow: 0 4px 14px -6px rgba(74, 58, 53, .2);
   transition: transform .3s cubic-bezier(.2,.9,.3,1), box-shadow .3s, border-color .3s, background .3s;
@@ -573,7 +559,6 @@
 .tlk-opp-slot.top   { grid-area: optop;  justify-self: center; align-self: start; }
 .tlk-opp-slot.right { grid-area: opright; justify-self: end; align-self: start; }
 .tlk-opp-slot[hidden] { display: none !important; }
-
 .tlk-opp-slot.active {
   background: linear-gradient(160deg, #fff8fc, #ffe4f0);
   border-color: var(--tlk-pink);
@@ -598,7 +583,6 @@
   50%      { transform: translateX(-50%) translateY(-4px); }
 }
 @media (prefers-reduced-motion: reduce) { .tlk-opp-slot.active::before { animation: none; } }
-
 .tlk-opp-avatar {
   width: 42px;
   height: 42px;
@@ -613,7 +597,6 @@
   overflow: hidden;
   border: 2.5px solid #fff;
   box-shadow: 0 3px 10px rgba(255, 112, 185, .25);
-  transition: transform .3s;
 }
 .tlk-opp-slot.active .tlk-opp-avatar {
   transform: scale(1.08);
@@ -666,7 +649,7 @@
   animation: tlkUrgentPulse .6s ease-in-out infinite;
 }
 
-/* ───── Zone 2: Table (center) ───── */
+/* Table center */
 .tlk-play-center {
   grid-area: table;
   display: flex;
@@ -703,8 +686,6 @@
   border-radius: 16px;
   min-height: 52px;
   align-items: center;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
 }
 .tlk-table-history .tlk-table-cards {
   padding: 5px 10px;
@@ -743,9 +724,7 @@
   text-align: center;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   ⭐ Zone 3: Me (status + hand)
-   ═══════════════════════════════════════════════════════════════ */
+/* Me area */
 .tlk-play-me {
   grid-area: mebar;
   display: flex;
@@ -753,14 +732,10 @@
   align-items: center;
   gap: 8px;
   padding-top: 4px;
-  padding-bottom: 0;
+  padding-bottom: 4px;
   min-height: 0;
   position: relative;
-  /* ⭐ v2.2.0: chừa chỗ cho card nhô lên */
-  padding-bottom: 4px;
 }
-
-/* ⭐ v2.2.0: status luôn nổi TRÊN card (z-index cao) */
 .tlk-my-status {
   position: relative;
   z-index: 100;
@@ -772,10 +747,7 @@
   gap: 6px;
   flex-wrap: wrap;
   flex-shrink: 0;
-  pointer-events: none;
 }
-.tlk-my-status > * { pointer-events: auto; }
-
 .tlk-status-tag {
   font-size: 12px;
   font-weight: 900;
@@ -783,8 +755,6 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, .95);
   color: var(--tlk-text);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   border: 1.5px solid var(--tlk-card-border);
   box-shadow: 0 3px 10px -5px rgba(74, 58, 53, .2);
 }
@@ -831,7 +801,7 @@
   50%      { opacity: .7; transform: scale(1.05); }
 }
 
-/* ⭐ v2.2.0: hand chừa padding-top cho card nhô */
+/* Hand */
 .tlk-my-hand {
   display: flex;
   flex-wrap: wrap;
@@ -866,14 +836,11 @@
   transform: translateY(-4px);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   Zone 4: Action bar
-   ═══════════════════════════════════════════════════════════════ */
+/* Action bar */
 .tlk-play-actions {
-  grid}
--area: actions;
- .t display: flex;
-  gap:lk 6px;
+  grid-area: actions;
+  display: flex;
+  gap: 6px;
   justify-content: center;
   align-items: center;
   padding: 6px 0 4px;
@@ -938,7 +905,8 @@
   position: relative;
   font-family: ui-monospace, Menlo, monospace;
   box-sizing: border-box;
--card::before {
+}
+.tlk-card::before {
   content: "";
   position: absolute;
   inset: 2px;
@@ -979,7 +947,6 @@
   font-size: 20px;
   filter: drop-shadow(0 2px 3px rgba(232, 60, 145, .35));
 }
-
 .tlk-table-cards .tlk-card.small {
   width: 38px;
   height: 54px;
@@ -997,35 +964,40 @@
 .tlk-table-cards.prev .tlk-card.small .tlk-card-suit { font-size: 13px; }
 
 /* ═══════════════════════════════════════════════════════════════
-   FINISHED
+   ⭐ FINISHED — FIX v2.2.1
    ═══════════════════════════════════════════════════════════════ */
 .tlk-finished {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  text-align: center;
-  width: 100%;
-  max-width: 500px;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 10px !important;
+  text-align: center !important;
+  width: 100% !important;
+  max-width: 500px !important;
+  margin: 0 auto !important;
 }
+
 .tlk-trophy {
   font-size: 76px;
   line-height: 1;
   margin-bottom: 6px;
   filter: drop-shadow(0 10px 24px rgba(232, 165, 60, .55));
   animation: tlkBounce .9s ease-in-out infinite;
+  flex-shrink: 0;
 }
 @keyframes tlkBounce {
   0%, 100% { transform: translateY(0) scale(1) rotate(-3deg); }
   50%      { transform: translateY(-12px) scale(1.06) rotate(3deg); }
 }
 @media (prefers-reduced-motion: reduce) { .tlk-trophy { animation: none; } }
+
 .tlk-winner-label {
   font-size: 12px;
   font-weight: 900;
   color: var(--tlk-text-mute);
   letter-spacing: .18em;
   text-transform: uppercase;
+  flex-shrink: 0;
 }
 .tlk-winner-name {
   font-size: 30px;
@@ -1033,6 +1005,7 @@
   color: var(--tlk-pink-deep);
   margin-bottom: 6px;
   text-shadow: 0 3px 12px rgba(255, 112, 185, .35), 0 1px 2px rgba(255, 255, 255, .8);
+  flex-shrink: 0;
 }
 .tlk-winner-reason {
   font-size: 13px;
@@ -1044,41 +1017,80 @@
   border-radius: 999px;
   margin-bottom: 18px;
   box-shadow: 0 4px 12px -5px rgba(232, 165, 60, .5);
+  flex-shrink: 0;
 }
+.tlk-winner-reason:empty {
+  display: none !important;
+}
+
+/* ⭐ Hand reveal — FIX card xếp dọc */
 .tlk-finished-hands {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  margin-bottom: 18px !important;
+  box-sizing: border-box !important;
+}
+.tlk-finished-hand {
+  padding: 12px 14px !important;
+  background: rgba(255, 255, 255, .88) !important;
+  border: 1.5px solid var(--tlk-card-border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 12px -6px rgba(74, 58, 53, .15) !important;
+  text-align: left !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.tlk-finished-hand.winner {
+  background: linear-gradient(160deg, #fffbe8, #fff3d4) !important;
+  border-color: #ffd88a !important;
+  box-shadow: 0 6px 20px -8px rgba(232, 165, 60, .55) !important;
+}
+.tlk-finished-hand-name {
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  color: var(--tlk-text) !important;
+  margin-bottom: 8px !important;
+  display: block !important;
+}
+.tlk-finished-hand.winner .tlk-finished-hand-name { color: #5a3a00 !important; }
+
+/* ⭐ QUAN TRỌNG: force flex row cho cards */
+.tlk-finished-hand-cards {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: 4px !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  width: 100% !important;
+}
+.tlk-finished-hand-cards .tlk-card {
+  flex: 0 0 auto !important;
+  width: 32px !important;
+  height: 46px !important;
+  cursor: default !important;
+}
+.tlk-finished-hand-cards .tlk-card .tlk-card-rank {
+  font-size: 11px !important;
+}
+.tlk-finished-hand-cards .tlk-card .tlk-card-suit {
+  font-size: 15px !important;
+  margin-bottom: 1px !important;
+}
+
+/* Actions trong finished — nút căn giữa */
+.tlk-finished .tlk-actions {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 18px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
 }
-.tlk-finished-hand {
-  padding: 12px 14px;
-  background: rgba(255, 255, 255, .88);
-  border: 1.5px solid var(--tlk-card-border);
-  border-radius: 16px;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  box-shadow: 0 4px 12px -6px rgba(74, 58, 53, .15);
-  text-align: left;
-}
-.tlk-finished-hand.winner {
-  background: linear-gradient(160deg, #fffbe8, #fff3d4);
-  border-color: #ffd88a;
-  box-shadow: 0 6px 20px -8px rgba(232, 165, 60, .55);
-}
-.tlk-finished-hand-name {
-  font-size: 12px;
-  font-weight: 900;
-  color: var(--tlk-text);
-  margin-bottom: 8px;
-}
-.tlk-finished-hand.winner .tlk-finished-hand-name { color: #5a3a00; }
-.tlk-finished-hand-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  justify-content: flex-start;
+.tlk-finished .tlk-actions .tlk-btn {
+  max-width: 320px;
 }
 
 #tulokhoMenuBtn .menu-item-icon { color: var(--tlk-pink-deep, #e8556b); }
@@ -1094,6 +1106,9 @@
   .tlk-table-cards.prev .tlk-card.small { width: 32px; height: 46px; }
   .tlk-opp-slot { min-width: 100px; }
   .tlk-opp-avatar { width: 48px; height: 48px; font-size: 20px; }
+  .tlk-finished-hand-cards .tlk-card { width: 38px !important; height: 54px !important; }
+  .tlk-finished-hand-cards .tlk-card .tlk-card-rank { font-size: 13px !important; }
+  .tlk-finished-hand-cards .tlk-card .tlk-card-suit { font-size: 17px !important; }
 }
 
 @media (max-height: 640px) {
@@ -1103,6 +1118,8 @@
   .tlk-my-hand { padding-top: 16px; }
   .tlk-play { gap: 6px; padding: 8px; }
   .tlk-status-tag, .tlk-timer, .tlk-status-hint { font-size: 11px; padding: 4px 10px; }
+  .tlk-trophy { font-size: 60px; }
+  .tlk-winner-name { font-size: 24px; }
 }
 
 body.tlk-open { overflow: hidden; }
