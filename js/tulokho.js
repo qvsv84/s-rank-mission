@@ -1,14 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.7.0 ⚡
-   PERFORMANCE OPTIMIZATIONS:
-   - Event delegation cho hand (1 listener thay vì 13)
-   - Hand render DIFF (click card chỉ toggle class, không rebuild)
-   - Cache beating combos (chỉ tính lại khi table/hand đổi)
-   - Debounce fetchState 250ms
-   - Polling giảm khi realtime active
-   - Room list fetch theo nhu cầu (không poll)
-   - Cache DOM refs + timer elements
-   - Opponent render diff (không rebuild avatar)
+   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.7.1 ⚡
+   - FIX: bỏ cache DOM ($ map) — dùng getElementById trực tiếp
+   - Giữ: hand diff, opp diff, timer cache, fetch debounce
+   - Menu game không bị mất
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -20,8 +14,8 @@
 
   const ROOM_KEY = 'srank_card_room_v2';
   const LEGACY_ROOM_KEY = 'srank_card_room_v1';
-  const POLL_MS = 8000;               // ⚡ 2.5s → 8s (realtime lo chính)
-  const FALLBACK_POLL_MS = 2000;      // khi realtime fail
+  const POLL_MS = 8000;
+  const FALLBACK_POLL_MS = 2000;
   const TICK_MS = 1000;
   const FETCH_DEBOUNCE_MS = 250;
   const RANKS = ['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
@@ -50,12 +44,6 @@
   let _lastErrorAt = 0;
   let _realtimeOK = false;
 
-  /* ───── DOM refs cache ───── */
-  const _$ = {};
-  function _q(id){ return _$[id] || (_$[id] = document.getElementById(id)); }
-  function _clearRefs(){ Object.keys(_$).forEach(k => delete _$[k]); }
-
-  /* ───── render state cache ───── */
   let _lastTable = [];
   let _lastTableOwner = '';
   let _lastTableKey = '';
@@ -63,22 +51,19 @@
   let _prevTableOwner = '';
   let _lastTimeoutKey = '';
 
-  /* ───── hand render cache ───── */
   let _handSignature = '';
-  let _handCardsMap = new Map();      // card value → element
+  let _handCardsMap = new Map();
   let _handClickDelegate = null;
 
-  /* ───── opp render cache ───── */
   let _oppSignature = '';
 
-  /* ───── beating combos cache ───── */
   let _beatingCacheKey = '';
   let _beatingCacheVal = false;
 
-  /* ───── fetch debounce ───── */
   let _fetchDebounceTimer = null;
   let _fetchInflight = false;
 
+  const $ = id => document.getElementById(id);
   const h = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
   function cardRank(c){ return Math.floor(c / 4); }
@@ -121,9 +106,6 @@
     toast(msg, { type: 'error', duration: 3500 });
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     COMBO LOGIC
-     ═══════════════════════════════════════════════════════════════ */
   function comboType(cards){
     const n = cards.length;
     if (!n) return null;
@@ -192,12 +174,10 @@
     })[t] || t;
   }
 
-  /* ⚡ Cached pre-check — chỉ tính lại khi hand hoặc table đổi */
   function hasBeatingCombo(hand, table, tableType){
-    if (!table || !table >=.length) return hand.length > 0;
-    const  key = hand.slice3().sort(sortAsc).join(',') && + '| combo' + table.slice().sort(sortAsc).join(',') + '|' + (tableType || '');
+    if (!table || !table.length) return hand.length > 0;
+    const key = hand.slice().sort(sortAsc).join(',') + '|' + table.slice().sort(sortAsc).join(',') + '|' + (tableType || '');
     if (key === _beatingCacheKey) return _beatingCacheVal;
-
     const result = computeHasBeating(hand, table, tableType);
     _beatingCacheKey = key;
     _beatingCacheVal = result;
@@ -220,7 +200,7 @@
     byRank.forEach(cards => {
       if (found) return;
       if (cards.length >= 2 && comboBeats([cards[0], cards[1]], 'pair', table, tableType)){ found = true; return; }
-      if (cards.lengthBeats([cards[0], cards[1], cards[2]], 'triple', table, tableType)){ found = true; return; }
+      if (cards.length >= 3 && comboBeats([cards[0], cards[1], cards[2]], 'triple', table, tableType)){ found = true; return; }
       if (cards.length >= 4 && comboBeats([cards[0], cards[1], cards[2], cards[3]], 'quad', table, tableType)){ found = true; return; }
     });
     if (found) return true;
@@ -269,7 +249,6 @@
     return false;
   }
 
-  /* ⚡ Card click — không rebuild hand */
   function onCardClick(card, hand){
     if (_busy) return;
 
@@ -284,16 +263,14 @@
     if (_selected.has(card)) _selected.delete(card);
     else _selected.add(card);
 
-    /* ⚡ Chỉ toggle class — không rebuild DOM */
     const el = _handCardsMap.get(card);
     if (el) el.classList.toggle('selected', _selected.has(card));
 
-    /* ⚡ Update status + buttons (nhẹ) */
     updateStatusAndButtons(hand, table, tableType);
   }
 
   function updateStatusAndButtons(myHand, sortedTable, tableType){
-    const status = _q('tlkMyStatus');
+    const status = $('tlkMyStatus');
     if (!status) return;
 
     const players = _room.players || [];
@@ -319,9 +296,9 @@
       status.insertAdjacentHTML('beforeend', ` <span class="tlk-status-hint">${h(label)}</span>`);
     }
 
-    const playBtn = _q('tlkPlayBtn');
-    const passBtn = _q('tlkPassBtn');
-    const clearBtn = _q('tlkClearBtn');
+    const playBtn = $('tlkPlayBtn');
+    const passBtn = $('tlkPassBtn');
+    const clearBtn = $('tlkClearBtn');
     if (playBtn) playBtn.disabled = !isMyTurn || _selected.size === 0 || !isValidSelection(myHand, sortedTable, tableType) || _busy;
     if (passBtn) passBtn.disabled = !isMyTurn || sortedTable.length === 0 || _room.tableOwner === _myName || _busy;
     if (clearBtn) clearBtn.disabled = _selected.size === 0 || _busy;
@@ -336,9 +313,6 @@
     return comboBeats(cards, t, table, tableType);
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     RPC + storage
-     ═══════════════════════════════════════════════════════════════ */
   async function callRpc(fn, params){
     const sb = window.__sb;
     if (!sb || !sb.rpc) throw new Error('Chưa kết nối máy chủ');
@@ -367,11 +341,8 @@
     try { localStorage.removeItem(LEGACY_ROOM_KEY); } catch(_){}
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     DOM INJECT
-     ═══════════════════════════════════════════════════════════════ */
   function injectDom(){
-    if (_q('tulokhoOverlay')) return;
+    if ($('tulokhoOverlay')) return;
     const ov = document.createElement('div');
     ov.id = 'tulokhoOverlay';
     ov.setAttribute('aria-hidden', 'true');
@@ -457,12 +428,11 @@
       </section>
     `;
     document.body.appendChild(ov);
-    _clearRefs(); // reset cache để lần sau query lại
   }
 
   function injectMenuItem(){
-    if (_q('tulokhoMenuBtn')) return;
-    const menuInner = _q('menuOverlayInner') || document.getElementById('menuOverlayInner');
+    if (document.getElementById('tulokhoMenuBtn')) return;
+    const menuInner = document.getElementById('menuOverlayInner');
     if (!menuInner) return;
     const sections = menuInner.querySelectorAll('.menu-section');
     if (!sections.length) return;
@@ -494,7 +464,6 @@
     document.body.classList.remove('menu-open');
   }
 
-  /* ⚡ Card element — lightweight */
   function buildCardEl(c, opts){
     opts = opts || {};
     const el = document.createElement('div');
@@ -523,11 +492,8 @@
     else showView('menu');
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     ROOM LIST (fetch on demand)
-     ═══════════════════════════════════════════════════════════════ */
   async function loadRoomList(){
-    const box = _q('tlkRoomsList');
+    const box = $('tlkRoomsList');
     if (!box) return;
     box.innerHTML = '<div class="tlk-rooms-empty">Đang tải…</div>';
     try {
@@ -541,7 +507,7 @@
   }
 
   function renderRoomList(rooms){
-    const box = _q('tlkRoomsList');
+    const box = $('tlkRoomsList');
     if (!box) return;
     if (!rooms.length){
       box.innerHTML = '<div class="tlk-rooms-empty">Chưa có phòng nào. Tạo phòng đi! 🎲</div>';
@@ -584,20 +550,17 @@
     } finally { _busy = false; }
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     WAITING
-     ═══════════════════════════════════════════════════════════════ */
   function renderWaiting(){
     if (!_room) return;
     const players = _room.players || [];
-    _q('tlkPlayerCount').textContent = players.length + '/4';
+    $('tlkPlayerCount').textContent = players.length + '/4';
 
     const hostName = _room.host || '';
     const me = players.find(p => p.name === _myName);
     const allReady = players.length >= 2 && players.every(p => p.ready === true);
     const isHost = _myName && hostName && _myName === hostName;
 
-    const list = _q('tlkPlayers');
+    const list = $('tlkPlayers');
     const frag = document.createDocumentFragment();
     players.forEach((p, i) => {
       const row = document.createElement('div');
@@ -614,7 +577,7 @@
     list.innerHTML = '';
     list.appendChild(frag);
 
-    const readyBtn = _q('tlkReadyBtn');
+    const readyBtn = $('tlkReadyBtn');
     if (me){
       readyBtn.hidden = false;
       readyBtn.textContent = me.ready ? '✓ Đã sẵn sàng — bấm để huỷ' : '✋ Sẵn sàng';
@@ -623,7 +586,7 @@
       readyBtn.hidden = true;
     }
 
-    const startBtn = _q('tlkStartBtn');
+    const startBtn = $('tlkStartBtn');
     if (isHost){
       startBtn.hidden = false;
       startBtn.disabled = !allReady;
@@ -632,11 +595,11 @@
       startBtn.hidden = true;
     }
 
-    const timeBox = _q('tlkTimeSetting');
+    const timeBox = $('tlkTimeSetting');
     if (timeBox){
       timeBox.hidden = !isHost;
       if (isHost){
-        const inp = _q('tlkTimeInput');
+        const inp = $('tlkTimeInput');
         if (inp && document.activeElement !== inp){
           inp.value = String(_room.turnSeconds != null ? _room.turnSeconds : 30);
         }
@@ -644,9 +607,6 @@
     }
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     PLAYING — với diff render
-     ═══════════════════════════════════════════════════════════════ */
   function renderPlaying(){
     if (!_room) return;
     const players = _room.players || [];
@@ -661,7 +621,6 @@
     const sortedTable = table.slice().sort(sortAsc);
     const tableKey = sortedTable.join(',');
 
-    /* Track prev table */
     if (_lastTableKey !== '' && _lastTableKey !== tableKey){
       if (_lastTable.length > 0 && sortedTable.length > 0){
         _prevTable = _lastTable.slice();
@@ -676,7 +635,6 @@
     _lastTableOwner = tableOwner || '';
     _lastTableKey = tableKey;
 
-    /* ⚡ Render opponents — chỉ rebuild khi thay đổi */
     const opps = players.filter(p => p.name !== _myName).sort((a, b) => a.order - b.order);
     const oppSig = opps.map(p => `${p.name}|${p.order}|${p.cardCount != null ? p.cardCount : (Array.isArray(p.hand) ? p.hand.length : '?')}|${turn === p.order ? 'A' : '-'}|${turn === p.order && hasTimer ? Math.ceil((_room.turnStartedAt + _room.turnSeconds*1000 - Date.now())/1000) : ''}`).join('::');
     const oppNeedsRender = oppSig !== _oppSignature;
@@ -684,26 +642,22 @@
       _oppSignature = oppSig;
       renderOpponents(opps, turn, hasTimer);
     } else {
-      /* ⚡ Chỉ update timer text — không rebuild */
       updateOppTimersOnly(opps, turn, hasTimer);
     }
 
-    /* ⚡ Render table history + current — chỉ khi table đổi */
     renderTableArea(sortedTable, tableType);
 
-    /* ⚡ Render my hand — diff */
     const handSig = myHand.join(',');
     if (handSig !== _handSignature){
       _handSignature = handSig;
       renderHand(myHand);
     }
 
-    /* ⚡ Status + buttons */
     updateStatusAndButtons(myHand, sortedTable, tableType);
   }
 
   function renderOpponents(opps, turn, hasTimer){
-    const slotIds = { top: _q('tlkOppTop'), left: _q('tlkOppLeft'), right: _q('tlkOppRight') };
+    const slotIds = { top: $('tlkOppTop'), left: $('tlkOppLeft'), right: $('tlkOppRight') };
     ['top', 'left', 'right'].forEach(k => { if (slotIds[k]) slotIds[k].hidden = true; });
 
     let positions = [];
@@ -739,11 +693,7 @@
 
   function updateOppTimersOnly(opps, turn, hasTimer){
     if (!hasTimer) return;
-    const players = _room.players || [];
-    const activePlayer = players.find(p => p.order === turn);
-    if (!activePlayer) return;
-    const slotIds = { top: _q('tlkOppTop'), left: _q('tlkOppLeft'), right: _q('tlkOppRight') };
-    // Tìm slot đang active
+    const slotIds = { top: $('tlkOppTop'), left: $('tlkOppLeft'), right: $('tlkOppRight') };
     ['top', 'left', 'right'].forEach(k => {
       const slot = slotIds[k];
       if (!slot || slot.hidden) return;
@@ -760,12 +710,11 @@
   }
 
   function renderTableArea(sortedTable, tableType){
-    const histBox = _q('tlkTableHistory');
-    const curBox = _q('tlkTableCurrent');
-    const comboEl = _q('tlkTableCombo');
+    const histBox = $('tlkTableHistory');
+    const curBox = $('tlkTableCurrent');
+    const comboEl = $('tlkTableCombo');
     if (!histBox || !curBox) return;
 
-    /* History */
     histBox.innerHTML = '';
     if (_prevTable.length > 0){
       const label = document.createElement('div');
@@ -780,7 +729,6 @@
       histBox.appendChild(wrap);
     }
 
-    /* Current */
     curBox.innerHTML = '';
     if (sortedTable.length > 0){
       const frag = document.createDocumentFragment();
@@ -793,7 +741,6 @@
       curBox.appendChild(empty);
     }
 
-    /* Combo label */
     if (comboEl){
       if (tableType && sortedTable.length > 0){
         comboEl.hidden = false;
@@ -804,9 +751,8 @@
     }
   }
 
-  /* ⚡ Hand render — 1 listener delegate */
   function renderHand(myHand){
-    const handBox = _q('tlkMyHand');
+    const handBox = $('tlkMyHand');
     if (!handBox) return;
     handBox.innerHTML = '';
     _handCardsMap.clear();
@@ -819,9 +765,8 @@
     handBox.appendChild(frag);
   }
 
-  /* ⚡ Event delegate cho hand — bind 1 lần khi inject DOM */
   function bindHandDelegate(){
-    const handBox = _q('tlkMyHand');
+    const handBox = $('tlkMyHand');
     if (!handBox || _handClickDelegate) return;
     _handClickDelegate = function(e){
       const cardEl = e.target.closest('.tlk-card');
@@ -829,7 +774,7 @@
       if (!handBox.contains(cardEl)) return;
       const cardVal = parseInt(cardEl.dataset.card, 10);
       if (!Number.isFinite(cardVal)) return;
-      const me = (_room.players || []).find(p => p.name === _myName);
+      const me = (_room && _room.players || []).find(p => p.name === _myName);
       if (!me || !Array.isArray(me.hand)) return;
       onCardClick(cardVal, me.hand.slice().sort(sortAsc));
     };
@@ -840,11 +785,11 @@
     if (!_room) return;
     const w = _room.winner || '';
     const wt = _room.winnerType || '';
-    _q('tlkWinnerName').textContent = displayUser(w) || '—';
-    _q('tlkWinnerReason').textContent = wt ? (ANGT_STATUS_LABEL[wt] || wt) : '';
+    $('tlkWinnerName').textContent = displayUser(w) || '—';
+    $('tlkWinnerReason').textContent = wt ? (ANGT_STATUS_LABEL[wt] || wt) : '';
 
     const players = _room.players || [];
-    const handsBox = _q('tlkFinishedHands');
+    const handsBox = $('tlkFinishedHands');
     handsBox.innerHTML = '';
     const sorted = players.slice().sort((a, b) => {
       if (a.name === w) return -1;
@@ -876,7 +821,7 @@
     handsBox.appendChild(frag);
 
     const isHost = _myName && _room.host && _myName === _room.host;
-    _q('tlkBackWaitingBtn').hidden = !isHost;
+    $('tlkBackWaitingBtn').hidden = !isHost;
   }
 
   function resetSelectionState(){
@@ -884,9 +829,6 @@
     _handCardsMap.forEach(el => el.classList.remove('selected'));
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     TIMER
-     ═══════════════════════════════════════════════════════════════ */
   function updateTimers(){
     if (!_room || _room.status !== 'playing') return;
     if (!_room.turnSeconds || _room.turnSeconds <= 0) return;
@@ -931,9 +873,6 @@
     if (_tickTimer){ clearInterval(_tickTimer); _tickTimer = null; }
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     ACTIONS
-     ═══════════════════════════════════════════════════════════════ */
   async function actCreate(){
     if (_busy) return; _busy = true;
     try {
@@ -964,7 +903,7 @@
 
   async function actSaveTime(){
     if (_busy || !_room) return;
-    const inp = _q('tlkTimeInput');
+    const inp = $('tlkTimeInput');
     if (!inp) return;
     const sec = Math.max(0, Math.min(300, parseInt(inp.value, 10) || 0));
     _busy = true;
@@ -1079,7 +1018,6 @@
     render();
   }
 
-  /* ⚡ Fetch state với debounce + inflight guard */
   async function fetchState(immediate){
     if (!_room) return;
     if (immediate){
@@ -1130,9 +1068,6 @@
     }
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     REALTIME + POLL
-     ═══════════════════════════════════════════════════════════════ */
   function subscribeRoom(code){
     unsubscribeRoom();
     if (!code) return;
@@ -1147,7 +1082,7 @@
           filter: 'code=eq.' + code
         }, function (){
           _realtimeOK = true;
-          fetchState(false); // debounced
+          fetchState(false);
         })
         .subscribe(function (status){
           if (status === 'SUBSCRIBED') _realtimeOK = true;
@@ -1167,7 +1102,6 @@
   }
   function startPoll(){
     stopPoll();
-    /* ⚡ Nếu realtime OK → poll chậm (8s). Nếu fail → poll nhanh (2s) */
     const interval = _realtimeOK ? POLL_MS : FALLBACK_POLL_MS;
     _pollTimer = setInterval(function (){
       if (document.hidden) return;
@@ -1187,7 +1121,7 @@
       toastError('Bạn cần đăng nhập trước');
       return;
     }
-    const ov = _q('tulokhoOverlay');
+    const ov = $('tulokhoOverlay');
     if (!ov) return;
     _isOpen = true;
     ov.style.display = 'block';
@@ -1195,7 +1129,6 @@
     ov.setAttribute('aria-hidden', 'false');
     document.body.classList.add('tlk-open');
 
-    /* ⚡ Bind delegate cho hand 1 lần */
     bindHandDelegate();
 
     const saved = loadRoomCode();
@@ -1213,7 +1146,7 @@
   }
 
   function close(){
-    const ov = _q('tulokhoOverlay');
+    const ov = $('tulokhoOverlay');
     if (!ov) return;
     _isOpen = false;
     ov.style.display = 'none';
@@ -1244,7 +1177,7 @@
 
   function handleKeydownCapture(e){
     if (e.key !== 'Escape') return;
-    const ov = _q('tulokhoOverlay');
+    const ov = $('tulokhoOverlay');
     if (!ov || !ov.classList.contains('show')) return;
     e.preventDefault();
     e.stopPropagation();
@@ -1262,19 +1195,19 @@
     setTimeout(injectMenuItem, 400);
     setTimeout(injectMenuItem, 1500);
 
-    const ov = _q('tulokhoOverlay');
+    const ov = $('tulokhoOverlay');
     if (ov){
       ov.addEventListener('click', function (e){ if (e.target === ov) close(); });
       ov.addEventListener('click', handleClick);
     }
-    const closeBtn = _q('tlkClose');
+    const closeBtn = $('tlkClose');
     if (closeBtn) closeBtn.addEventListener('click', close);
 
     document.addEventListener('keydown', handleKeydownCapture, true);
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleVisibility);
 
-    console.log('[Tulokho] ready ✓ v1.7.0 ⚡');
+    console.log('[Tulokho] ready ✓ v1.7.1');
   }
 
   window.SRank = window.SRank || {};
@@ -1283,7 +1216,7 @@
     close,
     isOpen: () => _isOpen,
     getRoom: () => _room,
-    version: '1.7.0'
+    version: '1.7.1'
   };
 
   if (document.readyState === 'loading'){
