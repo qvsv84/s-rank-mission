@@ -1,12 +1,11 @@
 /* ═══════════════════════════════════════════════════════════
-   MENU 3 GẠCH — v1.2 (role-based admin + fix pinch-zoom)
+   MENU 3 GẠCH — v1.3 (role-based admin, KHÔNG fix zoom)
+   - v1.3 REVERT: Bỏ lockPinch/unlockPinch gây conflict với
+     pointer events → nút menu không drag/tap được.
+   - Chấp nhận cho phép pinch-zoom để menu hoạt động bình thường.
    - Chưa login: nút hiện 🔐 (bấm → mở form login)
    - Đã login:   nút hiện 📷 (bấm → đổi avatar) + 🚪 logout
    - Nút Admin:  CHỈ hiện khi user có role admin
-                 (cả bottomNav #adminBtn + menu item)
-   - Fix tap/hold: ấn giữ ≠ tap, debounce toggle 350ms
-   - v1.2 FIX: Chặn pinch-zoom khi menu đang mở
-               (dùng touchstart/touchmove/gesture* listeners)
    ═══════════════════════════════════════════════════════════ */
 (() => {
   'use strict';
@@ -128,11 +127,10 @@
       return `${base}/storage/v1/object/public/avatars/${encodeURIComponent(uid)}.jpg${b ? '?t=' + b : ''}`;
     };
 
-    /* ───── role resolver — v1.1 role-based ───── */
+    /* ───── role resolver ───── */
     const getRole = () => {
       const cand = [];
 
-      /* ⭐ Ưu tiên 1: Supabase Auth user metadata */
       try {
         const u = window.SRank?.Auth?.getCurrentUser?.() || {};
         if (u.app_metadata?.role) cand.push(u.app_metadata.role);
@@ -140,7 +138,6 @@
         if (u.role) cand.push(u.role);
       } catch(_){}
 
-      /* ⭐ Ưu tiên 2: Đọc session từ localStorage */
       try {
         const u = readSession();
         if (u){
@@ -150,7 +147,6 @@
         }
       } catch(_){}
 
-      /* Ưu tiên 3: Scan localStorage keys chứa "role" */
       try {
         for (let i = 0; i < localStorage.length; i++){
           const k = localStorage.key(i), v = localStorage.getItem(k);
@@ -166,7 +162,6 @@
         }
       } catch(_){}
 
-      /* Ưu tiên 4: Whitelist username (fallback) */
       try {
         const u = window.SRank?.Auth?.getCurrentUser?.() || readSession() || {};
         const un = String(u.username || (u.email || '').split('@')[0] || '').toLowerCase();
@@ -184,31 +179,27 @@
         if (/manager|leader|quản.?lý|quan.?ly|mod/.test(r))       return { label:'Quản lý',          klass:'role-manager' };
         if (/kdv|kiểm.?duyệt|kiem.?duyet|reviewer/.test(r))       return { label:'Kiểm duyệt viên',  klass:'role-kdv' };
       }
- th      return { label:'Thành viên', klass:'role-member' };
+      return { label:'Thành viên', klass:'role-member' };
     };
 
-   ay const applyRole = (el đ) => {
+    const applyRole = (el) => {
       if (!el) return;
-      constổi info = getRole();
-      if ( */
-el.textContent !== info.label) el.text   Content = info.label;
+      const info = getRole();
+      if (el.textContent !== info.label) el.textContent = info.label;
       el.classList.remove('role-admin','role-manager','role-kdv','role-member');
       el.classList.add(info.klass);
 
       const isAdmin = info.klass === 'role-admin';
 
-      /* ⭐ Menu item admin trong menu 3 gạch */
       if (adminItemEl){
         if (adminItemEl.hidden !== !isAdmin) adminItemEl.hidden = !isAdmin;
       }
 
-      /* ⭐ Nút Admin ở bottomNav */
       if (adminBottomBtn){
         adminBottomBtn.style.display = isAdmin ? '' : 'none';
         adminBottomBtn.hidden = !isAdmin;
       }
 
-      /* ⭐ Body class để CSS fallback */
       try {
         document.body.classList.toggle('user-is-admin', isAdmin);
       } catch(_){}
@@ -267,7 +258,7 @@ el.textContent !== info.label) el.text   Content = info.label;
       img.src = raw;
     };
 
-    /* ───── sync user card (PHƯƠNG ÁN B) ───── */
+    /* ───── sync user card ───── */
     let syncing = false;
     const isLoggedIn = () => !!(realLogout && !realLogout.hidden);
 
@@ -348,40 +339,12 @@ el.textContent !== info.label) el.text   Content = info.label;
       });
     };
 
-    /* ⭐ v1.2: chặn pinch-zoom khi menu mở */
-    const _preventPinch = (e) => {
-      if (e.touches && e.touches.length > 1) {
-        e.preventDefault();
-      }
-    };
-    const _preventGesture = (e) => { e.preventDefault(); };
-    let _pinchLocked = false;
-    const lockPinch = () => {
-      if (_pinchLocked) return;
-      _pinchLocked = true;
-      document.addEventListener('touchstart', _preventPinch, { passive: false, capture: true });
-      document.addEventListener('touchmove', _preventPinch, { passive: false, capture: true });
-      document.addEventListener('gesturestart', _preventGesture, { passive: false, capture: true });
-      document.addEventListener('gesturechange', _preventGesture, { passive: false, capture: true });
-      document.addEventListener('gestureend', _preventGesture, { passive: false, capture: true });
-    };
-    const unlockPinch = () => {
-      if (!_pinchLocked) return;
-      _pinchLocked = false;
-      document.removeEventListener('touchstart', _preventPinch, { capture: true });
-      document.removeEventListener('touchmove', _preventPinch, { capture: true });
-      document.removeEventListener('gesturestart', _preventGesture, { capture: true });
-      document.removeEventListener('gesturechange', _preventGesture, { capture: true });
-      document.removeEventListener('gestureend', _preventGesture, { capture: true });
-    };
-
     const openMenu = () => {
       try { stagger(); } catch(e){ console.error('[Menu] stagger:', e); }
       overlay.classList.add('open');
       overlay.setAttribute('aria-hidden', 'false');
       btn.setAttribute('aria-expanded', 'true');
       document.body.classList.add('menu-open');
-      lockPinch();
       try { startSync(); } catch(e){ console.error('[Menu] sync:', e); }
     };
     const closeMenu = () => {
@@ -390,7 +353,6 @@ el.textContent !== info.label) el.text   Content = info.label;
       overlay.setAttribute('aria-hidden', 'true');
       btn.setAttribute('aria-expanded', 'false');
       document.body.classList.remove('menu-open');
-      unlockPinch();
     };
 
     /* ───── FIX BUG TAP vs HOLD ───── */
@@ -498,7 +460,7 @@ el.textContent !== info.label) el.text   Content = info.label;
       });
     });
 
-    /* ───── nút avatar (đổi hành vi theo mode) ───── */
+    /* ───── nút avatar ───── */
     if (menuAvatarBtn){
       menuAvatarBtn.addEventListener('click', (e) => {
         e.preventDefault(); e.stopPropagation();
@@ -558,7 +520,7 @@ el.textContent !== info.label) el.text   Content = info.label;
       [500, 1500, 3000].forEach(t => setTimeout(syncCard, t));
     });
 
-    /* ⭐ Re-apply role khi auth try {
+    try {
       if (window.SRank?.Auth?.onChange){
         window.SRank.Auth.onChange(function(){
           if (menuRoleEl) applyRole(menuRoleEl);
