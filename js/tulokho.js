@@ -1,10 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.5.3
-   - Smart select v2: build dần combo, click lại → clear, click khác → thay thế
-   - Pre-check "không có bài đánh lại" → chặn click
-   - Chất yếu nhất: ♠ < ♣ < ♦ < ♥
-   - FIX: dùng displayName (tên gốc)
-   - Room list, timeout, reveal bài khi finished
+   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.5.4
+   - FIX: comboType cho phép sảnh 4 lá (trước đó chỉ nhận tứ quý)
+   - Smart select v2, pre-check, chất yếu nhất
+   - Dùng displayName, room list, timeout, reveal
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -95,39 +93,39 @@
     toast(msg, { type: 'error', duration: 3500 });
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     COMBO LOGIC
-     ═══════════════════════════════════════════════════════════════ */
-
+  /* ⭐ FIX v1.5.4: comboType nhận sảnh cho MỌI n>=3 */
   function comboType(cards){
     const n = cards.length;
     if (!n) return null;
     const ranks = cards.map(cardRank).sort((a, b) => a - b);
+
     if (n === 1) return 'single';
     if (n === 2) return ranks[0] === ranks[1] ? 'pair' : null;
-    if (n === 3){
-      if (ranks[0] === ranks[1] && ranks[1] === ranks[2]) return 'triple';
-      if (ranks[1] === ranks[0]+1 && ranks[2] === ranks[1]+1 && ranks[2] < 12) return 'straight';
-      return null;
+    if (n === 3 && ranks[0] === ranks[1] && ranks[1] === ranks[2]) return 'triple';
+    if (n === 4 && ranks[0] === ranks[3]) return 'quad';
+
+    // 3 đôi thông (6 lá)
+    if (n === 6
+        && ranks[0]===ranks[1] && ranks[2]===ranks[3] && ranks[4]===ranks[5]
+        && ranks[2]===ranks[0]+1 && ranks[4]===ranks[2]+1 && ranks[4]<12){
+      return '3straight';
     }
-    if (n === 4) return ranks[0] === ranks[3] ? 'quad' : null;
-    if (n === 6){
-      if (ranks[0]===ranks[1] && ranks[2]===ranks[3] && ranks[4]===ranks[5]
-          && ranks[2]===ranks[0]+1 && ranks[4]===ranks[2]+1 && ranks[4]<12) return '3straight';
-      let ok = true;
-      for (let i = 1; i < 6; i++) if (ranks[i] !== ranks[i-1]+1){ ok = false; break; }
-      if (ok && ranks[5] < 12) return 'straight';
-      return null;
+    // 4 đôi thông (8 lá)
+    if (n === 8
+        && ranks[0]===ranks[1] && ranks[2]===ranks[3]
+        && ranks[4]===ranks[5] && ranks[6]===ranks[7]
+        && ranks[2]===ranks[0]+1 && ranks[4]===ranks[2]+1
+        && ranks[6]===ranks[4]+1 && ranks[6]<12){
+      return '4straight';
     }
-    if (n === 8){
-      if (ranks[0]===ranks[1] && ranks[2]===ranks[3] && ranks[4]===ranks[5] && ranks[6]===ranks[7]
-          && ranks[2]===ranks[0]+1 && ranks[4]===ranks[2]+1 && ranks[6]===ranks[4]+1 && ranks[6]<12) return '4straight';
-      return null;
-    }
-    if (n >= 5){
-      let ok = true;
-      for (let i = 1; i < n; i++) if (ranks[i] !== ranks[i-1]+1){ ok = false; break; }
-      if (ok && ranks[n-1] < 12) return 'straight';
+
+    // ⭐ Sảnh: n >= 3, liên tiếp, không chứa 2 (rank 12)
+    if (n >= 3){
+      let isStraight = true;
+      for (let i = 1; i < n; i++){
+        if (ranks[i] !== ranks[i-1]+1){ isStraight = false; break; }
+      }
+      if (isStraight && ranks[n-1] < 12) return 'straight';
     }
     return null;
   }
@@ -167,7 +165,6 @@
     })[t] || t;
   }
 
-  /* ───── Enumerate tất cả combo có thể từ hand ───── */
   function enumerateAllCombos(hand){
     const combos = [];
     const byRank = new Map();
@@ -176,20 +173,16 @@
       if (!byRank.has(r)) byRank.set(r, []);
       byRank.get(r).push(c);
     });
-    // Sort chất yếu trước: ♠ < ♣ < ♦ < ♥ (suit 0 < 1 < 2 < 3)
     byRank.forEach(arr => arr.sort((a, b) => cardSuit(a) - cardSuit(b)));
 
-    // Single
     for (const c of hand) combos.push([c]);
 
-    // Pair / Triple / Quad — lấy chất yếu nhất
     byRank.forEach(cards => {
       if (cards.length >= 2) combos.push([cards[0], cards[1]]);
       if (cards.length >= 3) combos.push([cards[0], cards[1], cards[2]]);
       if (cards.length >= 4) combos.push([cards[0], cards[1], cards[2], cards[3]]);
     });
 
-    // Straight (3-12 lá, không chứa 2 = rank 12)
     for (let len = 3; len <= 12; len++){
       for (let start = 0; start <= 12 - len; start++){
         const end = start + len - 1;
@@ -205,7 +198,6 @@
       }
     }
 
-    // 3 đôi thông (6 lá)
     for (let start = 0; start <= 12 - 3; start++){
       const end = start + 2;
       if (end >= 12) continue;
@@ -219,7 +211,6 @@
       if (ok) combos.push(combo);
     }
 
-    // 4 đôi thông (8 lá)
     for (let start = 0; start <= 12 - 4; start++){
       const end = start + 3;
       if (end >= 12) continue;
@@ -236,7 +227,6 @@
     return combos;
   }
 
-  /* ───── Filter: chỉ giữ combo beat được bàn (nếu bàn có bài) ───── */
   function getValidCombos(hand, table, tableType){
     const all = enumerateAllCombos(hand);
     if (!table || !table.length) return all;
@@ -246,14 +236,12 @@
     });
   }
 
-  /* ───── Selection có thể build thành 1 combo nào đó không ───── */
   function canBuild(selected, combos){
     if (!selected.size) return true;
     const selArr = [...selected];
     return combos.some(combo => selArr.every(c => combo.indexOf(c) >= 0));
   }
 
-  /* ───── Best combo chứa card: ngắn nhất → chất yếu nhất ───── */
   function getBestCombo(card, combos){
     const containing = combos.filter(c => c.indexOf(card) >= 0);
     if (!containing.length) return null;
@@ -266,7 +254,6 @@
     return containing[0];
   }
 
-  /* ───── Smart select handler ───── */
   function onCardClick(card, hand){
     if (_busy) return;
 
@@ -274,20 +261,17 @@
     const tableType = _room.tableType;
     const combos = getValidCombos(hand, table, tableType);
 
-    // Pre-check: bàn có bài mà không beat được → toast + không chọn
     if (table.length > 0 && combos.length === 0){
       toastError('Không có bài đánh lại');
       return;
     }
 
-    // Click lá đang chọn → clear hết
     if (_selected.has(card)){
       _selected.clear();
       renderPlaying();
       return;
     }
 
-    // Thử build
     const trySel = new Set(_selected);
     trySel.add(card);
     if (canBuild(trySel, combos)){
@@ -296,7 +280,6 @@
       return;
     }
 
-    // Không build được → clear hết, chọn best combo cho card
     _selected.clear();
     const best = getBestCombo(card, combos);
     if (best) best.forEach(c => _selected.add(c));
@@ -311,10 +294,6 @@
     if (!table || !table.length) return true;
     return comboBeats(cards, t, table, tableType);
   }
-
-  /* ═══════════════════════════════════════════════════════════════
-     RPC + storage
-     ═══════════════════════════════════════════════════════════════ */
 
   async function callRpc(fn, params){
     const sb = window.__sb;
@@ -344,9 +323,6 @@
     try { localStorage.removeItem(LEGACY_ROOM_KEY); } catch(_){}
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     DOM INJECT
-     ═══════════════════════════════════════════════════════════════ */
   function injectDom(){
     if ($('tulokhoOverlay')) return;
     const ov = document.createElement('div');
@@ -499,9 +475,6 @@
     else showView('menu');
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     ROOM LIST
-     ═══════════════════════════════════════════════════════════════ */
   async function loadRoomList(){
     const box = $('tlkRoomsList');
     if (!box) return;
@@ -558,9 +531,6 @@
     } finally { _busy = false; }
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     RENDER VIEWS
-     ═══════════════════════════════════════════════════════════════ */
   function renderWaiting(){
     if (!_room) return;
     const players = _room.players || [];
@@ -638,7 +608,6 @@
         _prevTable = [];
         _prevTableOwner = '';
       }
-      // ⭐ Table thay đổi → clear selection cũ (invalid)
       _selected.clear();
     }
     _lastTable = sortedTable.slice();
@@ -789,9 +758,6 @@
     _selected.clear();
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     TIMER
-     ═══════════════════════════════════════════════════════════════ */
   function updateTimers(){
     if (!_room || _room.status !== 'playing') return;
     if (!_room.turnSeconds || _room.turnSeconds <= 0) return;
@@ -816,7 +782,7 @@
     _lastTimeoutKey = key;
     callRpc('rpc_card_timeout', { p_code: _room.code }).then(() => {
       fetchState();
-    }).catch(() => { /* client khác đã xử lý, bỏ qua */ });
+    }).catch(() => {});
   }
 
   function startTick(){
@@ -834,9 +800,6 @@
     if (_tickTimer){ clearInterval(_tickTimer); _tickTimer = null; }
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     ACTIONS
-     ═══════════════════════════════════════════════════════════════ */
   async function actCreate(){
     if (_busy) return; _busy = true;
     try {
@@ -998,9 +961,6 @@
     }
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     REALTIME + POLL
-     ═══════════════════════════════════════════════════════════════ */
   function subscribeRoom(code){
     unsubscribeRoom();
     if (!code) return;
@@ -1048,9 +1008,6 @@
     if (_roomPollTimer){ clearInterval(_roomPollTimer); _roomPollTimer = null; }
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     OPEN / CLOSE
-     ═══════════════════════════════════════════════════════════════ */
   function open(){
     injectDom();
     clearLegacyRoomKey();
@@ -1145,7 +1102,7 @@
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleVisibility);
 
-    console.log('[Tulokho] ready ✓ v1.5.3');
+    console.log('[Tulokho] ready ✓ v1.5.4');
   }
 
   window.SRank = window.SRank || {};
@@ -1154,7 +1111,7 @@
     close,
     isOpen: () => _isOpen,
     getRoom: () => _room,
-    version: '1.5.3'
+    version: '1.5.4'
   };
 
   if (document.readyState === 'loading'){
