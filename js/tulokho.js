@@ -1,10 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.5.2
-   - FIX: dùng displayName (tên gốc) thay username → DN() + avatar chuẩn
-   - Ẩn mã phòng khỏi UI (đã có room list)
-   - Xoá copy code
-   - ROOM_KEY đổi v1 → v2
-   - Timeout per turn + host setting
+   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.5.3
+   - Smart select v2: build dần combo, click lại → clear, click khác → thay thế
+   - Pre-check "không có bài đánh lại" → chặn click
+   - Chất yếu nhất: ♠ < ♣ < ♦ < ♥
+   - FIX: dùng displayName (tên gốc)
+   - Room list, timeout, reveal bài khi finished
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -14,7 +14,7 @@
   const Auth = window.SRank && window.SRank.Auth;
   if (!Auth) { console.warn('[Tulokho] SRank.Auth chưa load'); return; }
 
-  const ROOM_KEY = 'srank_card_room_v2';   // ⭐ v1 → v2
+  const ROOM_KEY = 'srank_card_room_v2';
   const LEGACY_ROOM_KEY = 'srank_card_room_v1';
   const POLL_MS = 2500;
   const ROOM_POLL_MS = 5000;
@@ -50,9 +50,6 @@
   let _lastTableStr = '';
   let _prevTable = [];
   let _prevTableOwner = '';
-
-  let _lastClickCard = null;
-  let _lastClickMode = -1;
   let _lastTimeoutKey = '';
 
   const $ = id => document.getElementById(id);
@@ -64,7 +61,6 @@
   function cardValue(c){ return cardRank(c) * 4 + cardSuit(c); }
   function sortAsc(a, b){ return cardValue(a) - cardValue(b); }
 
-  /* ⭐ v1.5.2: lấy tên gốc (displayName) thay vì username */
   function getUserIdentity(){
     try {
       const u = Auth.getCurrentUser?.();
@@ -98,6 +94,10 @@
     _lastErrorAt = now;
     toast(msg, { type: 'error', duration: 3500 });
   }
+
+  /* ═══════════════════════════════════════════════════════════════
+     COMBO LOGIC
+     ═══════════════════════════════════════════════════════════════ */
 
   function comboType(cards){
     const n = cards.length;
@@ -167,86 +167,154 @@
     })[t] || t;
   }
 
-  function getCandidates(clickedCard, hand){
-    const result = [];
-    const clickedRank = cardRank(clickedCard);
-    const rankToCards = new Map();
+  /* ───── Enumerate tất cả combo có thể từ hand ───── */
+  function enumerateAllCombos(hand){
+    const combos = [];
+    const byRank = new Map();
     hand.forEach(c => {
       const r = cardRank(c);
-      if (!rankToCards.has(r)) rankToCards.set(r, []);
-      rankToCards.get(r).push(c);
+      if (!byRank.has(r)) byRank.set(r, []);
+      byRank.get(r).push(c);
     });
-    rankToCards.forEach(arr => arr.sort(sortAsc));
+    // Sort chất yếu trước: ♠ < ♣ < ♦ < ♥ (suit 0 < 1 < 2 < 3)
+    byRank.forEach(arr => arr.sort((a, b) => cardSuit(a) - cardSuit(b)));
 
-    const sameRankRaw = (rankToCards.get(clickedRank) || []).slice();
-    const sameRank = [clickedCard, ...sameRankRaw.filter(c => c !== clickedCard)];
-    if (sameRank.length >= 2) result.push(sameRank.slice(0, 2));
-    if (sameRank.length >= 3) result.push(sameRank.slice(0, 3));
-    if (sameRank.length >= 4) result.push(sameRank.slice(0, 4));
+    // Single
+    for (const c of hand) combos.push([c]);
 
+    // Pair / Triple / Quad — lấy chất yếu nhất
+    byRank.forEach(cards => {
+      if (cards.length >= 2) combos.push([cards[0], cards[1]]);
+      if (cards.length >= 3) combos.push([cards[0], cards[1], cards[2]]);
+      if (cards.length >= 4) combos.push([cards[0], cards[1], cards[2], cards[3]]);
+    });
+
+    // Straight (3-12 lá, không chứa 2 = rank 12)
     for (let len = 3; len <= 12; len++){
-      for (let start = Math.max(0, clickedRank - len + 1);
-           start <= Math.min(clickedRank, 12 - len);
-           start++){
+      for (let start = 0; start <= 12 - len; start++){
         const end = start + len - 1;
         if (end >= 12) continue;
         let ok = true;
         const combo = [];
         for (let r = start; r <= end; r++){
-          const cards = rankToCards.get(r);
+          const cards = byRank.get(r);
           if (!cards || !cards.length){ ok = false; break; }
-          combo.push(r === clickedRank ? clickedCard : cards[0]);
+          combo.push(cards[0]);
         }
-        if (ok) result.push(combo);
+        if (ok) combos.push(combo);
       }
     }
 
-    if (sameRank.length >= 2){
-      for (let start = Math.max(0, clickedRank - 2);
-           start <= Math.min(clickedRank, 12 - 3);
-           start++){
-        const end = start + 2;
-        if (end >= 12) continue;
-        let ok = true;
-        const combo = [];
-        for (let r = start; r <= end; r++){
-          const cards = rankToCards.get(r);
-          if (!cards || cards.length < 2){ ok = false; break; }
-          if (r === clickedRank) combo.push(...sameRank.slice(0, 2));
-          else combo.push(cards[0], cards[1]);
-        }
-        if (ok) result.push(combo);
+    // 3 đôi thông (6 lá)
+    for (let start = 0; start <= 12 - 3; start++){
+      const end = start + 2;
+      if (end >= 12) continue;
+      let ok = true;
+      const combo = [];
+      for (let r = start; r <= end; r++){
+        const cards = byRank.get(r);
+        if (!cards || cards.length < 2){ ok = false; break; }
+        combo.push(cards[0], cards[1]);
       }
+      if (ok) combos.push(combo);
     }
 
-    if (sameRank.length >= 2){
-      for (let start = Math.max(0, clickedRank - 3);
-           start <= Math.min(clickedRank, 12 - 4);
-           start++){
-        const end = start + 3;
-        if (end >= 12) continue;
-        let ok = true;
-        const combo = [];
-        for (let r = start; r <= end; r++){
-          const cards = rankToCards.get(r);
-          if (!cards || cards.length < 2){ ok = false; break; }
-          if (r === clickedRank) combo.push(...sameRank.slice(0, 2));
-          else combo.push(cards[0], cards[1]);
-        }
-        if (ok) result.push(combo);
+    // 4 đôi thông (8 lá)
+    for (let start = 0; start <= 12 - 4; start++){
+      const end = start + 3;
+      if (end >= 12) continue;
+      let ok = true;
+      const combo = [];
+      for (let r = start; r <= end; r++){
+        const cards = byRank.get(r);
+        if (!cards || cards.length < 2){ ok = false; break; }
+        combo.push(cards[0], cards[1]);
       }
+      if (ok) combos.push(combo);
     }
 
-    result.push([clickedCard]);
-
-    const seen = new Set();
-    const unique = [];
-    result.forEach(combo => {
-      const key = combo.slice().sort(sortAsc).join(',');
-      if (!seen.has(key)){ seen.add(key); unique.push(combo); }
-    });
-    return unique;
+    return combos;
   }
+
+  /* ───── Filter: chỉ giữ combo beat được bàn (nếu bàn có bài) ───── */
+  function getValidCombos(hand, table, tableType){
+    const all = enumerateAllCombos(hand);
+    if (!table || !table.length) return all;
+    return all.filter(c => {
+      const t = comboType(c);
+      return t && comboBeats(c, t, table, tableType);
+    });
+  }
+
+  /* ───── Selection có thể build thành 1 combo nào đó không ───── */
+  function canBuild(selected, combos){
+    if (!selected.size) return true;
+    const selArr = [...selected];
+    return combos.some(combo => selArr.every(c => combo.indexOf(c) >= 0));
+  }
+
+  /* ───── Best combo chứa card: ngắn nhất → chất yếu nhất ───── */
+  function getBestCombo(card, combos){
+    const containing = combos.filter(c => c.indexOf(card) >= 0);
+    if (!containing.length) return null;
+    containing.sort((a, b) => {
+      if (a.length !== b.length) return a.length - b.length;
+      const sumA = a.reduce((s, c) => s + cardValue(c), 0);
+      const sumB = b.reduce((s, c) => s + cardValue(c), 0);
+      return sumA - sumB;
+    });
+    return containing[0];
+  }
+
+  /* ───── Smart select handler ───── */
+  function onCardClick(card, hand){
+    if (_busy) return;
+
+    const table = _room.table || [];
+    const tableType = _room.tableType;
+    const combos = getValidCombos(hand, table, tableType);
+
+    // Pre-check: bàn có bài mà không beat được → toast + không chọn
+    if (table.length > 0 && combos.length === 0){
+      toastError('Không có bài đánh lại');
+      return;
+    }
+
+    // Click lá đang chọn → clear hết
+    if (_selected.has(card)){
+      _selected.clear();
+      renderPlaying();
+      return;
+    }
+
+    // Thử build
+    const trySel = new Set(_selected);
+    trySel.add(card);
+    if (canBuild(trySel, combos)){
+      _selected = trySel;
+      renderPlaying();
+      return;
+    }
+
+    // Không build được → clear hết, chọn best combo cho card
+    _selected.clear();
+    const best = getBestCombo(card, combos);
+    if (best) best.forEach(c => _selected.add(c));
+    renderPlaying();
+  }
+
+  function isValidSelection(myHand, table, tableType){
+    const cards = myHand.filter(c => _selected.has(c));
+    if (!cards.length) return false;
+    const t = comboType(cards);
+    if (!t) return false;
+    if (!table || !table.length) return true;
+    return comboBeats(cards, t, table, tableType);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     RPC + storage
+     ═══════════════════════════════════════════════════════════════ */
 
   async function callRpc(fn, params){
     const sb = window.__sb;
@@ -276,6 +344,9 @@
     try { localStorage.removeItem(LEGACY_ROOM_KEY); } catch(_){}
   }
 
+  /* ═══════════════════════════════════════════════════════════════
+     DOM INJECT
+     ═══════════════════════════════════════════════════════════════ */
   function injectDom(){
     if ($('tulokhoOverlay')) return;
     const ov = document.createElement('div');
@@ -428,6 +499,9 @@
     else showView('menu');
   }
 
+  /* ═══════════════════════════════════════════════════════════════
+     ROOM LIST
+     ═══════════════════════════════════════════════════════════════ */
   async function loadRoomList(){
     const box = $('tlkRoomsList');
     if (!box) return;
@@ -484,6 +558,9 @@
     } finally { _busy = false; }
   }
 
+  /* ═══════════════════════════════════════════════════════════════
+     RENDER VIEWS
+     ═══════════════════════════════════════════════════════════════ */
   function renderWaiting(){
     if (!_room) return;
     const players = _room.players || [];
@@ -561,6 +638,8 @@
         _prevTable = [];
         _prevTableOwner = '';
       }
+      // ⭐ Table thay đổi → clear selection cũ (invalid)
+      _selected.clear();
     }
     _lastTable = sortedTable.slice();
     _lastTableOwner = tableOwner || '';
@@ -649,7 +728,7 @@
     const selectedCards = myHand.filter(c => _selected.has(c));
     if (selectedCards.length){
       const t = comboType(selectedCards);
-      const label = t ? comboLabel(t) : 'Bộ không hợp lệ';
+      const label = t ? comboLabel(t) : 'Đang chọn…';
       status.insertAdjacentHTML('beforeend', ` <span class="tlk-status-hint">${h(label)}</span>`);
     }
 
@@ -665,37 +744,6 @@
     const passBtn = $('tlkPassBtn');
     playBtn.disabled = !isMyTurn || _selected.size === 0 || !isValidSelection(myHand, sortedTable, tableType) || _busy;
     passBtn.disabled = !isMyTurn || sortedTable.length === 0 || tableOwner === _myName || _busy;
-  }
-
-  function onCardClick(clickedCard, myHand){
-    if (_busy) return;
-    if (clickedCard === _lastClickCard){
-      _lastClickMode += 1;
-    } else {
-      _lastClickCard = clickedCard;
-      _lastClickMode = 0;
-    }
-    const candidates = getCandidates(clickedCard, myHand);
-    if (!candidates.length) return;
-    if (_lastClickMode >= candidates.length){
-      _selected.clear();
-      _lastClickMode = -1;
-      renderPlaying();
-      return;
-    }
-    const combo = candidates[_lastClickMode];
-    _selected.clear();
-    combo.forEach(c => _selected.add(c));
-    renderPlaying();
-  }
-
-  function isValidSelection(myHand, table, tableType){
-    const cards = myHand.filter(c => _selected.has(c));
-    if (!cards.length) return false;
-    const t = comboType(cards);
-    if (!t) return false;
-    if (!table || !table.length) return true;
-    return comboBeats(cards, t, table, tableType);
   }
 
   function renderFinished(){
@@ -739,10 +787,11 @@
 
   function resetSelectionState(){
     _selected.clear();
-    _lastClickCard = null;
-    _lastClickMode = -1;
   }
 
+  /* ═══════════════════════════════════════════════════════════════
+     TIMER
+     ═══════════════════════════════════════════════════════════════ */
   function updateTimers(){
     if (!_room || _room.status !== 'playing') return;
     if (!_room.turnSeconds || _room.turnSeconds <= 0) return;
@@ -785,6 +834,9 @@
     if (_tickTimer){ clearInterval(_tickTimer); _tickTimer = null; }
   }
 
+  /* ═══════════════════════════════════════════════════════════════
+     ACTIONS
+     ═══════════════════════════════════════════════════════════════ */
   async function actCreate(){
     if (_busy) return; _busy = true;
     try {
@@ -946,6 +998,9 @@
     }
   }
 
+  /* ═══════════════════════════════════════════════════════════════
+     REALTIME + POLL
+     ═══════════════════════════════════════════════════════════════ */
   function subscribeRoom(code){
     unsubscribeRoom();
     if (!code) return;
@@ -993,9 +1048,12 @@
     if (_roomPollTimer){ clearInterval(_roomPollTimer); _roomPollTimer = null; }
   }
 
+  /* ═══════════════════════════════════════════════════════════════
+     OPEN / CLOSE
+     ═══════════════════════════════════════════════════════════════ */
   function open(){
     injectDom();
-    clearLegacyRoomKey();   // ⭐ xoá key cũ 1 lần
+    clearLegacyRoomKey();
     _myName = getUserIdentity();
     if (!_myName){
       toastError('Bạn cần đăng nhập trước');
@@ -1087,7 +1145,7 @@
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleVisibility);
 
-    console.log('[Tulokho] ready ✓ v1.5.2');
+    console.log('[Tulokho] ready ✓ v1.5.3');
   }
 
   window.SRank = window.SRank || {};
@@ -1096,7 +1154,7 @@
     close,
     isOpen: () => _isOpen,
     getRoom: () => _room,
-    version: '1.5.2'
+    version: '1.5.3'
   };
 
   if (document.readyState === 'loading'){
