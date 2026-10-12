@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#f3f8f1">
 <meta name="color-scheme" content="light">
 <meta name="format-detection" content="telephone=no">
@@ -120,7 +120,8 @@
 <link rel="preload" href="css/main.css" as="style">
 <link rel="preload" href="js/main.js" as="script">
 <link rel="stylesheet" href="css/main.css">
-<link rel="stylesheet" href="css/menu.css"> <link rel="stylesheet" href="css/puzzle.css">
+<link rel="stylesheet" href="css/menu.css">
+<link rel="stylesheet" href="css/puzzle.css">
 
 <style id="landingCourtForce">
 html, body { overflow-y: auto !important; overflow-x: hidden !important; height: auto !important; min-height: 100% !important; }
@@ -220,9 +221,19 @@ html body .att-employee-stats .att-stats-rank.rank-B { background: linear-gradie
 .bd-menu-badge { position: absolute !important; top: -4px !important; right: -4px !important; min-width: 20px !important; height: 20px !important; padding: 0 6px !important; border-radius: 10px !important; background: linear-gradient(135deg, #ff4d94, #b1005c) !important; color: #fff !important; font-size: 11px !important; font-weight: 800 !important; line-height: 1 !important; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: 0 2px 6px rgba(0,0,0,.3), 0 0 0 2px rgba(255,255,255,.25) !important; pointer-events: none !important; z-index: 3 !important; }
 .bd-menu-badge[hidden] { display: none !important; }
 body:not(.user-is-admin) #adminBtn { display: none !important; }
+
+/* ⭐ Login remember checkbox */
 .login-remember-label { display: flex !important; align-items: center !important; gap: 8px !important; font-size: 13px !important; color: #5a7a60 !important; font-weight: 700 !important; margin: 4px 0 10px !important; cursor: pointer !important; user-select: none !important; padding: 2px 0 !important; }
 .login-remember-label input[type="checkbox"] { width: 18px !important; height: 18px !important; cursor: pointer !important; accent-color: #4fa370 !important; margin: 0 !important; flex-shrink: 0 !important; }
 .login-remember-label span { line-height: 1.2 !important; }
+
+/* ⭐ FIX pinch-zoom */
+html, body { touch-action: pan-x pan-y !important; -webkit-text-size-adjust: 100% !important; text-size-adjust: 100% !important; }
+#menuOverlay { touch-action: manipulation !important; overscroll-behavior: contain !important; }
+#menuOverlay *, #menuOverlayInner *, .menu-item, .menu-float { touch-action: manipulation !important; }
+#menuToggle { touch-action: none !important; }
+body.menu-open { touch-action: none !important; overscroll-behavior: none !important; overflow: hidden !important; }
+body.menu-open #menuOverlay { transform: none !important; }
 </style>
 </head>
 <body>
@@ -359,7 +370,7 @@ body:not(.user-is-admin) #adminBtn { display: none !important; }
     </div>
   </section>
 
-<div id="hint" aria-hidden="true" hidden></div>
+  <div id="hint" aria-hidden="true" hidden></div>
 </main>
 
 <div id="puzzleOverlay" aria-hidden="true">
@@ -386,6 +397,7 @@ body:not(.user-is-admin) #adminBtn { display: none !important; }
 
 <button id="birthdayBtn" type="button" aria-label="Inb vùng kín" hidden style="display:none">💌</button>
 <button id="displayNameBtn" type="button" hidden style="display:none"></button>
+<button id="puzzleBtn" type="button" hidden style="display:none"></button>
 
 <div id="loginOverlay" aria-hidden="true">
   <section id="loginPanel" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
@@ -396,7 +408,7 @@ body:not(.user-is-admin) #adminBtn { display: none !important; }
     <label class="login-label" for="loginUsername">Tên đăng nhập</label>
     <input id="loginUsername" type="text" inputmode="text" autocomplete="username" placeholder="VD: tienloi" maxlength="60" autocapitalize="none" spellcheck="false">
     <label class="login-label" for="loginPassword">Mật khẩu</label>
-  <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••">
+    <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••">
     <label class="login-remember-label" for="loginRemember">
       <input type="checkbox" id="loginRemember">
       <span>Lưu mật khẩu cho lần sau</span>
@@ -520,7 +532,7 @@ body:not(.user-is-admin) #adminBtn { display: none !important; }
 <script src="js/secret-mail.js" defer></script>
 <script src="js/realtime.js" defer></script>
 <script src="js/bxh-top.js" defer></script>
- <script src="js/puzzle.js" defer></script>
+<script src="js/puzzle.js" defer></script>
 <script src="js/birthday-chat.js?v=2.0.0" defer></script>
 <script src="js/kick-signal.js" defer></script>
 <script src="js/menu.js" defer></script>
@@ -641,7 +653,8 @@ body:not(.user-is-admin) #adminBtn { display: none !important; }
       <div class="menu-section-title"><span>🎀</span> Công cụ</div>
       <div class="menu-grid">
         <button class="menu-item" data-target="kdvRulesBtn" type="button"><span class="menu-item-icon">📜</span><span class="menu-item-label">Luật KDV</span></button>
-        <button class="menu-item" data-target="lunchBtn" type="button"><span class="menu-item-icon">🍜</span><span class="menu-item-label">Bữa trưa</span></button> <button class="menu-item" data-target="puzzleBtn" type="button"><span class="menu-item-icon">🧩</span><span class="menu-item-label">Giải đố</span></button>
+        <button class="menu-item" data-target="lunchBtn" type="button"><span class="menu-item-icon">🍜</span><span class="menu-item-label">Bữa trưa</span></button>
+        <button class="menu-item" data-target="puzzleBtn" type="button"><span class="menu-item-icon">🧩</span><span class="menu-item-label">Giải đố</span></button>
         <button class="menu-item" data-target="attendanceBtn" type="button"><span class="menu-item-icon">🗓</span><span class="menu-item-label">Chấm công</span></button>
         <button class="menu-item" data-target="birthdayProxyBtn" type="button"><span class="menu-item-icon">💌</span><span class="menu-item-label">Inb vùng kín</span><span class="bd-menu-badge" id="bdMenuBadge" hidden></span></button>
         <button class="menu-item" data-target="displayNameBtn" type="button"><span class="menu-item-icon">🎴</span><span class="menu-item-label">Đổi tên hiển thị</span></button>
