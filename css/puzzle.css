@@ -38,8 +38,6 @@
 .pz-word{display:flex;gap:6px;padding:6px;border-radius:10px;background:#f4faf1;border:1px dashed #c8dec8}
 .pz-cell{width:42px;height:50px;border:2px solid #c8dec8;background:#fff;border-radius:10px;font-size:22px;font-weight:900;text-align:center;text-transform:uppercase;color:#2a5a38;font-family:inherit;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .pz-cell.filled{background:#eef8ec;border-color:#a8d0b0}
-
-/* ⭐ v1.0.2: LEGEND màu sắc */
 .pz-legend{margin-top:10px;background:#f4faf1;border:1px solid #d8ead8;border-radius:12px;padding:10px 12px}
 .pz-legend-title{font-weight:900;font-size:11px;color:#5a7a60;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .pz-legend-list{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
@@ -51,7 +49,6 @@
 .pz-legend-swatch.purple{background:linear-gradient(135deg,#b873d0,#8e3baa)}
 .pz-legend-example{margin-top:8px;padding-top:8px;border-top:1px dashed #c8dec8;font-size:11px;color:#5a7a60;font-weight:700;line-height:1.5}
 .pz-legend-example b{color:#2a5a38;background:#fff;padding:1px 5px;border-radius:4px;font-family:monospace;letter-spacing:.5px}
-
 .pz-input-wrap{margin-top:14px}
 .pz-input{width:100%;padding:14px 18px;border:2px solid #c8dec8;border-radius:14px;font-size:18px;font-weight:900;text-align:center;letter-spacing:3px;text-transform:uppercase;background:#fff;color:#2a5a38;font-family:inherit;outline:none;transition:all .15s;box-sizing:border-box}
 .pz-input:focus{border-color:#4fa370;box-shadow:0 0 0 4px rgba(79,163,112,.2)}
