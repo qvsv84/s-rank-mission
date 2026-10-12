@@ -1,9 +1,13 @@
 /* =========================================================
-   PUZZLE GAME — Wordle tiếng Việt v2.1.0
-   v2.1.0 FIXES:
-   - Chuyển từ 7 input riêng → 1 input chung + 7 preview div
-   - Bàn phím Telex/VNI hoạt động bình thường
-   - Không can thiệp từng ký tự khi user gõ
+   PUZZLE GAME — Wordle tiếng Việt v2.2.0
+   ---------------------------------------------------------
+   v2.2.0:
+   - Admin check = CHỈ user tienloi (không cần role admin chung)
+   - Không leak đáp án khi hết hạn (chỉ hiện khi giải đúng)
+   v2.1.0:
+   - 1 input chung + preview div → Telex/VNI hoạt động
+   v2.0.0:
+   - Unicode NFC normalize + debug log + menu listener direct
    ========================================================= */
 (function(){
   'use strict';
@@ -45,7 +49,14 @@
     const Toast=window.Toast;
     const DN=window.DN||(n=>n);
 
-    const isAdmin=()=>{   try{     const u=window.SRank?.Auth?.getCurrentUser?.();     const un=String(u?.username||'').toLowerCase().trim();     return un==='tienloi';   }catch(_){return false} };
+    // ⭐ v2.2.0: CHỈ tienloi có quyền admin puzzle
+    const isAdmin=()=>{
+      try{
+        const u=window.SRank?.Auth?.getCurrentUser?.();
+        const un=String(u?.username||'').toLowerCase().trim();
+        return un==='tienloi';
+      }catch(_){return false}
+    };
     const isLoggedIn=()=>{
       try{
         if(window.SRank?.Auth?.isLoggedIn)return window.SRank.Auth.isLoggedIn();
@@ -197,18 +208,18 @@
         +'<div class="pz-points-badge">💰 '+p.points_reward+'đ</div>'
         +'<div class="pz-timer"><span>⏱</span><span class="pz-timer-text">--:--</span></div>'
         +'</div>'
-       +'<div class="pz-grid" id="pzGrid"></div>'
-+'<div class="pz-legend">'
-+'<div class="pz-legend-title">🎨 Chú thích màu</div>'
-+'<div class="pz-legend-list">'
-+'<div class="pz-legend-item"><span class="pz-legend-swatch green">✓</span>Đúng chữ + đúng vị trí</div>'
-+'<div class="pz-legend-item"><span class="pz-legend-swatch black">≈</span>Đúng nguyên âm, sai dấu</div>'
-+'<div class="pz-legend-item"><span class="pz-legend-swatch yellow">↺</span>Đúng chữ, sai vị trí</div>'
-+'<div class="pz-legend-item"><span class="pz-legend-swatch purple">✕</span>Không có trong đáp án</div>'
-+'</div>'
-+'<div class="pz-legend-example">💡 VD: đáp án <b>HOA HỒNG</b> — bạn gõ <b>HỌC SINH</b> thì <b>H</b> đầu 🟩, <b>Ọ</b> thứ 2 🖤, <b>H</b> cuối 🟨, <b>C S I</b> 🟪</div>'
-+'</div>'
-+'<div class="pz-input-wrap">'
+        +'<div class="pz-grid" id="pzGrid"></div>'
+        +'<div class="pz-legend">'
+        +'<div class="pz-legend-title">🎨 Chú thích màu</div>'
+        +'<div class="pz-legend-list">'
+        +'<div class="pz-legend-item"><span class="pz-legend-swatch green">✓</span>Đúng chữ + đúng vị trí</div>'
+        +'<div class="pz-legend-item"><span class="pz-legend-swatch black">≈</span>Đúng nguyên âm, sai dấu</div>'
+        +'<div class="pz-legend-item"><span class="pz-legend-swatch yellow">↺</span>Đúng chữ, sai vị trí</div>'
+        +'<div class="pz-legend-item"><span class="pz-legend-swatch purple">✕</span>Không có trong đáp án</div>'
+        +'</div>'
+        +'<div class="pz-legend-example">💡 VD: đáp án <b>HOA HỒNG</b> — bạn gõ <b>HỌC SINH</b> thì <b>H</b> đầu 🟩, <b>Ọ</b> thứ 2 🖤, <b>H</b> cuối 🟨, <b>C S I</b> 🟪</div>'
+        +'</div>'
+        +'<div class="pz-input-wrap">'
         +'<input type="text" id="pzGuessInput" class="pz-input" placeholder="Nhập đáp án ('+total+' ký tự)..." autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done">'
         +'</div>'
         +'<div class="pz-hints" id="pzHints"></div>'
@@ -242,7 +253,6 @@
         }
         gridEl.appendChild(wordEl);
       });
-      // Tap vào grid để focus input
       gridEl.addEventListener('click',()=>guessInput?.focus());
     }
 
@@ -261,7 +271,6 @@
       const graphemes=splitGraphemes(cleaned);
       const total=totalChars();
       const limited=graphemes.slice(0,total);
-      // Nếu user gõ quá total, cắt bớt
       if(graphemes.length>total){
         guessInput.value=limited.join('');
       }
@@ -335,9 +344,10 @@
           +'</div>').join('');
     }
 
+    // ⭐ v2.2.0: chỉ hiện đáp án khi GIẢI ĐÚNG, không hiện khi hết hạn
     function renderFinished(solved,expired){
       const p=selectedPuzzle;
-      const answer=(p.revealed_answer||attemptState.revealed_answer||'').toUpperCase();
+      const answer=solved?(p.revealed_answer||attemptState.revealed_answer||'').toUpperCase():'';
       playContent.innerHTML=
         (solved
           ?'<div class="pz-banner solved"><span class="pz-banner-title">🎉 Chính xác!</span>'
@@ -346,8 +356,8 @@
             +(answer?'<div class="pz-banner-answer">Đáp án: <b>'+escHtml(answer)+'</b></div>':'')
             +'</div>'
           :'<div class="pz-banner expired"><span class="pz-banner-title">⏰ Hết thời gian!</span>'
-            +'<div>Bạn đã dùng '+attemptState.total_guesses+' lần đoán</div>'
-            +(answer?'<div class="pz-banner-answer">Đáp án là: <b>'+escHtml(answer)+'</b></div>':'')
+            +'<div>Bạn đã dùng '+attemptState.total_guesses+' lần đoán nhưng chưa giải ra</div>'
+            +'<div style="margin-top:8px;font-size:12px;opacity:.85;">🔒 Đáp án sẽ không được công bố.<br>Hãy thử lại ở puzzle sau nhé!</div>'
             +'</div>')
         +'<div class="pz-history" id="pzHistory"></div>'
         +'<div class="pz-lb" id="pzLb"></div>'
@@ -359,13 +369,14 @@
       });
     }
 
+    // ⭐ v2.2.0: revealed_answer chỉ giữ khi đã solved
     async function selectPuzzle(p){
       selectedPuzzle=p;attemptState=null;guessHistory=[];
       hintItems=[];revealedHintCount=0;
       if(p.has_attempt){
         try{
           const s=await API.start(p.id);
-          attemptState={attempt_id:s.attempt_id,expires_at:s.expires_at,started_at:s.started_at,solved_at:s.solved_at,total_guesses:s.total_guesses,points_earned:s.points_earned||0,revealed_answer:s.revealed_answer};
+          attemptState={attempt_id:s.attempt_id,expires_at:s.expires_at,started_at:s.started_at,solved_at:s.solved_at,total_guesses:s.total_guesses,points_earned:s.points_earned||0,revealed_answer:s.solved_at?s.revealed_answer:null};
           guessHistory=s.guess_history||[];
           hintItems=s.hint_items||[];
           revealedHintCount=s.revealed_hint_count||0;
@@ -379,7 +390,7 @@
       if(!selectedPuzzle)return;
       try{
         const s=await API.start(selectedPuzzle.id);
-        attemptState={attempt_id:s.attempt_id,expires_at:s.expires_at,started_at:s.started_at,solved_at:s.solved_at,total_guesses:s.total_guesses,points_earned:s.points_earned||0,revealed_answer:s.revealed_answer};
+        attemptState={attempt_id:s.attempt_id,expires_at:s.expires_at,started_at:s.started_at,solved_at:s.solved_at,total_guesses:s.total_guesses,points_earned:s.points_earned||0,revealed_answer:s.solved_at?s.revealed_answer:null};
         guessHistory=s.guess_history||[];
         hintItems=s.hint_items||[];
         revealedHintCount=s.revealed_hint_count||0;
@@ -571,6 +582,6 @@
     window.SRank=window.SRank||{};
     window.SRank.Puzzle={open,close,debug:()=>console.log(LOG,'activePuzzles:',activePuzzles,'selected:',selectedPuzzle,'attempt:',attemptState)};
 
-    console.log(LOG,'v2.1.0 ready ✓');
+    console.log(LOG,'v2.2.0 ready ✓');
   }
 })();
