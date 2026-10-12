@@ -1,9 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.4.0
-   - Room list (thay nhập mã)
-   - Finished: reveal bài đối thủ
-   - Back to waiting: chỉ host
-   - Smart select cycle
+   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.5.0
+   - Timeout: host cài giây/lượt, hết giờ tự pass hoặc tự đánh lowest
+   - Lowest card đi trước nếu không có 3♠
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -16,6 +14,7 @@
   const ROOM_KEY = 'srank_card_room_v1';
   const POLL_MS = 2500;
   const ROOM_POLL_MS = 5000;
+  const TICK_MS = 1000;
   const RANKS = ['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
   const SUITS = ['♠','♣','♦','♥'];
 
@@ -27,7 +26,8 @@
     '4con2_sam': '4 con 2 + sám',
     cung_mau: '13 lá cùng màu',
     '3_sam': '3 sám cô',
-    het_bai: 'Hết bài'
+    het_bai: 'Hết bài',
+    out: 'Đối thủ rời'
   };
 
   let _room = null;
@@ -36,6 +36,7 @@
   let _channel = null;
   let _pollTimer = null;
   let _roomPollTimer = null;
+  let _tickTimer = null;
   let _isOpen = false;
   let _busy = false;
   let _lastErrorAt = 0;
@@ -48,6 +49,7 @@
 
   let _lastClickCard = null;
   let _lastClickMode = -1;
+  let _lastTimeoutKey = '';
 
   const $ = id => document.getElementById(id);
   const h = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -291,6 +293,15 @@
                 <div id="tlkCode" class="tlk-code">------</div>
                 <button class="tlk-copy-btn" data-action="copy-code" type="button">📋 Copy</button>
               </div>
+              <div id="tlkTimeSetting" class="tlk-time-setting" hidden>
+                <label for="tlkTimeInput">⏱ Giới hạn mỗi lượt</label>
+                <div class="tlk-time-row">
+                  <input id="tlkTimeInput" type="number" min="0" max="300" step="5" value="30" inputmode="numeric">
+                  <span>giây</span>
+                  <button data-action="save-time" type="button">Lưu</button>
+                </div>
+                <div class="tlk-time-hint">0 = tắt giới hạn • Hết giờ sẽ tự bỏ lượt (hoặc tự đánh lá thấp nhất nếu đang mở vòng)</div>
+              </div>
               <div class="tlk-players-label">Người chơi <span id="tlkPlayerCount">0/4</span></div>
               <div id="tlkPlayers" class="tlk-players"></div>
               <div class="tlk-actions">
@@ -404,7 +415,6 @@
     else showView('menu');
   }
 
-  /* ───── ROOM LIST ───── */
   async function loadRoomList(){
     const box = $('tlkRoomsList');
     if (!box) return;
@@ -504,6 +514,18 @@
     } else {
       startBtn.hidden = true;
     }
+
+    // Host setting time
+    const timeBox = $('tlkTimeSetting');
+    if (timeBox){
+      timeBox.hidden = !isHost;
+      if (isHost){
+        const inp = $('tlkTimeInput');
+        if (inp && document.activeElement !== inp){
+          inp.value = String(_room.turnSeconds != null ? _room.turnSeconds : 30);
+        }
+      }
+    }
   }
 
   function renderPlaying(){
@@ -516,6 +538,7 @@
     const table = _room.table || [];
     const tableType = _room.tableType;
     const tableOwner = _room.tableOwner;
+    const hasTimer = _room.turnSeconds > 0 && _room.turnStartedAt;
 
     const sortedTable = table.slice().sort(sortAsc);
     const tableStr = JSON.stringify(sortedTable);
@@ -553,10 +576,16 @@
       const avHtml = av
         ? `<img src="${h(av)}" alt="" onerror="this.style.display='none';this.parentNode.textContent='${h(initial)}'">`
         : h(initial);
+      let timerHtml = '';
+      if (turn === p.order && hasTimer){
+        const remain = Math.max(0, Math.ceil((_room.turnStartedAt + _room.turnSeconds*1000 - Date.now())/1000));
+        timerHtml = `<div class="tlk-opp-timer ${remain <= 5 ? 'urgent' : ''}">⏱ <span data-tlk-timer>${remain}</span>s</div>`;
+      }
       slot.innerHTML = `
         <div class="tlk-opp-avatar">${avHtml}</div>
         <div class="tlk-opp-name" title="${h(du)}">${h(du)}</div>
         <div class="tlk-opp-cards"><span class="tlk-opp-cards-icon"></span>${cnt}</div>
+        ${timerHtml}
       `;
     });
 
@@ -595,7 +624,12 @@
     const status = $('tlkMyStatus');
     status.innerHTML = '';
     if (isMyTurn){
-      status.innerHTML = '<span class="tlk-status-tag turn">🎯 Lượt bạn</span>';
+      let timerHtml = '';
+      if (hasTimer){
+        const remain = Math.max(0, Math.ceil((_room.turnStartedAt + _room.turnSeconds*1000 - Date.now())/1000));
+        timerHtml = ` <span class="tlk-timer ${remain <= 5 ? 'urgent' : ''}">⏱ <span data-tlk-timer>${remain}</span>s</span>`;
+      }
+      status.innerHTML = `<span class="tlk-status-tag turn">🎯 Lượt bạn</span>${timerHtml}`;
     } else if (turn != null){
       const curr = players.find(p => p.order === turn);
       status.innerHTML = `<span class="tlk-status-tag">⏳ ${h(displayUser(curr ? curr.name : '?'))}</span>`;
@@ -660,7 +694,6 @@
     $('tlkWinnerName').textContent = displayUser(w) || '—';
     $('tlkWinnerReason').textContent = wt ? (ANGT_STATUS_LABEL[wt] || wt) : '';
 
-    // ⭐ Reveal hands
     const players = _room.players || [];
     const handsBox = $('tlkFinishedHands');
     handsBox.innerHTML = '';
@@ -699,6 +732,50 @@
     _lastClickMode = -1;
   }
 
+  /* ───── TIMER ───── */
+  function updateTimers(){
+    if (!_room || _room.status !== 'playing') return;
+    if (!_room.turnSeconds || _room.turnSeconds <= 0) return;
+    if (!_room.turnStartedAt) return;
+    const deadline = _room.turnStartedAt + _room.turnSeconds * 1000;
+    const remain = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+    document.querySelectorAll('[data-tlk-timer]').forEach(el => {
+      if (el.textContent !== String(remain)) el.textContent = String(remain);
+      const parent = el.parentElement;
+      if (parent) parent.classList.toggle('urgent', remain <= 5);
+    });
+  }
+
+  function checkTimeout(){
+    if (!_room || _room.status !== 'playing') return;
+    if (!_room.turnSeconds || _room.turnSeconds <= 0) return;
+    if (!_room.turnStartedAt) return;
+    const deadline = _room.turnStartedAt + _room.turnSeconds * 1000;
+    if (Date.now() < deadline) return;
+    const key = _room.turnStartedAt + ':' + _room.turn;
+    if (_lastTimeoutKey === key) return;
+    _lastTimeoutKey = key;
+    callRpc('rpc_card_timeout', { p_code: _room.code }).then(() => {
+      fetchState();
+    }).catch(() => { /* client khác đã xử lý, bỏ qua */ });
+  }
+
+  function startTick(){
+    stopTick();
+    _tickTimer = setInterval(function (){
+      if (document.hidden) return;
+      if (!_isOpen) return;
+      if (!_room || _room.status !== 'playing') return;
+      if (!_room.turnSeconds || _room.turnSeconds <= 0) return;
+      updateTimers();
+      checkTimeout();
+    }, TICK_MS);
+  }
+  function stopTick(){
+    if (_tickTimer){ clearInterval(_tickTimer); _tickTimer = null; }
+  }
+
+  /* ───── ACTIONS ───── */
   async function actCreate(){
     if (_busy) return; _busy = true;
     try {
@@ -727,6 +804,20 @@
     finally { _busy = false; }
   }
 
+  async function actSaveTime(){
+    if (_busy || !_room) return;
+    const inp = $('tlkTimeInput');
+    if (!inp) return;
+    const sec = Math.max(0, Math.min(300, parseInt(inp.value, 10) || 0));
+    _busy = true;
+    try {
+      await callRpc('rpc_card_set_time', { p_code: _room.code, p_name: _myName, p_seconds: sec });
+      await fetchState();
+      toast(sec === 0 ? 'Đã tắt giới hạn thời gian' : 'Đã đặt ' + sec + 's/lượt', { type: 'success', duration: 2400 });
+    } catch (e){ toastError(e.message); }
+    finally { _busy = false; }
+  }
+
   async function actStart(){
     if (_busy || !_room) return;
     _busy = true;
@@ -734,6 +825,7 @@
       const r = await callRpc('rpc_card_start', { p_code: _room.code, p_name: _myName });
       resetSelectionState();
       _prevTable = []; _prevTableOwner = ''; _lastTable = []; _lastTableOwner = ''; _lastTableStr = '';
+      _lastTimeoutKey = '';
       await fetchState();
       if (r?.data?.winner){
         toast('🎉 Ăn trắng! ' + displayUser(r.data.winner), { type: 'success', duration: 4200 });
@@ -752,6 +844,7 @@
     try {
       const r = await callRpc('rpc_card_play', { p_code: _room.code, p_name: _myName, p_cards: cards });
       resetSelectionState();
+      _lastTimeoutKey = '';
       await fetchState();
       if (r?.data?.winner){
         toast('🏆 ' + displayUser(r.data.winner) + ' thắng!', { type: 'success', duration: 4200 });
@@ -765,6 +858,7 @@
     _busy = true;
     try {
       resetSelectionState();
+      _lastTimeoutKey = '';
       await callRpc('rpc_card_pass', { p_code: _room.code, p_name: _myName });
       await fetchState();
     } catch (e){ toastError(e.message); }
@@ -794,6 +888,7 @@
       await callRpc('rpc_card_back_waiting', { p_code: _room.code, p_name: _myName });
       resetSelectionState();
       _prevTable = []; _prevTableOwner = ''; _lastTable = []; _lastTableOwner = ''; _lastTableStr = '';
+      _lastTimeoutKey = '';
       await fetchState();
       toast('Đã về phòng chờ', { type: 'success', duration: 2000 });
     } catch (e){ toastError(e.message); }
@@ -820,6 +915,7 @@
     _room = null;
     resetSelectionState();
     _prevTable = []; _prevTableOwner = ''; _lastTable = []; _lastTableOwner = ''; _lastTableStr = '';
+    _lastTimeoutKey = '';
     render();
   }
 
@@ -837,9 +933,11 @@
       render();
       if (statusChanged && st.status === 'playing'){
         resetSelectionState();
+        _lastTimeoutKey = '';
       }
       if (statusChanged && st.status === 'finished'){
         resetSelectionState();
+        _lastTimeoutKey = '';
         if (st.winner){
           toast('🏆 ' + displayUser(st.winner) + ' thắng!', { type: 'success', duration: 4200 });
         }
@@ -893,7 +991,7 @@
     _roomPollTimer = setInterval(function (){
       if (document.hidden) return;
       if (!_isOpen) return;
-      if (!_room) loadRoomList(); // chỉ load khi đang ở menu
+      if (!_room) loadRoomList();
     }, ROOM_POLL_MS);
   }
   function stopRoomPoll(){
@@ -926,6 +1024,7 @@
     }
     startPoll();
     startRoomPoll();
+    startTick();
   }
 
   function close(){
@@ -937,6 +1036,7 @@
     document.body.classList.remove('tlk-open');
     stopPoll();
     stopRoomPoll();
+    stopTick();
     if (!_room) unsubscribeRoom();
   }
 
@@ -949,6 +1049,7 @@
     else if (a === 'refresh-rooms') loadRoomList();
     else if (a === 'copy-code') actCopyCode();
     else if (a === 'toggle-ready') actToggleReady();
+    else if (a === 'save-time') actSaveTime();
     else if (a === 'start') actStart();
     else if (a === 'play') actPlay();
     else if (a === 'pass') actPass();
@@ -989,7 +1090,7 @@
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleVisibility);
 
-    console.log('[Tulokho] ready ✓ v1.4.0');
+    console.log('[Tulokho] ready ✓ v1.5.0');
   }
 
   window.SRank = window.SRank || {};
@@ -998,7 +1099,7 @@
     close,
     isOpen: () => _isOpen,
     getRoom: () => _room,
-    version: '1.4.0'
+    version: '1.5.0'
   };
 
   if (document.readyState === 'loading'){
