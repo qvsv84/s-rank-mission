@@ -1,9 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.5.1
-   - FIX: overlay ẩn từ đầu (inline style) — tránh hiện khi CSS chưa load
+   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.5.2
+   - FIX: dùng displayName (tên gốc) thay username → DN() + avatar chuẩn
+   - Ẩn mã phòng khỏi UI (đã có room list)
+   - Xoá copy code
+   - ROOM_KEY đổi v1 → v2
    - Timeout per turn + host setting
-   - Lowest card đi trước nếu không có 3♠
-   - Room list, reveal bài khi finished
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -13,7 +14,8 @@
   const Auth = window.SRank && window.SRank.Auth;
   if (!Auth) { console.warn('[Tulokho] SRank.Auth chưa load'); return; }
 
-  const ROOM_KEY = 'srank_card_room_v1';
+  const ROOM_KEY = 'srank_card_room_v2';   // ⭐ v1 → v2
+  const LEGACY_ROOM_KEY = 'srank_card_room_v1';
   const POLL_MS = 2500;
   const ROOM_POLL_MS = 5000;
   const TICK_MS = 1000;
@@ -62,10 +64,20 @@
   function cardValue(c){ return cardRank(c) * 4 + cardSuit(c); }
   function sortAsc(a, b){ return cardValue(a) - cardValue(b); }
 
-  function getUsername(){
-    try { const u = Auth.getCurrentUser?.(); return String(u?.username || '').trim().toLowerCase(); }
-    catch(_){ return ''; }
+  /* ⭐ v1.5.2: lấy tên gốc (displayName) thay vì username */
+  function getUserIdentity(){
+    try {
+      const u = Auth.getCurrentUser?.();
+      if (!u) return '';
+      const dn = String(u.displayName || '').trim();
+      if (dn) return dn;
+      const m = u.user_metadata || {};
+      const raw = String(m.display_name || m.full_name || m.name || '').trim();
+      if (raw) return raw;
+      return String(u.username || '').trim().toLowerCase();
+    } catch(_){ return ''; }
   }
+
   function displayUser(uname){
     if (!uname) return '';
     const d = window.DN ? window.DN(uname) : uname;
@@ -260,13 +272,16 @@
   function clearRoomCode(){
     try { localStorage.removeItem(ROOM_KEY); } catch(_){}
   }
+  function clearLegacyRoomKey(){
+    try { localStorage.removeItem(LEGACY_ROOM_KEY); } catch(_){}
+  }
 
   function injectDom(){
     if ($('tulokhoOverlay')) return;
     const ov = document.createElement('div');
     ov.id = 'tulokhoOverlay';
     ov.setAttribute('aria-hidden', 'true');
-    ov.style.display = 'none';   // ⭐ FIX: ẩn ngay từ đầu, không phụ thuộc CSS
+    ov.style.display = 'none';
     ov.innerHTML = `
       <section id="tlkPanel" role="dialog" aria-modal="true">
         <header id="tlkHead">
@@ -291,11 +306,6 @@
           </div>
           <div class="tlk-view" data-view="waiting" hidden>
             <div class="tlk-waiting">
-              <div class="tlk-code-wrap">
-                <div class="tlk-code-label">Mã phòng</div>
-                <div id="tlkCode" class="tlk-code">------</div>
-                <button class="tlk-copy-btn" data-action="copy-code" type="button">📋 Copy</button>
-              </div>
               <div id="tlkTimeSetting" class="tlk-time-setting" hidden>
                 <label for="tlkTimeInput">⏱ Giới hạn mỗi lượt</label>
                 <div class="tlk-time-row">
@@ -476,7 +486,6 @@
 
   function renderWaiting(){
     if (!_room) return;
-    $('tlkCode').textContent = _room.code || '------';
     const players = _room.players || [];
     $('tlkPlayerCount').textContent = players.length + '/4';
 
@@ -518,7 +527,6 @@
       startBtn.hidden = true;
     }
 
-    // Host setting time
     const timeBox = $('tlkTimeSetting');
     if (timeBox){
       timeBox.hidden = !isHost;
@@ -735,7 +743,6 @@
     _lastClickMode = -1;
   }
 
-  /* ───── TIMER ───── */
   function updateTimers(){
     if (!_room || _room.status !== 'playing') return;
     if (!_room.turnSeconds || _room.turnSeconds <= 0) return;
@@ -778,7 +785,6 @@
     if (_tickTimer){ clearInterval(_tickTimer); _tickTimer = null; }
   }
 
-  /* ───── ACTIONS ───── */
   async function actCreate(){
     if (_busy) return; _busy = true;
     try {
@@ -789,7 +795,7 @@
       _room = { code, status: 'waiting', version: 0, players: [] };
       subscribeRoom(code);
       await fetchState();
-      toast('Đã tạo phòng ' + code, { type: 'success', duration: 2600 });
+      toast('Đã tạo phòng', { type: 'success', duration: 2600 });
     } catch (e){
       toastError('Tạo phòng lỗi: ' + e.message);
     } finally { _busy = false; }
@@ -898,20 +904,6 @@
     finally { _busy = false; }
   }
 
-  function actCopyCode(){
-    if (!_room) return;
-    const txt = _room.code || '';
-    if (!txt) return;
-    if (navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(txt).then(
-        () => toast('Đã copy mã phòng', { type: 'success', duration: 2000 }),
-        () => toastError('Không copy được')
-      );
-    } else {
-      toastError('Trình duyệt chưa hỗ trợ copy');
-    }
-  }
-
   function closeRoom(){
     unsubscribeRoom();
     clearRoomCode();
@@ -1003,7 +995,8 @@
 
   function open(){
     injectDom();
-    _myName = getUsername();
+    clearLegacyRoomKey();   // ⭐ xoá key cũ 1 lần
+    _myName = getUserIdentity();
     if (!_myName){
       toastError('Bạn cần đăng nhập trước');
       return;
@@ -1011,7 +1004,7 @@
     const ov = $('tulokhoOverlay');
     if (!ov) return;
     _isOpen = true;
-    ov.style.display = 'block';   // ⭐ FIX
+    ov.style.display = 'block';
     ov.classList.add('show');
     ov.setAttribute('aria-hidden', 'false');
     document.body.classList.add('tlk-open');
@@ -1035,7 +1028,7 @@
     const ov = $('tulokhoOverlay');
     if (!ov) return;
     _isOpen = false;
-    ov.style.display = 'none';   // ⭐ FIX
+    ov.style.display = 'none';
     ov.classList.remove('show');
     ov.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('tlk-open');
@@ -1052,7 +1045,6 @@
     const a = t.dataset.action;
     if (a === 'create') actCreate();
     else if (a === 'refresh-rooms') loadRoomList();
-    else if (a === 'copy-code') actCopyCode();
     else if (a === 'toggle-ready') actToggleReady();
     else if (a === 'save-time') actSaveTime();
     else if (a === 'start') actStart();
@@ -1095,7 +1087,7 @@
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleVisibility);
 
-    console.log('[Tulokho] ready ✓ v1.5.1');
+    console.log('[Tulokho] ready ✓ v1.5.2');
   }
 
   window.SRank = window.SRank || {};
@@ -1104,7 +1096,7 @@
     close,
     isOpen: () => _isOpen,
     getRoom: () => _room,
-    version: '1.5.1'
+    version: '1.5.2'
   };
 
   if (document.readyState === 'loading'){
