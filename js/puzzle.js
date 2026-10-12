@@ -1,9 +1,12 @@
 /* =========================================================
-   PUZZLE GAME — Wordle tiếng Việt v2.2.0
+   PUZZLE GAME — Wordle tiếng Việt v2.2.1
    ---------------------------------------------------------
+   v2.2.1:
+   - FIX: switchTab('play') refresh list (thấy puzzle vừa tạo)
+   - Auto-open login khi chưa đăng nhập
    v2.2.0:
-   - Admin check = CHỈ user tienloi (không cần role admin chung)
-   - Không leak đáp án khi hết hạn (chỉ hiện khi giải đúng)
+   - Admin check = CHỈ user tienloi
+   - Không leak đáp án khi hết hạn
    v2.1.0:
    - 1 input chung + preview div → Telex/VNI hoạt động
    v2.0.0:
@@ -514,7 +517,7 @@
       try{
         await API.create({title,answer,hints,points,duration});
         Toast?.show('Đã tạo puzzle ✓',{type:'success',duration:3500});
-        $('pzFldTitle').value='';$('pzFldAnswer').value='';$('pzFldHints').value='';
+        $('pzFldTitle').value='';$('pzFldAnswer30').value='';$('pzFldHints').value='';
         $('pzFldPoints').value='50';$('pzFldDuration').value='60';
         renderAdminView();
         API.getActive().then(l=>{activePuzzles=l||[]}).catch(()=>{});
@@ -522,19 +525,31 @@
       finally{btn.disabled=!1;btn.textContent='✚ Tạo puzzle mới'}
     }
 
+    // ⭐ v2.2.1: switchTab('play') refresh list (thấy puzzle vừa tạo)
     function switchTab(name){
       currentTab=name;
       tabsEl.querySelectorAll('.puzzle-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
       playView.classList.toggle('active',name==='play');
       adminView.classList.toggle('active',name==='admin');
       if(name==='admin')renderAdminView();
+      else if(name==='play'){
+        if(selectedPuzzle)renderPlayView();
+        else{
+          API.getActive().then(l=>{
+            activePuzzles=l||[];
+            renderPlayView();
+          }).catch(()=>renderPlayView());
+        }
+      }
     }
     tabsEl.querySelectorAll('.puzzle-tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
 
+    // ⭐ v2.2.1: auto-open login khi chưa đăng nhập
     async function open(){
       console.log(LOG,'open() called | loggedIn=',isLoggedIn());
       if(!isLoggedIn()){
-        Toast?.show('Vui lòng đăng nhập',{type:'warning'});
+        Toast?.show('Vui lòng đăng nhập để chơi 🧩',{type:'warning',duration:2500});
+        try{ if(window.SRank?.openLogin) window.SRank.openLogin(); }catch(_){}
         return;
       }
       overlay.classList.add('show');overlay.setAttribute('aria-hidden','false');
@@ -543,7 +558,7 @@
       selectedPuzzle=null;attemptState=null;guessHistory=[];
       hintItems=[];revealedHintCount=0;
       switchTab('play');
-      playContent.innerHTML='<div style="text-align:center;padding:30px;color:#7a9a80;">⏳ Đang tải…</div>';
+      playContent.innerHTML='<div style="text-align:center;padding:px;color:#7a9a80;">⏳ Đang tải…</div>';
       try{
         activePuzzles=(await API.getActive())||[];
         console.log(LOG,'active puzzles:',activePuzzles.length);
@@ -582,6 +597,6 @@
     window.SRank=window.SRank||{};
     window.SRank.Puzzle={open,close,debug:()=>console.log(LOG,'activePuzzles:',activePuzzles,'selected:',selectedPuzzle,'attempt:',attemptState)};
 
-    console.log(LOG,'v2.2.0 ready ✓');
+    console.log(LOG,'v2.2.1 ready ✓');
   }
 })();
