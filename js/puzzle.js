@@ -1,10 +1,13 @@
 /* =========================================================
-   PUZZLE GAME — Wordle tiếng Việt v2.2.2
+   PUZZLE GAME — Wordle tiếng Việt v2.2.3
    ---------------------------------------------------------
+   v2.2.3:
+   - FIX: Auto-inject #puzzleBtn nếu chưa có → menu proxy OK
+   - FIX: open() tự đóng menu overlay nếu đang mở
+   - FIX: Bỏ double fetch API
+   - Log chi tiết
    v2.2.2:
-   - FIX: Event delegation cho menu item (chắc 100%, không
-     phụ thuộc element tồn tại lúc load)
-   - FIX: Bỏ timing conflict 340/400ms
+   - Event delegation cho menu item
    v2.2.1:
    - switchTab('play') refresh list
    - Auto-open login khi chưa đăng nhập
@@ -17,9 +20,38 @@
 (function(){
   'use strict';
   const LOG='[PUZZLE]';
-  console.log(LOG,'script loaded v2.2.2');
+  console.log(LOG,'script loaded v2.2.3');
 
   const $=id=>document.getElementById(id);
+
+  /* ⭐ v2.2.3: Auto-inject #puzzleBtn nếu chưa có
+     → menu.js proxy luôn tìm thấy → closeMenu chạy đúng */
+  (function ensurePuzzleBtn(){
+    if(document.getElementById('puzzleBtn'))return;
+    const b=document.createElement('button');
+    b.id='puzzleBtn';
+    b.type='button';
+    b.hidden=true;
+    b.style.display='none';
+    b.setAttribute('aria-hidden','true');
+    document.body.appendChild(b);
+    console.log(LOG,'auto-injected #puzzleBtn');
+  })();
+
+  /* ⭐ v2.2.3: Force-close menu overlay nếu đang mở */
+  function forceCloseMenu(){
+    try{
+      const menuOv=document.getElementById('menuOverlay');
+      if(menuOv&&menuOv.classList.contains('open')){
+        menuOv.classList.remove('open');
+        menuOv.setAttribute('aria-hidden','true');
+        const menuBtn=document.getElementById('menuToggle');
+        if(menuBtn)menuBtn.setAttribute('aria-expanded','false');
+        document.body.classList.remove('menu-open');
+        console.log(LOG,'force-closed menu overlay');
+      }
+    }catch(_){}
+  }
 
   function waitForOverlay(){
     const ov=$('puzzleOverlay');
@@ -36,7 +68,7 @@
 
   waitForOverlay().then(overlay=>{
     if(!overlay){
-      console.error(LOG,'#puzzleOverlay KHÔNG TÌM THẤY trong DOM.');
+      console.error(LOG,'#puzzleOverlay KHÔNG TÌM THẤY trong DOM. Cần patch index.html chỗ 5.');
       return;
     }
     console.log(LOG,'overlay found');
@@ -72,6 +104,7 @@
     let activePuzzles=[],selectedPuzzle=null,attemptState=null,guessHistory=[];
     let currentTab='play',cells=[],guessInput=null,isSubmitting=!1,timerHandle=null;
     let hintItems=[],revealedHintCount=0,leaderboardRows=[];
+    let _isOpening=false;
 
     function splitGraphemes(str){
       const out=[];if(!str)return out;
@@ -542,25 +575,39 @@
     }
     tabsEl.querySelectorAll('.puzzle-tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
 
+    /* ⭐ v2.2.3: open() với các fix */
     async function open(){
+      if(_isOpening){console.log(LOG,'open() bị bỏ qua — đang mở');return}
+      _isOpening=true;
       console.log(LOG,'open() called | loggedIn=',isLoggedIn());
-      if(!isLoggedIn()){
-        Toast?.show('Vui lòng đăng nhập để chơi 🧩',{type:'warning',duration:2500});
-        try{ if(window.SRank?.openLogin) window.SRank.openLogin(); }catch(_){}
-        return;
-      }
-      overlay.classList.add('show');overlay.setAttribute('aria-hidden','false');
-      document.body.style.overflow='hidden';
-      if(adminTab)adminTab.hidden=!isAdmin();
-      selectedPuzzle=null;attemptState=null;guessHistory=[];
-      hintItems=[];revealedHintCount=0;
-      switchTab('play');
-      playContent.innerHTML='<div style="text-align:center;padding:30px;color:#7a9a80;">⏳ Đang tải…</div>';
       try{
+        if(!isLoggedIn()){
+          Toast?.show('Vui lòng đăng nhập để chơi 🧩',{type:'warning',duration:2500});
+          try{ if(window.SRank?.openLogin) window.SRank.openLogin(); }catch(_){}
+          return;
+        }
+        /* ⭐ Đóng menu overlay nếu đang mở */
+        forceCloseMenu();
+        /* Mở puzzle overlay */
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden','false');
+        document.body.style.overflow='hidden';
+        if(adminTab)adminTab.hidden=!isAdmin();
+        /* Reset state */
+        selectedPuzzle=null;attemptState=null;guessHistory=[];
+        hintItems=[];revealedHintCount=0;
+        /* Set tab play KHÔNG qua switchTab để tránh double fetch */
+        currentTab='play';
+        tabsEl.querySelectorAll('.puzzle-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab==='play'));
+        playView.classList.add('active');
+        adminView.classList.remove('active');
+        playContent.innerHTML='<div style="text-align:center;padding:30px;color:#7a9a80;">⏳ Đang tải…</div>';
+        /* Load data 1 lần duy nhất */
         activePuzzles=(await API.getActive())||[];
         console.log(LOG,'active puzzles:',activePuzzles.length);
         renderPlayView();
       }catch(e){showError(e.message||'Không tải được')}
+      finally{_isOpening=false}
     }
     function close(){
       stopTimer();
@@ -573,22 +620,19 @@
     overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('show')){e.preventDefault();close()}});
 
-    /* ⭐ v2.2.2: EVENT DELEGATION — bind trên document, chắc 100%
-       - Chạy capture phase → trước menu.js bubble
-       - Không phụ thuộc element tồn tại lúc load
-       - Bắt mọi click vào [data-target="puzzleBtn"] bất kể lúc nào */
+    /* ⭐ v2.2.3: Event delegation (capture phase) — chắc 100% */
     document.addEventListener('click',function(e){
       const item=e.target.closest('[data-target="puzzleBtn"]');
       if(!item)return;
       console.log(LOG,'event delegation: puzzleBtn clicked');
-      // Delay 450ms — sau menu proxy 340ms đóng overlay menu
+      // Delay 450ms — sau menu.js proxy 340ms
       setTimeout(function(){
         const ov=$('puzzleOverlay');
         if(ov&&!ov.classList.contains('show')){open()}
       },450);
-    },true); /* ← capture phase */
+    },true);
 
-    /* Backup: nút #puzzleBtn trực tiếp (nếu có) */
+    /* Backup: nút #puzzleBtn trực tiếp */
     const triggerBtn=$('puzzleBtn');
     if(triggerBtn){
       triggerBtn.addEventListener('click',()=>{console.log(LOG,'trigger via #puzzleBtn');open()});
@@ -597,6 +641,6 @@
     window.SRank=window.SRank||{};
     window.SRank.Puzzle={open,close,debug:()=>console.log(LOG,'activePuzzles:',activePuzzles,'selected:',selectedPuzzle,'attempt:',attemptState)};
 
-    console.log(LOG,'v2.2.2 ready ✓');
+    console.log(LOG,'v2.2.3 ready ✓');
   }
 })();
