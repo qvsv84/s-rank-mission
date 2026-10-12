@@ -1,9 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ — v1.5.0
+   TÚ LƠ KHƠ — v1.5.2
    - Full-screen, hand wrap
    - Room list (thay nhập mã)
    - Finished: reveal bài đối thủ
    - Timer per turn + host setting
+   - Xoá mã phòng khỏi UI
    ═══════════════════════════════════════════════════════════════ */
 
 #tulokhoOverlay {
@@ -291,50 +292,6 @@
   gap: 14px;
   width: 100%;
   max-width: 460px;
-}
-.tlk-code-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 12px 14px;
-  background: rgba(255, 255, 255, .08);
-  border: 1.5px solid rgba(255, 255, 255, .15);
-  border-radius: 16px;
-  flex-wrap: wrap;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.tlk-code-label {
-  font-size: 11px;
-  font-weight: 900;
-  color: rgba(255, 255, 255, .55);
-  letter-spacing: .14em;
-  text-transform: uppercase;
-}
-#tlkCode {
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 24px;
-  font-weight: 950;
-  color: #fff;
-  letter-spacing: .3em;
-  padding: 4px 10px;
-  background: rgba(255, 255, 255, .12);
-  border-radius: 8px;
-  text-shadow: 0 1px 3px rgba(0,0,0,.5);
-}
-.tlk-copy-btn {
-  min-height: 38px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1.5px solid rgba(255, 255, 255, .25);
-  background: rgba(255, 255, 255, .12);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
 }
 .tlk-players-label {
   display: flex;
