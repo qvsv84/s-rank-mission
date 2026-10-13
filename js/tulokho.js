@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ (TIẾN LÊN MIỀN NAM) — v1.7.1 ⚡
-   - FIX: bỏ cache DOM ($ map) — dùng getElementById trực tiếp
-   - Giữ: hand diff, opp diff, timer cache, fetch debounce
-   - Menu game không bị mất
+   TÚ LƠ KHƠ — v1.8.0 ⚡💰
+   - Header hiển thị ví
+   - Finished overlay hiển thị +/- tiền
+   - Giữ optimization v1.7.1
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -63,6 +63,11 @@
   let _fetchDebounceTimer = null;
   let _fetchInflight = false;
 
+  /* ⭐ WALLET state */
+  let _myBalance = null;
+  let _balanceBeforeGame = null;
+  let _lastFinishedWinner = null;
+
   const $ = id => document.getElementById(id);
   const h = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
@@ -71,6 +76,11 @@
   function isRed(c){ return cardSuit(c) >= 2; }
   function cardValue(c){ return cardRank(c) * 4 + cardSuit(c); }
   function sortAsc(a, b){ return a - b; }
+
+  function formatMoney(n){
+    const num = Math.round(Number(n) || 0);
+    return num.toLocaleString('vi-VN') + 'đ';
+  }
 
   function getUserIdentity(){
     try {
@@ -313,6 +323,17 @@
     return comboBeats(cards, t, table, tableType);
   }
 
+  /* ⭐ Cập nhật header ví */
+  function updateWalletDisplay(){
+    const el = $('tlkWalletAmount');
+    if (!el) return;
+    if (_myBalance == null){
+      el.textContent = '—';
+      return;
+    }
+    el.textContent = formatMoney(_myBalance);
+  }
+
   async function callRpc(fn, params){
     const sb = window.__sb;
     if (!sb || !sb.rpc) throw new Error('Chưa kết nối máy chủ');
@@ -351,6 +372,7 @@
       <section id="tlkPanel" role="dialog" aria-modal="true">
         <header id="tlkHead">
           <div id="tlkHeadTitle"><span class="tlk-head-icon">🃏</span><span>Tú lơ khơ</span></div>
+          <div id="tlkWallet" class="tlk-wallet" hidden>💰 <span id="tlkWalletAmount">—</span></div>
           <button id="tlkClose" type="button" aria-label="Đóng">×</button>
         </header>
         <div id="tlkBody">
@@ -417,6 +439,7 @@
               <div class="tlk-winner-label">Người thắng</div>
               <div id="tlkWinnerName" class="tlk-winner-name">—</div>
               <div id="tlkWinnerReason" class="tlk-winner-reason"></div>
+              <div id="tlkWalletDelta"></div>
               <div id="tlkFinishedHands" class="tlk-finished-hands"></div>
               <div class="tlk-actions">
                 <button class="tlk-btn primary" data-action="back-waiting" id="tlkBackWaitingBtn" type="button" hidden>↩ Về phòng chờ</button>
@@ -480,6 +503,8 @@
     for (let i = 0; i < views.length; i++){
       views[i].hidden = views[i].dataset.view !== name;
     }
+    const w = $('tlkWallet');
+    if (w) w.hidden = (name === 'menu');
     if (name === 'menu') loadRoomList();
   }
 
@@ -490,6 +515,7 @@
     else if (st === 'playing') { renderPlaying(); showView('playing'); }
     else if (st === 'finished') { renderFinished(); showView('finished'); }
     else showView('menu');
+    updateWalletDisplay();
   }
 
   async function loadRoomList(){
@@ -781,12 +807,35 @@
     handBox.addEventListener('click', _handClickDelegate);
   }
 
+  /* ⭐ Finished — hiển thị ví delta */
   function renderFinished(){
     if (!_room) return;
     const w = _room.winner || '';
     const wt = _room.winnerType || '';
     $('tlkWinnerName').textContent = displayUser(w) || '—';
     $('tlkWinnerReason').textContent = wt ? (ANGT_STATUS_LABEL[wt] || wt) : '';
+
+    /* Delta hiển thị */
+    const deltaBox = $('tlkWalletDelta');
+    if (deltaBox){
+      deltaBox.innerHTML = '';
+      if (_balanceBeforeGame != null && _myBalance != null){
+        const delta = _myBalance - _balanceBeforeGame;
+        if (delta !== 0){
+          const isWin = delta > 0;
+          const cls = isWin ? 'win' : 'lose';
+          const icon = isWin ? '💰' : '💸';
+          const sign = delta > 0 ? '+' : '';
+          deltaBox.innerHTML = `
+            <div class="tlk-wallet-delta ${cls}">
+              <span class="delta-icon">${icon}</span>
+              <span class="delta-amount">${sign}${Math.abs(delta).toLocaleString('vi-VN')}đ</span>
+              <span class="delta-balance">còn ${_myBalance.toLocaleString('vi-VN')}đ</span>
+            </div>
+          `;
+        }
+      }
+    }
 
     const players = _room.players || [];
     const handsBox = $('tlkFinishedHands');
@@ -919,6 +968,8 @@
     if (_busy || !_room) return;
     _busy = true;
     try {
+      /* ⭐ Lưu balance trước ván */
+      _balanceBeforeGame = _myBalance;
       const r = await callRpc('rpc_card_start', { p_code: _room.code, p_name: _myName });
       resetSelectionState();
       _prevTable = []; _prevTableOwner = ''; _lastTable = []; _lastTableOwner = ''; _lastTableKey = '';
@@ -928,7 +979,10 @@
       if (r?.data?.winner){
         toast('🎉 Ăn trắng! ' + displayUser(r.data.winner), { type: 'success', duration: 4200 });
       }
-    } catch (e){ toastError(e.message); }
+    } catch (e){
+      _balanceBeforeGame = null;
+      toastError(e.message);
+    }
     finally { _busy = false; }
   }
 
@@ -1000,6 +1054,7 @@
       _prevTable = []; _prevTableOwner = ''; _lastTable = []; _lastTableOwner = ''; _lastTableKey = '';
       _lastTimeoutKey = '';
       _handSignature = ''; _oppSignature = '';
+      _balanceBeforeGame = null;
       await fetchState(true);
       toast('Đã về phòng chờ', { type: 'success', duration: 2000 });
     } catch (e){ toastError(e.message); }
@@ -1015,6 +1070,7 @@
     _lastTimeoutKey = '';
     _handSignature = ''; _oppSignature = '';
     _beatingCacheKey = '';
+    _balanceBeforeGame = null;
     render();
   }
 
@@ -1043,12 +1099,23 @@
       const newVersion = st.version || 0;
       if (newVersion < prevVersion) return;
       const statusChanged = _room.status !== st.status;
+
+      /* ⭐ Cập nhật ví từ RPC */
+      if (Number.isFinite(Number(st.myBalance))){
+        _myBalance = Number(st.myBalance);
+        updateWalletDisplay();
+      }
+
       _room = st;
       render();
       if (statusChanged && st.status === 'playing'){
         resetSelectionState();
         _lastTimeoutKey = '';
         _handSignature = ''; _oppSignature = '';
+        /* ⭐ Khi mới vào playing (chưa có beforeGame) → lấy balance hiện tại làm base */
+        if (_balanceBeforeGame == null){
+          _balanceBeforeGame = _myBalance + 100000; /* cộng lại cọc vì đã bị trừ */
+        }
       }
       if (statusChanged && st.status === 'finished'){
         resetSelectionState();
@@ -1131,6 +1198,15 @@
 
     bindHandDelegate();
 
+    /* ⭐ Refresh ví từ Wallet */
+    try {
+      if (window.SRank && window.SRank.Wallet){
+        const w = window.SRank.Wallet.get();
+        if (w && Number.isFinite(w.balance)) _myBalance = w.balance;
+      }
+    } catch(_){}
+    updateWalletDisplay();
+
     const saved = loadRoomCode();
     if (saved && saved.name === _myName){
       _room = { code: saved.code, status: 'waiting', version: 0, players: [] };
@@ -1207,7 +1283,16 @@
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleVisibility);
 
-    console.log('[Tulokho] ready ✓ v1.7.1');
+    /* ⭐ Listen walletUpdated để đồng bộ ví */
+    window.addEventListener('walletUpdated', function(e){
+      const d = e && e.detail;
+      if (d && Number.isFinite(Number(d.balance))){
+        _myBalance = Number(d.balance);
+        updateWalletDisplay();
+      }
+    });
+
+    console.log('[Tulokho] ready ✓ v1.8.0 💰');
   }
 
   window.SRank = window.SRank || {};
@@ -1216,7 +1301,8 @@
     close,
     isOpen: () => _isOpen,
     getRoom: () => _room,
-    version: '1.7.1'
+    getBalance: () => _myBalance,
+    version: '1.8.0'
   };
 
   if (document.readyState === 'loading'){
