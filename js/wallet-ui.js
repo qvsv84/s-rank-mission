@@ -1,8 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════
-   SRANK WALLET — v1.2.0 💰
+   SRANK WALLET — v1.3.0 💰
    - Menu user card: ví bản thân
-   - Landing court: inject ví vào TỪNG slot (throne/advisor/courtier)
-   - Auto claim bonus khi checkin
+   - Landing court: ví + RANK cho từng slot
+   - Rank dựa trên balance
+   - Ẩn time check (thay bằng rank)
    ═══════════════════════════════════════════════════════════════ */
 (function(){
   'use strict';
@@ -17,11 +18,10 @@
   let _inflight = false;
   let _inflightBonus = false;
 
-  /* All wallets map (tên gốc → balance) */
   let _allWallets = {};
   let _allFetchedAt = 0;
   let _allInflight = false;
-  const ALL_WALLETS_TTL = 60000; /* 60s */
+  const ALL_WALLETS_TTL = 60000;
 
   let _landingObserver = null;
   let _injectDebounce = null;
@@ -38,6 +38,18 @@
     const num = Math.round(Number(n) || 0);
     const sign = num > 0 ? '+' : '';
     return sign + num.toLocaleString('vi-VN') + 'đ';
+  }
+
+  /* ⭐ Rank theo ví */
+  function getRankFromBalance(bal){
+    const n = Number(bal) || 0;
+    if (n >= 3000000) return { label: 'Thánh tộc',  cls: 'rank-thanh-toc',  icon: '✨' };
+    if (n >= 2500000) return { label: 'Hoàng tộc',  cls: 'rank-hoang-toc',  icon: '👑' };
+    if (n >= 2000000) return { label: 'Vương tộc',  cls: 'rank-vuong-toc',  icon: '🏆' };
+    if (n >= 1500000) return { label: 'Quý tộc',    cls: 'rank-quy-toc',    icon: '💎' };
+    if (n >= 1000000) return { label: 'Quý nhân',   cls: 'rank-quy-nhan',   icon: '🎩' };
+    if (n >= 500000)  return { label: 'Người giàu', cls: 'rank-giau',       icon: '💰' };
+    return                   { label: 'Người nghèo',cls: 'rank-ngheo',      icon: '🪙' };
   }
 
   function getUsername(){
@@ -62,7 +74,6 @@
     return data;
   }
 
-  /* ───── Refresh ví bản thân ───── */
   async function refresh(){
     const uname = getUsername();
     if (!uname) return _wallet;
@@ -86,7 +97,6 @@
     return _wallet;
   }
 
-  /* ───── Refresh all wallets ───── */
   async function refreshAllWallets(force){
     if (!force && Date.now() - _allFetchedAt < ALL_WALLETS_TTL) return _allWallets;
     if (_allInflight) return _allWallets;
@@ -110,7 +120,6 @@
     return _allWallets;
   }
 
-  /* ───── Claim bonus ───── */
   async function claimBonus(){
     const uname = getUsername();
     if (!uname) return null;
@@ -187,6 +196,13 @@
   .menu-user-wallet.wallet-low { animation: none !important; }
 }
 
+/* ⭐ Ẩn time check trên landing court */
+html body #question .throne-time,
+html body #question .advisor-time,
+html body #question .courtier-time {
+  display: none !important;
+}
+
 /* Landing court — ví từng slot */
 .courtier-wallet {
   display: inline-block !important;
@@ -210,10 +226,73 @@
   color: #b8434e !important;
 }
 
+/* ⭐ Rank badge trên landing court */
+.courtier-rank {
+  display: inline-block !important;
+  padding: 1px 8px !important;
+  border-radius: 999px !important;
+  font-weight: 950 !important;
+  white-space: nowrap !important;
+  letter-spacing: .01em !important;
+  line-height: 1.2 !important;
+  margin-top: 2px !important;
+  font-variant-numeric: tabular-nums !important;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, .4) !important;
+}
+
+/* Rank colors */
+.courtier-rank.rank-ngheo {
+  background: linear-gradient(135deg, #e8e4dd, #c8c0b5) !important;
+  color: #5a4a42 !important;
+  border: 1px solid #b0a89c !important;
+}
+.courtier-rank.rank-giau {
+  background: linear-gradient(135deg, #d4f5e0, #a8e8c0) !important;
+  color: #1a6b3a !important;
+  border: 1px solid #7ce0a0 !important;
+}
+.courtier-rank.rank-quy-nhan {
+  background: linear-gradient(135deg, #d4e8ff, #a8ccff) !important;
+  color: #1a3a7a !important;
+  border: 1px solid #7ca8e8 !important;
+}
+.courtier-rank.rank-quy-toc {
+  background: linear-gradient(135deg, #e0d4ff, #c4a8ff) !important;
+  color: #4a1a7a !important;
+  border: 1px solid #a87ce8 !important;
+}
+.courtier-rank.rank-vuong-toc {
+  background: linear-gradient(135deg, #ffd88a, #e8a53c) !important;
+  color: #5a3a00 !important;
+  border: 1px solid #d88820 !important;
+}
+.courtier-rank.rank-hoang-toc {
+  background: linear-gradient(135deg, #ffb0d8, #ff70b9) !important;
+  color: #7a1a4a !important;
+  border: 1px solid #e85588 !important;
+}
+.courtier-rank.rank-thanh-toc {
+  background: linear-gradient(135deg, #fff8e6, #ffd88a) !important;
+  color: #7a5410 !important;
+  border: 1px solid #ffb800 !important;
+  box-shadow: 0 0 12px rgba(255, 200, 60, .7) !important;
+  animation: thanhTocGlow 2s ease-in-out infinite !important;
+}
+@keyframes thanhTocGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 200, 60, .5); }
+  50%      { box-shadow: 0 0 16px rgba(255, 200, 60, .9); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .courtier-rank.rank-thanh-toc { animation: none !important; }
+}
+
 /* Size theo vị trí */
 html body #question .court-throne .courtier-wallet { font-size: 11px !important; }
+html body #question .court-throne .courtier-rank { font-size: 11px !important; }
 html body #question .advisor .courtier-wallet { font-size: 10px !important; }
+html body #question .advisor .courtier-rank { font-size: 10px !important; }
 html body #question .courtier .courtier-wallet { font-size: 9px !important; }
+html body #question .courtier .courtier-rank { font-size: 9px !important; }
 
 /* Tú lơ khơ header — ví */
 .tlk-wallet {
@@ -311,7 +390,7 @@ html body #question .courtier .courtier-wallet { font-size: 9px !important; }
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     Landing court — inject ví vào từng slot
+     Landing court — inject ví + rank vào từng slot
      ═══════════════════════════════════════════════════════════════ */
   function buildDnLookup(){
     const map = new Map();
@@ -322,7 +401,6 @@ html body #question .courtier .courtier-wallet { font-size: 9px !important; }
         if (!raw) return;
         const dn = window.DN ? String(window.DN(raw) || raw).trim() : raw;
         if (dn) map.set(dn, raw);
-        /* Cũng map chính tên gốc (fallback nếu DN không áp dụng) */
         map.set(raw, raw);
       });
     } catch(_){}
@@ -344,7 +422,7 @@ html body #question .courtier .courtier-wallet { font-size: 9px !important; }
     const parent = nameEl.parentElement;
     if (!parent) return;
 
-    /* Tìm hoặc tạo element ví — chèn sau nameEl */
+    /* Wallet */
     let w = parent.querySelector('.courtier-wallet');
     if (!w){
       w = document.createElement('div');
@@ -353,6 +431,19 @@ html body #question .courtier .courtier-wallet { font-size: 9px !important; }
     }
     w.textContent = '💰 ' + formatMoneyBare(bal);
     w.classList.toggle('wallet-low', bal < 100000);
+
+    /* Rank badge — chèn sau wallet */
+    let r = parent.querySelector('.courtier-rank');
+    if (!r){
+      r = document.createElement('div');
+      r.className = 'courtier-rank';
+      w.insertAdjacentElement('afterend', r);
+    }
+    const rank = getRankFromBalance(bal);
+    r.textContent = rank.icon + ' ' + rank.label;
+    /* Reset class + add rank class */
+    r.className = 'courtier-rank';
+    r.classList.add(rank.cls);
   }
 
   function injectCourtWallets(){
@@ -360,14 +451,10 @@ html body #question .courtier .courtier-wallet { font-size: 9px !important; }
     if (!q) return;
     if (!Object.keys(_allWallets).length) return;
 
-    /* Throne */
     const throne = q.querySelector('.court-throne .throne-name');
     if (throne) injectIntoSlot(throne);
 
-    /* Advisors (top2 + top3) */
     q.querySelectorAll('.advisor .advisor-name').forEach(el => injectIntoSlot(el));
-
-    /* Courtiers (top 4-13) */
     q.querySelectorAll('.courtier .courtier-name').forEach(el => injectIntoSlot(el));
   }
 
@@ -393,7 +480,6 @@ html body #question .courtier .courtier-wallet { font-size: 9px !important; }
       scheduleInject();
     });
     _landingObserver.observe(q, { childList: true, subtree: true });
-    /* Inject lần đầu */
     scheduleInject();
   }
 
@@ -403,7 +489,6 @@ html body #question .courtier .courtier-wallet { font-size: 9px !important; }
   window.addEventListener('checkinDone', function(){
     setTimeout(function(){
       claimBonus();
-      /* Bonus vừa cộng → refresh all để landing cập nhật */
       setTimeout(function(){ refreshAllWallets(true); }, 900);
     }, 500);
   });
@@ -424,7 +509,6 @@ html body #question .courtier .courtier-wallet { font-size: 9px !important; }
     });
   } catch(_){}
 
-  /* Poll định kỳ để đồng bộ ví mọi người */
   setInterval(function(){
     if (document.hidden) return;
     if (!Auth.getCurrentUser?.()) return;
@@ -445,18 +529,15 @@ html body #question .courtier .courtier-wallet { font-size: 9px !important; }
       }, 400);
     }
 
-    /* Menu wallet — retry phòng khi menu DOM chưa có */
     [1500, 3000].forEach(t => setTimeout(function(){
       injectMenuWallet();
       renderMenu();
     }, t));
 
-    /* Landing court — observer */
     setupLandingObserver();
-    /* Retry inject phòng khi main.js render chậm */
     [1500, 3000, 5000].forEach(t => setTimeout(scheduleInject, t));
 
-    console.log('[Wallet] ready ✓ v1.2.0');
+    console.log('[Wallet] ready ✓ v1.3.0');
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
@@ -470,6 +551,7 @@ html body #question .courtier .courtier-wallet { font-size: 9px !important; }
     refreshAllWallets,
     claimBonus,
     formatMoney,
-    formatDelta
+    formatDelta,
+    getRankFromBalance
   };
 })();
