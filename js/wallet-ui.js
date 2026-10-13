@@ -126,7 +126,7 @@
         try { window.dispatchEvent(new CustomEvent('walletUpdated', { detail: _wallet })); } catch(_){}
         try {
           if (window.Toast && window.Toast.show){
-            window.Toast.show('💰 +100.000đ bonus checklist', { type: 'success', duration: 3600 });
+            window.Toast.show('+100.000 VNĐ vào tài khoản 💰', { type: 'success', duration: 3600 });
           }
         } catch(_){}
       }
