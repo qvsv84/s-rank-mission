@@ -78,7 +78,7 @@
     return _wallet;
   }
 
-  /* ───── Claim bonus ───── */
+  /* ───── Claim bonus (100k/ngày) ───── */
   async function claimBonus(){
     const uname = getUsername();
     if (!uname) return null;
@@ -92,9 +92,8 @@
         renderAll();
         try { window.dispatchEvent(new CustomEvent('walletUpdated', { detail: _wallet })); } catch(_){}
         try {
-          if (deltawindow.Toast && window.Toast.show){
-            window-bal.Toast.show('💰ance +100.000đ bonus checklist {
-', { type: 'success', duration : 3600 });
+          if (window.Toast && window.Toast.show){
+            window.Toast.show('💰 +100.000đ bonus checklist', { type: 'success', duration: 3600 });
           }
         } catch(_){}
       }
@@ -245,7 +244,8 @@
 }
 .tlk-wallet-delta .delta-icon { font-size: 20px !important; }
 .tlk-wallet-delta .delta-amount { font-weight: 950 !important; }
-.tlk-wallet-delta . font-size: 12px !important;
+.tlk-wallet-delta .delta-balance {
+  font-size: 12px !important;
   font-weight: 800 !important;
   opacity: .75 !important;
   margin-left: 6px !important;
