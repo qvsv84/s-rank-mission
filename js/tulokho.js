@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════
-   TÚ LƠ KHƠ — v1.8.0 ⚡💰
-   - Header hiển thị ví
-   - Finished overlay hiển thị +/- tiền
+   TÚ LƠ KHƠ — v1.8.1 ⚡💰
+   - Header ví + delta kết ván
+   - Chặt heo (PA2): heo đen 30k, heo đỏ 50k
    - Giữ optimization v1.7.1
    ═══════════════════════════════════════════════════════════════ */
 (function () {
@@ -63,10 +63,8 @@
   let _fetchDebounceTimer = null;
   let _fetchInflight = false;
 
-  /* ⭐ WALLET state */
   let _myBalance = null;
   let _balanceBeforeGame = null;
-  let _lastFinishedWinner = null;
 
   const $ = id => document.getElementById(id);
   const h = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -323,7 +321,6 @@
     return comboBeats(cards, t, table, tableType);
   }
 
-  /* ⭐ Cập nhật header ví */
   function updateWalletDisplay(){
     const el = $('tlkWalletAmount');
     if (!el) return;
@@ -807,7 +804,6 @@
     handBox.addEventListener('click', _handClickDelegate);
   }
 
-  /* ⭐ Finished — hiển thị ví delta */
   function renderFinished(){
     if (!_room) return;
     const w = _room.winner || '';
@@ -815,7 +811,6 @@
     $('tlkWinnerName').textContent = displayUser(w) || '—';
     $('tlkWinnerReason').textContent = wt ? (ANGT_STATUS_LABEL[wt] || wt) : '';
 
-    /* Delta hiển thị */
     const deltaBox = $('tlkWalletDelta');
     if (deltaBox){
       deltaBox.innerHTML = '';
@@ -968,7 +963,6 @@
     if (_busy || !_room) return;
     _busy = true;
     try {
-      /* ⭐ Lưu balance trước ván */
       _balanceBeforeGame = _myBalance;
       const r = await callRpc('rpc_card_start', { p_code: _room.code, p_name: _myName });
       resetSelectionState();
@@ -1001,6 +995,18 @@
       await fetchState(true);
       if (r?.data?.winner){
         toast('🏆 ' + displayUser(r.data.winner) + ' thắng!', { type: 'success', duration: 4200 });
+      }
+      /* ⭐ Chặt heo toast */
+      if (r?.data?.chop){
+        const c = r.data.chop;
+        const amt = Number(c.amount) || 0;
+        if (c.to === _myName){
+          toast('⚡ Chặt heo! +' + amt.toLocaleString('vi-VN') + 'đ', { type: 'success', duration: 3200 });
+        } else if (c.from === _myName){
+          toast('💥 Bạn bị chặt heo -' + amt.toLocaleString('vi-VN') + 'đ', { type: 'error', duration: 3600 });
+        } else {
+          toast('⚡ ' + displayUser(c.to) + ' chặt heo ' + displayUser(c.from), { type: 'info', duration: 3000 });
+        }
       }
     } catch (e){ toastError(e.message); }
     finally { _busy = false; }
@@ -1100,7 +1106,6 @@
       if (newVersion < prevVersion) return;
       const statusChanged = _room.status !== st.status;
 
-      /* ⭐ Cập nhật ví từ RPC */
       if (Number.isFinite(Number(st.myBalance))){
         _myBalance = Number(st.myBalance);
         updateWalletDisplay();
@@ -1112,9 +1117,8 @@
         resetSelectionState();
         _lastTimeoutKey = '';
         _handSignature = ''; _oppSignature = '';
-        /* ⭐ Khi mới vào playing (chưa có beforeGame) → lấy balance hiện tại làm base */
         if (_balanceBeforeGame == null){
-          _balanceBeforeGame = _myBalance + 100000; /* cộng lại cọc vì đã bị trừ */
+          _balanceBeforeGame = _myBalance + 100000;
         }
       }
       if (statusChanged && st.status === 'finished'){
@@ -1198,7 +1202,6 @@
 
     bindHandDelegate();
 
-    /* ⭐ Refresh ví từ Wallet */
     try {
       if (window.SRank && window.SRank.Wallet){
         const w = window.SRank.Wallet.get();
@@ -1283,7 +1286,6 @@
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleVisibility);
 
-    /* ⭐ Listen walletUpdated để đồng bộ ví */
     window.addEventListener('walletUpdated', function(e){
       const d = e && e.detail;
       if (d && Number.isFinite(Number(d.balance))){
@@ -1292,7 +1294,7 @@
       }
     });
 
-    console.log('[Tulokho] ready ✓ v1.8.0 💰');
+    console.log('[Tulokho] ready ✓ v1.8.1 💰');
   }
 
   window.SRank = window.SRank || {};
@@ -1302,7 +1304,7 @@
     isOpen: () => _isOpen,
     getRoom: () => _room,
     getBalance: () => _myBalance,
-    version: '1.8.0'
+    version: '1.8.1'
   };
 
   if (document.readyState === 'loading'){
