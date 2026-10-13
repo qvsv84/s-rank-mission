@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════
-   SRANK WALLET — v1.1.0 💰
-   - Hiển thị ví ở menu user card
-   - Hiển thị ví ở landing (dưới dòng lock note)
+   SRANK WALLET — v1.2.0 💰
+   - Menu user card: ví bản thân
+   - Landing court: inject ví vào TỪNG slot (throne/advisor/courtier)
    - Auto claim bonus khi checkin
    ═══════════════════════════════════════════════════════════════ */
 (function(){
@@ -16,7 +16,15 @@
   let _wallet = { username: '', balance: 0, lastBonusDate: null };
   let _inflight = false;
   let _inflightBonus = false;
+
+  /* All wallets map (tên gốc → balance) */
+  let _allWallets = {};
+  let _allFetchedAt = 0;
+  let _allInflight = false;
+  const ALL_WALLETS_TTL = 60000; /* 60s */
+
   let _landingObserver = null;
+  let _injectDebounce = null;
 
   /* ───── Format ───── */
   function formatMoney(n){
@@ -54,7 +62,7 @@
     return data;
   }
 
-  /* ───── Refresh ───── */
+  /* ───── Refresh ví bản thân ───── */
   async function refresh(){
     const uname = getUsername();
     if (!uname) return _wallet;
@@ -68,7 +76,7 @@
         balance: Number(d.balance) || 0,
         lastBonusDate: d.lastBonusDate || null
       };
-      renderAll();
+      renderMenu();
       try { window.dispatchEvent(new CustomEvent('walletUpdated', { detail: _wallet })); } catch(_){}
     } catch(e){
       console.warn('[Wallet] refresh:', e.message);
@@ -78,7 +86,31 @@
     return _wallet;
   }
 
-  /* ───── Claim bonus (100k/ngày) ───── */
+  /* ───── Refresh all wallets ───── */
+  async function refreshAllWallets(force){
+    if (!force && Date.now() - _allFetchedAt < ALL_WALLETS_TTL) return _allWallets;
+    if (_allInflight) return _allWallets;
+    _allInflight = true;
+    try {
+      const data = await callRpc('rpc_wallet_get_all', {});
+      const list = (data && data.data && Array.isArray(data.data.wallets)) ? data.data.wallets : [];
+      const map = {};
+      list.forEach(w => {
+        const name = String(w.username || '').trim();
+        if (name) map[name] = Number(w.balance) || 0;
+      });
+      _allWallets = map;
+      _allFetchedAt = Date.now();
+      scheduleInject();
+    } catch(e){
+      console.warn('[Wallet] refreshAll:', e.message);
+    } finally {
+      _allInflight = false;
+    }
+    return _allWallets;
+  }
+
+  /* ───── Claim bonus ───── */
   async function claimBonus(){
     const uname = getUsername();
     if (!uname) return null;
@@ -89,7 +121,8 @@
       const d = (data && data.data) || {};
       if (d.claimed){
         _wallet.balance = Number(d.balance) || _wallet.balance;
-        renderAll();
+        renderMenu();
+        refreshAllWallets(true);
         try { window.dispatchEvent(new CustomEvent('walletUpdated', { detail: _wallet })); } catch(_){}
         try {
           if (window.Toast && window.Toast.show){
@@ -154,48 +187,33 @@
   .menu-user-wallet.wallet-low { animation: none !important; }
 }
 
-/* Landing — ví dưới lock note */
-.landing-wallet {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  margin-top: 10px !important;
-  margin-bottom: 6px !important;
-  padding: 7px 16px !important;
-  background: linear-gradient(135deg, #fff8e6, #ffe9b8) !important;
-  border: 1.5px solid #ffd88a !important;
+/* Landing court — ví từng slot */
+.courtier-wallet {
+  display: inline-block !important;
+  padding: 1px 7px !important;
   border-radius: 999px !important;
-  font-size: 15px !important;
+  background: linear-gradient(135deg, #fff8e6, #ffe9b8) !important;
+  border: 1px solid #ffd88a !important;
   font-weight: 950 !important;
-  color: #5a3a00 !important;
+  color: #7a5410 !important;
   font-variant-numeric: tabular-nums !important;
-  box-shadow: 0 4px 14px -5px rgba(232, 165, 60, .55) !important;
   white-space: nowrap !important;
   letter-spacing: .01em !important;
-  animation: lwIn .4s cubic-bezier(.2,.9,.3,1.4) !important;
-  pointer-events: none !important;
-  position: relative !important;
-  z-index: 1 !important;
+  line-height: 1.2 !important;
+  margin-top: 2px !important;
+  box-shadow: 0 2px 6px -2px rgba(232, 165, 60, .35) !important;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, .5) !important;
 }
-.landing-wallet .lw-amount { font-weight: 950 !important; }
-.landing-wallet .lw-icon {
-  font-size: 17px !important;
-  filter: drop-shadow(0 2px 4px rgba(232, 165, 60, .4)) !important;
-}
-.landing-wallet.wallet-low {
+.courtier-wallet.wallet-low {
   background: linear-gradient(135deg, #fff0f0, #ffd9d9) !important;
   border-color: #ffb8b8 !important;
   color: #b8434e !important;
-  animation: lwIn .4s cubic-bezier(.2,.9,.3,1.4), walletPulseWarn 1.8s ease-in-out infinite !important;
 }
-@keyframes lwIn {
-  0%   { transform: scale(.6); opacity: 0; }
-  60%  { transform: scale(1.06); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .landing-wallet, .landing-wallet.wallet-low { animation: none !important; }
-}
+
+/* Size theo vị trí */
+html body #question .court-throne .courtier-wallet { font-size: 11px !important; }
+html body #question .advisor .courtier-wallet { font-size: 10px !important; }
+html body #question .courtier .courtier-wallet { font-size: 9px !important; }
 
 /* Tú lơ khơ header — ví */
 .tlk-wallet {
@@ -263,7 +281,7 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     UI — menu user card
+     Menu user card wallet
      ═══════════════════════════════════════════════════════════════ */
   function injectMenuWallet(){
     const info = document.querySelector('#menuUserCard .menu-user-info');
@@ -293,45 +311,72 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     UI — landing (dưới lock note)
+     Landing court — inject ví vào từng slot
      ═══════════════════════════════════════════════════════════════ */
-  function injectLandingWallet(){
-    const q = $('question');
-    if (!q) return null;
-
-    const uname = getUsername();
-    if (!uname){
-      const old = q.querySelector('#landingWallet');
-      if (old) old.remove();
-      return null;
-    }
-
-    let el = q.querySelector('#landingWallet');
-    if (el) return el;
-
-    el = document.createElement('div');
-    el.id = 'landingWallet';
-    el.className = 'landing-wallet';
-
-    /* Ưu tiên chèn sau .landing-lock-note, fallback sau .landing-cta */
-    const lockNote = q.querySelector('.landing-lock-note');
-    const cta = q.querySelector('.landing-cta');
-    const anchor = lockNote || cta;
-
-    if (anchor && anchor.parentNode === q){
-      anchor.insertAdjacentElement('afterend', el);
-    } else {
-      q.appendChild(el);
-    }
-    return el;
+  function buildDnLookup(){
+    const map = new Map();
+    try {
+      const names = (window.__getChecklistNames && window.__getChecklistNames()) || [];
+      names.forEach(n => {
+        const raw = String(n || '').trim();
+        if (!raw) return;
+        const dn = window.DN ? String(window.DN(raw) || raw).trim() : raw;
+        if (dn) map.set(dn, raw);
+        /* Cũng map chính tên gốc (fallback nếu DN không áp dụng) */
+        map.set(raw, raw);
+      });
+    } catch(_){}
+    return map;
   }
 
-  function renderLanding(){
-    const el = injectLandingWallet();
-    if (!el) return;
-    const bal = _wallet.balance || 0;
-    el.innerHTML = `<span class="lw-amount">${h(formatMoneyBare(bal))}</span> <span class="lw-icon">💰</span>`;
-    el.classList.toggle('wallet-low', bal < 100000);
+  function injectIntoSlot(nameEl){
+    if (!nameEl) return;
+    const dn = String(nameEl.textContent || '').trim();
+    if (!dn) return;
+
+    const lookup = buildDnLookup();
+    const rawName = lookup.get(dn);
+    if (!rawName) return;
+
+    const bal = _allWallets[rawName];
+    if (bal == null) return;
+
+    const parent = nameEl.parentElement;
+    if (!parent) return;
+
+    /* Tìm hoặc tạo element ví — chèn sau nameEl */
+    let w = parent.querySelector('.courtier-wallet');
+    if (!w){
+      w = document.createElement('div');
+      w.className = 'courtier-wallet';
+      nameEl.insertAdjacentElement('afterend', w);
+    }
+    w.textContent = '💰 ' + formatMoneyBare(bal);
+    w.classList.toggle('wallet-low', bal < 100000);
+  }
+
+  function injectCourtWallets(){
+    const q = $('question');
+    if (!q) return;
+    if (!Object.keys(_allWallets).length) return;
+
+    /* Throne */
+    const throne = q.querySelector('.court-throne .throne-name');
+    if (throne) injectIntoSlot(throne);
+
+    /* Advisors (top2 + top3) */
+    q.querySelectorAll('.advisor .advisor-name').forEach(el => injectIntoSlot(el));
+
+    /* Courtiers (top 4-13) */
+    q.querySelectorAll('.courtier .courtier-name').forEach(el => injectIntoSlot(el));
+  }
+
+  function scheduleInject(){
+    if (_injectDebounce) return;
+    _injectDebounce = setTimeout(function(){
+      _injectDebounce = null;
+      injectCourtWallets();
+    }, 60);
   }
 
   function setupLandingObserver(){
@@ -345,47 +390,60 @@
     }
     _landingObserver = new MutationObserver(function(){
       if (!getUsername()) return;
-      if (!q.querySelector('#landingWallet')) renderLanding();
+      scheduleInject();
     });
-    _landingObserver.observe(q, { childList: true, subtree: false });
+    _landingObserver.observe(q, { childList: true, subtree: true });
     /* Inject lần đầu */
-    renderLanding();
-  }
-
-  function renderAll(){
-    renderMenu();
-    renderLanding();
+    scheduleInject();
   }
 
   /* ═══════════════════════════════════════════════════════════════
      HOOKS
      ═══════════════════════════════════════════════════════════════ */
   window.addEventListener('checkinDone', function(){
-    setTimeout(function(){ claimBonus(); }, 500);
+    setTimeout(function(){
+      claimBonus();
+      /* Bonus vừa cộng → refresh all để landing cập nhật */
+      setTimeout(function(){ refreshAllWallets(true); }, 900);
+    }, 500);
   });
 
   try {
     Auth.onChange(function(u){
-      if (u) setTimeout(refresh, 400);
-      else {
+      if (u){
+        setTimeout(function(){
+          refresh();
+          refreshAllWallets(true);
+        }, 400);
+      } else {
         _wallet = { username: '', balance: 0, lastBonusDate: null };
-        renderAll();
+        _allWallets = {};
+        _allFetchedAt = 0;
+        renderMenu();
       }
     });
   } catch(_){}
 
+  /* Poll định kỳ để đồng bộ ví mọi người */
   setInterval(function(){
     if (document.hidden) return;
     if (!Auth.getCurrentUser?.()) return;
     refresh();
-  }, 30000);
+    refreshAllWallets(false);
+  }, 45000);
 
   /* ═══════════════════════════════════════════════════════════════
      INIT
      ═══════════════════════════════════════════════════════════════ */
   function init(){
     injectCss();
-    if (Auth.getCurrentUser?.()) setTimeout(refresh, 400);
+
+    if (Auth.getCurrentUser?.()){
+      setTimeout(function(){
+        refresh();
+        refreshAllWallets(true);
+      }, 400);
+    }
 
     /* Menu wallet — retry phòng khi menu DOM chưa có */
     [1500, 3000].forEach(t => setTimeout(function(){
@@ -393,13 +451,12 @@
       renderMenu();
     }, t));
 
-    /* Landing wallet — retry + observer */
-    [800, 1500, 3000].forEach(t => setTimeout(function(){
-      renderLanding();
-    }, t));
+    /* Landing court — observer */
     setupLandingObserver();
+    /* Retry inject phòng khi main.js render chậm */
+    [1500, 3000, 5000].forEach(t => setTimeout(scheduleInject, t));
 
-    console.log('[Wallet] ready ✓ v1.1.0');
+    console.log('[Wallet] ready ✓ v1.2.0');
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
@@ -410,6 +467,7 @@
     get,
     getBalance,
     refresh,
+    refreshAllWallets,
     claimBonus,
     formatMoney,
     formatDelta
