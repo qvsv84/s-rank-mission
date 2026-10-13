@@ -1,9 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   SRANK WALLET — v1.3.0 💰
+   SRANK WALLET — v1.3.1 💰
    - Menu user card: ví bản thân
-   - Landing court: ví + RANK cho từng slot
-   - Rank dựa trên balance
-   - Ẩn time check (thay bằng rank)
+   - Landing court: ví + RANK (không icon)
+   - Auto claim bonus khi checkin
    ═══════════════════════════════════════════════════════════════ */
 (function(){
   'use strict';
@@ -40,16 +39,16 @@
     return sign + num.toLocaleString('vi-VN') + 'đ';
   }
 
-  /* ⭐ Rank theo ví */
+  /* ⭐ Rank theo ví — không icon */
   function getRankFromBalance(bal){
     const n = Number(bal) || 0;
-    if (n >= 3000000) return { label: 'Thánh tộc',  cls: 'rank-thanh-toc',  icon: '✨' };
-    if (n >= 2500000) return { label: 'Hoàng tộc',  cls: 'rank-hoang-toc',  icon: '👑' };
-    if (n >= 2000000) return { label: 'Vương tộc',  cls: 'rank-vuong-toc',  icon: '🏆' };
-    if (n >= 1500000) return { label: 'Quý tộc',    cls: 'rank-quy-toc',    icon: '💎' };
-    if (n >= 1000000) return { label: 'Quý nhân',   cls: 'rank-quy-nhan',   icon: '🎩' };
-    if (n >= 500000)  return { label: 'Người giàu', cls: 'rank-giau',       icon: '💰' };
-    return                   { label: 'Người nghèo',cls: 'rank-ngheo',      icon: '🪙' };
+    if (n >= 3000000) return { label: 'Thánh tộc',  cls: 'rank-thanh-toc' };
+    if (n >= 2500000) return { label: 'Hoàng tộc',  cls: 'rank-hoang-toc' };
+    if (n >= 2000000) return { label: 'Vương tộc',  cls: 'rank-vuong-toc' };
+    if (n >= 1500000) return { label: 'Quý tộc',    cls: 'rank-quy-toc' };
+    if (n >= 1000000) return { label: 'Quý nhân',   cls: 'rank-quy-nhan' };
+    if (n >= 500000)  return { label: 'Người giàu', cls: 'rank-giau' };
+    return                   { label: 'Người nghèo',cls: 'rank-ngheo' };
   }
 
   function getUsername(){
@@ -432,7 +431,7 @@ html body #question .courtier .courtier-rank { font-size: 9px !important; }
     w.textContent = '💰 ' + formatMoneyBare(bal);
     w.classList.toggle('wallet-low', bal < 100000);
 
-    /* Rank badge — chèn sau wallet */
+    /* Rank badge — chèn sau wallet (không icon) */
     let r = parent.querySelector('.courtier-rank');
     if (!r){
       r = document.createElement('div');
@@ -440,8 +439,7 @@ html body #question .courtier .courtier-rank { font-size: 9px !important; }
       w.insertAdjacentElement('afterend', r);
     }
     const rank = getRankFromBalance(bal);
-    r.textContent = rank.icon + ' ' + rank.label;
-    /* Reset class + add rank class */
+    r.textContent = rank.label;
     r.className = 'courtier-rank';
     r.classList.add(rank.cls);
   }
@@ -537,7 +535,7 @@ html body #question .courtier .courtier-rank { font-size: 9px !important; }
     setupLandingObserver();
     [1500, 3000, 5000].forEach(t => setTimeout(scheduleInject, t));
 
-    console.log('[Wallet] ready ✓ v1.3.0');
+    console.log('[Wallet] ready ✓ v1.3.1');
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
