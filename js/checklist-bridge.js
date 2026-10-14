@@ -33,7 +33,7 @@
 
   function init() {
     const panel = document.getElementById("checklistPanel");
-    const page  = document.getElementByIdị("clV6Page");
+    const page  = document.getElementById("clV6Page");
 
     // #clpV6Page tr có thể chưa tồn tại ngay (checklist-ui.js tạo muộn).
     // Thử lại vài nhước khi bỏ cuộc.
